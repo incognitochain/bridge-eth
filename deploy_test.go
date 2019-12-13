@@ -21,6 +21,22 @@ import (
 	"github.com/pkg/errors"
 )
 
+func TestDecodeSwapBridgeInst(t *testing.T) {
+	// Get proof
+	url := "https://mainnet.incognito.org/fullnode:433"
+	block := 73853
+	proof, err := getAndDecodeBridgeSwapProof(url, block)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Printf("inst: %x\n", proof.Instruction)
+	fmt.Printf("instType: %d\n", proof.Instruction[0])
+	fmt.Printf("shard: %d\n", proof.Instruction[1])
+	fmt.Printf("startHeight: %d\n", big.NewInt(0).SetBytes(proof.Instruction[2:34]))
+	fmt.Printf("numVals: %d\n", big.NewInt(0).SetBytes(proof.Instruction[34:66]))
+}
+
 func TestSwapBridge(t *testing.T) {
 	// Get proof
 	url := "http://54.39.158.106:19032"
