@@ -224,6 +224,62 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 }
 
+func (v2 *VaulV2TestSuite) TestVaultV2sigToAddress() {
+	timestamp := []byte(randomizeTimestamp())
+	var data32 [32]byte
+	data := rawsha3(timestamp)
+	address := crypto.PubkeyToAddress(genesisAcc.PrivateKey.PublicKey)
+
+	// verify signer with right signature
+	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
+	copy(data32[:], data)
+	signer, err := v2.v.SigToAddress(nil, signBytes, data32)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), signer, address)
+
+	// wrong signature
+	signBytes[0]++
+	signer, err = v2.v.SigToAddress(nil, signBytes, data32)
+	require.Equal(v2.T(), nil, err)
+	require.NotEqual(v2.T(), signer, address)
+}
+
+func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
+	desc := "USDT"
+	testAmount := big.NewInt(int64(0))
+	var data32 [32]byte
+	tinfo := v2.p.customErc20s[desc]
+	timestamp := []byte(randomizeTimestamp())
+	tempData := append([]byte(IncPaymentAddr), tinfo.addr[:]...)
+	tempData1 := append(tempData, timestamp...)
+	tempData2 := append(tempData1, common.LeftPadBytes(testAmount.Bytes(), 32)...)
+	data := rawsha3(tempData2)
+
+	copy(data32[:], data)
+	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
+	_, err := v2.v.RequestWithdraw(auth, IncPaymentAddr, tinfo.addr, testAmount, signBytes, timestamp)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	// datahash used must return true
+	isUsed, err := v2.v.IsSigDataUsed(nil, data32)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), true, isUsed)
+
+	// update vault to next version and check sig used
+	_, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	require.Equal(v2.T(), nil, err)
+	isUsed, err = nextVault.IsSigDataUsed(nil, data32)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), true, isUsed)
+
+	// datahash unsed must return false on new vault
+	data32[0]++
+	isUsed, err = nextVault.IsSigDataUsed(nil, data32)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), false, isUsed)
+}
+
 func buildWithdrawTestcaseV2(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
