@@ -224,6 +224,347 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 }
 
+func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
+	desc := "BNB"
+	tinfo := v2.p.customErc20s[desc]
+	withdraw := big.NewInt(int64(5e18))
+	executeAmount := big.NewInt(int64(1e18))
+	srcToken := v2.EtherAddress
+	destToken := tinfo.addr
+	address := crypto.PubkeyToAddress(genesisAcc.PrivateKey.PublicKey)
+	dAddr, _, _, err := dapp.DeployDapp(auth, v2.p.sim, v2.p.vAddr)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, _, err = deposit(v2.p, big.NewInt(int64(5e18)))
+	require.Equal(v2.T(), nil, err)
+	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, withdraw, address)
+	auth.GasLimit = 0
+	_, err = SubmitBurnProof(v2.p.v, auth, proof)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	dappAbi, err := abi.JSON(strings.NewReader(dapp.DappABI))
+
+	// check balance remain
+	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), withdraw, bal)
+	timestamp := []byte(randomizeTimestamp())
+
+	testCases := []struct {
+		srcToken  common.Address
+		srcQty    *big.Int
+		destToken common.Address
+		dapp      common.Address
+		input     []byte
+		vault     *vault.Vault
+		timestamp []byte
+		iserr     bool
+	}{
+		{
+			// must be able to run execute smoothly by calling simpleCall func
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     false,
+		},
+		{
+			// use sig twice
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+		{
+			// trade same token
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: srcToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: []byte(randomizeTimestamp()),
+			iserr:     true,
+		},
+		{
+			// trade amount greater than amount available
+			srcToken:  srcToken,
+			srcQty:    withdraw,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+		{
+			// execute dapp get revert
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "revertCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+		{
+			// dapp return value amount but didn't transfer dest coin
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "ReturnAmountWithoutTranfer", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+	}
+
+	for _, tc := range testCases {
+		beforeExecute := v2.p.getBalance(v2.p.vAddr)
+		_, err = runExecuteVault(auth, v2.p.sim, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
+		if tc.iserr {
+			require.NotEqual(v2.T(), nil, err)
+			require.Equal(v2.T(), beforeExecute, v2.p.getBalance(v2.p.vAddr))
+		} else {
+			require.Equal(v2.T(), nil, err)
+			require.NotEqual(v2.T(), beforeExecute, v2.p.getBalance(v2.p.vAddr))
+		}
+	}
+}
+
+func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
+	desc := "USDT"
+	tinfo := v2.p.customErc20s[desc]
+	withdraw := big.NewInt(int64(5e8))
+	executeAmount := big.NewInt(int64(1e8))
+	srcToken := tinfo.addr
+	destToken := v2.EtherAddress
+	address := crypto.PubkeyToAddress(genesisAcc.PrivateKey.PublicKey)
+	dAddr, _, _, err := dapp.DeployDapp(auth, v2.p.sim, v2.p.vAddr)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, _, err = lockSimERC20WithTxs(v2.p, tinfo.c, tinfo.addr, withdraw)
+	require.Equal(v2.T(), nil, err)
+	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, tinfo.addr, withdraw, address)
+	auth.GasLimit = 0
+	_, err = SubmitBurnProof(v2.p.v, auth, proof)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	dappAbi, err := abi.JSON(strings.NewReader(dapp.DappABI))
+
+	// check balance remain
+	bal, err := v2.v.GetDepositedBalance(nil, tinfo.addr, address)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), withdraw, bal)
+	timestamp := []byte(randomizeTimestamp())
+
+	testCases := []struct {
+		srcToken  common.Address
+		srcQty    *big.Int
+		destToken common.Address
+		dapp      common.Address
+		input     []byte
+		vault     *vault.Vault
+		timestamp []byte
+		iserr     bool
+	}{
+		{
+			// must be able to run execute smoothly by calling simpleCall func
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     false,
+		},
+		{
+			// use sig twice
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+		{
+			// trade same token
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: srcToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: []byte(randomizeTimestamp()),
+			iserr:     true,
+		},
+		{
+			// trade amount greater than amount available
+			srcToken:  srcToken,
+			srcQty:    withdraw,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+		{
+			// execute dapp get revert
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "revertCall", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+		{
+			// dapp return value amount but didn't transfer dest coin
+			srcToken:  srcToken,
+			srcQty:    executeAmount,
+			destToken: destToken,
+			dapp:      dAddr,
+			input:     v2.packInputData(dappAbi, "ReturnAmountWithoutTranfer", destToken),
+			vault:     v2.v,
+			timestamp: timestamp,
+			iserr:     true,
+		},
+	}
+
+	for _, tc := range testCases {
+		beforeExecute := getBalanceERC20(tinfo.c, v2.p.vAddr)
+		_, err = runExecuteVault(auth, v2.p.sim, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
+		if tc.iserr {
+			require.NotEqual(v2.T(), nil, err)
+			require.Equal(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
+		} else {
+			require.Equal(v2.T(), nil, err)
+			require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
+		}
+	}
+}
+
+func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
+	desc := "BNB"
+	deposit := big.NewInt(int64(3e17))
+	withdraw := big.NewInt(int64(2e8))
+	executeAmount := big.NewInt(int64(1e17))
+	address := crypto.PubkeyToAddress(genesisAcc.PrivateKey.PublicKey)
+	// Deposit, must success
+	tinfo := v2.p.customErc20s[desc]
+	_, _, err := lockSimERC20WithTxs(v2.p, tinfo.c, tinfo.addr, deposit)
+	require.Equal(v2.T(), nil, err)
+
+	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, tinfo.addr, withdraw, address)
+	auth.GasLimit = 0
+	_, err = SubmitBurnProof(v2.p.v, auth, proof)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	// check balance remain
+	bal, err := v2.v.GetDepositedBalance(nil, tinfo.addr, address)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), bal, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
+
+	// update newVault then user must be able to request execute
+	nextVaultAddr, _, _, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.Pause(auth)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, err = v2.v.Migrate(auth, nextVaultAddr)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, err = v2.v.MoveAssets(auth, []common.Address{tinfo.addr})
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	wrapNextVault, err := vault.NewVault(nextVaultAddr, v2.p.sim)
+	require.Equal(v2.T(), nil, err)
+	// check balance on nextVault
+	bal, err = wrapNextVault.GetDepositedBalance(nil, tinfo.addr, address)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), bal, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
+
+	dAddr, _, _, err := dapp.DeployDapp(auth, v2.p.sim, nextVaultAddr)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	beforeExecute := getBalanceERC20(tinfo.c, nextVaultAddr)
+	require.Equal(v2.T(), beforeExecute, deposit)
+
+	dappAbi, err := abi.JSON(strings.NewReader(dapp.DappABI))
+	_, err = runExecuteVault(
+		auth,
+		v2.p.sim,
+		dAddr,
+		tinfo.addr,
+		executeAmount,
+		v2.EtherAddress,
+		v2.packInputData(dappAbi, "simpleCall", v2.EtherAddress),
+		wrapNextVault,
+		[]byte(randomizeTimestamp()),
+	)
+	require.Equal(v2.T(), nil, err)
+	require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, nextVaultAddr))
+}
+
+func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
+	desc := "BNB"
+	tinfo := v2.p.customErc20s[desc]
+	withdraw := big.NewInt(int64(5e18))
+	executeAmount := big.NewInt(int64(1e18))
+	remain := big.NewInt(int64(3e18))
+	srcToken := v2.EtherAddress
+	destToken := tinfo.addr
+	address := crypto.PubkeyToAddress(genesisAcc.PrivateKey.PublicKey)
+	dAddr, _, dappInst, err := dapp.DeployDapp(auth, v2.p.sim, v2.p.vAddr)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, _, err = deposit(v2.p, big.NewInt(int64(5e18)))
+	require.Equal(v2.T(), nil, err)
+	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, withdraw, address)
+	auth.GasLimit = 0
+	_, err = SubmitBurnProof(v2.p.v, auth, proof)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	// must be able to reentrance if enough amount
+	callData, err := buildDataReentranceAttackData(srcToken, executeAmount, destToken, dAddr)
+	require.Equal(v2.T(), nil, err)
+	_, err = dappInst.ReEntranceAttack(auth, destToken, callData)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), bal, remain)
+
+	// reentrance transfer available amount twice must fail
+	callData, err = buildDataReentranceAttackData(srcToken, remain, destToken, dAddr)
+	require.Equal(v2.T(), nil, err)
+	_, err = dappInst.ReEntranceAttack(auth, destToken, callData)
+	require.NotEqual(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), bal, remain)
+	require.Equal(v2.T(), remain, v2.p.getBalance(v2.p.vAddr))
+}
+
 func (v2 *VaulV2TestSuite) TestVaultV2sigToAddress() {
 	timestamp := []byte(randomizeTimestamp())
 	var data32 [32]byte
