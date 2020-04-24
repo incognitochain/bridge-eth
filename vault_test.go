@@ -997,6 +997,37 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 
 }
 
+func TestFixedWithdrawModifiedProod(t *testing.T) {
+	p, comm, err := setupFixedCommittee()
+	desc := "DAI"
+	deposit := big.NewInt(int64(3e17))
+	withdraw := big.NewInt(int64(1e8))
+	// Deposit, must success
+	tinfo := p.customErc20s[desc]
+	_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, deposit)
+	assert.Nil(t, err)
+
+	// wrong meta
+	meta := 98
+	shardID := 1
+	proof := buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, withdraw)
+
+	auth.GasLimit = 0
+	_, err = Withdraw(p.v, auth, proof)
+	assert.NotNil(t, err)
+	p.sim.Commit()
+
+	// wrong shard
+	meta = 97
+	shardID = 2
+	proof = buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, withdraw)
+
+	auth.GasLimit = 0
+	_, err = Withdraw(p.v, auth, proof)
+	assert.NotNil(t, err)
+	p.sim.Commit()
+}
+
 func setupFixedCommittee(accs ...ec.Address) (*Platform, *committees, error) {
 	c := getFixedCommittee()
 	p, err := setup(c.beacons, c.bridges, []int{}, accs...)
