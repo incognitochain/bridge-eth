@@ -301,7 +301,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 			dapp:      dAddr,
 			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
 			vault:     v2.v,
-			timestamp: timestamp,
+			timestamp: []byte(randomizeTimestamp()),
 			iserr:     true,
 		},
 		{
@@ -312,7 +312,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 			dapp:      dAddr,
 			input:     v2.packInputData(dappAbi, "revertCall", destToken),
 			vault:     v2.v,
-			timestamp: timestamp,
+			timestamp: []byte(randomizeTimestamp()),
 			iserr:     true,
 		},
 		{
@@ -323,7 +323,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 			dapp:      dAddr,
 			input:     v2.packInputData(dappAbi, "ReturnAmountWithoutTranfer", destToken),
 			vault:     v2.v,
-			timestamp: timestamp,
+			timestamp: []byte(randomizeTimestamp()),
 			iserr:     true,
 		},
 	}
@@ -418,7 +418,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 			dapp:      dAddr,
 			input:     v2.packInputData(dappAbi, "simpleCall", destToken),
 			vault:     v2.v,
-			timestamp: timestamp,
+			timestamp: []byte(randomizeTimestamp()),
 			iserr:     true,
 		},
 		{
@@ -429,7 +429,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 			dapp:      dAddr,
 			input:     v2.packInputData(dappAbi, "revertCall", destToken),
 			vault:     v2.v,
-			timestamp: timestamp,
+			timestamp: []byte(randomizeTimestamp()),
 			iserr:     true,
 		},
 		{
@@ -440,7 +440,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 			dapp:      dAddr,
 			input:     v2.packInputData(dappAbi, "ReturnAmountWithoutTranfer", destToken),
 			vault:     v2.v,
-			timestamp: timestamp,
+			timestamp: []byte(randomizeTimestamp()),
 			iserr:     true,
 		},
 	}
