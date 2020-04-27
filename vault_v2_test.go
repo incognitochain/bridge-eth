@@ -330,12 +330,14 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 
 	for _, tc := range testCases {
 		beforeExecute := v2.p.getBalance(v2.p.vAddr)
-		_, err = runExecuteVault(auth, v2.p.sim, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
+		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
 		if tc.iserr {
 			require.NotEqual(v2.T(), nil, err)
+			v2.p.sim.Commit()
 			require.Equal(v2.T(), beforeExecute, v2.p.getBalance(v2.p.vAddr))
 		} else {
 			require.Equal(v2.T(), nil, err)
+			v2.p.sim.Commit()
 			require.NotEqual(v2.T(), beforeExecute, v2.p.getBalance(v2.p.vAddr))
 		}
 	}
@@ -447,12 +449,14 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 
 	for _, tc := range testCases {
 		beforeExecute := getBalanceERC20(tinfo.c, v2.p.vAddr)
-		_, err = runExecuteVault(auth, v2.p.sim, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
+		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
 		if tc.iserr {
 			require.NotEqual(v2.T(), nil, err)
+			v2.p.sim.Commit()
 			require.Equal(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
 		} else {
 			require.Equal(v2.T(), nil, err)
+			v2.p.sim.Commit()
 			require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
 		}
 	}
@@ -510,7 +514,6 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	dappAbi, err := abi.JSON(strings.NewReader(dapp.DappABI))
 	_, err = runExecuteVault(
 		auth,
-		v2.p.sim,
 		dAddr,
 		tinfo.addr,
 		executeAmount,
@@ -520,6 +523,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 		[]byte(randomizeTimestamp()),
 	)
 	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
 	require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, nextVaultAddr))
 }
 
@@ -673,7 +677,6 @@ func setupNextVault(
 
 func runExecuteVault(
 	auth *bind.TransactOpts,
-	backend *backends.SimulatedBackend,
 	dapp common.Address,
 	srcToken common.Address,
 	srcQty *big.Int,
@@ -703,7 +706,6 @@ func runExecuteVault(
 	if err != nil {
 		return nil, err
 	}
-	backend.Commit()
 	return tx, err
 }
 
