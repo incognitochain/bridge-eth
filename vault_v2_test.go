@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"strings"
@@ -330,7 +331,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 
 	for _, tc := range testCases {
 		beforeExecute := v2.p.getBalance(v2.p.vAddr)
-		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
+		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp, genesisAcc.PrivateKey)
 		if tc.iserr {
 			require.NotEqual(v2.T(), nil, err)
 			v2.p.sim.Commit()
@@ -449,7 +450,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 
 	for _, tc := range testCases {
 		beforeExecute := getBalanceERC20(tinfo.c, v2.p.vAddr)
-		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp)
+		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp, genesisAcc.PrivateKey)
 		if tc.iserr {
 			require.NotEqual(v2.T(), nil, err)
 			v2.p.sim.Commit()
@@ -521,6 +522,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 		v2.packInputData(dappAbi, "simpleCall", v2.EtherAddress),
 		wrapNextVault,
 		[]byte(randomizeTimestamp()),
+		genesisAcc.PrivateKey,
 	)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
@@ -684,12 +686,13 @@ func runExecuteVault(
 	input []byte,
 	vault *vault.Vault,
 	timestamp []byte,
+	signer *ecdsa.PrivateKey,
 ) (*types.Transaction, error) {
 	tempData := append(dapp[:], input...)
 	tempData1 := append(tempData, timestamp...)
 	tempData2 := append(tempData1, common.LeftPadBytes(srcQty.Bytes(), 32)...)
 	data := rawsha3(tempData2)
-	signBytes, err := crypto.Sign(data, genesisAcc.PrivateKey)
+	signBytes, err := crypto.Sign(data, signer)
 	if err != nil {
 		return nil, err
 	}

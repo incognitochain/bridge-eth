@@ -1,12 +1,13 @@
 package main
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -53,6 +54,12 @@ func (v2 *KyberTestSuite) SetupSuite() {
 	v2.EthPrivateKey = "1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61"
 	v2.EthHost = "http://localhost:8545"
 	var err error
+	fmt.Println("Pulling image if not exist, please wait...")
+	// remove container if already running
+	exec.Command("/bin/sh", "-c", "docker rm -f kybertrade").Output()
+	_, err = exec.Command("/bin/sh", "-c", "docker run -d -p 8545:8545 --name kybertrade bomtb/kybertrade").Output()
+	require.Equal(v2.T(), nil, err)
+	time.Sleep(10 * time.Second)
 	ETHPrivKey, ETHClient, err := ethInstance(v2.EthPrivateKey, v2.EthHost)
 	require.Equal(v2.T(), nil, err)
 	v2.ETHClient = ETHClient
@@ -80,6 +87,8 @@ func (v2 *KyberTestSuite) SetupSuite() {
 
 func (v2 *KyberTestSuite) TearDownSuite() {
 	fmt.Println("Tearing down the suite...")
+	_, err := exec.Command("/bin/sh", "-c", "docker rm -f kybertrade").Output()
+	require.Equal(v2.T(), nil, err)
 }
 
 func (v2 *KyberTestSuite) SetupTest() {
@@ -104,14 +113,13 @@ func (v2 *KyberTestSuite) TestKyberTrade() {
 	v2.auth.Value = deposit
 	address := crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey)
 	_, err := v2.v.Deposit(v2.auth, "")
-	bal, err := v2.ETHClient.BalanceAt(context.Background(), v2.VaultAddress, nil)
 	require.Equal(v2.T(), nil, err)
-	require.Equal(v2.T(), deposit, bal)
+	v2.auth.Value = big.NewInt(0)
 	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
 	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
 	require.Equal(v2.T(), nil, err)
 
-	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("Eth deposited: ", bal)
 
@@ -140,14 +148,13 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	v2.auth.Value = deposit
 	address := crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey)
 	_, err := v2.v.Deposit(v2.auth, "")
-	bal, err := v2.ETHClient.BalanceAt(context.Background(), v2.VaultAddress, nil)
 	require.Equal(v2.T(), nil, err)
-	require.Equal(v2.T(), deposit, bal)
+	v2.auth.Value = big.NewInt(0)
 	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
 	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
 	require.Equal(v2.T(), nil, err)
 
-	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("Eth deposited: ", bal)
 
@@ -162,7 +169,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 	expectRate := v2.getExpectedRate(srcToken, destToken, deposit)
 	input, _ := tradeAbi.Pack("trade", srcToken, deposit, destToken, expectRate)
-	_, err = runExecuteVault(v2.auth, v2.KyberProxy, srcToken, tradeamount, destToken, input, v2.v, []byte(randomizeTimestamp()))
+	_, err = runExecuteVault(v2.auth, v2.KyberProxy, srcToken, tradeamount, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
 	require.NotEqual(v2.T(), nil, err)
 
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
@@ -172,12 +179,13 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	// Trade with minconversionRate larger than expecRate
 	expectRate = v2.getExpectedRate(srcToken, destToken, tradeamount)
 	input, _ = tradeAbi.Pack("trade", srcToken, tradeamount, destToken, big.NewInt(0).Add(expectRate, big.NewInt(int64(1))))
-	_, err = runExecuteVault(v2.auth, v2.KyberProxy, srcToken, tradeamount, destToken, input, v2.v, []byte(randomizeTimestamp()))
+	_, err = runExecuteVault(v2.auth, v2.KyberProxy, srcToken, tradeamount, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
 	require.NotEqual(v2.T(), nil, err)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("kbn traded with wrong minconversionRate: ", bal)
 }
+
 func (v2 *KyberTestSuite) getExpectedRate(
 	srcToken common.Address,
 	destToken common.Address,
@@ -191,10 +199,8 @@ func (v2 *KyberTestSuite) getExpectedRate(
 	}
 	c, err := kbntrade.NewKbntrade(v2.KyberProxy, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
-	expectRate, slippageRate, err := c.GetConversionRates(nil, srcToken, srcQty, destToken)
+	expectRate, _, err := c.GetConversionRates(nil, srcToken, srcQty, destToken)
 	require.Equal(v2.T(), nil, err)
-	fmt.Printf("slippageRate value: %d\n", slippageRate)
-	fmt.Printf("expectRate value: %d\n", expectRate)
 	return expectRate
 }
 
@@ -206,13 +212,9 @@ func (v2 *KyberTestSuite) executeWithKyber(
 	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 	expectRate := v2.getExpectedRate(srcToken, destToken, srcQty)
 	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectRate)
-	tx, err := runExecuteVault(v2.auth, v2.KyberProxy, srcToken, srcQty, destToken, input, v2.v, []byte(randomizeTimestamp()))
+	tx, err := runExecuteVault(v2.auth, v2.KyberProxy, srcToken, srcQty, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
 	require.Equal(v2.T(), nil, err)
-	txHash := tx.Hash()
-	if err := wait(v2.ETHClient, txHash); err != nil {
-		require.Equal(v2.T(), nil, err)
-	}
-	fmt.Printf("Kyber trade executed , txHash: %x\n", txHash[:])
+	fmt.Printf("Kyber trade executed , txHash: %x\n", tx.Hash())
 }
 
 func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethclient.Client, error) {
