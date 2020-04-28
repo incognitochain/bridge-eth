@@ -184,6 +184,13 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("kbn traded with wrong minconversionRate: ", bal)
+
+	// call kyberproxy to trade directly
+	v2.auth.Value = deposit
+	expectRate = v2.getExpectedRate(srcToken, destToken, tradeamount)
+	kybertrade, err := kbntrade.NewKbntrade(v2.KyberProxy, v2.ETHClient)
+	_, err = kybertrade.Trade(v2.auth, srcToken, deposit, destToken, expectRate)
+	require.NotEqual(v2.T(), nil, err)
 }
 
 func (v2 *KyberTestSuite) getExpectedRate(
