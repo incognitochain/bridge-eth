@@ -534,7 +534,6 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
 	tinfo := v2.p.customErc20s[desc]
 	withdraw := big.NewInt(int64(5e18))
 	executeAmount := big.NewInt(int64(1e18))
-	remain := big.NewInt(int64(3e18))
 	srcToken := v2.EtherAddress
 	destToken := tinfo.addr
 	address := crypto.PubkeyToAddress(genesisAcc.PrivateKey.PublicKey)
@@ -549,26 +548,26 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
-	// must be able to reentrance if enough amount
+	// must not be able to reentrance in any case
 	callData, err := buildDataReentranceAttackData(srcToken, executeAmount, destToken, dAddr)
 	require.Equal(v2.T(), nil, err)
 	_, err = dappInst.ReEntranceAttack(auth, destToken, callData)
-	require.Equal(v2.T(), nil, err)
+	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
-	require.Equal(v2.T(), bal, remain)
+	require.Equal(v2.T(), bal, withdraw)
 
 	// reentrance transfer available amount twice must fail
-	callData, err = buildDataReentranceAttackData(srcToken, remain, destToken, dAddr)
+	callData, err = buildDataReentranceAttackData(srcToken, executeAmount, destToken, dAddr)
 	require.Equal(v2.T(), nil, err)
 	_, err = dappInst.ReEntranceAttack(auth, destToken, callData)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
-	require.Equal(v2.T(), bal, remain)
-	require.Equal(v2.T(), remain, v2.p.getBalance(v2.p.vAddr))
+	require.Equal(v2.T(), bal, withdraw)
+	require.Equal(v2.T(), withdraw, v2.p.getBalance(v2.p.vAddr))
 }
 
 func (v2 *VaulV2TestSuite) TestVaultV2sigToAddress() {

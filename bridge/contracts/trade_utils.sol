@@ -1,4 +1,4 @@
-pragma solidity >= 0.5.12;
+pragma solidity ^0.6.6;
 
 import './IERC20.sol';
 
@@ -10,9 +10,6 @@ contract TradeUtils {
 	    require(msg.sender == incognitoSmartContract);
 	    _;
 	}
-
-	// fallback function is used to receive eth.
-	function() external payable {}
 
 	function balanceOf(IERC20 token) internal view returns (uint256) {
 		if (token == ETH_CONTRACT_ADDRESS) {
@@ -45,12 +42,12 @@ contract TradeUtils {
      * This check is needed to fix https://github.com/ethereum/solidity/issues/4116
      * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
      */
-    function checkSuccess() private pure returns (bool) {
+    function checkSuccess() internal pure returns (bool) {
 		uint256 returnValue = 0;
 
 		assembly {
 			// check number of bytes returned from last function call
-			switch returndatasize
+			switch returndatasize()
 
 			// no bytes returned: assume success
 			case 0x0 {

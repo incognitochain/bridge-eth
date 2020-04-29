@@ -1,19 +1,16 @@
-pragma solidity >=0.5.12;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.6.6;
 
-import "@0x/contracts-exchange-forwarder/contracts/src/interfaces/IForwarder.sol";
-import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 import "./trade_utils.sol";
 import "./IERC20.sol";
 
-contract WETH {
-    function withdraw(uint256 wad) public;
+interface WETH {
+    function withdraw(uint256 wad) external;
 }
 
 contract ZRXTrade is TradeUtils {
-    using LibBytes for bytes;
-
-    function() external payable {}
+    
+    // Reciever function which allows transfer eth.
+    receive() external payable {}
 
     address zeroProxy;
     address wETH;
@@ -39,8 +36,7 @@ contract ZRXTrade is TradeUtils {
         approve(srcToken, zeroProxy, amount);
 
         // trigger 0x forwarder.
-        IForwarder forwarder = IForwarder(_forwarder);
-        (bool success, ) = address(forwarder).call.value(msg.value)(
+        (bool success, ) = _forwarder.call{value: msg.value}(
             callDataHex
         );
         require(success);
