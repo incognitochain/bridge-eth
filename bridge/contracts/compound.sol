@@ -1,4 +1,4 @@
-pragma solidity >= 0.5.12;
+pragma solidity ^0.6.6;
 
 import './IERC20.sol';
 
@@ -10,9 +10,6 @@ contract TradeUtilsCompound {
 	    require(msg.sender == incognitoSmartContract);
 	    _;
 	}
-
-	// fallback function is used to receive eth.
-	function() external payable {}
 
 	function balanceOf(IERC20 token) internal view returns (uint256) {
 		if (token == ETH_CONTRACT_ADDRESS) {
@@ -50,7 +47,7 @@ contract TradeUtilsCompound {
 
 		assembly {
 			// check number of bytes returned from last function call
-			switch returndatasize
+			switch returndatasize()
 
 			// no bytes returned: assume success
 			case 0x0 {
@@ -79,15 +76,15 @@ interface CTokenInterface {
     function borrow(uint borrowAmount) external returns (uint);
 }
 
-contract CEther is CTokenInterface {
+interface CEther is CTokenInterface {
     function mint() external payable;
     function repayBorrow() external payable;
     function repayBorrowBehalf(address borrower) external;
     function liquidateBorrow(address borrower, CTokenInterface cTokenCollateral) external payable;
 }
 
-contract CErc20 is CTokenInterface {
-    address public underlying;
+interface CErc20 is CTokenInterface {
+    function underlying() external returns(address);
     function mint(uint mintAmount) external returns (uint);
     function repayBorrow(uint repayAmount) external returns (uint);
     function repayBorrowBehalf(address borrower, uint repayAmount) external returns (uint);
@@ -106,8 +103,8 @@ contract CompoundAgentLogic is TradeUtilsCompound {
 
     constructor() public {}
 
-    // fallback function which allows transfer eth.
-    function() external payable {}
+    // receive function which allows transfer eth.
+    receive() external payable {}
 
     /**
      * @dev Call mint func to compound 
@@ -118,7 +115,7 @@ contract CompoundAgentLogic is TradeUtilsCompound {
     function mint(address cToken, uint amount) external payable returns (address, uint) {
         uint amountRecieved = balanceOf(IERC20(cToken));
         if(cToken == address(cEther)) {
-            CEther(cToken).mint.value(msg.value)();
+            CEther(cToken).mint{value: msg.value}();
         } else {
             approve(IERC20(CErc20(cToken).underlying()), cToken, amount);
             require(CErc20(cToken).mint(amount) == 0);
@@ -217,7 +214,7 @@ contract CompoundAgentLogic is TradeUtilsCompound {
      */
     function repayBorrow(address cToken, uint amount) external payable returns (address, uint) {
         if(cToken == address(cEther)) {
-            CEther(cToken).repayBorrow.value(msg.value)();
+            CEther(cToken).repayBorrow{value: msg.value}();
         } else {
             approve(IERC20(CErc20(cToken).underlying()), cToken, amount);
             require(CErc20(cToken).repayBorrow(amount) == 0);
@@ -240,7 +237,7 @@ contract CompoundAgentLogic is TradeUtilsCompound {
     function liquidateBorrow(address cToken, address borrower, uint repayAmount, address cTokenCollateral) external payable returns (address, uint) {
         uint amountRecieved = balanceOf(IERC20(cTokenCollateral));
         if(cToken == address(cEther)) {
-            CEther(cToken).liquidateBorrow.value(msg.value)(borrower, CTokenInterface(cTokenCollateral));
+            CEther(cToken).liquidateBorrow{value: msg.value}(borrower, CTokenInterface(cTokenCollateral));
         } else {
             approve(IERC20(CErc20(cToken).underlying()), cToken, repayAmount);
             require(CErc20(cToken).liquidateBorrow(borrower, repayAmount, CTokenInterface(cTokenCollateral)) == 0);
@@ -266,8 +263,8 @@ contract CompoundAgent {
         compoundAgentLogic = _compoundAgentLogic;
     }
     
-    // fallback function which allows transfer eth.
-    function() external payable {}
+    // Receive function which allows transfer eth.
+    receive() external payable {}
     
     /**
      * @notice External method to delegate execution to another contract
@@ -279,7 +276,7 @@ contract CompoundAgent {
         (bool success, bytes memory returnData) = compoundAgentLogic.delegatecall(data);
         assembly {
             if eq(success, 0) {
-                revert(add(returnData, 0x20), returndatasize)
+                revert(add(returnData, 0x20), returndatasize())
             }
         }
         
@@ -378,7 +375,7 @@ contract CompoundProxy is TradeUtils {
             srcToken.transfer(agent, amount);
             checkSuccess();
         }
-        (bool success, bytes memory result) = agent.call.value(msg.value)(callData);
+        (bool success, bytes memory result) = agent.call{value: msg.value}(callData);
         require(success);
         bytes memory decodeResult = abi.decode(result, (bytes));
         
@@ -405,7 +402,7 @@ contract CompoundProxy is TradeUtils {
                 checkSuccess();
             }
         }
-        (bool success, bytes memory result) = agent.call.value(msg.value)(callData);
+        (bool success, bytes memory result) = agent.call{value: msg.value}(callData);
         require(success);
         bytes memory decodeResult = abi.decode(result, (bytes));
         

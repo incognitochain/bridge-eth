@@ -254,7 +254,8 @@ func (tradingSuite *CompoundTradingTestSuite) executeWith0xCompound(
 	timestamp := []byte(randomizeTimestamp())
 	tempData := append(tradingSuite.ZRXTradeDeployedAddr[:], input...)
 	tempData1 := append(tempData, timestamp...)
-	data := rawsha3(tempData1)
+	tempData2 := append(tempData1, common.LeftPadBytes(srcQty.Bytes(), 32)...)
+	data := rawsha3(tempData2)
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 
 	tx, err := c.Execute(
@@ -322,6 +323,7 @@ func (tradingSuite *CompoundTradingTestSuite) executeMultiCollateralCompound(
 	// auth.GasLimit = 2500000
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
+
 	sourceAddresses := make([]common.Address, 0)
 	for _, p := range srcTokenIDStrs {
 		sourceAddresses = append(sourceAddresses, common.HexToAddress(p))
@@ -330,6 +332,11 @@ func (tradingSuite *CompoundTradingTestSuite) executeMultiCollateralCompound(
 	for _, p := range destTokenIDStrs {
 		destAddresses = append(destAddresses, common.HexToAddress(p))
 	}
+	amounts := make([]byte, 0)
+	for i := range srcQties {
+		amounts = append(amounts, common.LeftPadBytes(srcQties[i].Bytes(), 32)...)
+	}
+
 	timestamp := []byte(randomizeTimestamp())
 	tempData1 := append(inputAgent, timestamp...)
 	data := rawsha3(tempData1)
@@ -344,7 +351,8 @@ func (tradingSuite *CompoundTradingTestSuite) executeMultiCollateralCompound(
 	inputProxy, _ := compounProxyAbi.Pack("executeMulti", sourceAddresses, srcQties, inputAgent, timestamp, signBytes)
 	tempData := append(tradingSuite.CompoundDeployedAddr[:], inputProxy...)
 	tempData1 = append(tempData, timestamp...)
-	data = rawsha3(tempData1)
+	tempData2 := append(tempData1, amounts...)
+	data = rawsha3(tempData2)
 	signBytes, _ = crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 
 	tx, err := c.ExecuteMulti(
