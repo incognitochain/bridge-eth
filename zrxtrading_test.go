@@ -31,13 +31,13 @@ type ZRXTradingTestSuite struct {
 
 	ZRXTradeDeployedAddr common.Address
 
-	ZRXContractAddr   common.Address
-	WETHAddr          common.Address
+	ZRXContractAddr common.Address
+	WETHAddr        common.Address
 
 	Quote0xUrl string
 
 	// token amounts for tests
-	DepositingEther float64
+	DepositingEther      float64
 	DAIBalanceAfterStep1 *big.Int
 	SAIBalanceAfterStep2 *big.Int
 }
@@ -56,7 +56,7 @@ func (tradingSuite *ZRXTradingTestSuite) SetupSuite() {
 	tradingSuite.ZRXContractAddr = common.HexToAddress("0xf1ec01d6236d3cd881a0bf0130ea25fe4234003e")
 	tradingSuite.WETHAddr = common.HexToAddress("0xd0a1e359811322d97991e03f863a0c30c2cf029c")
 
-	tradingSuite.ZRXTradeDeployedAddr = common.HexToAddress("0x0F248fA4c3F93e495bff1FfD4Eed4BA1D9911654")
+	tradingSuite.ZRXTradeDeployedAddr = common.HexToAddress("0x7f549812dA3604fE81B896B033DF0874B2AACCb6")
 
 	tradingSuite.Quote0xUrl = "https://kovan.api.0x.org/swap/v0/quote?sellToken=%v&buyToken=%v&sellAmount=%v"
 
@@ -118,7 +118,8 @@ func (tradingSuite *ZRXTradingTestSuite) executeWith0x(
 	timestamp := []byte(randomizeTimestamp())
 	tempData := append(tradingSuite.ZRXTradeDeployedAddr[:], input...)
 	tempData1 := append(tempData, timestamp...)
-	data := rawsha3(tempData1)
+	tempData2 := append(tempData1, common.LeftPadBytes(srcQty.Bytes(), 32)...)
+	data := rawsha3(tempData2)
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 
 	tx, err := c.Execute(

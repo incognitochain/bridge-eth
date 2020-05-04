@@ -1,4 +1,4 @@
-pragma solidity >=0.5.12;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
@@ -38,30 +38,30 @@ library SafeMath {
  * @dev Interface of the contract capable of checking if an instruction is
  * confirmed over at Incognito Chain
  */
-contract Incognito {
+interface Incognito {
     function instructionApproved(
         bool,
         bytes32,
         uint,
-        bytes32[] memory,
-        bool[] memory,
+        bytes32[] calldata,
+        bool[] calldata,
         bytes32,
         bytes32,
-        uint[] memory,
-        uint8[] memory,
-        bytes32[] memory,
-        bytes32[] memory
-    ) public view returns (bool);
+        uint[] calldata,
+        uint8[] calldata,
+        bytes32[] calldata,
+        bytes32[] calldata
+    ) external view returns (bool);
 }
 
 /**
  * @dev Interface of the previous Vault contract to query burn proof status
  */
-contract Withdrawable {
-    function isWithdrawed(bytes32) public view returns (bool);
-    function isSigDataUsed(bytes32) public view returns (bool);
-    function getDepositedBalance(address, address) public view returns (uint);
-    function updateAssets(address[] memory, uint[] memory) public returns (bool); 
+interface Withdrawable {
+    function isWithdrawed(bytes32)  external view returns (bool);
+    function isSigDataUsed(bytes32)  external view returns (bool);
+    function getDepositedBalance(address, address)  external view returns (uint);
+    function updateAssets(address[] calldata, uint[] calldata) external returns (bool); 
 }
 
 /**
@@ -77,11 +77,10 @@ contract Vault is AdminPausable {
     // address => token => amount
     mapping(address => mapping(address => uint)) public withdrawRequests;
     mapping(address => uint) public totalDepositedToSCAmount;
-    mapping(address => mapping(address => bool)) migration;
-
     Incognito public incognito;
     Withdrawable public prevVault;
     address payable public newVault;
+    bool public notEntered = true;
 
     event Deposit(address token, string incognitoAddress, uint amount);
     event Withdraw(address token, address to, uint amount);
@@ -94,9 +93,30 @@ contract Vault is AdminPausable {
      * modifier for contract version 
      */
      modifier onlyPreVault(){
-        require(address(prevVault) != address(0x0) && msg.sender == address(prevVault));
+        require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), "Only preVault authored to call!");
         _;
      }
+     
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and make it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        // On the first call to nonReentrant, notEntered will be true
+        require(notEntered, "ReentrancyGuard: reentrant call");
+
+        // Any calls to nonReentrant after this point will fail
+        notEntered = false;
+
+        _;
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        notEntered = true;
+    } 
 
     /**
      * @dev Creates new Vault to hold assets for Incognito Chain
@@ -119,8 +139,7 @@ contract Vault is AdminPausable {
      * @param incognitoAddress: Incognito Address to receive pETH
      */
     function deposit(string memory incognitoAddress) public payable isNotPaused {
-        // require((msg.value + address(this).balance) <= 10 ** 27, "Balance of this contract has been reaching to its uint's maximum.");
-        require(address(this).balance <= 10 ** 27);
+        require(address(this).balance <= 10 ** 27, "Balance of this contract has been reaching to its uint's maximum!");
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
 
@@ -175,7 +194,6 @@ contract Vault is AdminPausable {
      * @return shard: ID of the Incognito shard containing the instruction, must be 1
      * @return token: ETH address of the token contract (0x0 for ETH)
      * @return to: ETH address of the receiver of the token
-     * @return amount: of tokens to return
      */
     function parseBurnInst(bytes memory inst) public pure returns (uint8, uint8, address, address payable, uint) {
         uint8 meta = uint8(inst[0]);
@@ -214,7 +232,7 @@ contract Vault is AdminPausable {
         bytes32 instHash = keccak256(inst);
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights[0]));
         bytes32 bridgeInstHash = keccak256(abi.encodePacked(inst, heights[1]));
-        require(!isWithdrawed(instHash));
+        require(!isWithdrawed(instHash), "The instHash already used!");
 
         // Verify instruction on beacon
         require(incognito.instructionApproved(
@@ -277,7 +295,7 @@ contract Vault is AdminPausable {
         uint8[][2] memory sigVs,
         bytes32[][2] memory sigRs,
         bytes32[][2] memory sigSs
-    ) public isNotPaused {
+    ) public isNotPaused nonReentrant {
         (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
         require(meta == 72 && shard == 1); // Check instruction type
 
@@ -307,7 +325,8 @@ contract Vault is AdminPausable {
 
         // Send and notify
         if (token == ETH_TOKEN) {
-            to.transfer(burned);
+          (bool success, ) =  to.call{value: burned}("");
+          require(success);
         } else {
             IERC20(token).transfer(to, burned);
             require(checkSuccess());
@@ -345,7 +364,7 @@ contract Vault is AdminPausable {
         uint8[][2] memory sigVs,
         bytes32[][2] memory sigRs,
         bytes32[][2] memory sigSs
-    ) public isNotPaused {
+    ) public isNotPaused nonReentrant {
         (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
         require(meta == 97 && shard == 1); // Check instruction type
         // Check if balance is enough
@@ -402,11 +421,6 @@ contract Vault is AdminPausable {
     function isSigDataUsed(bytes32 hash) public view returns(bool) {
         if (sigDataUsed[hash]) {
             return true;
-        // TODO: check previous signature    
-        // } else if (address(prevVault) == address(0)) {
-        //     return false;
-        // }
-        // return prevVault.isSigDataUsed(hash);
         }
         return false;
     }
@@ -426,14 +440,10 @@ contract Vault is AdminPausable {
         uint amount,
         bytes memory signData,
         bytes memory timestamp
-    ) public isNotPaused {
+    ) public isNotPaused nonReentrant {
         // verify owner signs data
-        address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp), signData);
-        // TODO: check the balance of previous version 
-        // if(address(prevVault) != address(0) && !migration[verifier][token]) {
-        //     withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeAdd(prevVault.getDepositedBalance(token, verifier));
-        //     migration[verifier][token] = true;
-        // }
+        address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp, amount), signData);
+        
         require(withdrawRequests[verifier][token] >= amount);
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
@@ -468,15 +478,10 @@ contract Vault is AdminPausable {
         bytes memory callData,
         bytes memory timestamp,
         bytes memory signData
-    ) public payable isNotPaused {
+    ) public payable isNotPaused nonReentrant {
         //verify ower signs data from input
-        address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp), signData);
-         
-        // TODO: check the balance of previous version 
-        // if(address(prevVault) != address(0) && !migration[verifier][token]) {
-        //     withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeAdd(prevVault.getDepositedBalance(token, verifier));
-        //     migration[verifier][token] = true;
-        // }
+        address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amount), signData);
+        
         require(withdrawRequests[verifier][token] >= amount);
         require(token != recipientToken);
 
@@ -513,19 +518,13 @@ contract Vault is AdminPausable {
         bytes memory callData,
         bytes memory timestamp,
         bytes memory signData
-    ) public payable isNotPaused {
+    ) public payable isNotPaused nonReentrant {
         require(tokens.length == amounts.length && recipientTokens.length > 0);
         //verify ower signs data from input
-        address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp), signData);
+        address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amounts), signData);
         // define number of eth spent for forwarder.
         uint ethAmount = msg.value;
         for(uint i = 0; i < tokens.length; i++){
-            // TODO: check the balance of previous version
-            // if(address(prevVault) != address(0) && !migration[verifier][tokens[i]]) {
-            //     withdrawRequests[verifier][tokens[i]] = withdrawRequests[verifier][tokens[i]].safeAdd(prevVault.getDepositedBalance(tokens[i], verifier));
-            //     migration[verifier][tokens[i]] = true;
-            // }
-            
             // check balance is enough or not
             require(withdrawRequests[verifier][tokens[i]] >= amounts[i]);
     
@@ -576,7 +575,7 @@ contract Vault is AdminPausable {
             balanceBeforeTrade = balanceBeforeTrade.safeSub(msg.value);
         }
         require(address(this).balance >= ethAmount);
-        (bool success, bytes memory result) = exchangeAddress.call.value(ethAmount)(callData);
+        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
         require(success);
 
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
@@ -590,7 +589,7 @@ contract Vault is AdminPausable {
      */
     function callExtFuncMulti(uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (address[] memory, uint[] memory) {
         require(address(this).balance >= ethAmount);
-        (bool success, bytes memory result) = exchangeAddress.call.value(ethAmount)(callData);
+        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
         require(success);
 
         return abi.decode(result, (address[], uint[]));
@@ -694,9 +693,9 @@ contract Vault is AdminPausable {
     }
 
     /**
-     * @dev Payable Fallback function to receive Ether from oldVault when migrating
+     * @dev Payable receive function to receive Ether from oldVault when migrating
      */
-    function () external payable {}
+    receive() external payable {}
 
     /**
      * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
@@ -705,10 +704,9 @@ contract Vault is AdminPausable {
      */
     function checkSuccess() private pure returns (bool) {
 		uint256 returnValue = 0;
-
 		assembly {
 			// check number of bytes returned from last function call
-			switch returndatasize
+			switch returndatasize()
 
 			// no bytes returned: assume success
 			case 0x0 {

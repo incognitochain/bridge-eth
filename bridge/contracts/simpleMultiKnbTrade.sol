@@ -1,14 +1,14 @@
-pragma solidity >=0.5.12;
+pragma solidity ^0.6.6;
 
 import './trade_utils.sol';
 import './IERC20.sol';
 
-contract KyberNetwork {
-    function trade(IERC20 src, uint srcAmount, IERC20 dest, address destAddress, uint maxDestAmount, uint minConversionRate, address walletId) public payable returns(uint);
-    function swapTokenToToken(IERC20 src, uint srcAmount, IERC20 dest, uint minConversionRate) public returns(uint);
-    function swapEtherToToken(IERC20 token, uint minConversionRate) public payable returns(uint);
-    function swapTokenToEther(IERC20 token, uint srcAmount, uint minConversionRate) public returns(uint);
-    function getExpectedRate(IERC20 src, IERC20 dest, uint srcQty) public view returns(uint expectedRate, uint slippageRate);
+interface KyberNetwork {
+    function trade(IERC20 src, uint srcAmount, IERC20 dest, address destAddress, uint maxDestAmount, uint minConversionRate, address walletId) external payable returns(uint);
+    function swapTokenToToken(IERC20 src, uint srcAmount, IERC20 dest, uint minConversionRate) external returns(uint);
+    function swapEtherToToken(IERC20 token, uint minConversionRate) external payable returns(uint);
+    function swapTokenToEther(IERC20 token, uint srcAmount, uint minConversionRate) external returns(uint);
+    function getExpectedRate(IERC20 src, IERC20 dest, uint srcQty) external view returns(uint expectedRate, uint slippageRate);
 }
 
 contract KBNMultiTrade is TradeUtils {
@@ -26,8 +26,8 @@ contract KBNMultiTrade is TradeUtils {
         incognitoSmartContract = _incognitoSmartContract;
     }
 
-    // fallback function which allows transfer eth.
-    function() external payable {}
+    // Reciever function which allows transfer eth.
+    receive() external payable {}
 
     /**
      * @dev Gets the conversion rate for the destToken given the srcQty.
@@ -67,7 +67,7 @@ contract KBNMultiTrade is TradeUtils {
     function ethToToken(IERC20 token, uint srcQty, uint minConversionRate) internal returns (uint) {
         // Get the minimum conversion rate
         require(address(this).balance >= srcQty);
-        return kyberNetworkProxyContract.swapEtherToToken.value(srcQty)(token, minConversionRate);
+        return kyberNetworkProxyContract.swapEtherToToken{value: srcQty}(token, minConversionRate);
     }
 
     function tokenToEth(IERC20 token, uint amount, uint minConversionRate) internal returns (uint) {

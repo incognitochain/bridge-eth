@@ -99,7 +99,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
-	tradingSuite.VaultAddr = common.HexToAddress("0x334DD81BAE629C6d386f6E5EFf57523e3aB6c0EF")
+	tradingSuite.VaultAddr = common.HexToAddress("0xF4667fe380179fB66FF5A2B4269c37513275BfD6")
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -406,7 +406,8 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	timestamp := []byte(randomizeTimestamp())
 	tempData := append([]byte(tradingSuite.IncPaymentAddrStr), token[:]...)
 	tempData1 := append(tempData, timestamp...)
-	data := rawsha3(tempData1)
+	tempData2 := append(tempData1, common.LeftPadBytes(amount.Bytes(), 32)...)
+	data := rawsha3(tempData2)
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 	auth.GasPrice = big.NewInt(50000000000)
 	auth.GasLimit = 2000000
