@@ -84,6 +84,7 @@ contract Vault is AdminPausable {
 
     // error code 
     enum Errors {
+        EMPTY,
         ONLY_PREVAULT,
         NO_REENTRANCE,
         MAX_UINT_REACHED,
