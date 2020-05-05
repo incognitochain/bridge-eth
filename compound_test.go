@@ -200,7 +200,8 @@ func (tradingSuite *CompoundTradingTestSuite) callVault(
 	inputProxy, _ := compounProxyAbi.Pack("execute", srcToken, srcQty, inputAgent, timestamp, signBytes)
 	tempData = append(tradingSuite.CompoundDeployedAddr[:], inputProxy...)
 	tempData1 = append(tempData, timestamp...)
-	data = rawsha3(tempData1)
+	tempData2 := append(tempData1, common.LeftPadBytes(srcQty.Bytes(), 32)...)
+	data = rawsha3(tempData2)
 	// sign for vault verification
 	signBytes, _ = crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 	// // Get contract instance
