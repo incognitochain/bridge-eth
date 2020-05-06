@@ -374,6 +374,12 @@ func (tradingSuite *CompoundTradingTestSuite) executeMultiCollateralCompound(
 	fmt.Printf("Multi collaterals executed , txHash: %x\n", txHash[:])
 }
 
+func (tradingSuite *CompoundTradingTestSuite) getAgent(userAddress common.Address) (common.Address, error) {
+	compound, err := compound.NewCompound(tradingSuite.CompoundDeployedAddr, tradingSuite.ETHClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	return compound.GetAgentAddress(nil, userAddress)
+}
+
 func (tradingSuite *CompoundTradingTestSuite) Test1MintBorrowRedeemCETHbyCompound() {
 	fmt.Println("============ TEST COMPOUND ETHER FOR CETH WITH COMPOUND PROXY ===========")
 	fmt.Println("------------ STEP 0: declaration & initialization --------------")
