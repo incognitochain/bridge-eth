@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -75,11 +76,17 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			}
 
 			// Update
-			_, err = p.v.UpdateIncognitoProxy(bind.NewKeyedTransactor(tc.caller.PrivateKey), acc.Address)
+			txOpt := bind.NewKeyedTransactor(tc.caller.PrivateKey)
+			txOpt.GasLimit = 1000000
+			tx, err := p.v.UpdateIncognitoProxy(txOpt, acc.Address)
 			p.sim.Commit()
 
 			if tc.err {
-				assert.NotNil(t, err)
+				// Check error message != nil
+				receipt, _ := bind.WaitMined(context.Background(), p.sim, tx)
+				reason, err := errorReason(context.Background(), p.sim, tx, receipt.BlockNumber, tc.caller.Address)
+				assert.True(nil, len(reason) > 0)
+				fmt.Println(reason, err)
 			} else {
 				assert.Nil(t, err)
 

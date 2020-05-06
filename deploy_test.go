@@ -98,6 +98,33 @@ func TestSwapBeacon(t *testing.T) {
 	fmt.Printf("swapped, txHash: %x\n", txHash[:])
 }
 
+func TestResendETH(t *testing.T) {
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Enter receiver address here
+	addr := ""
+
+	// Enter nonce here
+	nonce := uint64(0)
+
+	// Enter amount to send here
+	value := big.NewInt(0.1 * params.Ether)
+
+	// Enter gasLimit and gasPrice here
+	gasLimit := uint64(30000)
+	gasPrice := big.NewInt(5000000000) // 5 GWei
+
+	txHash, err := transfer(client, privKey, addr, nonce, value, gasLimit, gasPrice)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("sent, txHash: %s\n", txHash)
+}
+
 func TestMassSend(t *testing.T) {
 	addrs := []string{
 		"0xDF1A9BE4dA9Ed6CDC28bea3c23E81B8a3e4480Ae",
@@ -118,8 +145,11 @@ func TestMassSend(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	value := big.NewInt(0.1 * params.Ether)
+	gasLimit := uint64(30000)
+	gasPrice := big.NewInt(20000000000)
 	for i, addr := range addrs {
-		txHash, err := transfer(client, privKey, addr, nonce+uint64(i))
+		txHash, err := transfer(client, privKey, addr, nonce+uint64(i), value, gasLimit, gasPrice)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -132,11 +162,11 @@ func transfer(
 	privKey *ecdsa.PrivateKey,
 	to string,
 	nonce uint64,
+	value *big.Int,
+	gasLimit uint64,
+	gasPrice *big.Int,
 ) (string, error) {
 	toAddress := common.HexToAddress(to)
-	value := big.NewInt(0.1 * params.Ether)
-	gasLimit := uint64(30000)
-	gasPrice := big.NewInt(20000000000)
 	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, nil)
 
 	chainID, err := client.NetworkID(context.Background())
@@ -196,21 +226,97 @@ func TestDeposit(t *testing.T) {
 
 	// Get contract instance
 	vaultAddr := common.HexToAddress(VaultAddress)
-	c, err := vault.NewVault(vaultAddr, client)
+	v, err := vault.NewVault(vaultAddr, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	amount := big.NewInt(0.123 * params.Ether)
+	_, err = depositDetail(
+		privKey,
+		v,
+		amount,
+		IncPaymentAddr,
+		0,
+		0,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRedeposit(t *testing.T) {
+	// Set up client
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Enter nonce here
+	nonce := uint64(0)
+
+	// Enter amount here
+	amount := big.NewInt(int64(0))
+
+	// Enter user's incognito address here
+	incPaymentAddr := ""
+
+	// Enter gasPrice here
+	gasPrice := big.NewInt(5000000000) // 5 GWei
+
+	// Get contract instance
+	vaultAddr := common.HexToAddress(VaultAddress)
+	v, err := vault.NewVault(vaultAddr, client)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Deposit
-	auth := bind.NewKeyedTransactor(privKey)
-	// auth.GasPrice = big.NewInt(20000000000)
-	auth.Value = big.NewInt(0.123 * params.Ether)
-	tx, err := c.Deposit(auth, IncPaymentAddr)
+	_, err = depositDetail(
+		privKey,
+		v,
+		amount,
+		incPaymentAddr,
+		nonce,
+		0,
+		gasPrice,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func depositDetail(
+	privKey *ecdsa.PrivateKey,
+	v *vault.Vault,
+	amount *big.Int,
+	incPaymentAddr string,
+	nonce uint64,
+	gasLimit uint64,
+	gasPrice *big.Int,
+) (*types.Transaction, error) {
+	auth := bind.NewKeyedTransactor(privKey)
+	auth.Value = amount
+	if gasLimit > 0 {
+		auth.GasLimit = gasLimit
+	}
+	if gasPrice != nil {
+		auth.GasPrice = gasPrice
+	}
+	if nonce > 0 {
+		auth.Nonce = big.NewInt(int64(nonce))
+	}
+
+	// Deposit
+	tx, err := v.Deposit(auth, incPaymentAddr)
+	if err != nil {
+		return nil, err
+	}
 	txHash := tx.Hash()
 	fmt.Printf("deposited, txHash: %x\n", txHash[:])
+	return tx, nil
 }
 
 // func TestGetCommittee(t *testing.T) {
