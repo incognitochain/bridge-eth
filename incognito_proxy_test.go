@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -16,6 +17,36 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestCompareCommittee(t *testing.T) {
+	// // Committee on chain
+	// url := "https://mainnet.incognito.org/fullnode:443"
+	// _, _, err := getCommittee(url)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// Committee on contract
+	committeeIdx := big.NewInt(0)
+	_, c := connectAndInstantiate(t)
+	comm, err := c.inc.GetBeaconCommittee(nil, committeeIdx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Start block: ", comm.StartBlock.String())
+	for _, addr := range comm.Pubkeys {
+		fmt.Printf("beaconOld: %s\n", addr)
+	}
+
+	comm, err = c.inc.GetBridgeCommittee(nil, committeeIdx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Start block: ", comm.StartBlock.String())
+	for _, addr := range comm.Pubkeys {
+		fmt.Printf("bridgeOld: %s\n", addr)
+	}
+}
 
 func TestGetBridgeCommitteeOnChain(t *testing.T) {
 	url := "https://test-node.incognito.org:443"
