@@ -76,6 +76,7 @@ contract Vault is AdminPausable {
     mapping(bytes32 => bool) public sigDataUsed;
     // address => token => amount
     mapping(address => mapping(address => uint)) public withdrawRequests;
+    mapping(address => mapping(address => bool)) public migration;
     mapping(address => uint) public totalDepositedToSCAmount;
     Incognito public incognito;
     Withdrawable public prevVault;
@@ -440,8 +441,10 @@ contract Vault is AdminPausable {
     function isSigDataUsed(bytes32 hash) public view returns(bool) {
         if (sigDataUsed[hash]) {
             return true;
+        } else if (address(prevVault) == address(0)) {
+            return false;
         }
-        return false;
+        return prevVault.isSigDataUsed(hash);
     }
 
     /**
@@ -462,6 +465,9 @@ contract Vault is AdminPausable {
     ) public isNotPaused nonReentrant {
         // verify owner signs data
         address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp, amount), signData);
+        
+        // migrate from preVault
+        migrateBalance(verifier, token);
         
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
@@ -501,6 +507,8 @@ contract Vault is AdminPausable {
         //verify ower signs data from input
         address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amount), signData);
         
+        // migrate from preVault
+        migrateBalance(verifier, token);
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
 
         // update balance of verifier
@@ -543,6 +551,8 @@ contract Vault is AdminPausable {
         // define number of eth spent for forwarder.
         uint ethAmount = msg.value;
         for(uint i = 0; i < tokens.length; i++){
+            // migrate from preVault
+            migrateBalance(verifier, tokens[i]);
             // check balance is enough or not
             require(withdrawRequests[verifier][tokens[i]] >= amounts[i], errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
     
@@ -625,6 +635,17 @@ contract Vault is AdminPausable {
         
         return verifier;
      }
+     
+    /**
+      * @dev migrate balance from previous vault
+      * Note: uncomment for next version
+      */ 
+    function migrateBalance(address owner, address token) public nonReentrant {
+        if (address(prevVault) != address(0x0) && !migration[owner][token]) {
+            withdrawRequests[owner][token] = withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
+  	        migration[owner][token] = true;
+  	   }
+    }
     
     /**
      * @dev Get the amount of specific coin for specific wallet
@@ -633,6 +654,9 @@ contract Vault is AdminPausable {
         address token,
         address owner
     ) public view returns (uint) {
+        if (address(prevVault) != address(0x0) && !migration[owner][token]) {
+ 	        return withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
+ 	    }
         return withdrawRequests[owner][token];
     }
 
