@@ -85,7 +85,6 @@ contract Vault is AdminPausable {
     // error code 
     enum Errors {
         EMPTY,
-        ONLY_PREVAULT,
         NO_REENTRANCE,
         MAX_UINT_REACHED,
         VALUE_OVER_FLOW,
@@ -105,14 +104,6 @@ contract Vault is AdminPausable {
     event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
-
-    /**
-     * modifier for contract version 
-     */
-     modifier onlyPreVault(){
-        require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), errorToString(Errors.ONLY_PREVAULT));
-        _;
-     }
      
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -183,7 +174,7 @@ contract Vault is AdminPausable {
         require(emitAmount <= 10 ** 18 && tokenBalance <= 10 ** 18 && emitAmount.safeAdd(tokenBalance) <= 10 ** 18, errorToString(Errors.VALUE_OVER_FLOW));
         erc20Interface.transferFrom(msg.sender, address(this), amount);
         require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        require(balanceOf(token) - beforeTransfer == amount, errorToString(Errors.NOT_EQUAL));
+        require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
     
         emit Deposit(token, incognitoAddress, emitAmount);
     }
@@ -678,23 +669,6 @@ contract Vault is AdminPausable {
         require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
         
         emit MoveAssets(assets);
-    }
-
-    /**
-     * @dev Move total number of assets to newVault
-     * @notice This only works when the preVault is Paused
-     * @notice This can only be called by preVault
-     * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
-     * @param amounts: total number of the ERC20 tokens to move, 0x0 for ETH
-     */
-    function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
-        require(assets.length == amounts.length,  errorToString(Errors.NOT_EQUAL));
-        for (uint i = 0; i < assets.length; i++) {
-            totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
-        }
-        emit UpdateTokenTotal(assets, amounts);
-        
-        return true;
     }
 
     /**

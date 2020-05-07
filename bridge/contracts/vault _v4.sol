@@ -62,6 +62,7 @@ interface Withdrawable {
     function isSigDataUsed(bytes32)  external view returns (bool);
     function getDepositedBalance(address, address)  external view returns (uint);
     function updateAssets(address[] calldata, uint[] calldata) external returns (bool); 
+    function paused() external view returns (bool);
 }
 
 /**
@@ -86,7 +87,6 @@ contract Vault is AdminPausable {
     // error code 
     enum Errors {
         EMPTY,
-        ONLY_PREVAULT,
         NO_REENTRANCE,
         MAX_UINT_REACHED,
         VALUE_OVER_FLOW,
@@ -97,7 +97,9 @@ contract Vault is AdminPausable {
         WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH,
         INVALID_RETURN_DATA,
         NOT_EQUAL,
-        NULL_VALUE
+        NULL_VALUE,
+        ONLY_PREVAULT,
+        PREVAULT_NOT_PAUSED
     }
 
     event Deposit(address token, string incognitoAddress, uint amount);
@@ -184,7 +186,7 @@ contract Vault is AdminPausable {
         require(emitAmount <= 10 ** 18 && tokenBalance <= 10 ** 18 && emitAmount.safeAdd(tokenBalance) <= 10 ** 18, errorToString(Errors.VALUE_OVER_FLOW));
         erc20Interface.transferFrom(msg.sender, address(this), amount);
         require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        require(balanceOf(token) - beforeTransfer == amount, errorToString(Errors.NOT_EQUAL));
+        require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
     
         emit Deposit(token, incognitoAddress, emitAmount);
     }
@@ -640,7 +642,7 @@ contract Vault is AdminPausable {
       * @dev migrate balance from previous vault
       * Note: uncomment for next version
       */ 
-    function migrateBalance(address owner, address token) public nonReentrant {
+    function migrateBalance(address owner, address token) internal {
         if (address(prevVault) != address(0x0) && !migration[owner][token]) {
             withdrawRequests[owner][token] = withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
   	        migration[owner][token] = true;
@@ -713,6 +715,7 @@ contract Vault is AdminPausable {
      */
     function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
         require(assets.length == amounts.length,  errorToString(Errors.NOT_EQUAL));
+        require(Withdrawable(prevVault).paused(), errorToString(Errors.PREVAULT_NOT_PAUSED));
         for (uint i = 0; i < assets.length; i++) {
             totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
         }
