@@ -1084,23 +1084,23 @@ func (_NextVault *NextVaultTransactorSession) Withdraw(inst []byte, heights [2]*
 // Receive is a paid mutator transaction binding the contract receive function.
 //
 // Solidity: receive() payable returns()
-func (_NextVault *NextVaultTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _NextVault.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
-}
+// func (_NextVault *NextVaultTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
+// 	return _NextVault.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
+// }
 
-// Receive is a paid mutator transaction binding the contract receive function.
-//
-// Solidity: receive() payable returns()
-func (_NextVault *NextVaultSession) Receive() (*types.Transaction, error) {
-	return _NextVault.Contract.Receive(&_NextVault.TransactOpts)
-}
+// // Receive is a paid mutator transaction binding the contract receive function.
+// //
+// // Solidity: receive() payable returns()
+// func (_NextVault *NextVaultSession) Receive() (*types.Transaction, error) {
+// 	return _NextVault.Contract.Receive(&_NextVault.TransactOpts)
+// }
 
-// Receive is a paid mutator transaction binding the contract receive function.
-//
-// Solidity: receive() payable returns()
-func (_NextVault *NextVaultTransactorSession) Receive() (*types.Transaction, error) {
-	return _NextVault.Contract.Receive(&_NextVault.TransactOpts)
-}
+// // Receive is a paid mutator transaction binding the contract receive function.
+// //
+// // Solidity: receive() payable returns()
+// func (_NextVault *NextVaultTransactorSession) Receive() (*types.Transaction, error) {
+// 	return _NextVault.Contract.Receive(&_NextVault.TransactOpts)
+// }
 
 // NextVaultClaimIterator is returned from FilterClaim and is used to iterate over the raw logs and unpacked data for Claim events raised by the NextVault contract.
 type NextVaultClaimIterator struct {
