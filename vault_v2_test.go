@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strings"
@@ -116,6 +117,23 @@ func (v2 *VaulV2TestSuite) TestVaultV2SubmitBurnProof() {
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
 
 	// use proof twice
+	_, err = SubmitBurnProof(v2.p.v, auth, proof)
+	require.NotEqual(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	// submit wrong proof
+	proof = buildWithdrawTestcase(v2.c, meta, shardID, tinfo.addr, withdraw)
+	proof.Instruction[0]++
+	auth.GasLimit = 0
+	_, err = SubmitBurnProof(v2.p.v, auth, proof)
+	require.NotEqual(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	// submit wrong inst bytes arrays
+	proof = buildWithdrawTestcase(v2.c, meta, shardID, tinfo.addr, withdraw)
+	fmt.Println(hex.EncodeToString(proof.Instruction))
+	proof.Instruction = proof.Instruction[1:]
+	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth, proof)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()

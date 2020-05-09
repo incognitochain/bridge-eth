@@ -997,7 +997,7 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 
 }
 
-func TestFixedWithdrawModifiedProod(t *testing.T) {
+func TestFixedWithdrawModifiedProof(t *testing.T) {
 	p, comm, err := setupFixedCommittee()
 	desc := "DAI"
 	deposit := big.NewInt(int64(3e17))

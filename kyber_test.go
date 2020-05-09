@@ -15,6 +15,7 @@ import (
 	ec "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/incognitochain/bridge-eth/bridge/dappMulti"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
@@ -27,18 +28,19 @@ import (
 // // functionality from testify - including assertion methods.
 type KyberTestSuite struct {
 	suite.Suite
-	p             *Platform
-	c             *committees
-	v             *vault.Vault
-	withdrawer    common.Address
-	auth          *bind.TransactOpts
-	EtherAddress  common.Address
-	EthPrivateKey string
-	EthHost       string
-	ETHPrivKey    *ecdsa.PrivateKey
-	ETHClient     *ethclient.Client
-	KyberProxy    common.Address
-	VaultAddress  common.Address
+	p               *Platform
+	c               *committees
+	v               *vault.Vault
+	withdrawer      common.Address
+	auth            *bind.TransactOpts
+	EtherAddress    common.Address
+	EthPrivateKey   string
+	EthHost         string
+	ETHPrivKey      *ecdsa.PrivateKey
+	ETHClient       *ethclient.Client
+	KyberProxy      common.Address
+	KyberMultiProxy common.Address
+	VaultAddress    common.Address
 
 	KBNAddress      common.Address
 	ETHKyberAddress common.Address
@@ -79,6 +81,10 @@ func (v2 *KyberTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.KyberProxy = kbnProxy
 	fmt.Printf("Kyber proxy address: %s\n", kbnProxy.Hex())
+
+	v2.KyberMultiProxy, _, _, err = dappMulti.DeployDappMulti(v2.auth, ETHClient, KyberContractAddr, vaultAddr)
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Kyber multi proxy address: %s\n", v2.KyberMultiProxy.Hex())
 
 	v2.ETHKyberAddress = common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
 	v2.KBNAddress = common.HexToAddress("0x8c13AFB7815f10A8333955854E6ec7503eD841B7")
@@ -193,6 +199,132 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	require.NotEqual(v2.T(), nil, err)
 }
 
+func (v2 *KyberTestSuite) TestVaultMultiExecute() {
+	deposit := big.NewInt(int64(9e18))
+	tradeamount := big.NewInt(int64(1e18))
+	v2.auth.Value = deposit
+	address := crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey)
+	_, err := v2.v.Deposit(v2.auth, "")
+	require.Equal(v2.T(), nil, err)
+	v2.auth.Value = big.NewInt(0)
+	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
+	require.Equal(v2.T(), nil, err)
+
+	// Trade eth to erc20
+	timestamp := []byte(randomizeTimestamp())
+	data, input := v2.buildDataToSignMultiTrade([]*big.Int{tradeamount, tradeamount}, []common.Address{v2.EtherAddress, v2.EtherAddress}, []common.Address{v2.KBNAddress, v2.MANAAddress}, v2.KyberMultiProxy, timestamp, "trade")
+	signBytes, err := crypto.Sign(data, v2.ETHPrivKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		[]common.Address{v2.EtherAddress, v2.EtherAddress},
+		[]*big.Int{tradeamount, tradeamount},
+		[]common.Address{v2.KBNAddress, v2.MANAAddress},
+		v2.KyberMultiProxy,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.Equal(v2.T(), nil, err)
+
+	bal, err := v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println("kbn traded: ", bal)
+
+	bal2, err := v2.v.GetDepositedBalance(nil, v2.MANAAddress, address)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println("Mana traded: ", bal2)
+
+	// use same signature twice
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		[]common.Address{v2.EtherAddress, v2.EtherAddress},
+		[]*big.Int{tradeamount, tradeamount},
+		[]common.Address{v2.KBNAddress, v2.MANAAddress},
+		v2.KyberMultiProxy,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.NotEqual(v2.T(), nil, err)
+
+	// trade amount greater than available
+	data, input = v2.buildDataToSignMultiTrade([]*big.Int{big.NewInt(0).Add(bal, big.NewInt(int64(1)))}, []common.Address{v2.KBNAddress}, []common.Address{v2.EtherAddress}, v2.KyberMultiProxy, timestamp, "trade")
+	signBytes, err = crypto.Sign(data, v2.ETHPrivKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		[]common.Address{v2.KBNAddress},
+		[]*big.Int{big.NewInt(0).Add(bal, big.NewInt(int64(1)))},
+		[]common.Address{v2.EtherAddress},
+		v2.KyberMultiProxy,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.NotEqual(v2.T(), nil, err)
+
+	// trade erc20 to eth
+	data, input = v2.buildDataToSignMultiTrade([]*big.Int{bal}, []common.Address{v2.KBNAddress}, []common.Address{v2.EtherAddress}, v2.KyberMultiProxy, timestamp, "trade")
+	signBytes, err = crypto.Sign(data, v2.ETHPrivKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		[]common.Address{v2.KBNAddress},
+		[]*big.Int{bal},
+		[]common.Address{v2.EtherAddress},
+		v2.KyberMultiProxy,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.Equal(v2.T(), nil, err)
+
+	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println("ETH traded: ", bal)
+
+	// trade erc20 to erc20
+	data, input = v2.buildDataToSignMultiTrade([]*big.Int{bal2}, []common.Address{v2.MANAAddress}, []common.Address{v2.KBNAddress}, v2.KyberMultiProxy, timestamp, "trade")
+	signBytes, err = crypto.Sign(data, v2.ETHPrivKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		[]common.Address{v2.MANAAddress},
+		[]*big.Int{bal2},
+		[]common.Address{v2.KBNAddress},
+		v2.KyberMultiProxy,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.Equal(v2.T(), nil, err)
+
+	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println("KBN traded: ", bal)
+
+	// return amount but not transfer from proxy
+	timestamp = []byte(randomizeTimestamp())
+	data, input = v2.buildDataToSignMultiTrade([]*big.Int{tradeamount, tradeamount}, []common.Address{v2.EtherAddress, v2.EtherAddress}, []common.Address{v2.KBNAddress, v2.MANAAddress}, v2.KyberMultiProxy, timestamp, "returnAmountWithoutTransfer")
+	signBytes, err = crypto.Sign(data, v2.ETHPrivKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		[]common.Address{v2.EtherAddress, v2.EtherAddress},
+		[]*big.Int{tradeamount, tradeamount},
+		[]common.Address{v2.KBNAddress, v2.MANAAddress},
+		v2.KyberMultiProxy,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.NotEqual(v2.T(), nil, err)
+
+	// reentrance attack
+	v2.buildDReentranceAttackDataForMultiExecute([]*big.Int{tradeamount}, []common.Address{v2.EtherAddress}, []common.Address{v2.KBNAddress}, v2.KyberMultiProxy)
+}
 func (v2 *KyberTestSuite) getExpectedRate(
 	srcToken common.Address,
 	destToken common.Address,
@@ -238,4 +370,99 @@ func ethInstance(ethPrivate string, ethEnpoint string) (*ecdsa.PrivateKey, *ethc
 		return nil, nil, err
 	}
 	return privKey, client, nil
+}
+
+func (v2 *KyberTestSuite) buildDataToSignMultiTrade(
+	srcQties []*big.Int,
+	srcTokenIDs []common.Address,
+	destTokenIDs []common.Address,
+	KyberMultiTradeDeployedAddr common.Address,
+	timestamp []byte,
+	funcName string,
+) ([]byte, []byte) {
+	tradeAbi, _ := abi.JSON(strings.NewReader(dappMulti.DappMultiABI))
+	sourceAddresses := make([]common.Address, 0)
+	for _, p := range srcTokenIDs {
+		sourceAddresses = append(sourceAddresses, p)
+	}
+	destAddresses := make([]common.Address, 0)
+	for _, p := range destTokenIDs {
+		destAddresses = append(destAddresses, p)
+	}
+	expectRates := make([]*big.Int, 0)
+	for i := range destTokenIDs {
+		expectRates = append(expectRates, v2.getExpectedRate(srcTokenIDs[i], destTokenIDs[i], srcQties[i]))
+	}
+	amounts := make([]byte, 0)
+	for i := range srcQties {
+		amounts = append(amounts, common.LeftPadBytes(srcQties[i].Bytes(), 32)...)
+	}
+
+	input, _ := tradeAbi.Pack(funcName, sourceAddresses, srcQties, destAddresses, expectRates)
+	tempData := append(KyberMultiTradeDeployedAddr[:], input...)
+	tempData1 := append(tempData, timestamp...)
+	tempData2 := append(tempData1, amounts...)
+	data := rawsha3(tempData2)
+	return data, input
+}
+
+func (v2 *KyberTestSuite) buildDReentranceAttackDataForMultiExecute(
+	srcQties []*big.Int,
+	srcTokenIDs []common.Address,
+	destTokenIDs []common.Address,
+	KyberMultiTradeDeployedAddr common.Address,
+) {
+	dappMultiAbi, err := abi.JSON(strings.NewReader(dappMulti.DappMultiABI))
+	require.Equal(v2.T(), nil, err)
+	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultABI))
+	require.Equal(v2.T(), nil, err)
+	expectRates := make([]*big.Int, 0)
+	for i := range destTokenIDs {
+		expectRates = append(expectRates, v2.getExpectedRate(srcTokenIDs[i], destTokenIDs[i], srcQties[i]))
+	}
+	amounts := make([]byte, 0)
+	for i := range srcQties {
+		amounts = append(amounts, common.LeftPadBytes(srcQties[i].Bytes(), 32)...)
+	}
+
+	timestamp := []byte(randomizeTimestamp())
+	input1, err := dappMultiAbi.Pack("simplePass", srcTokenIDs, srcQties, destTokenIDs, expectRates)
+	require.Equal(v2.T(), nil, err)
+	tempData := append(KyberMultiTradeDeployedAddr[:], input1...)
+	tempData1 := append(tempData, timestamp...)
+	tempData2 := append(tempData1, amounts...)
+	data := rawsha3(tempData2)
+	signBytes, err := crypto.Sign(data, genesisAcc.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	input2, err := vaultAbi.Pack(
+		"executeMulti",
+		srcTokenIDs,
+		srcQties,
+		destTokenIDs,
+		KyberMultiTradeDeployedAddr,
+		input1,
+		timestamp,
+		signBytes,
+	)
+	require.Equal(v2.T(), nil, err)
+	input3, err := dappMultiAbi.Pack("testReentrance", input2)
+	require.Equal(v2.T(), nil, err)
+	tempData = append(KyberMultiTradeDeployedAddr[:], input3...)
+	tempData1 = append(tempData, timestamp...)
+	tempData2 = append(tempData1, amounts...)
+	data = rawsha3(tempData2)
+	signBytes, err = crypto.Sign(data, genesisAcc.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+
+	_, err = v2.v.ExecuteMulti(
+		v2.auth,
+		srcTokenIDs,
+		srcQties,
+		destTokenIDs,
+		v2.KyberMultiProxy,
+		input3,
+		timestamp,
+		signBytes,
+	)
+	require.NotEqual(v2.T(), nil, err)
 }
