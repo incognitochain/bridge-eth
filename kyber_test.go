@@ -28,19 +28,21 @@ import (
 // // functionality from testify - including assertion methods.
 type KyberTestSuite struct {
 	suite.Suite
-	p               *Platform
-	c               *committees
-	v               *vault.Vault
-	withdrawer      common.Address
-	auth            *bind.TransactOpts
-	EtherAddress    common.Address
-	EthPrivateKey   string
-	EthHost         string
-	ETHPrivKey      *ecdsa.PrivateKey
-	ETHClient       *ethclient.Client
-	KyberProxy      common.Address
-	KyberMultiProxy common.Address
-	VaultAddress    common.Address
+	p                 *Platform
+	c                 *committees
+	v                 *vault.Vault
+	withdrawer        common.Address
+	auth              *bind.TransactOpts
+	EtherAddress      common.Address
+	EthPrivateKey     string
+	EthHost           string
+	ETHPrivKey        *ecdsa.PrivateKey
+	ETHClient         *ethclient.Client
+	KyberProxy        common.Address
+	KyberMultiProxy   common.Address
+	VaultAddress      common.Address
+	IncAddr           common.Address
+	KyberContractAddr common.Address
 
 	KBNAddress      common.Address
 	ETHKyberAddress common.Address
@@ -53,7 +55,11 @@ func (v2 *KyberTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	v2.withdrawer = ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 	v2.EtherAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
+	v2.ETHKyberAddress = common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+	v2.KBNAddress = common.HexToAddress("0x8c13AFB7815f10A8333955854E6ec7503eD841B7")
+	v2.MANAAddress = common.HexToAddress("0xe19Ec968c15f487E96f631Ad9AA54fAE09A67C8c")
 	v2.EthPrivateKey = "1ABA488300A9D7297A315D127837BE4219107C62C61966ECDF7A75431D75CC61"
+	v2.KyberContractAddr = common.HexToAddress("0xd3add19ee7e5287148a5866784aE3C55bd4E375A")
 	v2.EthHost = "http://localhost:8545"
 	var err error
 	fmt.Println("Pulling image if not exist, please wait...")
@@ -62,33 +68,6 @@ func (v2 *KyberTestSuite) SetupSuite() {
 	_, err = exec.Command("/bin/sh", "-c", "docker run -d -p 8545:8545 --name kybertrade bomtb/kybertrade").Output()
 	require.Equal(v2.T(), nil, err)
 	time.Sleep(10 * time.Second)
-	ETHPrivKey, ETHClient, err := ethInstance(v2.EthPrivateKey, v2.EthHost)
-	require.Equal(v2.T(), nil, err)
-	v2.ETHClient = ETHClient
-	v2.ETHPrivKey = ETHPrivKey
-	v2.c = getFixedCommittee()
-	v2.auth = bind.NewKeyedTransactor(ETHPrivKey)
-	incAddr, _, _, err := incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
-	require.Equal(v2.T(), nil, err)
-	fmt.Printf("Proxy address: %s\n", incAddr.Hex())
-	vaultAddr, _, vaultInst, err := vault.DeployVault(v2.auth, ETHClient, v2.auth.From, incAddr, common.Address{})
-	require.Equal(v2.T(), nil, err)
-	v2.VaultAddress = vaultAddr
-	fmt.Printf("Vault address: %s\n", vaultAddr.Hex())
-	v2.v = vaultInst
-	KyberContractAddr := common.HexToAddress("0xd3add19ee7e5287148a5866784aE3C55bd4E375A")
-	kbnProxy, _, _, err := kbntrade.DeployKbntrade(v2.auth, ETHClient, KyberContractAddr, vaultAddr)
-	require.Equal(v2.T(), nil, err)
-	v2.KyberProxy = kbnProxy
-	fmt.Printf("Kyber proxy address: %s\n", kbnProxy.Hex())
-
-	v2.KyberMultiProxy, _, _, err = dappMulti.DeployDappMulti(v2.auth, ETHClient, KyberContractAddr, vaultAddr)
-	require.Equal(v2.T(), nil, err)
-	fmt.Printf("Kyber multi proxy address: %s\n", v2.KyberMultiProxy.Hex())
-
-	v2.ETHKyberAddress = common.HexToAddress("0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-	v2.KBNAddress = common.HexToAddress("0x8c13AFB7815f10A8333955854E6ec7503eD841B7")
-	v2.MANAAddress = common.HexToAddress("0xe19Ec968c15f487E96f631Ad9AA54fAE09A67C8c")
 }
 
 func (v2 *KyberTestSuite) TearDownSuite() {
@@ -99,6 +78,25 @@ func (v2 *KyberTestSuite) TearDownSuite() {
 
 func (v2 *KyberTestSuite) SetupTest() {
 	fmt.Println("Setting up the test...")
+	var err error
+	ETHPrivKey, ETHClient, err := ethInstance(v2.EthPrivateKey, v2.EthHost)
+	require.Equal(v2.T(), nil, err)
+	v2.ETHClient = ETHClient
+	v2.ETHPrivKey = ETHPrivKey
+	v2.c = getFixedCommittee()
+	v2.auth = bind.NewKeyedTransactor(ETHPrivKey)
+	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
+	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Vault address: %s\n", v2.VaultAddress.Hex())
+	v2.KyberProxy, _, _, err = kbntrade.DeployKbntrade(v2.auth, v2.ETHClient, v2.KyberContractAddr, v2.VaultAddress)
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Kyber proxy address: %s\n", v2.KyberProxy.Hex())
+	v2.KyberMultiProxy, _, _, err = dappMulti.DeployDappMulti(v2.auth, v2.ETHClient, v2.KyberContractAddr, v2.VaultAddress)
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Kyber multi proxy address: %s\n", v2.KyberMultiProxy.Hex())
 }
 
 func (v2 *KyberTestSuite) TearDownTest() {
@@ -127,25 +125,31 @@ func (v2 *KyberTestSuite) TestKyberTrade() {
 
 	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("Eth deposited: ", bal)
+	require.Equal(v2.T(), deposit, big.NewInt(int64(1e18)))
 
 	// Trade ETH - ERC20
+	bignnum, ok := new(big.Int).SetString("549000000000000000000", 10)
+	require.Equal(v2.T(), ok, true)
 	v2.executeWithKyber(bal, v2.EtherAddress, v2.KBNAddress)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("kbn traded: ", bal)
+	require.Equal(v2.T(), bal, bignnum)
 
 	// Trade ERC20 - ETH
+	bignnum, ok = new(big.Int).SetString("3045173263944290564713", 10)
+	require.Equal(v2.T(), ok, true)
 	v2.executeWithKyber(bal, v2.KBNAddress, v2.MANAAddress)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.MANAAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("Mana traded: ", bal)
+	require.Equal(v2.T(), bal, bignnum)
 
 	// Trade ERC20 - ERC20
+	bignnum, ok = new(big.Int).SetString("990451423918783372", 10)
+	require.Equal(v2.T(), ok, true)
 	v2.executeWithKyber(bal, v2.MANAAddress, v2.EtherAddress)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("Eth traded: ", bal)
+	require.Equal(v2.T(), bal, bignnum)
 }
 
 func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
@@ -162,7 +166,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 
 	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("Eth deposited: ", bal)
+	require.Equal(v2.T(), bal, deposit)
 
 	srcToken := v2.EtherAddress
 	destToken := v2.KBNAddress
@@ -170,7 +174,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	// Trade with the srcQty from vault less than srcQty in kyber proxy
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("kbn before traded: ", bal)
+	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 
 	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 	expectRate := v2.getExpectedRate(srcToken, destToken, deposit)
@@ -180,7 +184,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("kbn after traded: ", bal)
+	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 
 	// Trade with minconversionRate larger than expecRate
 	expectRate = v2.getExpectedRate(srcToken, destToken, tradeamount)
@@ -189,7 +193,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	require.NotEqual(v2.T(), nil, err)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("kbn traded with wrong minconversionRate: ", bal)
+	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 
 	// call kyberproxy to trade directly
 	v2.auth.Value = deposit
@@ -228,13 +232,17 @@ func (v2 *KyberTestSuite) TestVaultMultiExecute() {
 	)
 	require.Equal(v2.T(), nil, err)
 
+	bignnum, ok := new(big.Int).SetString("549000000000000000000", 10)
+	require.Equal(v2.T(), ok, true)
 	bal, err := v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("kbn traded: ", bal)
+	require.Equal(v2.T(), bal, bignnum)
 
+	bignnum, ok = new(big.Int).SetString("3059075095546070770069", 10)
+	require.Equal(v2.T(), ok, true)
 	bal2, err := v2.v.GetDepositedBalance(nil, v2.MANAAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("Mana traded: ", bal2)
+	require.Equal(v2.T(), bal2, bignnum)
 
 	// use same signature twice
 	_, err = v2.v.ExecuteMulti(
@@ -281,9 +289,11 @@ func (v2 *KyberTestSuite) TestVaultMultiExecute() {
 	)
 	require.Equal(v2.T(), nil, err)
 
+	bignnum, ok = new(big.Int).SetString("7995405038328194803", 10)
+	require.Equal(v2.T(), ok, true)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("ETH traded: ", bal)
+	require.Equal(v2.T(), bal, bignnum)
 
 	// trade erc20 to erc20
 	data, input = v2.buildDataToSignMultiTrade([]*big.Int{bal2}, []common.Address{v2.MANAAddress}, []common.Address{v2.KBNAddress}, v2.KyberMultiProxy, timestamp, "trade")
@@ -301,9 +311,11 @@ func (v2 *KyberTestSuite) TestVaultMultiExecute() {
 	)
 	require.Equal(v2.T(), nil, err)
 
-	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
+	bignnum, ok = new(big.Int).SetString("546267957373391591871", 10)
+	require.Equal(v2.T(), ok, true)
+	bal, err = v2.v.GetDepositedBalance(nil, v2.KBNAddress, address)
 	require.Equal(v2.T(), nil, err)
-	fmt.Println("KBN traded: ", bal)
+	require.Equal(v2.T(), bal, bignnum)
 
 	// return amount but not transfer from proxy
 	timestamp = []byte(randomizeTimestamp())
