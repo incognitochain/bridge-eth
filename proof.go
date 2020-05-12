@@ -86,6 +86,7 @@ func getAndDecodeBurnProof(txID string) (*decodedProof, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Proof : ", r )
 	return decodeProof(&r)
 }
 
