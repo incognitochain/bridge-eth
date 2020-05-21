@@ -302,6 +302,7 @@ contract MultiSigWallet {
         }
         
         PauseVault(now);
+        return true;
     }
     
     /// @dev unPause vault when everything ok.
@@ -315,6 +316,7 @@ contract MultiSigWallet {
         }
         
         UnpauseVault(now);
+        return true;
     }
 
     /*
