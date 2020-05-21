@@ -125,6 +125,47 @@ func TestResendETH(t *testing.T) {
 	fmt.Printf("sent, txHash: %s\n", txHash)
 }
 
+func TestReburn(t *testing.T) {
+	// Get proof
+	proof, err := getAndDecodeBurnProof("59333c998a206e99621faf150f46588bbdfeb6279538266de893cc309e7cf4c5")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Connect to ETH
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Enter nonce here
+	nonce := uint64(0)
+
+	// Enter gasPrice here
+	gasPrice := big.NewInt(5000000000) // 5 GWei
+
+	// Get contract instance
+	vaultAddr := common.HexToAddress(VaultAddress)
+	c, err := vault.NewVault(vaultAddr, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Burn
+	auth := bind.NewKeyedTransactor(privKey)
+	auth.GasPrice = gasPrice
+	if nonce > 0 {
+		auth.Nonce = big.NewInt(int64(nonce))
+	}
+	tx, err := Withdraw(c, auth, proof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txHash := tx.Hash()
+	fmt.Printf("burned, txHash: %x\n", txHash[:])
+}
+
 func TestMassSend(t *testing.T) {
 	addrs := []string{
 		"0xDF1A9BE4dA9Ed6CDC28bea3c23E81B8a3e4480Ae",
