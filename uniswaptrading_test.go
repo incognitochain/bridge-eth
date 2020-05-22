@@ -53,7 +53,7 @@ func (tradingSuite *UniswapTradingTestSuite) SetupSuite() {
 	tradingSuite.IncMRKTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
 	tradingSuite.MRKAddressStr = "0xef13c0c8abcaf5767160018d268f9697ae4f5375"                                 // kovan
 	tradingSuite.WETHAddr = "0xd0a1e359811322d97991e03f863a0c30c2cf029c"                                      // kovan
-	tradingSuite.UniswapTradeDeployedAddr = common.HexToAddress("0xC27C636F2862f9BF5C0c28684D4365CC0B78829c") //kovan
+	tradingSuite.UniswapTradeDeployedAddr = common.HexToAddress("0x31DC0CAEdee768e0b699c6AdD7A11BB128E0Fb77") //kovan
 	tradingSuite.UniswapRouteContractAddr = common.HexToAddress("0xf164fC0Ec4E93095b804a4795bBe1e041497b92a")
 	tradingSuite.DepositingEther = float64(0.05)
 }
@@ -355,7 +355,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	time.Sleep(120 * time.Second)
 
 	fmt.Println("------------ step 5: withdrawing pMRK from Incognito to MRK --------------")
-	withdrawingPMRK := mrkTraded // MRK decimal 18
+	withdrawingPMRK := big.NewInt(0).Div(mrkTraded, big.NewInt(1000000000)) // MRK decimal 18
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncMRKTokenIDStr,
 		withdrawingPMRK,

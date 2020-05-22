@@ -70,15 +70,15 @@ contract UNiswapV2Trade is TradeUtils {
     }
 
     function ethToToken(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {
-        return uniswapV2.swapExactETHForTokens{value: srcQty}(amountOutMin, path, incognitoSmartContract, now + 120);
+        return uniswapV2.swapExactETHForTokens{value: srcQty}(amountOutMin, path, incognitoSmartContract, now + 600);
     }
 
     function tokenToEth(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {
-        return uniswapV2.swapExactTokensForETH(srcQty, amountOutMin, path, incognitoSmartContract, now + 120);
+        return uniswapV2.swapExactTokensForETH(srcQty, amountOutMin, path, incognitoSmartContract, now + 600);
     }
 
     function tokenToToken(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {
-        return uniswapV2.swapExactTokensForTokens(srcQty, amountOutMin, path, incognitoSmartContract, now + 120);
+        return uniswapV2.swapExactTokensForTokens(srcQty, amountOutMin, path, incognitoSmartContract, now + 600);
     }
     
     /** 
