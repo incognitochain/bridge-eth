@@ -10,6 +10,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	kbnmultiTrade "github.com/incognitochain/bridge-eth/bridge/kbnmultitrade"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
+	"github.com/incognitochain/bridge-eth/bridge/uniswap"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
@@ -22,9 +23,10 @@ import (
 type TradingDeployTestSuite struct {
 	*TradingTestSuite
 
-	KyberContractAddr common.Address
-	ZRXContractAddr   common.Address
-	WETHAddr          common.Address
+	KyberContractAddr        common.Address
+	ZRXContractAddr          common.Address
+	WETHAddr                 common.Address
+	UniswapRouteContractAddr common.Address
 }
 
 func NewTradingDeployTestSuite(tradingTestSuite *TradingTestSuite) *TradingDeployTestSuite {
@@ -39,6 +41,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) SetupSuite() {
 	tradingDeploySuite.KyberContractAddr = common.HexToAddress("0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D")
 	tradingDeploySuite.ZRXContractAddr = common.HexToAddress("0xf1ec01d6236d3cd881a0bf0130ea25fe4234003e")
 	tradingDeploySuite.WETHAddr = common.HexToAddress("0xd0a1e359811322d97991e03f863a0c30c2cf029c")
+	tradingDeploySuite.UniswapRouteContractAddr = common.HexToAddress("0xf164fC0Ec4E93095b804a4795bBe1e041497b92a")
 }
 
 func (tradingDeploySuite *TradingDeployTestSuite) TearDownSuite() {
@@ -131,6 +134,16 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	fmt.Println("deployed zrxTrade")
 	fmt.Printf("addr: %s\n", zrxTradeAddr.Hex())
+
+	// Deploy uniswaptrade
+	uniswapAddr, tx, _, err := uniswap.DeployUniswap(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr, vaultAddr)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed uniswap adapter")
+	fmt.Printf("addr: %s\n", uniswapAddr.Hex())
+
+	// Wait until tx is confirmed
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 }
 
 func convertCommittees(
