@@ -38,9 +38,17 @@ func TestDecodeSwapBridgeInst(t *testing.T) {
 }
 
 func TestSwapBridge(t *testing.T) {
+	// Enter nonce here
+	nonce := uint64(0)
+
+	// Enter gasPrice here
+	gasPrice := big.NewInt(5000000000) // 5 GWei
+
+	// Enter block here
+	block := 455353
+
 	// Get proof
-	url := "http://54.39.158.106:19032"
-	block := 54
+	url := "https://mainnet.incognito.org/fullnode:433"
 	proof, err := getAndDecodeBridgeSwapProof(url, block)
 	if err != nil {
 		t.Fatal(err)
@@ -62,6 +70,10 @@ func TestSwapBridge(t *testing.T) {
 
 	// Swap
 	auth := bind.NewKeyedTransactor(privKey)
+	auth.GasPrice = gasPrice
+	if nonce > 0 {
+		auth.Nonce = big.NewInt(int64(nonce))
+	}
 	tx, err := SwapBridge(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
