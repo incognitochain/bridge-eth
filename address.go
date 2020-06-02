@@ -8,4 +8,5 @@ const (
 	Admin                 = "0x454a9612717216BBcF6a9249a311d8F13997CaFe"
 	Successor             = "0x454a9612717216BBcF6a9249a311d8F13997CaFe"
 	KBNProxy              = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
+	NewVaultTmp           = "0x3c8ec94213f09A1575f773470830124dfb40042e" // v3-main - mainnet, branch master, with pkyber
 )

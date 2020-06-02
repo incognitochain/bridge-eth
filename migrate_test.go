@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -50,6 +51,7 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 
 	// Deploy vault
 	auth := bind.NewKeyedTransactor(privKey)
+	auth.GasPrice = big.NewInt(int64(25000000000))
 	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVaultAddr)
 	if err != nil {
 		t.Fatal(err)
@@ -106,7 +108,7 @@ func TestMigrateVault(t *testing.T) {
 	privKey, c := getVault(t)
 
 	// Migrate vault
-	newAddr := ""
+	newAddr := "0x3c8ec94213f09A1575f773470830124dfb40042e"
 	if len(newAddr) != 42 {
 		t.Fatal(errors.New("invalid new vault's address"))
 	}
