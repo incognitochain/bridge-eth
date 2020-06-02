@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/pkg/errors"
 )
@@ -55,6 +56,28 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	}
 	fmt.Println("deployed vault")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
+}
+
+func TestDeployKBNTrade(t *testing.T) {
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	kbnProxy := common.HexToAddress(KBNProxy)
+	vaultAddr := common.HexToAddress(VaultAddress)
+	fmt.Println("KBNProxy address:", kbnProxy.Hex())
+	fmt.Println("Vault address:", vaultAddr.Hex())
+
+	// Deploy KBNTrade
+	auth := bind.NewKeyedTransactor(privKey)
+	kbnTradeAddr, _, _, err := kbntrade.DeployKbntrade(auth, client, kbnProxy, vaultAddr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("deployed kbnTrade")
+	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
 }
 
 func TestPauseVault(t *testing.T) {
