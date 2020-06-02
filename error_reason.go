@@ -30,7 +30,7 @@ func errorReason(ctx context.Context, b ethereum.ContractCaller, tx *types.Trans
 
 var (
 	errorSig     = []byte{0x08, 0xc3, 0x79, 0xa0} // Keccak256("Error(string)")[:4]
-	abiString, _ = abi.NewType("string", nil)
+	abiString, _ = abi.NewType("string", "", nil)
 )
 
 func unpackError(result []byte) (string, error) {
