@@ -6,9 +6,6 @@ contract Erc20:
     def transfer(_to: address, _value: uint256) -> bool: modifying
     def transferFrom(_from: address, _to: address, _value: uint256) -> bool: modifying
     def approve(_spender: address, _value: uint256) -> bool: modifying
-    def mint(_to: address, _value: uint256): modifying
-    def burn(_value: uint256): modifying
-    def burnFrom(_to: address, _value: uint256): modifying
     def name() -> string[64]: constant
     def symbol() -> string[32]: constant
     def decimals() -> uint256: constant
