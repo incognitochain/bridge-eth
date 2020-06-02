@@ -62,6 +62,7 @@ interface Withdrawable {
     function isSigDataUsed(bytes32)  external view returns (bool);
     function getDepositedBalance(address, address)  external view returns (uint);
     function updateAssets(address[] calldata, uint[] calldata) external returns (bool); 
+    function paused() external view returns (bool);
 }
 
 /**
@@ -76,6 +77,7 @@ contract Vault is AdminPausable {
     mapping(bytes32 => bool) public sigDataUsed;
     // address => token => amount
     mapping(address => mapping(address => uint)) public withdrawRequests;
+    mapping(address => mapping(address => bool)) public migration;
     mapping(address => uint) public totalDepositedToSCAmount;
     Incognito public incognito;
     Withdrawable public prevVault;
@@ -95,7 +97,9 @@ contract Vault is AdminPausable {
         WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH,
         INVALID_RETURN_DATA,
         NOT_EQUAL,
-        NULL_VALUE
+        NULL_VALUE,
+        ONLY_PREVAULT,
+        PREVAULT_NOT_PAUSED
     }
 
     event Deposit(address token, string incognitoAddress, uint amount);
@@ -104,6 +108,14 @@ contract Vault is AdminPausable {
     event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
+
+    /**
+     * modifier for contract version 
+     */
+     modifier onlyPreVault(){
+        require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), errorToString(Errors.ONLY_PREVAULT));
+        _;
+     }
      
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -431,8 +443,10 @@ contract Vault is AdminPausable {
     function isSigDataUsed(bytes32 hash) public view returns(bool) {
         if (sigDataUsed[hash]) {
             return true;
+        } else if (address(prevVault) == address(0)) {
+            return false;
         }
-        return false;
+        return prevVault.isSigDataUsed(hash);
     }
 
     /**
@@ -453,6 +467,9 @@ contract Vault is AdminPausable {
     ) public isNotPaused nonReentrant {
         // verify owner signs data
         address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp, amount), signData);
+        
+        // migrate from preVault
+        migrateBalance(verifier, token);
         
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
@@ -492,6 +509,8 @@ contract Vault is AdminPausable {
         //verify ower signs data from input
         address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amount), signData);
         
+        // migrate from preVault
+        migrateBalance(verifier, token);
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
 
         // update balance of verifier
@@ -534,6 +553,8 @@ contract Vault is AdminPausable {
         // define number of eth spent for forwarder.
         uint ethAmount = msg.value;
         for(uint i = 0; i < tokens.length; i++){
+            // migrate from preVault
+            migrateBalance(verifier, tokens[i]);
             // check balance is enough or not
             require(withdrawRequests[verifier][tokens[i]] >= amounts[i], errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
     
@@ -616,6 +637,17 @@ contract Vault is AdminPausable {
         
         return verifier;
      }
+     
+    /**
+      * @dev migrate balance from previous vault
+      * Note: uncomment for next version
+      */ 
+    function migrateBalance(address owner, address token) internal {
+        if (address(prevVault) != address(0x0) && !migration[owner][token]) {
+            withdrawRequests[owner][token] = withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
+  	        migration[owner][token] = true;
+  	   }
+    }
     
     /**
      * @dev Get the amount of specific coin for specific wallet
@@ -624,6 +656,9 @@ contract Vault is AdminPausable {
         address token,
         address owner
     ) public view returns (uint) {
+        if (address(prevVault) != address(0x0) && !migration[owner][token]) {
+ 	        return withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
+ 	    }
         return withdrawRequests[owner][token];
     }
 
@@ -669,6 +704,24 @@ contract Vault is AdminPausable {
         require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
         
         emit MoveAssets(assets);
+    }
+
+    /**
+     * @dev Move total number of assets to newVault
+     * @notice This only works when the preVault is Paused
+     * @notice This can only be called by preVault
+     * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
+     * @param amounts: total number of the ERC20 tokens to move, 0x0 for ETH
+     */
+    function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
+        require(assets.length == amounts.length,  errorToString(Errors.NOT_EQUAL));
+        require(Withdrawable(prevVault).paused(), errorToString(Errors.PREVAULT_NOT_PAUSED));
+        for (uint i = 0; i < assets.length; i++) {
+            totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
+        }
+        emit UpdateTokenTotal(assets, amounts);
+        
+        return true;
     }
 
     /**

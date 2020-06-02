@@ -285,15 +285,29 @@ func setup(
 
 	// Vault
 	prevVault := common.Address{}
-	p.vAddr, tx, p.v, err = vault.DeployVault(auth, sim, admin, p.incAddr, prevVault)
+	addr, _, v, err := setupVault(auth, sim, admin, p.incAddr, prevVault)
 	if err != nil {
-		return nil, fmt.Errorf("failed to deploy Vault contract: %v", err)
+		return nil, err
 	}
-	sim.Commit()
+	p.vAddr = addr
+	p.v = v
 	// fmt.Printf("deployed vault, addr: %x ", p.vAddr)
 	// printReceipt(sim, tx)
 
 	return p, nil
+}
+
+func setupVault(
+	auth *bind.TransactOpts,
+	backend *backends.SimulatedBackend,
+	admin, incAddr, prevVault common.Address,
+) (common.Address, *types.Transaction, *vault.Vault, error) {
+	addr, tx, v, err := vault.DeployVault(auth, backend, admin, incAddr, prevVault)
+	if err != nil {
+		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault contract: %v", err)
+	}
+	backend.Commit()
+	return addr, tx, v, nil
 }
 
 func setupCustomTokens(p *Platform) error {

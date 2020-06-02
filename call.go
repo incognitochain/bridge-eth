@@ -31,6 +31,28 @@ func Withdraw(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProof) (*ty
 	return tx, nil
 }
 
+func SubmitBurnProof(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
+	// auth.GasPrice = big.NewInt(20000000000)
+	tx, err := v.SubmitBurnProof(
+		auth,
+		proof.Instruction,
+		proof.Heights,
+
+		proof.InstPaths,
+		proof.InstPathIsLefts,
+		proof.InstRoots,
+		proof.BlkData,
+		proof.SigIdxs,
+		proof.SigVs,
+		proof.SigRs,
+		proof.SigSs,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
 func SwapBridge(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	auth.GasPrice = big.NewInt(20000000000)
 	tx, err := inc.SwapBridgeCommittee(
