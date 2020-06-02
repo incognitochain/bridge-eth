@@ -67,14 +67,20 @@ func TestDeployKBNTrade(t *testing.T) {
 	}
 	defer client.Close()
 
+	newAddr := NewVaultTmp
+	if len(newAddr) != 42 {
+		t.Fatal(errors.New("invalid new vault's address"))
+	}
+	newVault := common.HexToAddress(newAddr)
+
 	kbnProxy := common.HexToAddress(KBNProxy)
-	vaultAddr := common.HexToAddress(VaultAddress)
 	fmt.Println("KBNProxy address:", kbnProxy.Hex())
-	fmt.Println("Vault address:", vaultAddr.Hex())
+	fmt.Println("New vault address:", newVault.Hex())
 
 	// Deploy KBNTrade
 	auth := bind.NewKeyedTransactor(privKey)
-	kbnTradeAddr, _, _, err := kbntrade.DeployKbntrade(auth, client, kbnProxy, vaultAddr)
+	auth.GasPrice = big.NewInt(int64(23000000000))
+	kbnTradeAddr, _, _, err := kbntrade.DeployKbntrade(auth, client, kbnProxy, newVault)
 	if err != nil {
 		t.Fatal(err)
 	}
