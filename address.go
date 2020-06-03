@@ -7,4 +7,6 @@ const (
 	IncPaymentAddr        = "1Uv46Pu4pqBvxCcPw7MXhHfiAD5Rmi2xgEE7XB6eQurFAt4vSYvfyGn3uMMB1xnXDq9nRTPeiAZv5gRFCBDroRNsXJF1sxPSjNQtivuHk"
 	Admin                 = "0x126748A0144968DD14b0187B906dE62378c59067"
 	Successor             = "0x50c9483C8F69B8b6d5FB406DbAf2aE38573E59b6"
+	KBNProxy              = ""
+	NewVaultTmp           = ""
 )
