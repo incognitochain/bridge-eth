@@ -16,7 +16,6 @@ decimals: public(uint256)
 balanceOf: public(map(address, uint256))
 allowances: map(address, map(address, uint256))
 total_supply: uint256
-minter: address
 
 
 @public
@@ -27,7 +26,6 @@ def __init__(_name: string[64], _symbol: string[32], _decimals: uint256, _supply
     self.decimals = _decimals
     self.balanceOf[msg.sender] = init_supply
     self.total_supply = init_supply
-    self.minter = msg.sender
     log.Transfer(ZERO_ADDRESS, msg.sender, init_supply)
 
 
@@ -102,53 +100,3 @@ def approve(_spender : address, _value : uint256) -> bool:
     self.allowances[msg.sender][_spender] = _value
     log.Approval(msg.sender, _spender, _value)
     return True
-
-
-@public
-def mint(_to: address, _value: uint256):
-    """
-    @dev Mint an amount of the token and assigns it to an account.
-         This encapsulates the modification of balances such that the
-         proper events are emitted.
-    @param _to The account that will receive the created tokens.
-    @param _value The amount that will be created.
-    """
-    assert msg.sender == self.minter
-    assert _to != ZERO_ADDRESS
-    self.total_supply += _value
-    self.balanceOf[_to] += _value
-    log.Transfer(ZERO_ADDRESS, _to, _value)
-
-
-@private
-def _burn(_to: address, _value: uint256):
-    """
-    @dev Internal function that burns an amount of the token of a given
-         account.
-    @param _to The account whose tokens will be burned.
-    @param _value The amount that will be burned.
-    """
-    assert _to != ZERO_ADDRESS
-    self.total_supply -= _value
-    self.balanceOf[_to] -= _value
-    log.Transfer(_to, ZERO_ADDRESS, _value)
-
-
-@public
-def burn(_value: uint256):
-    """
-    @dev Burn an amount of the token of msg.sender.
-    @param _value The amount that will be burned.
-    """
-    self._burn(msg.sender, _value)
-
-
-@public
-def burnFrom(_to: address, _value: uint256):
-    """
-    @dev Burn an amount of the token from a given account.
-    @param _to The account whose tokens will be burned.
-    @param _value The amount that will be burned.
-    """
-    self.allowances[_to][msg.sender] -= _value
-    self._burn(_to, _value)
