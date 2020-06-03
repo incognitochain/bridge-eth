@@ -171,7 +171,7 @@ func getCommittee(url string) ([]common.Address, []common.Address, error) {
 func getBurnProof(txID string) string {
 	// url := "http://127.0.0.1:9344"
 	// url := "https://dev-test-node.incognito.org/"
-	url := "https://mainnet.incognito.org/fullnode"
+	url := "http://51.83.36.184:9334"
 
 	if len(txID) == 0 {
 		txID = "87c89c1c19cec3061eff9cfefdcc531d9456ac48de568b3974c5b0a88d5f3834"
