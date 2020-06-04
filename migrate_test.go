@@ -130,15 +130,14 @@ func TestMoveAssetsVault(t *testing.T) {
 	privKey, c := getVault(t)
 
 	// KNOWN FAILED
+	// common.HexToAddress("0xc12d1c73ee7dc3615ba4e37e4abfdbddfa38907e"), // KickToken
+	// common.HexToAddress("0xbddab785b306bcd9fb056da189615cc8ece1d823"), // Ebakus
+	// common.HexToAddress("0x0e536b7831c7A7527FaD55da433986853d21A0c7"), // Harpoon
+	// common.HexToAddress("0xc92e74b131D7b1D46E60e07F3FaE5d8877Dd03F0"), // Minereum
+	// common.HexToAddress("0x426CA1eA2406c07d75Db9585F22781c096e3d0E0"), // MINEREUM
 
 	// Migrate vault
-	assets := []common.Address{
-		// common.HexToAddress("0xc12d1c73ee7dc3615ba4e37e4abfdbddfa38907e"), // KickToken
-		// common.HexToAddress("0xbddab785b306bcd9fb056da189615cc8ece1d823"), // Ebakus
-		// common.HexToAddress("0x0e536b7831c7A7527FaD55da433986853d21A0c7"), // Harpoon
-		// common.HexToAddress("0xc92e74b131D7b1D46E60e07F3FaE5d8877Dd03F0"), // Minereum
-		// common.HexToAddress("0x426CA1eA2406c07d75Db9585F22781c096e3d0E0"), // MINEREUM
-	}
+	assets := []common.Address{}
 
 	// DONE
 	// common.HexToAddress("0x2fB419E7023b32201e9aB3aba947f5c101a5C30e"), // Synth sEUR
