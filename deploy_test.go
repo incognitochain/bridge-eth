@@ -23,8 +23,8 @@ import (
 
 func TestDecodeSwapBridgeInst(t *testing.T) {
 	// Get proof
-	url := "https://mainnet.incognito.org/fullnode:433"
-	block := 73853
+	url := "https://testnet.incognito.org/fullnode"
+	block := 1623371
 	proof, err := getAndDecodeBridgeSwapProof(url, block)
 	if err != nil {
 		t.Fatal(err)
