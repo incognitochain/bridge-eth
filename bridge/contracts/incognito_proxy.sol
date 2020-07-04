@@ -1,4 +1,4 @@
-pragma solidity >=0.5.12;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./pause.sol";
@@ -9,16 +9,41 @@ import "./pause.sol";
  * Incognito
  */
 contract IncognitoProxy is AdminPausable {
+    struct InstructionProof {
+        bytes inst;
+        bytes32[] path;
+        bool[] isLeft;
+        bytes32 root;
+        bytes32 blkData;
+        uint[] sigIdx;
+        uint8[] sigV;
+        bytes32[] sigR;
+        bytes32[] sigS;
+    }
+
     struct Committee {
         address[] pubkeys; // ETH address of all members
         uint startBlock; // The block that the committee starts to work on
     }
 
+    struct Finality {
+        uint blockHeight; // TODO: remove if unnecessary
+        bytes32 rootHash;
+    }
+
     Committee[] public beaconCommittees; // All beacon committees from genesis block
     Committee[] public bridgeCommittees; // All bridge committees from genesis block
+    mapping(uint => Committee) public bridgeCandidates;
+    mapping(uint => Committee) public beaconCandidates;
 
+    // Finality info for beacon and bridge
+    Finality public beaconFinality;
+    Finality public bridgeFinality;
+
+    event SubmittedBridgeCandidate(uint id, uint startHeight);
     event BeaconCommitteeSwapped(uint id, uint startHeight);
     event BridgeCommitteeSwapped(uint id, uint startHeight);
+    event ChainFinalized(bool isBeacon);
 
     /**
      * @dev Sets the genesis committees and the address of admin
@@ -69,30 +94,15 @@ contract IncognitoProxy is AdminPausable {
     }
 
     /**
-     * @dev Updates the latest committee of the bridge
-     * @notice This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committee
+     * @dev Validates and stores a new group of bridge candidates
+     * The candidates will become a committee when a finality proof is provided
+     * @notice This function takes a swap instruction on Incognito Chain, checks for its validity and stores the candidates
      * @notice This only works when the contract is not Paused
      * @notice All params except inst are the list of 2 elements corresponding to the proof on beacon and bridge
-     * @param inst: the decoded instruction as a list of bytes
-     * @param instPaths: merkle path of the instruction
-     * @param instPathIsLefts: whether each node on the path is the left or right child
-     * @param instRoots: root of the merkle tree contains all instructions
-     * @param blkData: merkle has of the block body
-     * @param sigIdxs: indices of the validators who signed this block
-     * @param sigVs: part of the signatures of the validators
-     * @param sigRs: part of the signatures of the validators
-     * @param sigSs: part of the signatures of the validators
      */
-    function swapBridgeCommittee(
+    function submitBridgeCandidate(
         bytes memory inst,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        InstructionProof[2] memory instProofs
     ) public isNotPaused {
         bytes32 instHash = keccak256(inst);
 
@@ -101,46 +111,48 @@ contract IncognitoProxy is AdminPausable {
             true,
             instHash,
             beaconCommittees[beaconCommittees.length-1].startBlock,
-            instPaths[0],
-            instPathIsLefts[0],
-            instRoots[0],
-            blkData[0],
-            sigIdxs[0],
-            sigVs[0],
-            sigRs[0],
-            sigSs[0]
+            instProofs[0].path,
+            instProofs[0].isLeft,
+            instProofs[0].root,
+            instProofs[0].blkData,
+            instProofs[0].sigIdx,
+            instProofs[0].sigV,
+            instProofs[0].sigR,
+            instProofs[0].sigS
         ));
 
         // Verify instruction on bridge
+        // TODO: use candidate to validate if necessary
         require(instructionApproved(
             false,
             instHash,
             bridgeCommittees[bridgeCommittees.length-1].startBlock,
-            instPaths[1],
-            instPathIsLefts[1],
-            instRoots[1],
-            blkData[1],
-            sigIdxs[1],
-            sigVs[1],
-            sigRs[1],
-            sigSs[1]
+            instProofs[1].path,
+            instProofs[1].isLeft,
+            instProofs[1].root,
+            instProofs[1].blkData,
+            instProofs[1].sigIdx,
+            instProofs[1].sigV,
+            instProofs[1].sigR,
+            instProofs[1].sigS
         ));
 
         // Parse instruction and check metadata
-        (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
+        (uint8 meta, uint8 shard, uint startHeight, uint numVals, uint id) = extractMetaFromInstruction(inst);
         require(meta == 71 && shard == 1);
 
         // Make sure 1 instruction can't be used twice (using startHeight)
         require(startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, "cannot change old committee");
 
-        // Swap committee
+        // Store candidates
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
-        bridgeCommittees.push(Committee({
+        bridgeCandidates[id] = Committee({
             pubkeys: pubkeys,
             startBlock: startHeight
-        }));
+        });
 
-        emit BridgeCommitteeSwapped(bridgeCommittees.length, startHeight);
+        emit SubmittedBridgeCandidate(bridgeCommittees.length, startHeight);
+        // emit BridgeCommitteeSwapped(bridgeCommittees.length, startHeight);
     }
 
     /**
@@ -150,16 +162,9 @@ contract IncognitoProxy is AdminPausable {
      * @notice Swapping beacon committee doesn't require that the instruction is included in the bridge chain
      * @notice All params are the same as swapBridgeCommittee
      */
-    function swapBeaconCommittee(
+    function submitBeaconCandidate(
         bytes memory inst,
-        bytes32[] memory instPath,
-        bool[] memory instPathIsLeft,
-        bytes32 instRoot,
-        bytes32 blkData,
-        uint[] memory sigIdx,
-        uint8[] memory sigV,
-        bytes32[] memory sigR,
-        bytes32[] memory sigS
+        InstructionProof memory instProof
     ) public isNotPaused {
         bytes32 instHash = keccak256(inst);
 
@@ -168,31 +173,103 @@ contract IncognitoProxy is AdminPausable {
             true,
             instHash,
             beaconCommittees[beaconCommittees.length-1].startBlock,
-            instPath,
-            instPathIsLeft,
-            instRoot,
-            blkData,
-            sigIdx,
-            sigV,
-            sigR,
-            sigS
+            instProof.path,
+            instProof.isLeft,
+            instProof.root,
+            instProof.blkData,
+            instProof.sigIdx,
+            instProof.sigV,
+            instProof.sigR,
+            instProof.sigS
         ));
 
         // Parse instruction and check metadata and shardID
-        (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
+        (uint8 meta, uint8 shard, uint startHeight, uint numVals, uint id) = extractMetaFromInstruction(inst);
         require(meta == 70 && shard == 1);
 
         // Make sure 1 instruction can't be used twice (using startHeight)
         require(startHeight > beaconCommittees[beaconCommittees.length-1].startBlock, "cannot change old committee");
 
-        // Swap committee
+        // Store candidates
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
-        beaconCommittees.push(Committee({
+        beaconCandidates[id] = Committee({
             pubkeys: pubkeys,
             startBlock: startHeight
-        }));
+        });
 
-        emit BeaconCommitteeSwapped(beaconCommittees.length, startHeight);
+        emit SubmittedBridgeCandidate(beaconCommittees.length, startHeight);
+        // emit BeaconCommitteeSwapped(beaconCommittees.length, startHeight);
+    }
+
+    function submitFinalityProof(
+        InstructionProof[] memory instProofs,
+        uint swapID,
+        bool isCandidate,
+        bool isBeacon
+    ) public isNotPaused {
+        require(instProofs.length == 2, "must provide 2 blocks for finality proof");
+
+        // Extract the committee signed the instructions
+        // Using the same committee for both blocks
+        // We do not support two adjacent blocks with increasing timeslots but signed by 2 different committees
+        address[] memory signers;
+        if (isCandidate) {
+            if (isBeacon) {
+                signers = beaconCandidates[swapID].pubkeys;
+            } else {
+                signers = bridgeCandidates[swapID].pubkeys;
+            }
+        } else {
+            if (isBeacon) {
+                signers = beaconCommittees[beaconCommittees.length-1].pubkeys;
+            } else {
+                signers = bridgeCommittees[bridgeCommittees.length-1].pubkeys;
+            }
+        }
+
+        // Check if both BlockMerkleRoot instructions are valid
+        address[] memory signersTmp = new address[](signers.length);
+        for (uint i = 0; i < 2; i++) {
+            // Extract signers that signed this block (require sigIdx to be strictly increasing)
+            require(instProofs[i].sigV.length == instProofs[i].sigIdx.length);
+            for (uint j = 0; j < instProofs[i].sigIdx.length; j++) {
+                require(instProofs[i].sigIdx[j] < signers.length, "sigIdx not in range");
+                require((j == 0 || instProofs[i].sigIdx[j] <= instProofs[i].sigIdx[j-1]), "sigIdx must be strictly increasing");
+                signersTmp[j] = signers[instProofs[i].sigIdx[j]];
+            }
+
+            require(instructionApprovedByCommittee(
+                keccak256(instProofs[i].inst),
+                signersTmp,
+                instProofs[i].path,
+                instProofs[i].isLeft,
+                instProofs[i].root,
+                instProofs[i].blkData,
+                instProofs[i].sigV,
+                instProofs[i].sigR,
+                instProofs[i].sigS
+            ));
+        }
+
+        // Validate instruction's data
+        (uint8 meta0, bytes32 rootHash, uint proposeTime0) = extractDataFromBlockMerkleInstruction(instProofs[0].inst);
+        (uint8 meta1, bytes32 _, uint proposeTime1) = extractDataFromBlockMerkleInstruction(instProofs[1].inst);
+        require(proposeTime0 / 10 + 1 == proposeTime1 / 10, "proposeTime invalid");
+        require(meta0 == 1 && meta1 == 1, "invalid meta");
+
+        // Save the block merkle root
+        if (isBeacon) {
+            beaconFinality = Finality({
+                blockHeight: 0,
+                rootHash: rootHash
+            });
+        } else {
+            bridgeFinality = Finality({
+                blockHeight: 0,
+                rootHash: rootHash
+            });
+        }
+        emit ChainFinalized(isBeacon);
     }
 
     /**
@@ -245,11 +322,35 @@ contract IncognitoProxy is AdminPausable {
             signers[i] = signers[sigIdx[i]];
         }
 
+        return instructionApprovedByCommittee(
+            instHash,
+            signers,
+            instPath,
+            instPathIsLeft,
+            instRoot,
+            blkData,
+            sigV,
+            sigR,
+            sigS
+        );
+    }
+
+    function instructionApprovedByCommittee(
+        bytes32 instHash,
+        address[] memory signers,
+        bytes32[] memory instPath,
+        bool[] memory instPathIsLeft,
+        bytes32 instRoot,
+        bytes32 blkData,
+        uint8[] memory sigV,
+        bytes32[] memory sigR,
+        bytes32[] memory sigS
+    ) public view returns (bool) {
         // Get double block hash from instRoot and other data
         bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(blkData, instRoot))));
 
         // Check if enough validators signed this block
-        if (sigIdx.length <= signers.length * 2 / 3) {
+        if (sigV.length <= signers.length * 2 / 3) {
             return false;
         }
 
@@ -345,19 +446,22 @@ contract IncognitoProxy is AdminPausable {
      * @return shard: ID of the Incognito shard containing the instruction, must be 1
      * @return height: the starting block that the committee is responsible for
      * @return numVals: number of validators in the new committee
+     * @return id: id of the swap
      */
-    function extractMetaFromInstruction(bytes memory inst) public pure returns(uint8, uint8, uint, uint) {
+    function extractMetaFromInstruction(bytes memory inst) public pure returns(uint8, uint8, uint, uint, uint) {
         require(inst.length >= 0x42); // 0x02 bytes for meta and shard, 0x20 each for height and numVals
         uint8 meta = uint8(inst[0]);
         uint8 shard = uint8(inst[1]);
         uint height;
         uint numVals;
+        uint id;
         assembly {
             // skip first 0x20 bytes (stored length of inst)
             height := mload(add(inst, 0x22)) // [2:34]
             numVals := mload(add(inst, 0x42)) // [34:66]
+            id := mload(add(inst, 0x62)) // [66:98]
         }
-        return (meta, shard, height, numVals);
+        return (meta, shard, height, numVals, id);
     }
 
     /**
@@ -367,18 +471,31 @@ contract IncognitoProxy is AdminPausable {
      * @return committee: address of the committee members
      */
     function extractCommitteeFromInstruction(bytes memory inst, uint numVals) public pure returns (address[] memory) {
-        require(inst.length == 0x42 + numVals * 0x20);
+        require(inst.length == 0x62 + numVals * 0x20);
         address[] memory addr = new address[](numVals);
         address tmp;
         for (uint i = 0; i < numVals; i++) {
             assembly {
                 // skip first 0x20 bytes (stored length of inst)
-                // also, skip the next 0x42 bytes (stored metadata)
-                tmp := mload(add(add(inst, 0x62), mul(i, 0x20))) // 67+i*32
+                // also, skip the next 0x62 bytes (stored metadata)
+                tmp := mload(add(add(inst, 0x82), mul(i, 0x20))) // 98+i*32
             }
             addr[i] = tmp;
         }
         return addr;
+    }
+
+    function extractDataFromBlockMerkleInstruction(bytes memory inst) public pure returns (uint8, bytes32, uint) {
+        require(inst.length >= 0x41); // 0x01 bytes for meta and shard, 0x20 each for rootHash and proposeTime
+        uint8 meta = uint8(inst[0]);
+        bytes32 rootHash;
+        uint proposeTime;
+        assembly {
+            // skip first 0x20 bytes (stored length of inst)
+            rootHash := mload(add(inst, 0x21)) // [1:33]
+            proposeTime := mload(add(inst, 0x41)) // [33:65]
+        }
+        return (meta, rootHash, proposeTime);
     }
 
     /**
