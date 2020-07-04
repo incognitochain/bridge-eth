@@ -9,6 +9,11 @@ import "./pause.sol";
  * Incognito
  */
 contract IncognitoProxy is AdminPausable {
+    struct MerkleProof {
+        bytes32[] path;
+        bool[] isLeft;
+    }
+
     struct InstructionProof {
         bytes inst;
         bytes32[] path;
@@ -26,6 +31,12 @@ contract IncognitoProxy is AdminPausable {
         uint startBlock; // The block that the committee starts to work on
     }
 
+    struct Candidate {
+        address[] pubkeys;
+        uint startBlock;
+        bytes32 blockHash;
+    }
+
     struct Finality {
         uint blockHeight; // TODO: remove if unnecessary
         bytes32 rootHash;
@@ -33,8 +44,8 @@ contract IncognitoProxy is AdminPausable {
 
     Committee[] public beaconCommittees; // All beacon committees from genesis block
     Committee[] public bridgeCommittees; // All bridge committees from genesis block
-    mapping(uint => Committee) public bridgeCandidates;
-    mapping(uint => Committee) public beaconCandidates;
+    mapping(uint => Candidate) public bridgeCandidates;
+    mapping(uint => Candidate) public beaconCandidates;
 
     // Finality info for beacon and bridge
     Finality public beaconFinality;
@@ -44,6 +55,7 @@ contract IncognitoProxy is AdminPausable {
     event BeaconCommitteeSwapped(uint id, uint startHeight);
     event BridgeCommitteeSwapped(uint id, uint startHeight);
     event ChainFinalized(bool isBeacon);
+    event CandidatePromoted(uint swapID, bool isBeacon);
 
     /**
      * @dev Sets the genesis committees and the address of admin
@@ -146,9 +158,11 @@ contract IncognitoProxy is AdminPausable {
 
         // Store candidates
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
-        bridgeCandidates[id] = Committee({
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[1].blkData, instProofs[1].root))));
+        bridgeCandidates[id] = Candidate({
             pubkeys: pubkeys,
-            startBlock: startHeight
+            startBlock: startHeight,
+            blockHash: blk
         });
 
         emit SubmittedBridgeCandidate(bridgeCommittees.length, startHeight);
@@ -192,15 +206,19 @@ contract IncognitoProxy is AdminPausable {
 
         // Store candidates
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
-        beaconCandidates[id] = Committee({
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, instProof.root))));
+        beaconCandidates[id] = Candidate({
             pubkeys: pubkeys,
-            startBlock: startHeight
+            startBlock: startHeight,
+            blockHash: blk
         });
 
         emit SubmittedBridgeCandidate(beaconCommittees.length, startHeight);
         // emit BeaconCommitteeSwapped(beaconCommittees.length, startHeight);
     }
 
+    // TODO: doc
+    // TODO: split func
     function submitFinalityProof(
         InstructionProof[] memory instProofs,
         uint swapID,
@@ -270,6 +288,47 @@ contract IncognitoProxy is AdminPausable {
             });
         }
         emit ChainFinalized(isBeacon);
+    }
+
+    // TODO: doc
+    function promoteCandidate(
+        uint swapID,
+        bool isBeacon,
+        MerkleProof memory proof
+    ) public isNotPaused {
+        // Extract block data
+        bytes32 blockHash;
+        bytes32 blockRoot;
+        if (isBeacon) {
+            blockHash = beaconCandidates[swapID].blockHash;
+            blockRoot = beaconFinality.rootHash;
+        } else {
+            blockHash = bridgeCandidates[swapID].blockHash;
+            blockRoot = bridgeFinality.rootHash;
+        }
+
+        // Check that block is in merkle tree
+        require(leafInMerkleTree(
+            blockHash,
+            blockRoot,
+            proof.path,
+            proof.isLeft
+        ));
+
+        // TODO: check swapID vs latest committee
+        // Move candidate to committee
+        if (isBeacon) {
+            beaconCommittees.push(Committee({
+                pubkeys: beaconCandidates[swapID].pubkeys,
+                startBlock: beaconCandidates[swapID].startBlock
+            }));
+        } else {
+            bridgeCommittees.push(Committee({
+                pubkeys: bridgeCandidates[swapID].pubkeys,
+                startBlock: bridgeCandidates[swapID].startBlock
+            }));
+        }
+        emit CandidatePromoted(swapID, isBeacon);
     }
 
     /**
@@ -358,7 +417,7 @@ contract IncognitoProxy is AdminPausable {
         require(verifySig(signers, blk, sigV, sigR, sigS));
 
         // Check that inst is in block
-        require(instructionInMerkleTree(
+        require(leafInMerkleTree(
             instHash,
             instRoot,
             instPath,
@@ -419,7 +478,7 @@ contract IncognitoProxy is AdminPausable {
      * @param left: whether each node on the path is the left or right child
      * @return bool: whether the value is in the merkle tree
      */
-    function instructionInMerkleTree(
+    function leafInMerkleTree(
         bytes32 leaf,
         bytes32 root,
         bytes32[] memory path,
