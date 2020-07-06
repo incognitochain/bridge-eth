@@ -379,6 +379,7 @@ contract IncognitoProxy is AdminPausable {
         bytes32[] memory sigR,
         bytes32[] memory sigS
     ) public view returns (bool) {
+        // TODO: receive finality proof and check it
         // Find committee in charge of this block
         address[] memory signers;
         uint _;
