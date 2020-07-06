@@ -326,15 +326,20 @@ contract IncognitoProxy is AdminPausable {
             proof.isLeft
         ));
 
-        // TODO: check swapID vs latest committee
         // Move candidate to committee
         if (isBeacon) {
+            // This must be the next swapID
+            require(beaconCommittees[beaconCommittees.length-1].swapID + 1 == swapID, "must promote candidate sequentially");
+
             beaconCommittees.push(Committee({
                 pubkeys: beaconCandidates[swapID].pubkeys,
                 startBlock: beaconCandidates[swapID].startBlock,
                 swapID: swapID
             }));
         } else {
+            // This must be the next swapID
+            require(bridgeCommittees[bridgeCommittees.length-1].swapID + 1 == swapID, "must promote candidate sequentially");
+
             bridgeCommittees.push(Committee({
                 pubkeys: bridgeCandidates[swapID].pubkeys,
                 startBlock: bridgeCandidates[swapID].startBlock,
