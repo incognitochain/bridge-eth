@@ -238,6 +238,32 @@ func transfer(
 	return signedTx.Hash().String(), nil
 }
 
+func TestInstructionUsed(t *testing.T) {
+	proof, err := getAndDecodeBurnProof("4600db42637741fac7d8514f0ebabab431a67f7e4d2df55f3e2ce1e88e4b3fe9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	instHash := crypto.Keccak256(proof.Instruction)
+
+	// Connect to ETH
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Get contract instance
+	vaultAddr := common.HexToAddress(VaultAddress)
+	c, err := vault.NewVault(vaultAddr, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h := [32]byte{}
+	copy(h[:], instHash)
+	fmt.Println(c.IsWithdrawed(nil, h))
+}
+
 func TestBurn(t *testing.T) {
 	// Get proof
 	proof, err := getAndDecodeBurnProof("f9a347693a0c81168cfc12bd909455d1d53ee3d1527f2bf48d7d3615448ad862")
