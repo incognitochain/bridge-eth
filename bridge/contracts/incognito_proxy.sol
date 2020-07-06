@@ -26,9 +26,18 @@ contract IncognitoProxy is AdminPausable {
         bytes32[] sigS;
     }
 
+    struct CommitteeMeta {
+        uint8 meta;
+        uint8 shard;
+        uint startHeight;
+        uint numVals;
+        uint id;
+    }
+
     struct Committee {
         address[] pubkeys; // ETH address of all members
         uint startBlock; // The block that the committee starts to work on
+        uint swapID;
     }
 
     struct Candidate {
@@ -78,12 +87,14 @@ contract IncognitoProxy is AdminPausable {
     ) public AdminPausable(admin) {
         beaconCommittees.push(Committee({
             pubkeys: beaconCommittee,
-            startBlock: 0
+            startBlock: 0,
+            swapID: 0
         }));
 
         bridgeCommittees.push(Committee({
             pubkeys: bridgeCommittee,
-            startBlock: 0
+            startBlock: 0,
+            swapID: 0
         }));
     }
 
@@ -112,13 +123,19 @@ contract IncognitoProxy is AdminPausable {
      * @notice This only works when the contract is not Paused
      * @notice All params except inst are the list of 2 elements corresponding to the proof on beacon and bridge
      */
+
     function submitBridgeCandidate(
         bytes memory inst,
         InstructionProof[2] memory instProofs
     ) public isNotPaused {
-        bytes32 instHash = keccak256(inst);
+        // Parse instruction and check metadata
+        CommitteeMeta memory cm; // Temp var to by pass max local var in a function
+        (cm.meta, cm.shard, cm.startHeight, cm.numVals, cm.id) = extractMetaFromInstruction(inst);
+        require(cm.meta == 71 && cm.shard == 1);
 
         // Verify instruction on beacon
+        // NOTE: assuming no swap candidate for beacon
+        bytes32 instHash = keccak256(inst);
         require(instructionApproved(
             true,
             instHash,
@@ -134,39 +151,39 @@ contract IncognitoProxy is AdminPausable {
         ));
 
         // Verify instruction on bridge
-        // TODO: use candidate to validate if necessary
-        require(instructionApproved(
-            false,
+        address[] memory signers;
+        uint latestSwapID = bridgeCommittees[bridgeCommittees.length-1].swapID;
+        if (latestSwapID + 1 < cm.id) {
+            signers = filterSigners(instProofs[1].sigIdx, bridgeCandidates[cm.id-1].pubkeys);
+        } else {
+            signers = filterSigners(instProofs[1].sigIdx, bridgeCommittees[bridgeCommittees.length-1].pubkeys);
+        }
+        require(instructionApprovedBySigners(
             instHash,
-            bridgeCommittees[bridgeCommittees.length-1].startBlock,
+            signers,
             instProofs[1].path,
             instProofs[1].isLeft,
             instProofs[1].root,
             instProofs[1].blkData,
-            instProofs[1].sigIdx,
             instProofs[1].sigV,
             instProofs[1].sigR,
             instProofs[1].sigS
         ));
 
-        // Parse instruction and check metadata
-        (uint8 meta, uint8 shard, uint startHeight, uint numVals, uint id) = extractMetaFromInstruction(inst);
-        require(meta == 71 && shard == 1);
-
         // Make sure 1 instruction can't be used twice (using startHeight)
-        require(startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, "cannot change old committee");
+        require(cm.startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, "cannot change old committee");
 
         // Store candidates
-        address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
+        signers = extractCommitteeFromInstruction(inst, cm.numVals);
         bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[1].blkData, instProofs[1].root))));
-        bridgeCandidates[id] = Candidate({
-            pubkeys: pubkeys,
-            startBlock: startHeight,
+        bridgeCandidates[cm.id] = Candidate({
+            pubkeys: signers,
+            startBlock: cm.startHeight,
             blockHash: blk
         });
 
-        emit SubmittedBridgeCandidate(bridgeCommittees.length, startHeight);
-        // emit BridgeCommitteeSwapped(bridgeCommittees.length, startHeight);
+        emit SubmittedBridgeCandidate(bridgeCommittees.length, cm.startHeight);
+        // emit BridgeCommitteeSwapped(bridgeCommittees.length, cm.startHeight);
     }
 
     /**
@@ -246,17 +263,11 @@ contract IncognitoProxy is AdminPausable {
         }
 
         // Check if both BlockMerkleRoot instructions are valid
-        address[] memory signersTmp = new address[](signers.length);
         for (uint i = 0; i < 2; i++) {
             // Extract signers that signed this block (require sigIdx to be strictly increasing)
-            require(instProofs[i].sigV.length == instProofs[i].sigIdx.length);
-            for (uint j = 0; j < instProofs[i].sigIdx.length; j++) {
-                require(instProofs[i].sigIdx[j] < signers.length, "sigIdx not in range");
-                require((j == 0 || instProofs[i].sigIdx[j] <= instProofs[i].sigIdx[j-1]), "sigIdx must be strictly increasing");
-                signersTmp[j] = signers[instProofs[i].sigIdx[j]];
-            }
+            address[] memory signersTmp = filterSigners(instProofs[i].sigIdx, signers);
 
-            require(instructionApprovedByCommittee(
+            require(instructionApprovedBySigners(
                 keccak256(instProofs[i].inst),
                 signersTmp,
                 instProofs[i].path,
@@ -320,12 +331,14 @@ contract IncognitoProxy is AdminPausable {
         if (isBeacon) {
             beaconCommittees.push(Committee({
                 pubkeys: beaconCandidates[swapID].pubkeys,
-                startBlock: beaconCandidates[swapID].startBlock
+                startBlock: beaconCandidates[swapID].startBlock,
+                swapID: swapID
             }));
         } else {
             bridgeCommittees.push(Committee({
                 pubkeys: bridgeCandidates[swapID].pubkeys,
-                startBlock: bridgeCandidates[swapID].startBlock
+                startBlock: bridgeCandidates[swapID].startBlock,
+                swapID: swapID
             }));
         }
         emit CandidatePromoted(swapID, isBeacon);
@@ -371,17 +384,9 @@ contract IncognitoProxy is AdminPausable {
         }
 
         // Extract signers that signed this block (require sigIdx to be strictly increasing)
-        require(sigV.length == sigIdx.length);
-        require(sigV.length == sigR.length);
-        require(sigV.length == sigS.length);
-        for (uint i = 0; i < sigIdx.length; i++) {
-            if ((i > 0 && sigIdx[i] <= sigIdx[i-1]) || sigIdx[i] >= signers.length) {
-                return false;
-            }
-            signers[i] = signers[sigIdx[i]];
-        }
+        signers = filterSigners(sigIdx, signers);
 
-        return instructionApprovedByCommittee(
+        return instructionApprovedBySigners(
             instHash,
             signers,
             instPath,
@@ -394,7 +399,7 @@ contract IncognitoProxy is AdminPausable {
         );
     }
 
-    function instructionApprovedByCommittee(
+    function instructionApprovedBySigners(
         bytes32 instHash,
         address[] memory signers,
         bytes32[] memory instPath,
@@ -555,6 +560,18 @@ contract IncognitoProxy is AdminPausable {
             proposeTime := mload(add(inst, 0x41)) // [33:65]
         }
         return (meta, rootHash, proposeTime);
+    }
+
+    // TODO: doc
+    function filterSigners(uint[] memory sigIdx, address[] memory signers) public pure returns (address[] memory) {
+        address[] memory signersTmp = new address[](signers.length);
+        for (uint i = 0; i < sigIdx.length; i++) {
+            if ((i > 0 && sigIdx[i] <= sigIdx[i-1]) || sigIdx[i] >= signers.length) {
+                revert("sigIdx invalid");
+            }
+            signersTmp[i] = signers[sigIdx[i]];
+        }
+        return signersTmp;
     }
 
     /**
