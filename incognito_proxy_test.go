@@ -14,6 +14,7 @@ import (
 	"github.com/incognitochain/bridge-eth/common"
 	"github.com/incognitochain/bridge-eth/consensus/signatureschemes/bridgesig"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 )
 
 // func TestCompareCommittee(t *testing.T) {
@@ -237,33 +238,36 @@ func repeatSwapBeacon(c *committees, startBlock, swapID, meta, shard int) *decod
 // 	}
 // }
 
-// // TestFixedSwapBridgePaused makes sure swapping committee isn't allowed when contract is paused
-// func TestFixedSwapBridgePaused(t *testing.T) {
-// 	p, c, _ := setupFixedCommittee()
+// TestFixedSubmitBridgeCandidatePaused makes sure swapping committee isn't allowed when contract is paused
+func TestFixedSubmitBridgeCandidatePaused(t *testing.T) {
+	p, c, _ := setupFixedCommittee()
 
-// 	in := buildSwapBeaconTestcase(c, 789, 70, 1)
+	in := buildBridgeCandidateTestcase(c, 789, 1, 71, 1)
 
-// 	// Pause first, must success
-// 	_, err := p.inc.Pause(auth)
-// 	if err != nil {
-// 		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
-// 	}
+	// Pause first, must success
+	_, err := p.inc.Pause(auth)
+	if err != nil {
+		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
+	}
 
-// 	// Must fail
-// 	_, err = p.inc.SwapBridgeCommittee(auth, in.Instruction, in.InstPaths, in.InstPathIsLefts, in.InstRoots, in.BlkData, in.SigIdxs, in.SigVs, in.SigRs, in.SigSs)
+	// Must fail
+	instProofs := buildIncognitoProxyInstructionProof(in)
+	_, err = p.inc.SubmitBridgeCandidate(auth, in.Instruction, instProofs)
 
-// 	// Check tx
-// 	if err == nil {
-// 		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
-// 	}
-// 	p.sim.Commit()
+	// Check tx
+	if err == nil {
+		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
+	}
+	p.sim.Commit()
 
-// 	// New committee mustn't be inserted
-// 	_, err = p.inc.BridgeCommittees(nil, big.NewInt(1))
-// 	if err == nil {
-// 		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
-// 	}
-// }
+	// New committee mustn't be inserted
+	comm, err := p.inc.BridgeCandidates(nil, big.NewInt(1))
+	if err != nil {
+		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
+	}
+	assert.Equal(t, comm.StartBlock.Int64(), int64(0))
+	assert.Equal(t, comm.BlockHash, [32]byte{})
+}
 
 func TestFixedSubmitBridgeCandidate(t *testing.T) {
 	_, c, _ := setupFixedCommittee()
