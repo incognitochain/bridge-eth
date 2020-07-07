@@ -334,6 +334,24 @@ func TestFixedSubmitBridgeCandidate(t *testing.T) {
 	}
 }
 
+func TestFixedSubmitManyBridgeCandidates(t *testing.T) {
+	p, c, _ := setupFixedCommittee()
+	decodedProofs := []*decodedProof{}
+	for i := 0; i < 5; i++ {
+		proof := &decodedProof{}
+		proof, c = buildRandomBridgeCandidate(c, 789+i*400, i+1, 71, 1)
+		decodedProofs = append(decodedProofs, proof)
+	}
+	for _, proof := range decodedProofs {
+		instProofs := buildIncognitoProxyInstructionProof(proof)
+		_, err := p.inc.SubmitBridgeCandidate(auth, instProofs[0].Inst, instProofs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p.sim.Commit()
+	}
+}
+
 func buildIncognitoProxyInstructionProof(proof *decodedProof) [2]incognito_proxy.IncognitoProxyInstructionProof {
 	instProofs := [2]incognito_proxy.IncognitoProxyInstructionProof{}
 	for i := 0; i < 2; i++ {
@@ -352,13 +370,22 @@ func buildIncognitoProxyInstructionProof(proof *decodedProof) [2]incognito_proxy
 	return instProofs
 }
 
-func buildBridgeCandidateTestcase(c *committees, startBlock, swapID, meta, shard int) *decodedProof {
-	addrs := []string{
-		"834f98e1b7324450b798359c9febba74fb1fd888",
-		"1250ba2c592ac5d883a0b20112022f541898e65b",
-		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
-		"6d4850ab610be9849566c09da24b37c5cfa93e50",
+func buildRandomBridgeCandidate(c *committees, startBlock, swapID, meta, shard int) (*decodedProof, *committees) {
+	n := 4
+	addrs := []string{}
+	newComm := &committees{
+		beaconPrivs: c.beaconPrivs,
+		beacons:     c.beacons,
 	}
+	for i := 0; i < n; i++ {
+		key, _ := crypto.GenerateKey()
+		privKey := crypto.FromECDSA(key)
+		addr := crypto.PubkeyToAddress(key.PublicKey)
+		newComm.bridgePrivs = append(newComm.bridgePrivs, privKey)
+		newComm.bridges = append(newComm.bridges, addr)
+		addrs = append(addrs, addr.String()[2:]) // Remove 0x
+	}
+
 	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, swapID, addrs)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
 	ipBridge := signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:])
@@ -373,7 +400,12 @@ func buildBridgeCandidateTestcase(c *committees, startBlock, swapID, meta, shard
 		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
 		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
 		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
-	}
+	}, newComm
+}
+
+func buildBridgeCandidateTestcase(c *committees, startBlock, swapID, meta, shard int) *decodedProof {
+	p, _ := buildRandomBridgeCandidate(c, startBlock, swapID, meta, shard)
+	return p
 }
 
 // // TestFixedSwapBeaconPaused makes sure swapping committee isn't allowed when contract is paused
