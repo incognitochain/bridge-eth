@@ -444,7 +444,7 @@ func TestFixedSubmitBeaconCandidatePaused(t *testing.T) {
 	assert.Equal(t, comm.BlockHash, [32]byte{})
 }
 
-func TestFixedSwapBeaconCommittee(t *testing.T) {
+func TestFixedSubmitBeaconCandidate(t *testing.T) {
 	_, c, _ := setupFixedCommittee()
 
 	testCases := []struct {
@@ -860,24 +860,6 @@ func DecodeValidationData(data string) (*ValidationData, error) {
 // 	printReceipt(p.sim, tx)
 // }
 
-// // TestFixedSwapBeaconTwice submits a swap proof twice to make sure it isn't reusable
-// func TestFixedSwapBeaconTwice(t *testing.T) {
-// 	p, c, err := setupFixedCommittee()
-// 	assert.Nil(t, err)
-
-// 	// Proof: swap with the same members
-// 	proof := repeatSwapBeacon(c, 10, 70, 1)
-
-// 	// First submission
-// 	_, err = SwapBeacon(p.inc, auth, proof)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
-
-// 	// Second
-// 	_, err = SwapBeacon(p.inc, auth, proof)
-// 	assert.NotNil(t, err)
-// }
-
 // // TestFixedSwapBeaconFixedProof decodes a fixed proof and submit to make sure proof
 // // format wasn't changed without updating bot
 // func TestFixedSwapBeaconFixedProof(t *testing.T) {
@@ -1031,67 +1013,67 @@ func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
 	}
 }
 
-// func TestFixedInstructionInMerkleTree(t *testing.T) {
-// 	p, _, _ := setupFixedCommittee()
-// 	testCases := []struct {
-// 		desc string
-// 		in   *merklePath
-// 		out  bool
-// 		err  bool
-// 	}{
-// 		{
-// 			desc: "In merkle tree",
-// 			in:   buildMerklePathTestcase(8, 6, 6),
-// 			out:  true,
-// 		},
-// 		{
-// 			desc: "Not in merkle tree",
-// 			in:   buildMerklePathTestcase(8, 6, 4),
-// 			out:  false,
-// 		},
-// 		{
-// 			desc: "Random leaf",
-// 			in:   buildMerklePathTestcase(8, 6, -1),
-// 			out:  false,
-// 		},
-// 		{
-// 			desc: "Big tree",
-// 			in:   buildMerklePathTestcase(100000, 12345, 12345),
-// 			out:  true,
-// 		},
-// 		{
-// 			desc: "Single node",
-// 			in:   buildMerklePathTestcase(1, 0, 0),
-// 			out:  true,
-// 		},
-// 		{
-// 			desc: "Invalid left.length",
-// 			in: func() *merklePath {
-// 				mp := buildMerklePathTestcase(10, 9, 9)
-// 				mp.left = mp.left[:len(mp.left)-2]
-// 				return mp
-// 			}(),
-// 			err: true,
-// 		},
-// 	}
+func TestFixedLeafInMerkleTree(t *testing.T) {
+	p, _, _ := setupFixedCommittee()
+	testCases := []struct {
+		desc string
+		in   *merklePath
+		out  bool
+		err  bool
+	}{
+		{
+			desc: "In merkle tree",
+			in:   buildMerklePathTestcase(8, 6, 6),
+			out:  true,
+		},
+		{
+			desc: "Not in merkle tree",
+			in:   buildMerklePathTestcase(8, 6, 4),
+			out:  false,
+		},
+		{
+			desc: "Random leaf",
+			in:   buildMerklePathTestcase(8, 6, -1),
+			out:  false,
+		},
+		{
+			desc: "Big tree",
+			in:   buildMerklePathTestcase(100000, 12345, 12345),
+			out:  true,
+		},
+		{
+			desc: "Single node",
+			in:   buildMerklePathTestcase(1, 0, 0),
+			out:  true,
+		},
+		{
+			desc: "Invalid left.length",
+			in: func() *merklePath {
+				mp := buildMerklePathTestcase(10, 9, 9)
+				mp.left = mp.left[:len(mp.left)-2]
+				return mp
+			}(),
+			err: true,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			isIn, err := p.inc.InstructionInMerkleTree(nil, tc.in.leaf, tc.in.root, tc.in.path, tc.in.left)
-// 			isErr := err != nil
-// 			if isErr != tc.err {
-// 				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
-// 			}
-// 			if tc.err {
-// 				return
-// 			}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			isIn, err := p.inc.LeafInMerkleTree(nil, tc.in.leaf, tc.in.root, tc.in.path, tc.in.left)
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
 
-// 			if tc.out != isIn {
-// 				t.Errorf("check inst in merkle tree error, expect %v, got %v", tc.out, isIn)
-// 			}
-// 		})
-// 	}
-// }
+			if tc.out != isIn {
+				t.Errorf("check inst in merkle tree error, expect %v, got %v", tc.out, isIn)
+			}
+		})
+	}
+}
 
 func buildMerklePathTestcase(numInst, startNodeID, leafID int) *merklePath {
 	data := randomMerkleHashes(numInst)
