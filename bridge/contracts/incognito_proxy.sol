@@ -134,6 +134,7 @@ contract IncognitoProxy is AdminPausable {
 
         // Verify instruction on beacon
         // NOTE: assuming no swap candidate for beacon
+        // TODO: find correct committee to swap instead of just getting the last one
         bytes32 instHash = keccak256(inst);
         require(instructionApproved(
             true,
@@ -192,41 +193,42 @@ contract IncognitoProxy is AdminPausable {
         bytes memory inst,
         InstructionProof memory instProof
     ) public isNotPaused {
-        bytes32 instHash = keccak256(inst);
+        // Parse instruction and check metadata
+        CommitteeMeta memory cm;
+        (cm.meta, cm.shard, cm.startHeight, cm.numVals, cm.id) = extractMetaFromInstruction(inst);
+        require(cm.meta == 70 && cm.shard == 1);
 
         // Verify instruction on beacon
-        require(instructionApproved(
-            true,
+        bytes32 instHash = keccak256(inst);
+        address[] memory signers;
+        uint latestSwapID = beaconCommittees[beaconCommittees.length-1].swapID;
+        if (latestSwapID + 1 < cm.id) {
+            signers = filterSigners(instProof.sigIdx, beaconCandidates[cm.id-1].pubkeys);
+        } else {
+            signers = filterSigners(instProof.sigIdx, beaconCommittees[beaconCommittees.length-1].pubkeys);
+        }
+        require(instructionApprovedBySigners(
             instHash,
-            beaconCommittees[beaconCommittees.length-1].startBlock,
+            signers,
             instProof.path,
             instProof.isLeft,
             instProof.root,
             instProof.blkData,
-            instProof.sigIdx,
             instProof.sigV,
             instProof.sigR,
             instProof.sigS
         ));
 
-        // Parse instruction and check metadata and shardID
-        (uint8 meta, uint8 shard, uint startHeight, uint numVals, uint id) = extractMetaFromInstruction(inst);
-        require(meta == 70 && shard == 1);
-
-        // Make sure 1 instruction can't be used twice (using startHeight)
-        require(startHeight > beaconCommittees[beaconCommittees.length-1].startBlock, "cannot change old committee");
-
         // Store candidates
-        address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
+        address[] memory pubkeys = extractCommitteeFromInstruction(inst, cm.numVals);
         bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, instProof.root))));
-        beaconCandidates[id] = Candidate({
+        beaconCandidates[cm.id] = Candidate({
             pubkeys: pubkeys,
-            startBlock: startHeight,
+            startBlock: cm.startHeight,
             blockHash: blk
         });
 
-        emit SubmittedBridgeCandidate(beaconCommittees.length, startHeight);
-        // emit BeaconCommitteeSwapped(beaconCommittees.length, startHeight);
+        emit SubmittedBridgeCandidate(beaconCommittees.length, cm.startHeight);
     }
 
     // TODO: doc

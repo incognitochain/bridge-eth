@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"math/big"
+	"strings"
 	"testing"
 
 	ec "github.com/ethereum/go-ethereum/common"
@@ -412,85 +413,89 @@ func buildBridgeCandidateTestcase(c *committees, startBlock, swapID, meta, shard
 	return p
 }
 
-// // TestFixedSwapBeaconPaused makes sure swapping committee isn't allowed when contract is paused
-// func TestFixedSwapBeaconPaused(t *testing.T) {
-// 	p, c, _ := setupFixedCommittee()
+// TestFixedSubmitBeaconCandidatePaused makes sure swapping committee isn't allowed when contract is paused
+func TestFixedSubmitBeaconCandidatePaused(t *testing.T) {
+	p, c, _ := setupFixedCommittee()
 
-// 	in := buildSwapBeaconTestcase(c, 789, 70, 1)
+	in := buildBeaconCandidateTestcase(c, 789, 1, 70, 1)
 
-// 	// Pause first, must success
-// 	_, err := p.inc.Pause(auth)
-// 	if err != nil {
-// 		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
-// 	}
+	// Pause first, must success
+	_, err := p.inc.Pause(auth)
+	if err != nil {
+		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
+	}
 
-// 	// Must fail
-// 	_, err = p.inc.SwapBeaconCommittee(auth, in.Instruction, in.InstPaths[0], in.InstPathIsLefts[0], in.InstRoots[0], in.BlkData[0], in.SigIdxs[0], in.SigVs[0], in.SigRs[0], in.SigSs[0])
+	// Must fail
+	instProofs := buildIncognitoProxyInstructionProof(in)
+	_, err = p.inc.SubmitBeaconCandidate(auth, in.Instruction, instProofs[0])
 
-// 	// Check tx
-// 	if err == nil {
-// 		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
-// 	}
-// 	p.sim.Commit()
+	// Check tx
+	if err == nil {
+		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
+	}
+	p.sim.Commit()
 
-// 	// New committee mustn't be inserted
-// 	_, err = p.inc.BeaconCommittees(nil, big.NewInt(1))
-// 	if err == nil {
-// 		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
-// 	}
-// }
+	// New committee mustn't be inserted
+	comm, err := p.inc.BeaconCandidates(nil, big.NewInt(1))
+	if err != nil {
+		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
+	}
+	assert.Equal(t, comm.StartBlock.Int64(), int64(0))
+	assert.Equal(t, comm.BlockHash, [32]byte{})
+}
 
-// func TestFixedSwapBeaconCommittee(t *testing.T) {
-// 	_, c, _ := setupFixedCommittee()
+func TestFixedSwapBeaconCommittee(t *testing.T) {
+	_, c, _ := setupFixedCommittee()
 
-// 	testCases := []struct {
-// 		desc string
-// 		in   *decodedProof
-// 		out  int
-// 		err  bool
-// 	}{
-// 		{
-// 			desc: "Valid beacon swap instruction",
-// 			in:   buildSwapBeaconTestcase(c, 789, 70, 1),
-// 			out:  789,
-// 		},
-// 		{
-// 			desc: "Invalid meta",
-// 			in:   buildSwapBeaconTestcase(c, 789, 71, 1),
-// 			err:  true,
-// 		},
-// 		{
-// 			desc: "Invalid shard",
-// 			in:   buildSwapBeaconTestcase(c, 789, 70, 2),
-// 			err:  true,
-// 		},
-// 	}
+	testCases := []struct {
+		desc string
+		in   *decodedProof
+		out  int
+		err  bool
+	}{
+		{
+			desc: "Valid beacon swap instruction",
+			in:   buildBeaconCandidateTestcase(c, 789, 1, 70, 1),
+			out:  789,
+		},
+		{
+			desc: "Invalid meta",
+			in:   buildBeaconCandidateTestcase(c, 789, 1, 71, 1),
+			err:  true,
+		},
+		{
+			desc: "Invalid shard",
+			in:   buildBeaconCandidateTestcase(c, 789, 1, 70, 2),
+			err:  true,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			p, _, _ := setupFixedCommittee()
-// 			_, err := p.inc.SwapBeaconCommittee(auth, tc.in.Instruction, tc.in.InstPaths[0], tc.in.InstPathIsLefts[0], tc.in.InstRoots[0], tc.in.BlkData[0], tc.in.SigIdxs[0], tc.in.SigVs[0], tc.in.SigRs[0], tc.in.SigSs[0])
-// 			isErr := err != nil
-// 			if isErr != tc.err {
-// 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
-// 			}
-// 			if tc.err {
-// 				return
-// 			}
-// 			p.sim.Commit()
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, _, _ := setupFixedCommittee()
+			instProofs := buildIncognitoProxyInstructionProof(tc.in)
+			_, err := p.inc.SubmitBeaconCandidate(auth, instProofs[0].Inst, instProofs[0])
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
+			p.sim.Commit()
 
-// 			startBlock, err := p.inc.BeaconCommittees(nil, big.NewInt(1))
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
-// 			if startBlock.Int64() != int64(tc.out) {
-// 				t.Errorf("swap beacon failed, expect %v, got %v", tc.out, startBlock)
-// 			}
-// 		})
-// 	}
-// }
+			comm, err := p.inc.BeaconCandidates(nil, big.NewInt(1))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if comm.StartBlock.Int64() != int64(tc.out) {
+				t.Errorf("swap bridge failed, expect %v, got %v", tc.out, comm.StartBlock.Int64())
+			}
+		})
+	}
+}
 
-func buildSwapBeaconTestcase(c *committees, startBlock, swapID, meta, shard int) *decodedProof {
+func buildBeaconCandidateTestcase(c *committees, startBlock, swapID, meta, shard int) *decodedProof {
 	addrs := []string{
 		"834f98e1b7324450b798359c9febba74fb1fd888",
 		"1250ba2c592ac5d883a0b20112022f541898e65b",
@@ -673,119 +678,119 @@ type instProof struct {
 	sigS           [][32]byte
 }
 
-// func TestFixedVerifySig(t *testing.T) {
-// 	p, _, _ := setupFixedCommittee()
+func TestFixedVerifySig(t *testing.T) {
+	p, _, _ := setupFixedCommittee()
 
-// 	testCases := []struct {
-// 		desc string
-// 		in   *committeeSig
-// 		out  bool
-// 		err  bool
-// 	}{
-// 		{
-// 			desc: "Valid sig",
-// 			in:   getFixedCommitteeSig(),
-// 			out:  true,
-// 		},
-// 		{
-// 			desc: "Invalid committee",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.addrs[1][2] = 123
-// 				return sig
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Invalid msgHash",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.msgHash[0] = 123
-// 				return sig
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Invalid v",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.v[1] = 123
-// 				return sig
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Invalid r",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.r[2][3] = 123
-// 				return sig
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Invalid s",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.s[3][4] = 123
-// 				return sig
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Not enough committee members",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.addrs = sig.addrs[:2]
-// 				return sig
-// 			}(),
-// 			err: true,
-// 		},
-// 		{
-// 			desc: "Not enough v",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.v = sig.v[:2]
-// 				return sig
-// 			}(),
-// 			err: true,
-// 		},
-// 		{
-// 			desc: "Not enough r",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.r = sig.r[:2]
-// 				return sig
-// 			}(),
-// 			err: true,
-// 		},
-// 		{
-// 			desc: "Not enough s",
-// 			in: func() *committeeSig {
-// 				sig := getFixedCommitteeSig()
-// 				sig.s = sig.s[:2]
-// 				return sig
-// 			}(),
-// 			err: true,
-// 		},
-// 	}
+	testCases := []struct {
+		desc string
+		in   *committeeSig
+		out  bool
+		err  bool
+	}{
+		{
+			desc: "Valid sig",
+			in:   getFixedCommitteeSig(),
+			out:  true,
+		},
+		{
+			desc: "Invalid committee",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.addrs[1][2] = 123
+				return sig
+			}(),
+			out: false,
+		},
+		{
+			desc: "Invalid msgHash",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.msgHash[0] = 123
+				return sig
+			}(),
+			out: false,
+		},
+		{
+			desc: "Invalid v",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.v[1] = 123
+				return sig
+			}(),
+			out: false,
+		},
+		{
+			desc: "Invalid r",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.r[2][3] = 123
+				return sig
+			}(),
+			out: false,
+		},
+		{
+			desc: "Invalid s",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.s[3][4] = 123
+				return sig
+			}(),
+			out: false,
+		},
+		{
+			desc: "Not enough committee members",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.addrs = sig.addrs[:2]
+				return sig
+			}(),
+			err: true,
+		},
+		{
+			desc: "Not enough v",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.v = sig.v[:2]
+				return sig
+			}(),
+			err: true,
+		},
+		{
+			desc: "Not enough r",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.r = sig.r[:2]
+				return sig
+			}(),
+			err: true,
+		},
+		{
+			desc: "Not enough s",
+			in: func() *committeeSig {
+				sig := getFixedCommitteeSig()
+				sig.s = sig.s[:2]
+				return sig
+			}(),
+			err: true,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			res, err := p.inc.VerifySig(nil, tc.in.addrs, tc.in.msgHash, tc.in.v, tc.in.r, tc.in.s)
-// 			isErr := err != nil
-// 			if isErr != tc.err {
-// 				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
-// 			}
-// 			if tc.err {
-// 				return
-// 			}
-// 			if res != tc.out {
-// 				t.Errorf("verifySig failed, expect %v, got %v", tc.out, res)
-// 			}
-// 		})
-// 	}
-// }
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			res, err := p.inc.VerifySig(nil, tc.in.addrs, tc.in.msgHash, tc.in.v, tc.in.r, tc.in.s)
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
+			if res != tc.out {
+				t.Errorf("verifySig failed, expect %v, got %v", tc.out, res)
+			}
+		})
+	}
+}
 
 func getFixedCommitteeSig() *committeeSig {
 	validationData := "{\"ProducerBLSSig\":\"D4sg/eVi8yI+rX9WOwCWBEG+4mWXjGNorl2m3ppRCvE=\",\"ProducerBriSig\":null,\"ValidatiorsIdx\":[0,1,2,3],\"AggSig\":\"AriRXDvXcPDqkMNAQjHR61f3xis6YLNskuYF7vQJNzE=\",\"BridgeSig\":[\"/tSXMa9s1PKAxDC9H6etSMPcnAOEqqQYum3TfWtOKQpyvHxA1jllDkLmB68M6pp54bTUWenqXMQVWW+2GAcBjgA=\",\"MJyhaCCm8B6uwK/w6/OMqr7AW1Szo1etRfTcru0ZenZUwea0LVXhPo2QRKeO+Q1n12J2yRv4sUkhRLLL9zw1SwE=\",\"DOpccVDrw6SbGqs4+YP/Ti1nx4gg/xpsuHB7DBuhO2RMl8hAaUz2TVZ6hv+r8z0YLiUw/k6FEFY+5dg/EjMRAQA=\",\"qPEXt4KgFR8ZMw7JelEeEwsWQ7gW/IrzWMpx++zjQ6dLdeXwKcGwxoaBWhWnEpma+MVVQw1LvzzuvtzIBGZDKgE=\"]}"
@@ -957,74 +962,74 @@ func DecodeValidationData(data string) (*ValidationData, error) {
 // 	}
 // }
 
-// func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
-// 	p, _, _ := setupFixedCommittee()
-// 	addrs := []string{
-// 		"834f98e1b7324450b798359c9febba74fb1fd888",
-// 		"1250ba2c592ac5d883a0b20112022f541898e65b",
-// 		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
-// 		"6d4850ab610be9849566c09da24b37c5cfa93e50",
-// 	}
-// 	testCases := []struct {
-// 		desc    string
-// 		inst    []byte
-// 		numVals int
-// 		out     []string
-// 		err     bool
-// 	}{
-// 		{
-// 			desc:    "Extract beacon committee",
-// 			inst:    buildDecodedSwapConfirmInst(70, 1, 789, addrs),
-// 			numVals: len(addrs),
-// 			out:     addrs,
-// 		},
-// 		{
-// 			desc:    "Extract bridge committee",
-// 			inst:    buildDecodedSwapConfirmInst(71, 1, 19827312, addrs[:2]),
-// 			numVals: 2,
-// 			out:     addrs[:2],
-// 		},
-// 		{
-// 			desc:    "Instruction too short",
-// 			inst:    make([]byte, 97),
-// 			numVals: 1,
-// 			err:     true,
-// 		},
-// 		{
-// 			desc:    "numVals too big",
-// 			inst:    buildDecodedSwapConfirmInst(70, 1, 789, addrs),
-// 			numVals: 8,
-// 			err:     true,
-// 		},
-// 		{
-// 			desc:    "numVals too low",
-// 			inst:    buildDecodedSwapConfirmInst(70, 1, 789, addrs),
-// 			numVals: 2,
-// 			err:     true,
-// 		},
-// 	}
+func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
+	p, _, _ := setupFixedCommittee()
+	addrs := []string{
+		"834f98e1b7324450b798359c9febba74fb1fd888",
+		"1250ba2c592ac5d883a0b20112022f541898e65b",
+		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
+		"6d4850ab610be9849566c09da24b37c5cfa93e50",
+	}
+	testCases := []struct {
+		desc    string
+		inst    []byte
+		numVals int
+		out     []string
+		err     bool
+	}{
+		{
+			desc:    "Extract beacon committee",
+			inst:    buildDecodedSwapConfirmInst(70, 1, 789, 1, addrs),
+			numVals: len(addrs),
+			out:     addrs,
+		},
+		{
+			desc:    "Extract bridge committee",
+			inst:    buildDecodedSwapConfirmInst(71, 1, 19827312, 1, addrs[:2]),
+			numVals: 2,
+			out:     addrs[:2],
+		},
+		{
+			desc:    "Instruction too short",
+			inst:    make([]byte, 97),
+			numVals: 1,
+			err:     true,
+		},
+		{
+			desc:    "numVals too big",
+			inst:    buildDecodedSwapConfirmInst(70, 1, 789, 1, addrs),
+			numVals: 8,
+			err:     true,
+		},
+		{
+			desc:    "numVals too low",
+			inst:    buildDecodedSwapConfirmInst(70, 1, 789, 1, addrs),
+			numVals: 2,
+			err:     true,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			comm, err := p.inc.ExtractCommitteeFromInstruction(nil, tc.inst, big.NewInt(int64(tc.numVals)))
-// 			isErr := err != nil
-// 			if isErr != tc.err {
-// 				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
-// 			}
-// 			if tc.err {
-// 				return
-// 			}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			comm, err := p.inc.ExtractCommitteeFromInstruction(nil, tc.inst, big.NewInt(int64(tc.numVals)))
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
 
-// 			for i, c := range comm {
-// 				addr := c.Hex()
-// 				addr = addr[2:] // ignore 0x
-// 				if strings.ToLower(addr) != tc.out[i] {
-// 					t.Errorf("invalid committee[%d], expect %v, got %v", i, tc.out[i], addr)
-// 				}
-// 			}
-// 		})
-// 	}
-// }
+			for i, c := range comm {
+				addr := c.Hex()
+				addr = addr[2:] // ignore 0x
+				if strings.ToLower(addr) != tc.out[i] {
+					t.Errorf("invalid committee[%d], expect %v, got %v", i, tc.out[i], addr)
+				}
+			}
+		})
+	}
+}
 
 // func TestFixedInstructionInMerkleTree(t *testing.T) {
 // 	p, _, _ := setupFixedCommittee()
