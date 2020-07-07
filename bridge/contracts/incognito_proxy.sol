@@ -62,7 +62,6 @@ contract IncognitoProxy is AdminPausable {
 
     event SubmittedBridgeCandidate(uint id, uint startHeight);
     event BeaconCommitteeSwapped(uint id, uint startHeight);
-    event BridgeCommitteeSwapped(uint id, uint startHeight);
     event ChainFinalized(bool isBeacon);
     event CandidatePromoted(uint swapID, bool isBeacon);
 
@@ -170,9 +169,6 @@ contract IncognitoProxy is AdminPausable {
             instProofs[1].sigS
         ));
 
-        // Make sure 1 instruction can't be used twice (using startHeight)
-        require(cm.startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, "cannot change old committee");
-
         // Store candidates
         signers = extractCommitteeFromInstruction(inst, cm.numVals);
         bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[1].blkData, instProofs[1].root))));
@@ -183,7 +179,6 @@ contract IncognitoProxy is AdminPausable {
         });
 
         emit SubmittedBridgeCandidate(bridgeCommittees.length, cm.startHeight);
-        // emit BridgeCommitteeSwapped(bridgeCommittees.length, cm.startHeight);
     }
 
     /**
@@ -519,7 +514,7 @@ contract IncognitoProxy is AdminPausable {
      * @return id: id of the swap
      */
     function extractMetaFromInstruction(bytes memory inst) public pure returns(uint8, uint8, uint, uint, uint) {
-        require(inst.length >= 0x42); // 0x02 bytes for meta and shard, 0x20 each for height and numVals
+        require(inst.length >= 0x62); // 0x02 bytes for meta and shard, 0x20 each for height, numVals and swapID
         uint8 meta = uint8(inst[0]);
         uint8 shard = uint8(inst[1]);
         uint height;
