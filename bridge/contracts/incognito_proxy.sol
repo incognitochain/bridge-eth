@@ -83,17 +83,28 @@ contract IncognitoProxy is AdminPausable {
         address[] memory beaconCommittee,
         address[] memory bridgeCommittee
     ) public AdminPausable(admin) {
+        bytes32 blk;
         beaconCommittees.push(Committee({
             pubkeys: beaconCommittee,
             startBlock: 0,
             swapID: 0
         }));
+        beaconCandidates[0] = Candidate({
+            pubkeys: beaconCommittee,
+            startBlock: 0,
+            beaconBlockHash: blk
+        });
 
         bridgeCommittees.push(Committee({
             pubkeys: bridgeCommittee,
             startBlock: 0,
             swapID: 0
         }));
+        bridgeCandidates[0] = Candidate({
+            pubkeys: bridgeCommittee,
+            startBlock: 0,
+            beaconBlockHash: blk
+        });
     }
 
     /**
@@ -225,10 +236,10 @@ contract IncognitoProxy is AdminPausable {
     // TODO: doc
     function loadCandidates(uint swapID, bool isBeacon) public returns (address[] memory) {
         if (isBeacon) {
-            require(beaconCandidates[swapID].startBlock > 0, "invalid beacon swapID");
+            require(beaconCandidates[swapID].pubkeys.length > 0, "invalid beacon swapID");
             return beaconCandidates[swapID].pubkeys;
         }
-        require(bridgeCandidates[swapID].startBlock > 0, "invalid bridge swapID");
+        require(bridgeCandidates[swapID].pubkeys.length > 0, "invalid bridge swapID");
         return bridgeCandidates[swapID].pubkeys;
     }
 
@@ -241,7 +252,6 @@ contract IncognitoProxy is AdminPausable {
     }
 
     // TODO: doc
-    // TODO: split func
     function submitFinalityProof(
         bytes[2] memory insts,
         InstructionProof[2] memory instProofs,

@@ -533,6 +533,142 @@ func buildSwapData(meta, shard, startBlock, swapID int, addrs []string) ([]byte,
 	return inst, mp, blkData, blkHash[:]
 }
 
+func TestFixedSubmitFinalityProof(t *testing.T) {
+	_, c, _ := setupFixedCommittee()
+
+	testCases := []struct {
+		desc            string
+		isBeacon        bool
+		meta            []byte
+		blockMerkleRoot [][]byte
+		proposeTime     []int
+		swapID          int
+		err             bool
+	}{
+		{
+			desc:            "Valid bridge proof",
+			isBeacon:        false,
+			meta:            []byte{73, 73},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456790},
+			swapID:          0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, _, _ := setupFixedCommittee()
+			insts, instProofs := buildFinalityTestcase(
+				c,
+				tc.isBeacon,
+				tc.meta,
+				tc.blockMerkleRoot,
+				tc.proposeTime,
+			)
+			_, err := p.inc.SubmitFinalityProof(auth, insts, instProofs, big.NewInt(int64(tc.swapID)), tc.isBeacon)
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
+			p.sim.Commit()
+
+			// Check finality result
+			assertFinalityUpdated(t, p, tc.isBeacon)
+		})
+	}
+}
+
+func assertFinalityUpdated(t *testing.T, p *Platform, isBeacon bool) {
+	var rootHash [32]byte
+	if isBeacon {
+		s, err := p.inc.BeaconFinality(nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rootHash = s.RootHash
+	} else {
+		s, err := p.inc.BridgeFinality(nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rootHash = s.RootHash
+	}
+
+	assert.NotEqual(t, [32]byte{}, rootHash)
+}
+
+func buildFinalityTestcase(
+	c *committees,
+	isBeacon bool,
+	meta []byte,
+	blockMerkleRoot [][]byte,
+	proposeTime []int,
+) ([2][]byte, [2]incognito_proxy.IncognitoProxyInstructionProof) {
+	privs := [][]byte{}
+	if isBeacon {
+		privs = c.beaconPrivs
+	} else {
+		privs = c.bridgePrivs
+	}
+
+	// First block
+	inst0, instProof0 := buildFinalityInstructionProof(privs, meta[0], blockMerkleRoot[0], proposeTime[0])
+
+	// Second block
+	inst1, instProof1 := buildFinalityInstructionProof(privs, meta[1], blockMerkleRoot[1], proposeTime[1])
+
+	return [2][]byte{inst0, inst1}, [2]incognito_proxy.IncognitoProxyInstructionProof{
+		instProof0,
+		instProof1,
+	}
+}
+
+func buildFinalityInstructionProof(
+	privs [][]byte,
+	meta byte,
+	blockMerkleRoot []byte,
+	proposeTime int,
+) ([]byte, incognito_proxy.IncognitoProxyInstructionProof) {
+	inst, mp, blkData, blkHash := buildFinalityData(meta, blockMerkleRoot, proposeTime)
+	proof := signAndReturnInstProof(privs, true, mp, blkData, blkHash[:])
+	return inst, incognito_proxy.IncognitoProxyInstructionProof{
+		Path:    proof.instPath,
+		IsLeft:  proof.instPathIsLeft,
+		Root:    proof.instRoot,
+		BlkData: proof.blkData,
+		SigIdx:  proof.sigIdx,
+		SigV:    proof.sigV,
+		SigR:    proof.sigR,
+		SigS:    proof.sigS,
+	}
+}
+
+func buildFinalityData(meta byte, blockMerkleRoot []byte, proposeTime int) ([]byte, *merklePath, []byte, []byte) {
+	// Build instruction merkle tree
+	numInst := 12
+	startNodeID := 9
+	inst := buildDecodedBlockMerkleInst(meta, blockMerkleRoot, proposeTime)
+	data := randomMerkleHashes(numInst)
+	data[startNodeID] = inst
+	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+
+	// Generate random blkHash
+	h := randomMerkleHashes(1)
+	blkData := h[0]
+	blkHash := common.Keccak256(blkData, mp.root[:])
+	return inst, mp, blkData, blkHash[:]
+}
+
+func buildDecodedBlockMerkleInst(meta byte, blockMerkleRoot []byte, proposeTime int) []byte {
+	decoded := []byte{byte(meta)}
+	decoded = append(decoded, blockMerkleRoot...)
+	decoded = append(decoded, toBytes32BigEndian(big.NewInt(int64(proposeTime)).Bytes())...)
+	return decoded
+}
+
 // func TestFixedInstructionApproved(t *testing.T) {
 // 	p, c, _ := setupFixedCommittee()
 
