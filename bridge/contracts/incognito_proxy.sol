@@ -43,7 +43,7 @@ contract IncognitoProxy is AdminPausable {
     struct Candidate {
         address[] pubkeys;
         uint startBlock;
-        bytes32 blockHash;
+        bytes32 beaconBlockHash;
     }
 
     struct Finality {
@@ -153,10 +153,11 @@ contract IncognitoProxy is AdminPausable {
         // Verify instruction on bridge
         address[] memory signers;
         uint latestSwapID = bridgeCommittees[bridgeCommittees.length-1].swapID;
-        if (latestSwapID + 1 < cm.id) {
-            signers = filterSigners(instProofs[1].sigIdx, bridgeCandidates[cm.id-1].pubkeys);
-        } else {
+        require(cm.id > latestSwapID, "cannot submit candidate for old swaps");
+        if (cm.id == latestSwapID + 1) {
             signers = filterSigners(instProofs[1].sigIdx, bridgeCommittees[bridgeCommittees.length-1].pubkeys);
+        } else {
+            signers = filterSigners(instProofs[1].sigIdx, bridgeCandidates[cm.id-1].pubkeys);
         }
         require(instructionApprovedBySigners(
             instHash,
@@ -171,12 +172,14 @@ contract IncognitoProxy is AdminPausable {
         ));
 
         // Store candidates
+        // blockHash is from beacon block, we need to prove that block is final
+        // before promoting this candidates to committee
         signers = extractCommitteeFromInstruction(inst, cm.numVals);
-        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[1].blkData, instProofs[1].root))));
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[0].blkData, instProofs[0].root))));
         bridgeCandidates[cm.id] = Candidate({
             pubkeys: signers,
             startBlock: cm.startHeight,
-            blockHash: blk
+            beaconBlockHash: blk
         });
 
         emit SubmittedBridgeCandidate(bridgeCommittees.length, cm.startHeight);
@@ -202,10 +205,11 @@ contract IncognitoProxy is AdminPausable {
         bytes32 instHash = keccak256(inst);
         address[] memory signers;
         uint latestSwapID = beaconCommittees[beaconCommittees.length-1].swapID;
-        if (latestSwapID + 1 < cm.id) {
-            signers = filterSigners(instProof.sigIdx, beaconCandidates[cm.id-1].pubkeys);
-        } else {
+        require(cm.id > latestSwapID, "cannot submit candidate for old swaps");
+        if (cm.id == latestSwapID + 1) {
             signers = filterSigners(instProof.sigIdx, beaconCommittees[beaconCommittees.length-1].pubkeys);
+        } else {
+            signers = filterSigners(instProof.sigIdx, beaconCandidates[cm.id-1].pubkeys);
         }
         require(instructionApprovedBySigners(
             instHash,
@@ -225,39 +229,42 @@ contract IncognitoProxy is AdminPausable {
         beaconCandidates[cm.id] = Candidate({
             pubkeys: pubkeys,
             startBlock: cm.startHeight,
-            blockHash: blk
+            beaconBlockHash: blk
         });
 
         emit SubmittedBridgeCandidate(beaconCommittees.length, cm.startHeight);
     }
 
     // TODO: doc
+    function loadCandidates(uint swapID, bool isBeacon) public returns (address[] memory) {
+        if (isBeacon) {
+            require(beaconCandidates[swapID].startBlock > 0, "invalid beacon swapID");
+            return beaconCandidates[swapID].pubkeys;
+        }
+        require(bridgeCandidates[swapID].startBlock > 0, "invalid bridge swapID");
+        return bridgeCandidates[swapID].pubkeys;
+    }
+
+    // TODO: doc
+    function getLatestSwapID(bool isBeacon) public returns (uint) {
+        if (isBeacon) {
+            return beaconCommittees[beaconCommittees.length-1].swapID;
+        }
+        return bridgeCommittees[bridgeCommittees.length-1].swapID;
+    }
+
+    // TODO: doc
     // TODO: split func
     function submitFinalityProof(
-        InstructionProof[] memory instProofs,
+        InstructionProof[2] memory instProofs,
         uint swapID,
-        bool isCandidate,
         bool isBeacon
     ) public isNotPaused {
-        require(instProofs.length == 2, "must provide 2 blocks for finality proof");
-
         // Extract the committee signed the instructions
-        // Using the same committee for both blocks
-        // We do not support two adjacent blocks with increasing timeslots but signed by 2 different committees
-        address[] memory signers;
-        if (isCandidate) {
-            if (isBeacon) {
-                signers = beaconCandidates[swapID].pubkeys;
-            } else {
-                signers = bridgeCandidates[swapID].pubkeys;
-            }
-        } else {
-            if (isBeacon) {
-                signers = beaconCommittees[beaconCommittees.length-1].pubkeys;
-            } else {
-                signers = bridgeCommittees[bridgeCommittees.length-1].pubkeys;
-            }
-        }
+        // Using the same committee for both blocks: we do not support two
+        // adjacent blocks with increasing timeslots but signed by 2 different committees
+        require(swapID >= getLatestSwapID(isBeacon), "proof must be signed by new committee/candidate");
+        address[] memory signers = loadCandidates(swapID, isBeacon);
 
         // Check if both BlockMerkleRoot instructions are valid
         for (uint i = 0; i < 2; i++) {
@@ -281,12 +288,12 @@ contract IncognitoProxy is AdminPausable {
         (uint8 meta0, bytes32 rootHash, uint proposeTime0) = extractDataFromBlockMerkleInstruction(instProofs[0].inst);
         (uint8 meta1, bytes32 _, uint proposeTime1) = extractDataFromBlockMerkleInstruction(instProofs[1].inst);
         require(proposeTime0 / 10 + 1 == proposeTime1 / 10, "proposeTime invalid");
-        require(meta0 == 1 && meta1 == 1, "invalid meta");
+        require(meta0 == 73 && meta1 == 73, "invalid meta");
 
         // Save the block merkle root
         if (isBeacon) {
             beaconFinality = Finality({
-                blockHeight: 0,
+                blockHeight: 0, // TODO: save height if needed
                 rootHash: rootHash
             });
         } else {
@@ -306,13 +313,11 @@ contract IncognitoProxy is AdminPausable {
     ) public isNotPaused {
         // Extract block data
         bytes32 blockHash;
-        bytes32 blockRoot;
+        bytes32 blockRoot = beaconFinality.rootHash;
         if (isBeacon) {
-            blockHash = beaconCandidates[swapID].blockHash;
-            blockRoot = beaconFinality.rootHash;
+            blockHash = beaconCandidates[swapID].beaconBlockHash;
         } else {
-            blockHash = bridgeCandidates[swapID].blockHash;
-            blockRoot = bridgeFinality.rootHash;
+            blockHash = bridgeCandidates[swapID].beaconBlockHash;
         }
 
         // Check that block is in merkle tree
