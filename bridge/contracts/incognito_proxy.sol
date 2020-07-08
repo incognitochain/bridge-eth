@@ -15,7 +15,6 @@ contract IncognitoProxy is AdminPausable {
     }
 
     struct InstructionProof {
-        bytes inst;
         bytes32[] path;
         bool[] isLeft;
         bytes32 root;
@@ -162,13 +161,7 @@ contract IncognitoProxy is AdminPausable {
         require(instructionApprovedBySigners(
             instHash,
             signers,
-            instProofs[1].path,
-            instProofs[1].isLeft,
-            instProofs[1].root,
-            instProofs[1].blkData,
-            instProofs[1].sigV,
-            instProofs[1].sigR,
-            instProofs[1].sigS
+            instProofs[1]
         ));
 
         // Store candidates
@@ -214,13 +207,7 @@ contract IncognitoProxy is AdminPausable {
         require(instructionApprovedBySigners(
             instHash,
             signers,
-            instProof.path,
-            instProof.isLeft,
-            instProof.root,
-            instProof.blkData,
-            instProof.sigV,
-            instProof.sigR,
-            instProof.sigS
+            instProof
         ));
 
         // Store candidates
@@ -256,6 +243,7 @@ contract IncognitoProxy is AdminPausable {
     // TODO: doc
     // TODO: split func
     function submitFinalityProof(
+        bytes[2] memory insts,
         InstructionProof[2] memory instProofs,
         uint swapID,
         bool isBeacon
@@ -272,21 +260,15 @@ contract IncognitoProxy is AdminPausable {
             address[] memory signersTmp = filterSigners(instProofs[i].sigIdx, signers);
 
             require(instructionApprovedBySigners(
-                keccak256(instProofs[i].inst),
+                keccak256(insts[i]),
                 signersTmp,
-                instProofs[i].path,
-                instProofs[i].isLeft,
-                instProofs[i].root,
-                instProofs[i].blkData,
-                instProofs[i].sigV,
-                instProofs[i].sigR,
-                instProofs[i].sigS
+                instProofs[i]
             ));
         }
 
         // Validate instruction's data
-        (uint8 meta0, bytes32 rootHash, uint proposeTime0) = extractDataFromBlockMerkleInstruction(instProofs[0].inst);
-        (uint8 meta1, bytes32 _, uint proposeTime1) = extractDataFromBlockMerkleInstruction(instProofs[1].inst);
+        (uint8 meta0, bytes32 rootHash, uint proposeTime0) = extractDataFromBlockMerkleInstruction(insts[0]);
+        (uint8 meta1, bytes32 _, uint proposeTime1) = extractDataFromBlockMerkleInstruction(insts[1]);
         require(proposeTime0 / 10 + 1 == proposeTime1 / 10, "proposeTime invalid");
         require(meta0 == 73 && meta1 == 73, "invalid meta");
 
@@ -394,50 +376,50 @@ contract IncognitoProxy is AdminPausable {
         // Extract signers that signed this block (require sigIdx to be strictly increasing)
         signers = filterSigners(sigIdx, signers);
 
+        // Build proof
+        InstructionProof memory instProof = InstructionProof({
+            path: instPath,
+            isLeft: instPathIsLeft,
+            root: instRoot,
+            blkData: blkData,
+            sigIdx: sigIdx,
+            sigV: sigV,
+            sigR: sigR,
+            sigS: sigS
+        });
+
         return instructionApprovedBySigners(
             instHash,
             signers,
-            instPath,
-            instPathIsLeft,
-            instRoot,
-            blkData,
-            sigV,
-            sigR,
-            sigS
+            instProof
         );
     }
 
     function instructionApprovedBySigners(
         bytes32 instHash,
         address[] memory signers,
-        bytes32[] memory instPath,
-        bool[] memory instPathIsLeft,
-        bytes32 instRoot,
-        bytes32 blkData,
-        uint8[] memory sigV,
-        bytes32[] memory sigR,
-        bytes32[] memory sigS
+        InstructionProof memory instProof
     ) public view returns (bool) {
         // Get double block hash from instRoot and other data
-        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(blkData, instRoot))));
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, instProof.root))));
 
         // Check if enough validators signed this block
-        if (sigV.length <= signers.length * 2 / 3) {
+        if (instProof.sigV.length <= signers.length * 2 / 3) {
             return false;
         }
 
         // Check that signature is correct
-        require(verifySig(signers, blk, sigV, sigR, sigS));
+        if (!verifySig(signers, blk, instProof.sigV, instProof.sigR, instProof.sigS)) {
+            return false;
+        }
 
         // Check that inst is in block
-        require(leafInMerkleTree(
+        return leafInMerkleTree(
             instHash,
-            instRoot,
-            instPath,
-            instPathIsLeft
-        ));
-
-        return true;
+            instProof.root,
+            instProof.path,
+            instProof.isLeft
+        );
     }
 
     /**

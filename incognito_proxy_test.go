@@ -252,8 +252,8 @@ func TestFixedSubmitBridgeCandidatePaused(t *testing.T) {
 	}
 
 	// Must fail
-	instProofs := buildIncognitoProxyInstructionProof(in)
-	_, err = p.inc.SubmitBridgeCandidate(auth, in.Instruction, instProofs)
+	inst, instProofs := buildIncognitoProxyInstructionProof(in)
+	_, err = p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
 
 	// Check tx
 	if err == nil {
@@ -267,7 +267,7 @@ func TestFixedSubmitBridgeCandidatePaused(t *testing.T) {
 		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
 	}
 	assert.Equal(t, comm.StartBlock.Int64(), int64(0))
-	assert.Equal(t, comm.BlockHash, [32]byte{})
+	assert.Equal(t, comm.BeaconBlockHash, [32]byte{})
 }
 
 func TestFixedSubmitBridgeCandidate(t *testing.T) {
@@ -317,8 +317,8 @@ func TestFixedSubmitBridgeCandidate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			p, _, _ := setupFixedCommittee()
-			instProofs := buildIncognitoProxyInstructionProof(tc.in)
-			_, err := p.inc.SubmitBridgeCandidate(auth, tc.in.Instruction, instProofs)
+			inst, instProofs := buildIncognitoProxyInstructionProof(tc.in)
+			_, err := p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -348,8 +348,8 @@ func TestFixedSubmitManyBridgeCandidates(t *testing.T) {
 		decodedProofs = append(decodedProofs, proof)
 	}
 	for _, proof := range decodedProofs {
-		instProofs := buildIncognitoProxyInstructionProof(proof)
-		_, err := p.inc.SubmitBridgeCandidate(auth, instProofs[0].Inst, instProofs)
+		inst, instProofs := buildIncognitoProxyInstructionProof(proof)
+		_, err := p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -357,11 +357,10 @@ func TestFixedSubmitManyBridgeCandidates(t *testing.T) {
 	}
 }
 
-func buildIncognitoProxyInstructionProof(proof *decodedProof) [2]incognito_proxy.IncognitoProxyInstructionProof {
+func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incognito_proxy.IncognitoProxyInstructionProof) {
 	instProofs := [2]incognito_proxy.IncognitoProxyInstructionProof{}
 	for i := 0; i < 2; i++ {
 		instProofs[i] = incognito_proxy.IncognitoProxyInstructionProof{
-			Inst:    proof.Instruction,
 			Path:    proof.InstPaths[i],
 			IsLeft:  proof.InstPathIsLefts[i],
 			Root:    proof.InstRoots[i],
@@ -372,7 +371,7 @@ func buildIncognitoProxyInstructionProof(proof *decodedProof) [2]incognito_proxy
 			SigS:    proof.SigSs[i],
 		}
 	}
-	return instProofs
+	return proof.Instruction, instProofs
 }
 
 func buildRandomBridgeCandidate(c *committees, startBlock, swapID, meta, shard int) (*decodedProof, *committees) {
@@ -426,8 +425,8 @@ func TestFixedSubmitBeaconCandidatePaused(t *testing.T) {
 	}
 
 	// Must fail
-	instProofs := buildIncognitoProxyInstructionProof(in)
-	_, err = p.inc.SubmitBeaconCandidate(auth, in.Instruction, instProofs[0])
+	inst, instProofs := buildIncognitoProxyInstructionProof(in)
+	_, err = p.inc.SubmitBeaconCandidate(auth, inst, instProofs[0])
 
 	// Check tx
 	if err == nil {
@@ -441,7 +440,7 @@ func TestFixedSubmitBeaconCandidatePaused(t *testing.T) {
 		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
 	}
 	assert.Equal(t, comm.StartBlock.Int64(), int64(0))
-	assert.Equal(t, comm.BlockHash, [32]byte{})
+	assert.Equal(t, comm.BeaconBlockHash, [32]byte{})
 }
 
 func TestFixedSubmitBeaconCandidate(t *testing.T) {
@@ -473,8 +472,8 @@ func TestFixedSubmitBeaconCandidate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			p, _, _ := setupFixedCommittee()
-			instProofs := buildIncognitoProxyInstructionProof(tc.in)
-			_, err := p.inc.SubmitBeaconCandidate(auth, instProofs[0].Inst, instProofs[0])
+			inst, instProofs := buildIncognitoProxyInstructionProof(tc.in)
+			_, err := p.inc.SubmitBeaconCandidate(auth, inst, instProofs[0])
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
