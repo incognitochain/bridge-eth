@@ -539,19 +539,79 @@ func TestFixedSubmitFinalityProof(t *testing.T) {
 	testCases := []struct {
 		desc            string
 		isBeacon        bool
+		swapID          int
 		meta            []byte
 		blockMerkleRoot [][]byte
 		proposeTime     []int
-		swapID          int
+		init            func([2]incognito_proxy.IncognitoProxyInstructionProof)
 		err             bool
 	}{
 		{
 			desc:            "Valid bridge proof",
 			isBeacon:        false,
+			swapID:          0,
 			meta:            []byte{73, 73},
 			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
 			proposeTime:     []int{123456780, 123456790},
+		},
+		{
+			desc:            "Valid beacon proof",
+			isBeacon:        true,
 			swapID:          0,
+			meta:            []byte{73, 73},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456790},
+		},
+		{
+			desc:            "Invalid first proof",
+			isBeacon:        false,
+			swapID:          0,
+			meta:            []byte{72, 72},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456790},
+			err:             true,
+			init: func(instProofs [2]incognito_proxy.IncognitoProxyInstructionProof) {
+				instProofs[0].BlkData[0] = instProofs[0].BlkData[0] + 1
+			},
+		},
+		{
+			desc:            "Invalid second proof",
+			isBeacon:        false,
+			swapID:          0,
+			meta:            []byte{72, 72},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456790},
+			err:             true,
+			init: func(instProofs [2]incognito_proxy.IncognitoProxyInstructionProof) {
+				instProofs[1].BlkData[0] = instProofs[1].BlkData[0] + 1
+			},
+		},
+		{
+			desc:            "Invalid meta",
+			isBeacon:        false,
+			swapID:          0,
+			meta:            []byte{73, 72},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456790},
+			err:             true,
+		},
+		{
+			desc:            "Invalid swapID",
+			isBeacon:        false,
+			swapID:          4,
+			meta:            []byte{73, 72},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456790},
+			err:             true,
+		},
+		{
+			desc:            "Invalid timeslot",
+			isBeacon:        false,
+			swapID:          4,
+			meta:            []byte{73, 72},
+			blockMerkleRoot: [][]byte{randomMerkleHashes(1)[0], randomMerkleHashes(1)[0]},
+			proposeTime:     []int{123456780, 123456785},
+			err:             true,
 		},
 	}
 
@@ -565,6 +625,10 @@ func TestFixedSubmitFinalityProof(t *testing.T) {
 				tc.blockMerkleRoot,
 				tc.proposeTime,
 			)
+			if tc.init != nil {
+				tc.init(instProofs)
+			}
+
 			_, err := p.inc.SubmitFinalityProof(auth, insts, instProofs, big.NewInt(int64(tc.swapID)), tc.isBeacon)
 			isErr := err != nil
 			if isErr != tc.err {
