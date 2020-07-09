@@ -495,26 +495,8 @@ func TestFixedSubmitBeaconCandidate(t *testing.T) {
 }
 
 func buildBeaconCandidateTestcase(c *committees, startBlock, swapID, meta, shard int) *decodedProof {
-	addrs := []string{
-		"834f98e1b7324450b798359c9febba74fb1fd888",
-		"1250ba2c592ac5d883a0b20112022f541898e65b",
-		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
-		"6d4850ab610be9849566c09da24b37c5cfa93e50",
-	}
-	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, swapID, addrs)
-	ip := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	return &decodedProof{
-		Instruction: inst,
-
-		InstPaths:       [2][][32]byte{ip.instPath},
-		InstPathIsLefts: [2][]bool{ip.instPathIsLeft},
-		InstRoots:       [2][32]byte{ip.instRoot},
-		BlkData:         [2][32]byte{ip.blkData},
-		SigIdxs:         [2][]*big.Int{ip.sigIdx},
-		SigVs:           [2][]uint8{ip.sigV},
-		SigRs:           [2][][32]byte{ip.sigR},
-		SigSs:           [2][][32]byte{ip.sigS},
-	}
+	p, _ := buildRandomBridgeCandidate(c, startBlock, swapID, meta, shard)
+	return p
 }
 
 func buildSwapData(meta, shard, startBlock, swapID int, addrs []string) ([]byte, *merklePath, []byte, []byte) {
@@ -524,7 +506,7 @@ func buildSwapData(meta, shard, startBlock, swapID int, addrs []string) ([]byte,
 	inst := buildDecodedSwapConfirmInst(meta, shard, startBlock, swapID, addrs)
 	data := randomMerkleHashes(numInst)
 	data[startNodeID] = inst
-	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+	mp := buildInstructionMerklePath(data, startNodeID)
 
 	// Generate random blkHash
 	h := randomMerkleHashes(1)
@@ -717,7 +699,7 @@ func buildFinalityData(meta byte, blockMerkleRoot []byte, proposeTime int) ([]by
 	inst := buildDecodedBlockMerkleInst(meta, blockMerkleRoot, proposeTime)
 	data := randomMerkleHashes(numInst)
 	data[startNodeID] = inst
-	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+	mp := buildInstructionMerklePath(data, startNodeID)
 
 	// Generate random blkHash
 	h := randomMerkleHashes(1)
@@ -731,6 +713,241 @@ func buildDecodedBlockMerkleInst(meta byte, blockMerkleRoot []byte, proposeTime 
 	decoded = append(decoded, blockMerkleRoot...)
 	decoded = append(decoded, toBytes32BigEndian(big.NewInt(int64(proposeTime)).Bytes())...)
 	return decoded
+}
+
+type promoteCandidateTestcase struct {
+	candidateProof *decodedProof
+	finalityInsts  [2][]byte
+	finalityProofs [2]incognito_proxy.IncognitoProxyInstructionProof
+	promoteProof   incognito_proxy.IncognitoProxyMerkleProof
+}
+
+func TestFixedPromoteCandidate(t *testing.T) {
+	_, c, _ := setupFixedCommittee()
+
+	testCases := []struct {
+		desc     string
+		isBeacon bool
+		swapID   int
+		in       promoteCandidateTestcase
+		err      bool
+	}{
+		{
+			desc:     "Valid bridge promotion",
+			isBeacon: false,
+			swapID:   1,
+			in:       buildPromoteCandidateTestcase(c, false, 1),
+		},
+		{
+			desc:     "Valid beacon promotion",
+			isBeacon: true,
+			swapID:   1,
+			in:       buildPromoteCandidateTestcase(c, true, 1),
+		},
+		{
+			desc:     "Invalid proof path",
+			isBeacon: false,
+			swapID:   1,
+			in: func() promoteCandidateTestcase {
+				t := buildPromoteCandidateTestcase(c, false, 1)
+				t.promoteProof.IsLeft[0] = !t.promoteProof.IsLeft[0]
+				return t
+			}(),
+			err: true,
+		},
+		{
+			desc:     "Promote old swapID",
+			isBeacon: false,
+			swapID:   0,
+			in:       buildPromoteCandidateTestcase(c, false, 1),
+			err:      true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, _, _ := setupFixedCommittee()
+
+			// Submit candidate, must success
+			var err error
+			inst, instProofs := buildIncognitoProxyInstructionProof(tc.in.candidateProof)
+			if tc.isBeacon {
+				_, err = p.inc.SubmitBeaconCandidate(auth, inst, instProofs[0])
+			} else {
+				_, err = p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
+			}
+			assert.Nil(t, err)
+			p.sim.Commit()
+
+			// Submit finality, must success
+			_, err = p.inc.SubmitFinalityProof(auth, tc.in.finalityInsts, tc.in.finalityProofs, big.NewInt(int64(0)), true)
+			assert.Nil(t, err)
+			p.sim.Commit()
+
+			// Promote candidate and check results
+			_, err = p.inc.PromoteCandidate(auth, big.NewInt(int64(tc.swapID)), tc.isBeacon, tc.in.promoteProof)
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
+			p.sim.Commit()
+
+			var c incognito_proxy.IncognitoProxyCommittee
+			if tc.isBeacon {
+				c, err = p.inc.GetBeaconCommittee(nil, big.NewInt(1))
+			} else {
+				c, err = p.inc.GetBridgeCommittee(nil, big.NewInt(1))
+			}
+			assert.Greater(t, c.StartBlock.Int64(), int64(0))
+			assert.Nil(t, err)
+		})
+	}
+}
+
+func TestFixedPromoteCandidateSkippingSwapID(t *testing.T) {
+	p, c, _ := setupFixedCommittee()
+
+	// Build candidate proof
+	candidateProof, c2 := buildRandomBridgeCandidate(c, 123, 1, 71, 1)
+	blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.InstRoots[0][:])
+	candidateProof2, _ := buildRandomBridgeCandidate(c2, 234, 2, 71, 1)
+	blkHash2 := common.Keccak256(candidateProof2.BlkData[0][:], candidateProof2.InstRoots[0][:])
+
+	// Submit both candidates, must success
+	inst, instProofs := buildIncognitoProxyInstructionProof(candidateProof)
+	_, err := p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	inst, instProofs = buildIncognitoProxyInstructionProof(candidateProof2)
+	_, err = p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// Build promotion proof
+	numBlocks := 4567
+	candidateBlockHeight := 456
+	candidateBlockHeight2 := 789
+	data := randomMerkleHashes(numBlocks)
+	data[candidateBlockHeight] = blkHash[:]
+	data[candidateBlockHeight2] = blkHash2[:]
+	merkleProof := buildPromoteCandidateProof(data, candidateBlockHeight2)
+	promoteProof := buildIncognitoProxyMerkleProof(merkleProof)
+
+	// Build finality proof
+	finalityMeta := []byte{73, 73}
+	b := [32]byte{}
+	blockMerkleRoot := [][]byte{merkleProof.root[:], b[:]}
+	proposeTime := []int{123456780, 123456790}
+	finalityInsts, finalityProofs := buildFinalityTestcase(c, true, finalityMeta, blockMerkleRoot, proposeTime) // finality proof must be on beacon
+
+	// Submit finality, must success
+	_, err = p.inc.SubmitFinalityProof(auth, finalityInsts, finalityProofs, big.NewInt(int64(0)), true)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// Promote candidate and check results
+	_, err = p.inc.PromoteCandidate(auth, big.NewInt(int64(2)), false, promoteProof)
+	assert.NotNil(t, err)
+}
+
+func TestFixedPromoteManyCandidate(t *testing.T) {
+	p, c, _ := setupFixedCommittee()
+	numCandidates := 10
+	numBlocks := 4567
+
+	data := randomMerkleHashes(numBlocks)
+	candidateBlockHeights := []int{}
+	var candidateProof *decodedProof
+	for i := 0; i < numCandidates; i++ {
+		// Build candidate proof
+		candidateProof, c = buildRandomBridgeCandidate(c, 123+i, i+1, 71, 1)
+		blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.InstRoots[0][:])
+		data[456+i] = blkHash[:]
+		candidateBlockHeights = append(candidateBlockHeights, 456+i)
+
+		// Submit candidate, must success
+		inst, instProofs := buildIncognitoProxyInstructionProof(candidateProof)
+		_, err := p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
+		assert.Nil(t, err)
+		p.sim.Commit()
+	}
+
+	// Build promotion proofs
+	promoteProofs := []incognito_proxy.IncognitoProxyMerkleProof{}
+	var root []byte
+	for i := 0; i < numCandidates; i++ {
+		merkleProof := buildPromoteCandidateProof(data, candidateBlockHeights[i])
+		promoteProof := buildIncognitoProxyMerkleProof(merkleProof)
+		promoteProofs = append(promoteProofs, promoteProof)
+		root = merkleProof.root[:]
+	}
+
+	// Build finality proof
+	finalityMeta := []byte{73, 73}
+	b := [32]byte{}
+	blockMerkleRoot := [][]byte{root, b[:]}
+	proposeTime := []int{123456780, 123456790}
+	finalityInsts, finalityProofs := buildFinalityTestcase(c, true, finalityMeta, blockMerkleRoot, proposeTime) // finality proof must be on beacon
+
+	// Submit finality, must success
+	_, err := p.inc.SubmitFinalityProof(auth, finalityInsts, finalityProofs, big.NewInt(int64(0)), true)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// Promote candidates and check results
+	for i, proof := range promoteProofs {
+		_, err := p.inc.PromoteCandidate(auth, big.NewInt(int64(i+1)), false, proof)
+		assert.Nil(t, err)
+		p.sim.Commit()
+
+		c, err := p.inc.GetBridgeCommittee(nil, big.NewInt(int64(i+1)))
+		assert.Equal(t, len(c.Pubkeys), 4)
+	}
+}
+
+func buildPromoteCandidateTestcase(c *committees, isBeacon bool, swapID int) promoteCandidateTestcase {
+	// Build candidate proof
+	startBlock := 123
+	shard := 1
+	meta := 71
+	if isBeacon {
+		meta = 70
+	}
+	candidateProof, _ := buildRandomBridgeCandidate(c, startBlock, swapID, meta, shard)
+	blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.InstRoots[0][:])
+
+	// Build promotion proof
+	numBlocks := 789
+	candidateBlockHeight := 456
+	data := randomMerkleHashes(numBlocks)
+	data[candidateBlockHeight] = blkHash[:]
+	merkleProof := buildPromoteCandidateProof(data, candidateBlockHeight)
+	promoteProof := buildIncognitoProxyMerkleProof(merkleProof)
+
+	// Build finality proof
+	finalityMeta := []byte{73, 73}
+	b := [32]byte{}
+	blockMerkleRoot := [][]byte{merkleProof.root[:], b[:]}
+	proposeTime := []int{123456780, 123456790}
+	finalityInsts, finalityProofs := buildFinalityTestcase(c, true, finalityMeta, blockMerkleRoot, proposeTime) // finality proof must be on beacon
+
+	return promoteCandidateTestcase{candidateProof, finalityInsts, finalityProofs, promoteProof}
+}
+
+func buildPromoteCandidateProof(blockHashes [][]byte, candidateBlockHeight int) *merklePath {
+	mp := buildInstructionMerklePath(blockHashes, candidateBlockHeight)
+	return mp
+}
+
+func buildIncognitoProxyMerkleProof(merkleProof *merklePath) incognito_proxy.IncognitoProxyMerkleProof {
+	promoteProof := incognito_proxy.IncognitoProxyMerkleProof{
+		Path:   merkleProof.path,
+		IsLeft: merkleProof.left,
+	}
+	return promoteProof
 }
 
 // func TestFixedInstructionApproved(t *testing.T) {
@@ -1276,7 +1493,7 @@ func TestFixedLeafInMerkleTree(t *testing.T) {
 
 func buildMerklePathTestcase(numInst, startNodeID, leafID int) *merklePath {
 	data := randomMerkleHashes(numInst)
-	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+	mp := buildInstructionMerklePath(data, startNodeID)
 	if leafID < 0 {
 		// Randomize 32 bytes
 		h := randomMerkleHashes(1)
@@ -1287,7 +1504,7 @@ func buildMerklePathTestcase(numInst, startNodeID, leafID int) *merklePath {
 	return mp
 }
 
-func buildInstructionMerklePath(data [][]byte, numInst, startNodeID int) *merklePath {
+func buildInstructionMerklePath(data [][]byte, startNodeID int) *merklePath {
 	merkles := blockchain.BuildKeccak256MerkleTree(data)
 	p, l := blockchain.GetKeccak256MerkleProofFromTree(merkles, startNodeID)
 	path := [][32]byte{}

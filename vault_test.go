@@ -1077,7 +1077,7 @@ func buildWithdrawData(meta, shard int, tokenID ec.Address, amount *big.Int) ([]
 	instWithHeight := append(inst, toBytes32BigEndian(height.Bytes())...)
 	data := randomMerkleHashes(numInst)
 	data[startNodeID] = instWithHeight
-	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+	mp := buildInstructionMerklePath(data, startNodeID)
 
 	// Generate random blkHash
 	h := randomMerkleHashes(1)
