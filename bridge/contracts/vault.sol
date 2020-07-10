@@ -39,18 +39,11 @@ library SafeMath {
  * confirmed over at Incognito Chain
  */
 interface Incognito {
-    function instructionApproved(
-        bool,
-        bytes32,
-        uint,
-        bytes32[] calldata,
-        bool[] calldata,
-        bytes32,
-        bytes32,
-        uint[] calldata,
-        uint8[] calldata,
-        bytes32[] calldata,
-        bytes32[] calldata
+    function blockIsFinal(
+        bool isBeacon,
+        bytes32 blockHash,
+        bytes32[] calldata path,
+        bool[] calldata isLeft
     ) external view returns (bool);
 }
 
@@ -61,7 +54,7 @@ interface Withdrawable {
     function isWithdrawed(bytes32)  external view returns (bool);
     function isSigDataUsed(bytes32)  external view returns (bool);
     function getDepositedBalance(address, address)  external view returns (uint);
-    function updateAssets(address[] calldata, uint[] calldata) external returns (bool); 
+    function updateAssets(address[] calldata, uint[] calldata) external returns (bool);
 }
 
 /**
@@ -71,6 +64,19 @@ interface Withdrawable {
  */
 contract Vault is AdminPausable {
     using SafeMath for uint;
+
+    struct MinedProof {
+        bytes32[] path;
+        bool[] isLeft;
+        bytes32 root;
+        bytes32 blkData;
+    }
+
+    struct MerkleProof {
+        bytes32[] path;
+        bool[] isLeft;
+    }
+
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     mapping(bytes32 => bool) public withdrawed;
     mapping(bytes32 => bool) public sigDataUsed;
@@ -82,7 +88,7 @@ contract Vault is AdminPausable {
     address payable public newVault;
     bool public notEntered = true;
 
-    // error code 
+    // error code
     enum Errors {
         EMPTY,
         NO_REENTRANCE,
@@ -104,7 +110,7 @@ contract Vault is AdminPausable {
     event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
-     
+
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
      * Calling a `nonReentrant` function from another `nonReentrant`
@@ -124,7 +130,7 @@ contract Vault is AdminPausable {
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         notEntered = true;
-    } 
+    }
 
     /**
      * @dev Creates new Vault to hold assets for Incognito Chain
@@ -175,7 +181,7 @@ contract Vault is AdminPausable {
         erc20Interface.transferFrom(msg.sender, address(this), amount);
         require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
-    
+
         emit Deposit(token, incognitoAddress, emitAmount);
     }
 
@@ -220,6 +226,7 @@ contract Vault is AdminPausable {
         return (meta, shard, token, to, amount);
     }
 
+    // TODO: update doc
     /**
      * @dev Verifies that a burn instruction is valid
      * @notice All params except inst are the list of 2 elements corresponding to
@@ -229,53 +236,55 @@ contract Vault is AdminPausable {
     function verifyInst(
         bytes memory inst,
         uint[2] memory heights,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        MinedProof[2] memory minedProofs,
+        MerkleProof[2] memory ancestorProofs
     ) internal {
+        // TODO: check case manipulate heights
         // Each instruction can only by redeemed once
         bytes32 instHash = keccak256(inst);
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights[0]));
         bytes32 bridgeInstHash = keccak256(abi.encodePacked(inst, heights[1]));
         require(!isWithdrawed(instHash), errorToString(Errors.ALREADY_USED));
 
-        // Verify instruction on beacon
-        require(incognito.instructionApproved(
-            true,
+        // Verify instruction is in a beacon block
+        bytes32 beaconBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[0].blkData, minedProofs[0].root))));
+        require(leafInMerkleTree(
             beaconInstHash,
-            heights[0],
-            instPaths[0],
-            instPathIsLefts[0],
-            instRoots[0],
-            blkData[0],
-            sigIdxs[0],
-            sigVs[0],
-            sigRs[0],
-            sigSs[0]
+            beaconBlk,
+            minedProofs[0].path,
+            minedProofs[0].isLeft
         ), errorToString(Errors.INVALID_DATA));
 
-        // Verify instruction on bridge
-        require(incognito.instructionApproved(
-            false,
-            bridgeInstHash,
-            heights[1],
-            instPaths[1],
-            instPathIsLefts[1],
-            instRoots[1],
-            blkData[1],
-            sigIdxs[1],
-            sigVs[1],
-            sigRs[1],
-            sigSs[1]
+        // Verify the finality of the beacon block
+        require(incognito.blockIsFinal(
+            true,
+            beaconBlk,
+            ancestorProofs[0].path,
+            ancestorProofs[0].isLeft
         ), errorToString(Errors.INVALID_DATA));
+
+        // Verify instruction is in a bridge block
+        bytes32 bridgeBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[1].blkData, minedProofs[1].root))));
+        require(leafInMerkleTree(
+            bridgeInstHash,
+            bridgeBlk,
+            minedProofs[1].path,
+            minedProofs[1].isLeft
+        ), errorToString(Errors.INVALID_DATA));
+
+        // Verify the finality of the bridge block
+        require(incognito.blockIsFinal(
+            false,
+            bridgeBlk,
+            ancestorProofs[1].path,
+            ancestorProofs[1].isLeft
+        ), errorToString(Errors.INVALID_DATA));
+
+        // Mark as withdrawed
         withdrawed[instHash] = true;
     }
 
+    // TODO: doc
     /**
      * @dev Withdraws pETH/pIERC20 by providing a burn proof over at Incognito Chain
      * @notice This function takes a burn instruction on Incognito Chain, checks
@@ -284,27 +293,12 @@ contract Vault is AdminPausable {
      * @notice All params except inst are the list of 2 elements corresponding to
      * the proof on beacon and bridge
      * @param inst: the decoded instruction as a list of bytes
-     * @param heights: the blocks containing the instruction
-     * @param instPaths: merkle path of the instruction
-     * @param instPathIsLefts: whether each node on the path is the left or right child
-     * @param instRoots: root of the merkle tree contains all instructions
-     * @param blkData: merkle has of the block body
-     * @param sigIdxs: indices of the validators who signed this block
-     * @param sigVs: part of the signatures of the validators
-     * @param sigRs: part of the signatures of the validators
-     * @param sigSs: part of the signatures of the validators
      */
     function withdraw(
         bytes memory inst,
         uint[2] memory heights,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        MinedProof[2] memory minedProofs,
+        MerkleProof[2] memory ancestorProofs
     ) public isNotPaused nonReentrant {
         (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
         require(meta == 72 && shard == 1); // Check instruction type
@@ -320,18 +314,7 @@ contract Vault is AdminPausable {
             require(IERC20(token).balanceOf(address(this)) >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
 
-        verifyInst(
-            inst,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        );
+        verifyInst(inst, heights, minedProofs, ancestorProofs);
 
         // Send and notify
         if (token == ETH_TOKEN) {
@@ -353,27 +336,12 @@ contract Vault is AdminPausable {
      * @notice All params except inst are the list of 2 elements corresponding to
      * the proof on beacon and bridge
      * @param inst: the decoded instruction as a list of bytes
-     * @param heights: the blocks containing the instruction
-     * @param instPaths: merkle path of the instruction
-     * @param instPathIsLefts: whether each node on the path is the left or right child
-     * @param instRoots: root of the merkle tree contains all instructions
-     * @param blkData: merkle has of the block body
-     * @param sigIdxs: indices of the validators who signed this block
-     * @param sigVs: part of the signatures of the validators
-     * @param sigRs: part of the signatures of the validators
-     * @param sigSs: part of the signatures of the validators
      */
     function submitBurnProof(
         bytes memory inst,
         uint[2] memory heights,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        MinedProof[2] memory minedProofs,
+        MerkleProof[2] memory ancestorProofs
     ) public isNotPaused nonReentrant {
         (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
         require(meta == 97 && shard == 1); // Check instruction type
@@ -388,18 +356,7 @@ contract Vault is AdminPausable {
             require(IERC20(token).balanceOf(address(this)) >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
 
-        verifyInst(
-            inst,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        );
+        verifyInst(inst, heights, minedProofs, ancestorProofs);
 
         withdrawRequests[to][token] = withdrawRequests[to][token].safeAdd(burned);
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeAdd(burned);
@@ -453,11 +410,11 @@ contract Vault is AdminPausable {
     ) public isNotPaused nonReentrant {
         // verify owner signs data
         address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp, amount), signData);
-        
+
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
-        
+
         // convert denomination from ethereum's to incognito's (pcoin)
         uint emitAmount = amount;
         if (token != ETH_TOKEN) {
@@ -491,7 +448,7 @@ contract Vault is AdminPausable {
     ) public payable isNotPaused nonReentrant {
         //verify ower signs data from input
         address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amount), signData);
-        
+
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
 
         // update balance of verifier
@@ -536,11 +493,11 @@ contract Vault is AdminPausable {
         for(uint i = 0; i < tokens.length; i++){
             // check balance is enough or not
             require(withdrawRequests[verifier][tokens[i]] >= amounts[i], errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
-    
+
             // update balances of verifier
             totalDepositedToSCAmount[tokens[i]] = totalDepositedToSCAmount[tokens[i]].safeSub(amounts[i]);
             withdrawRequests[verifier][tokens[i]] = withdrawRequests[verifier][tokens[i]].safeSub(amounts[i]);
-            
+
             if (tokens[i] == ETH_TOKEN) {
                 ethAmount = ethAmount.safeAdd(amounts[i]);
             } else {
@@ -550,7 +507,7 @@ contract Vault is AdminPausable {
                 require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
             }
         }
-        
+
         // get balance of recipient token before trade to compare after trade.
         uint[] memory balancesBeforeTrade = new uint[](recipientTokens.length);
         for(uint i = 0; i < recipientTokens.length; i++) {
@@ -559,15 +516,15 @@ contract Vault is AdminPausable {
                 balancesBeforeTrade[i] = balancesBeforeTrade[i].safeSub(msg.value);
             }
         }
-        
+
         //return array Addresses and Amounts
         (address[] memory returnedTokenAddresses,uint[] memory returnedAmounts) = callExtFuncMulti(ethAmount, callData, exchangeAddress);
-        
+
         require(returnedTokenAddresses.length == recipientTokens.length && returnedAmounts.length == returnedTokenAddresses.length, errorToString(Errors.INVALID_RETURN_DATA));
-        
+
         //update withdrawRequests
         for(uint i = 0; i < returnedAmounts.length; i++) {
-            require(returnedTokenAddresses[i] == recipientTokens[i] 
+            require(returnedTokenAddresses[i] == recipientTokens[i]
                     && balanceOf(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], errorToString(Errors.INVALID_RETURN_DATA));
             withdrawRequests[verifier][recipientTokens[i]] = withdrawRequests[verifier][recipientTokens[i]].safeAdd(returnedAmounts[i]);
             totalDepositedToSCAmount[recipientTokens[i]] = totalDepositedToSCAmount[recipientTokens[i]].safeAdd(returnedAmounts[i]);
@@ -592,7 +549,7 @@ contract Vault is AdminPausable {
 
         return returnedAmount;
     }
-    
+
     /**
      * @dev multi trade
      */
@@ -603,7 +560,7 @@ contract Vault is AdminPausable {
 
         return abi.decode(result, (address[], uint[]));
     }
-    
+
     /**
      * @dev verify sign data
      */
@@ -613,10 +570,10 @@ contract Vault is AdminPausable {
         address verifier = sigToAddress(signData, hash);
        // mark data hash of sig as used
         sigDataUsed[hash] = true;
-        
+
         return verifier;
      }
-    
+
     /**
      * @dev Get the amount of specific coin for specific wallet
      */
@@ -667,7 +624,7 @@ contract Vault is AdminPausable {
             totalDepositedToSCAmount[assets[i]] = 0;
         }
         require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
-        
+
         emit MoveAssets(assets);
     }
 
@@ -722,7 +679,7 @@ contract Vault is AdminPausable {
 	}
 
     /**
-     * @dev convert enum to string value 
+     * @dev convert enum to string value
      */
      function errorToString(Errors error) internal pure returns(string memory) {
         uint8 erroNum = uint8(error);
@@ -738,7 +695,7 @@ contract Vault is AdminPausable {
         for (uint j = 0; j <= i; j++) {
             s[j] = reversed[i - j];
         }
-        return string(s); 
+        return string(s);
     }
 
     /**
@@ -759,5 +716,33 @@ contract Vault is AdminPausable {
             return address(this).balance;
         }
         return IERC20(token).balanceOf(address(this));
+    }
+
+    /**
+     * @dev Checks if a value is in a merkle tree
+     * @param leaf: the value to check
+     * @param root: of the merkle tree
+     * @param path: merkle path of the value to check
+     * @param left: whether each node on the path is the left or right child
+     * @return bool: whether the value is in the merkle tree
+     */
+    function leafInMerkleTree(
+        bytes32 leaf,
+        bytes32 root,
+        bytes32[] memory path,
+        bool[] memory left
+    ) public pure returns (bool) {
+        require(left.length == path.length);
+        bytes32 hash = leaf;
+        for (uint i = 0; i < path.length; i++) {
+            if (left[i]) {
+                hash = keccak256(abi.encodePacked(path[i], hash));
+            } else if (path[i] == 0x0) {
+                hash = keccak256(abi.encodePacked(hash, hash));
+            } else {
+                hash = keccak256(abi.encodePacked(hash, path[i]));
+            }
+        }
+        return hash == root;
     }
 }

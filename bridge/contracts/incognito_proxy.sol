@@ -348,7 +348,7 @@ contract IncognitoProxy is AdminPausable {
         bytes32 blockHash,
         bytes32[] memory path,
         bool[] memory isLeft
-    ) public returns (bool) {
+    ) public view returns (bool) {
         bytes32 blockRoot;
         if (isBeacon) {
             blockRoot = beaconFinality.rootHash;
