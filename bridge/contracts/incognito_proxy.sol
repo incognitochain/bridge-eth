@@ -305,7 +305,6 @@ contract IncognitoProxy is AdminPausable {
     ) public isNotPaused {
         // Extract block data
         bytes32 blockHash;
-        bytes32 blockRoot = beaconFinality.rootHash;
         if (isBeacon) {
             blockHash = beaconCandidates[swapID].beaconBlockHash;
         } else {
@@ -313,9 +312,9 @@ contract IncognitoProxy is AdminPausable {
         }
 
         // Check that block is in merkle tree
-        require(leafInMerkleTree(
+        require(blockIsFinal(
+            true,
             blockHash,
-            blockRoot,
             proof.path,
             proof.isLeft
         ));
@@ -341,6 +340,29 @@ contract IncognitoProxy is AdminPausable {
             }));
         }
         emit CandidatePromoted(swapID, isBeacon);
+    }
+
+    // TODO: doc
+    function blockIsFinal(
+        bool isBeacon,
+        bytes32 blockHash,
+        bytes32[] memory path,
+        bool[] memory isLeft
+    ) public returns (bool) {
+        bytes32 blockRoot;
+        if (isBeacon) {
+            blockRoot = beaconFinality.rootHash;
+        } else {
+            blockRoot = bridgeFinality.rootHash;
+        }
+
+        // TODO: check case manipulate path (length 0/1)
+        return leafInMerkleTree(
+            blockHash,
+            blockRoot,
+            path,
+            isLeft
+        );
     }
 
     /**
