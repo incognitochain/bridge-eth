@@ -1258,6 +1258,7 @@ func DecodeValidationData(data string) (*ValidationData, error) {
 	return &valData, nil
 }
 
+// TODO: update fixed proof tests
 // // TestFixedSwapBridgeFixedProof the same as the next test but for bridge
 // func TestFixedSwapBridgeFixedProof(t *testing.T) {
 // 	proof := getFixedSwapBridgeProof()

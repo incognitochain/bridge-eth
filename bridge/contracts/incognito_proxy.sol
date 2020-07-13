@@ -365,6 +365,7 @@ contract IncognitoProxy is AdminPausable {
         );
     }
 
+    // TODO: remove if not used
     /**
      * @dev Checks if an instruction is confirmed on chain (beacon or bridge)
      * @notice A confirmation means that the instruction is included in a block
