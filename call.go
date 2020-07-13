@@ -10,49 +10,50 @@ import (
 )
 
 func Withdraw(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
-	// auth.GasPrice = big.NewInt(20000000000)
-	tx, err := v.Withdraw(
-		auth,
-		proof.Instruction,
-		proof.Heights,
+	return nil, nil
+	// tx, err := v.Withdraw(
+	// 	auth,
+	// 	proof.Instruction,
+	// 	proof.Heights,
 
-		proof.InstPaths,
-		proof.InstPathIsLefts,
-		proof.InstRoots,
-		proof.BlkData,
-		proof.SigIdxs,
-		proof.SigVs,
-		proof.SigRs,
-		proof.SigSs,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return tx, nil
+	// 	proof.InstPaths,
+	// 	proof.InstPathIsLefts,
+	// 	proof.InstRoots,
+	// 	proof.BlkData,
+	// 	proof.SigIdxs,
+	// 	proof.SigVs,
+	// 	proof.SigRs,
+	// 	proof.SigSs,
+	// )
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return tx, nil
 }
 
 func SubmitBurnProof(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
-	// auth.GasPrice = big.NewInt(20000000000)
-	tx, err := v.SubmitBurnProof(
-		auth,
-		proof.Instruction,
-		proof.Heights,
+	return nil, nil
+	// tx, err := v.SubmitBurnProof(
+	// 	auth,
+	// 	proof.Instruction,
+	// 	proof.Heights,
 
-		proof.InstPaths,
-		proof.InstPathIsLefts,
-		proof.InstRoots,
-		proof.BlkData,
-		proof.SigIdxs,
-		proof.SigVs,
-		proof.SigRs,
-		proof.SigSs,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return tx, nil
+	// 	proof.InstPaths,
+	// 	proof.InstPathIsLefts,
+	// 	proof.InstRoots,
+	// 	proof.BlkData,
+	// 	proof.SigIdxs,
+	// 	proof.SigVs,
+	// 	proof.SigRs,
+	// 	proof.SigSs,
+	// )
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return tx, nil
 }
 
+// TODO: update for deploy_test
 func SwapBridge(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	auth.GasPrice = big.NewInt(20000000000)
 	return nil, nil

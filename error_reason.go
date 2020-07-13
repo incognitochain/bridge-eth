@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -21,11 +22,15 @@ func errorReason(ctx context.Context, b ethereum.ContractCaller, tx *types.Trans
 		Value:    tx.Value(),
 		Data:     tx.Data(),
 	}
-	res, err := b.CallContract(ctx, msg, blockNum)
+	_, err := b.CallContract(ctx, msg, blockNum)
 	if err != nil {
+		errMessage := err.Error()
+		if strings.Contains(errMessage, "execution reverted: ") {
+			return strings.ReplaceAll(errMessage, "execution reverted: ", ""), nil
+		}
 		return "", errors.Wrap(err, "CallContract")
 	}
-	return unpackError(res)
+	return "", errors.New("no error found")
 }
 
 var (

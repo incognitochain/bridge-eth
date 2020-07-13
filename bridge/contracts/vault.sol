@@ -226,7 +226,7 @@ contract Vault is AdminPausable {
         return (meta, shard, token, to, amount);
     }
 
-    // TODO: update doc
+    // TODO: update docs
     /**
      * @dev Verifies that a burn instruction is valid
      * @notice All params except inst are the list of 2 elements corresponding to
