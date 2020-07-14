@@ -953,92 +953,98 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 // 	}
 // }
 
-// func TestFixedWithdrawCustomERC20s(t *testing.T) {
-// 	testCases := []struct {
-// 		desc     string
-// 		deposit  *big.Int
-// 		withdraw *big.Int
-// 		remain   *big.Int
-// 		err      bool
-// 	}{
-// 		{
-// 			desc:     "USDT",
-// 			deposit:  big.NewInt(int64(5e8)),
-// 			withdraw: big.NewInt(int64(4e8)),
-// 			remain:   big.NewInt(int64(1e8)),
-// 		},
-// 		{
-// 			desc:     "BNB",
-// 			deposit:  big.NewInt(int64(3e18)),
-// 			withdraw: big.NewInt(int64(3e9)),
-// 			remain:   big.NewInt(int64(0)),
-// 		},
-// 		{
-// 			desc:     "DAI",
-// 			deposit:  big.NewInt(int64(3e17)),
-// 			withdraw: big.NewInt(int64(2e8)),
-// 			remain:   big.NewInt(int64(1e17)),
-// 		},
-// 	}
+func TestFixedWithdrawCustomERC20s(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		deposit  *big.Int
+		withdraw *big.Int
+		remain   *big.Int
+		err      bool
+	}{
+		{
+			desc:     "USDT",
+			deposit:  big.NewInt(int64(5e8)),
+			withdraw: big.NewInt(int64(4e8)),
+			remain:   big.NewInt(int64(1e8)),
+		},
+		{
+			desc:     "BNB",
+			deposit:  big.NewInt(int64(3e18)),
+			withdraw: big.NewInt(int64(3e9)),
+			remain:   big.NewInt(int64(0)),
+		},
+		{
+			desc:     "DAI",
+			deposit:  big.NewInt(int64(3e17)),
+			withdraw: big.NewInt(int64(2e8)),
+			remain:   big.NewInt(int64(1e17)),
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			p, comm, err := setupFixedCommittee()
-// 			assert.Nil(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			p, c, err := setupFixedCommittee()
+			assert.Nil(t, err)
 
-// 			// Deposit, must success
-// 			tinfo := p.customErc20s[tc.desc]
-// 			_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.deposit)
-// 			assert.Nil(t, err)
+			// Deposit, must success
+			tinfo := p.customErc20s[tc.desc]
+			_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.deposit)
+			assert.Nil(t, err)
 
-// 			meta := 72
-// 			shardID := 1
-// 			proof := buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, tc.withdraw)
+			meta := 72
+			shardID := 1
+			data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
 
-// 			auth.GasLimit = 0
-// 			_, err = Withdraw(p.v, auth, proof)
-// 			if assert.Nil(t, err) {
-// 				p.sim.Commit()
+			// The blocks with withdraw instructions are final
+			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.beaconHashes))
+			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.bridgeHashes))
 
-// 				// Check balance
-// 				bal := getBalanceERC20(tinfo.c, p.vAddr)
-// 				assert.Zero(t, tc.remain.Cmp(bal))
-// 			}
-// 		})
-// 	}
+			auth.GasLimit = 0
+			_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+			if assert.Nil(t, err) {
+				p.sim.Commit()
 
-// }
+				// Check balance
+				bal := getBalanceERC20(tinfo.c, p.vAddr)
+				assert.Zero(t, tc.remain.Cmp(bal))
+			}
+		})
+	}
 
-// func TestFixedWithdrawModifiedProof(t *testing.T) {
-// 	p, comm, err := setupFixedCommittee()
-// 	desc := "DAI"
-// 	deposit := big.NewInt(int64(3e17))
-// 	withdraw := big.NewInt(int64(1e8))
-// 	// Deposit, must success
-// 	tinfo := p.customErc20s[desc]
-// 	_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, deposit)
-// 	assert.Nil(t, err)
+}
 
-// 	// wrong meta
-// 	meta := 98
-// 	shardID := 1
-// 	proof := buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, withdraw)
+func TestFixedWithdrawModifiedProof(t *testing.T) {
+	p, c, err := setupFixedCommittee()
+	desc := "DAI"
+	deposit := big.NewInt(int64(3e17))
+	withdraw := big.NewInt(int64(1e8))
+	// Deposit, must success
+	tinfo := p.customErc20s[desc]
+	_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, deposit)
+	assert.Nil(t, err)
 
-// 	auth.GasLimit = 0
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.NotNil(t, err)
-// 	p.sim.Commit()
+	// wrong meta
+	meta := 98
+	shardID := 1
+	data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, withdraw)
 
-// 	// wrong shard
-// 	meta = 97
-// 	shardID = 2
-// 	proof = buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, withdraw)
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.beaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.bridgeHashes))
 
-// 	auth.GasLimit = 0
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.NotNil(t, err)
-// 	p.sim.Commit()
-// }
+	auth.GasLimit = 0
+	_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+	assert.NotNil(t, err)
+	p.sim.Commit()
+
+	// wrong shard
+	meta = 97
+	shardID = 2
+	auth.GasLimit = 0
+	_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+	assert.NotNil(t, err)
+	p.sim.Commit()
+}
 
 func setupFixedCommittee(accs ...ec.Address) (*Platform, *committees, error) {
 	c := getFixedCommittee()
