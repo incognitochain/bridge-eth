@@ -239,7 +239,6 @@ contract Vault is AdminPausable {
         MinedProof[2] memory minedProofs,
         MerkleProof[2] memory ancestorProofs
     ) internal {
-        // TODO: check case manipulate heights
         // Each instruction can only by redeemed once
         bytes32 instHash = keccak256(inst);
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights[0]));

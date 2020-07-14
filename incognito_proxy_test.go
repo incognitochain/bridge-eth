@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -18,226 +19,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestCompareCommittee(t *testing.T) {
-// 	// // Committee on chain
-// 	// url := "https://mainnet.incognito.org/fullnode:443"
-// 	// _, _, err := getCommittee(url)
-// 	// if err != nil {
-// 	// 	t.Fatal(err)
-// 	// }
+func TestCompareCommittee(t *testing.T) {
+	// // Committee on chain
+	// url := "https://mainnet.incognito.org/fullnode:443"
+	// _, _, err := getCommittee(url)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 
-// 	// Committee on contract
-// 	committeeIdx := big.NewInt(0)
-// 	_, c := connectAndInstantiate(t)
-// 	comm, err := c.inc.GetBeaconCommittee(nil, committeeIdx)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	fmt.Println("Start block: ", comm.StartBlock.String())
-// 	for _, addr := range comm.Pubkeys {
-// 		fmt.Printf("beaconOld: %s\n", addr)
-// 	}
-
-// 	comm, err = c.inc.GetBridgeCommittee(nil, committeeIdx)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	fmt.Println("Start block: ", comm.StartBlock.String())
-// 	for _, addr := range comm.Pubkeys {
-// 		fmt.Printf("bridgeOld: %s\n", addr)
-// 	}
-// }
-
-// func TestGetBridgeCommitteeOnChain(t *testing.T) {
-// 	url := "https://test-node.incognito.org:443"
-// 	_, _, err := getCommittee(url)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
-// func TestFixedFindBeaconCommitteeFromHeight(t *testing.T) {
-// 	testCases := []struct {
-// 		desc   string
-// 		length int
-// 		find   int64
-// 		pos    int64
-// 	}{
-// 		{
-// 			desc:   "A lot of committees",
-// 			length: 100,
-// 			find:   50,
-// 			pos:    50,
-// 		},
-// 		{
-
-// 			desc:   "Only 1 committee",
-// 			length: 0,
-// 			find:   50,
-// 			pos:    0,
-// 		},
-// 		{
-
-// 			desc:   "2 committees, get left",
-// 			length: 1,
-// 			find:   0,
-// 			pos:    0,
-// 		},
-// 		{
-
-// 			desc:   "2 committees, get right",
-// 			length: 1,
-// 			find:   1,
-// 			pos:    1,
-// 		},
-// 		{
-
-// 			desc:   "Get first committee",
-// 			length: 10,
-// 			find:   0,
-// 			pos:    0,
-// 		},
-// 		{
-// 			desc:   "Get last committee",
-// 			length: 10,
-// 			find:   10000000,
-// 			pos:    10,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			p, c, _ := setupFixedCommittee()
-// 			for i := 0; i < tc.length; i++ {
-// 				in := repeatSwapBeacon(c, i+1, 70, 1)
-// 				_, err := p.inc.SwapBeaconCommittee(auth, in.Instruction, in.InstPaths[0], in.InstPathIsLefts[0], in.InstRoots[0], in.BlkData[0], in.SigIdxs[0], in.SigVs[0], in.SigRs[0], in.SigSs[0])
-// 				if err != nil {
-// 					t.Fatal(err)
-// 				}
-// 				p.sim.Commit()
-// 			}
-// 			_, pos, err := p.inc.FindBeaconCommitteeFromHeight(nil, big.NewInt(tc.find))
-// 			if err != nil || pos.Int64() != tc.pos {
-// 				t.Errorf("invalid committee position, expect %d, got %d, err = %v", tc.pos, pos, err)
-// 			}
-// 		})
-// 	}
-// }
-
-func repeatSwapBeacon(c *committees, startBlock, swapID, meta, shard int) *decodedProof {
-	addrs := []string{
-		"A5301a0d25103967bf0e29db1576cba3408fD9bB",
-		"9BC0faE7BB432828759B6e391e0cC99995057791",
-		"6cbc2937FEe477bbda360A842EeEbF92c2FAb613",
-		"cabF3DB93eB48a61d41486AcC9281B6240411403",
+	// Committee on contract
+	committeeIdx := big.NewInt(0)
+	_, c := connectAndInstantiate(t)
+	comm, err := c.inc.GetBeaconCommittee(nil, committeeIdx)
+	if err != nil {
+		t.Fatal(err)
 	}
-	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, swapID, addrs)
-	ip := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	return &decodedProof{
-		Instruction: inst,
+	fmt.Println("Start block: ", comm.StartBlock.String())
+	for _, addr := range comm.Pubkeys {
+		fmt.Printf("beaconOld: %s\n", addr)
+	}
 
-		InstPaths:       [2][][32]byte{ip.instPath},
-		InstPathIsLefts: [2][]bool{ip.instPathIsLeft},
-		InstRoots:       [2][32]byte{ip.instRoot},
-		BlkData:         [2][32]byte{ip.blkData},
-		SigIdxs:         [2][]*big.Int{ip.sigIdx},
-		SigVs:           [2][]uint8{ip.sigV},
-		SigRs:           [2][][32]byte{ip.sigR},
-		SigSs:           [2][][32]byte{ip.sigS},
+	comm, err = c.inc.GetBridgeCommittee(nil, committeeIdx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("Start block: ", comm.StartBlock.String())
+	for _, addr := range comm.Pubkeys {
+		fmt.Printf("bridgeOld: %s\n", addr)
 	}
 }
 
-// func TestFixedFindBridgeCommitteeFromHeight(t *testing.T) {
-// 	testCases := []struct {
-// 		desc   string
-// 		length int
-// 		find   int64
-// 		pos    int64
-// 	}{
-// 		{
-// 			desc:   "A lot of committees",
-// 			length: 100,
-// 			find:   50,
-// 			pos:    50,
-// 		},
-// 		{
-
-// 			desc:   "Only 1 committee",
-// 			length: 0,
-// 			find:   50,
-// 			pos:    0,
-// 		},
-// 		{
-
-// 			desc:   "2 committees, get left",
-// 			length: 1,
-// 			find:   0,
-// 			pos:    0,
-// 		},
-// 		{
-
-// 			desc:   "2 committees, get right",
-// 			length: 1,
-// 			find:   1,
-// 			pos:    1,
-// 		},
-// 		{
-
-// 			desc:   "Get first committee",
-// 			length: 10,
-// 			find:   0,
-// 			pos:    0,
-// 		},
-// 		{
-// 			desc:   "Get last committee",
-// 			length: 10,
-// 			find:   10000000,
-// 			pos:    10,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			p, c, _ := setupFixedCommittee()
-// 			for i := 0; i < tc.length; i++ {
-// 				in := repeatSwapBridge(c, i+1, 71, 1)
-// 				_, err := p.inc.SwapBridgeCommittee(auth, in.Instruction, in.InstPaths, in.InstPathIsLefts, in.InstRoots, in.BlkData, in.SigIdxs, in.SigVs, in.SigRs, in.SigSs)
-// 				if err != nil {
-// 					t.Fatal(err)
-// 				}
-// 				p.sim.Commit()
-// 			}
-// 			_, pos, err := p.inc.FindBridgeCommitteeFromHeight(nil, big.NewInt(tc.find))
-// 			if err != nil || pos.Int64() != tc.pos {
-// 				t.Errorf("invalid committee position, expect %d, got %d, err = %v", tc.pos, pos, err)
-// 			}
-// 		})
-// 	}
-// }
-
-// func repeatSwapBridge(c *committees, startBlock, meta, shard int) *decodedProof {
-// 	addrs := []string{
-// 		"3c78124783E8e39D1E084FdDD0E097334ba2D945",
-// 		"76E34d8a527961286E55532620Af5b84F3C6538F",
-// 		"68686dB6874588D2404155D00A73F82a50FDd190",
-// 		"1533ac4d2922C150551f2F5dc2b0c1eDE382b890",
-// 	}
-// 	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, addrs)
-// 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-// 	ipBridge := signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:])
-// 	return &decodedProof{
-// 		Instruction: inst,
-
-// 		InstPaths:       [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
-// 		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft, ipBridge.instPathIsLeft},
-// 		InstRoots:       [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
-// 		BlkData:         [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
-// 		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
-// 		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
-// 		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
-// 		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
-// 	}
-// }
+func TestGetBridgeCommitteeOnChain(t *testing.T) {
+	url := "https://test-node.incognito.org:443"
+	_, _, err := getCommittee(url)
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 // TestFixedSubmitBridgeCandidatePaused makes sure swapping committee isn't allowed when contract is paused
 func TestFixedSubmitBridgeCandidatePaused(t *testing.T) {
@@ -950,102 +768,6 @@ func buildIncognitoProxyMerkleProof(merkleProof *merklePath) incognito_proxy.Inc
 	return promoteProof
 }
 
-// func TestFixedInstructionApproved(t *testing.T) {
-// 	p, c, _ := setupFixedCommittee()
-
-// 	testCases := []struct {
-// 		desc string
-// 		in   *instProof
-// 		out  bool
-// 		err  bool
-// 	}{
-// 		{
-// 			desc: "Valid beacon swap instruction",
-// 			in:   buildInstructionApprovedTestcase(true, c),
-// 			out:  true,
-// 		},
-// 		{
-// 			desc: "Valid bridge swap instruction",
-// 			in:   buildInstructionApprovedTestcase(false, c),
-// 			out:  true,
-// 		},
-// 		{
-// 			desc: "SigIdx incorrect",
-// 			in: func() *instProof {
-// 				p := buildInstructionApprovedTestcase(true, c)
-// 				p.sigIdx[0] = big.NewInt(20)
-// 				return p
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Not enough sigs",
-// 			in: func() *instProof {
-// 				p := buildInstructionApprovedTestcase(true, c)
-// 				p.sigIdx = p.sigIdx[:2]
-// 				return p
-// 			}(),
-// 			err: true,
-// 		},
-// 		{
-// 			desc: "Duplicated sigIdx",
-// 			in: func() *instProof {
-// 				p := buildInstructionApprovedTestcase(true, c)
-// 				p.sigIdx[0] = p.sigIdx[1]
-// 				p.sigV[0] = p.sigV[1]
-// 				p.sigR[0] = p.sigR[1]
-// 				p.sigS[0] = p.sigS[1]
-// 				return p
-// 			}(),
-// 			out: false,
-// 		},
-// 		{
-// 			desc: "Padded sigIdx",
-// 			in: func() *instProof {
-// 				p := buildInstructionApprovedTestcase(true, c)
-// 				p.sigV = p.sigV[:1]
-// 				p.sigR = p.sigR[:1]
-// 				p.sigS = p.sigS[:1]
-// 				return p
-// 			}(),
-// 			err: true,
-// 		},
-// 	}
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			res, err := p.inc.InstructionApproved(nil, tc.in.isBeacon, tc.in.instHash, tc.in.blkHeight, tc.in.instPath, tc.in.instPathIsLeft, tc.in.instRoot, tc.in.blkData, tc.in.sigIdx, tc.in.sigV, tc.in.sigR, tc.in.sigS)
-// 			isErr := err != nil
-// 			if isErr != tc.err {
-// 				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
-// 			}
-// 			if tc.err {
-// 				return
-// 			}
-// 			if res != tc.out {
-// 				t.Errorf("verify inst approval failed, expect %v, got %v", tc.out, res)
-// 			}
-// 		})
-// 	}
-// }
-
-func buildInstructionApprovedTestcase(isBeacon bool, c *committees) *instProof {
-	mp := buildMerklePathTestcase(8, 6, 6)
-
-	// Generate random blkHash
-	h := randomMerkleHashes(1)
-	blkData := h[0]
-	blkHash := common.Keccak256(blkData, mp.root[:])
-
-	// Get private keys
-	privs := c.beaconPrivs
-	if !isBeacon {
-		privs = c.bridgePrivs
-	}
-
-	return signAndReturnInstProof(privs, isBeacon, mp, blkData, blkHash[:])
-}
-
 func signAndReturnInstProof(
 	privs [][]byte,
 	isBeacon bool,
@@ -1295,71 +1017,77 @@ func DecodeValidationData(data string) (*ValidationData, error) {
 // 	printReceipt(p.sim, tx)
 // }
 
-// func TestFixedExtractMetaFromInstruction(t *testing.T) {
-// 	p, _, _ := setupFixedCommittee()
-// 	addrs := []string{
-// 		"834f98e1b7324450b798359c9febba74fb1fd888",
-// 		"1250ba2c592ac5d883a0b20112022f541898e65b",
-// 		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
-// 		"6d4850ab610be9849566c09da24b37c5cfa93e50",
-// 	}
-// 	testCases := []struct {
-// 		desc    string
-// 		inst    []byte
-// 		meta    uint8
-// 		shard   uint8
-// 		height  int
-// 		numVals int
-// 		err     bool
-// 	}{
-// 		{
-// 			desc:    "Extract swap beacon instruction",
-// 			inst:    buildDecodedSwapConfirmInst(70, 1, 123, addrs),
-// 			meta:    70,
-// 			shard:   1,
-// 			height:  123,
-// 			numVals: len(addrs),
-// 		},
-// 		{
-// 			desc:    "Extract swap bridge instruction",
-// 			inst:    buildDecodedSwapConfirmInst(71, 2, 19827312, addrs[:2]),
-// 			meta:    71,
-// 			shard:   2,
-// 			height:  19827312,
-// 			numVals: 2,
-// 		},
-// 		{
-// 			desc: "Instruction too short",
-// 			inst: make([]byte, 65),
-// 			err:  true,
-// 		},
-// 	}
+func TestFixedExtractMetaFromInstruction(t *testing.T) {
+	p, _, _ := setupFixedCommittee()
+	addrs := []string{
+		"834f98e1b7324450b798359c9febba74fb1fd888",
+		"1250ba2c592ac5d883a0b20112022f541898e65b",
+		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
+		"6d4850ab610be9849566c09da24b37c5cfa93e50",
+	}
+	testCases := []struct {
+		desc    string
+		inst    []byte
+		meta    uint8
+		shard   uint8
+		height  int
+		swapID  int
+		numVals int
+		err     bool
+	}{
+		{
+			desc:    "Extract swap beacon instruction",
+			inst:    buildDecodedSwapConfirmInst(70, 1, 123, 5, addrs),
+			meta:    70,
+			shard:   1,
+			height:  123,
+			swapID:  5,
+			numVals: len(addrs),
+		},
+		{
+			desc:    "Extract swap bridge instruction",
+			inst:    buildDecodedSwapConfirmInst(71, 2, 19827312, 7, addrs[:2]),
+			meta:    71,
+			shard:   2,
+			height:  19827312,
+			swapID:  7,
+			numVals: 2,
+		},
+		{
+			desc: "Instruction too short",
+			inst: make([]byte, 97),
+			err:  true,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			meta, shard, height, numVals, err := p.inc.ExtractMetaFromInstruction(nil, tc.inst)
-// 			isErr := err != nil
-// 			if isErr != tc.err {
-// 				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
-// 			}
-// 			if tc.err {
-// 				return
-// 			}
-// 			if meta != tc.meta {
-// 				t.Errorf("invalid meta, expect %v, got %v", tc.meta, meta)
-// 			}
-// 			if shard != tc.shard {
-// 				t.Errorf("invalid shard, expect %v, got %v", tc.shard, shard)
-// 			}
-// 			if height.Int64() != int64(tc.height) {
-// 				t.Errorf("invalid height, expect %v, got %v", tc.height, height)
-// 			}
-// 			if numVals.Int64() != int64(tc.numVals) {
-// 				t.Errorf("invalid numVals, expect %v, got %v", tc.numVals, numVals)
-// 			}
-// 		})
-// 	}
-// }
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			meta, shard, height, numVals, swapID, err := p.inc.ExtractMetaFromInstruction(nil, tc.inst)
+			isErr := err != nil
+			if isErr != tc.err {
+				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
+			}
+			if tc.err {
+				return
+			}
+			if meta != tc.meta {
+				t.Errorf("invalid meta, expect %v, got %v", tc.meta, meta)
+			}
+			if shard != tc.shard {
+				t.Errorf("invalid shard, expect %v, got %v", tc.shard, shard)
+			}
+			if height.Int64() != int64(tc.height) {
+				t.Errorf("invalid height, expect %v, got %v", tc.height, height)
+			}
+			if swapID.Int64() != int64(tc.swapID) {
+				t.Errorf("invalid swapID, expect %v, got %v", tc.swapID, swapID)
+			}
+			if numVals.Int64() != int64(tc.numVals) {
+				t.Errorf("invalid numVals, expect %v, got %v", tc.numVals, numVals)
+			}
+		})
+	}
+}
 
 func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
 	p, _, _ := setupFixedCommittee()

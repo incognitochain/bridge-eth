@@ -146,22 +146,14 @@ contract IncognitoProxy is AdminPausable {
         // NOTE: assuming no swap candidate for beacon
         // TODO: find correct committee to swap instead of just getting the last one
         bytes32 instHash = keccak256(inst);
-        require(instructionApproved(
-            true,
+        address[] memory signers = filterSigners(instProofs[0].sigIdx, beaconCommittees[beaconCommittees.length-1].pubkeys);
+        require(instructionApprovedBySigners(
             instHash,
-            beaconCommittees[beaconCommittees.length-1].startBlock,
-            instProofs[0].path,
-            instProofs[0].isLeft,
-            instProofs[0].root,
-            instProofs[0].blkData,
-            instProofs[0].sigIdx,
-            instProofs[0].sigV,
-            instProofs[0].sigR,
-            instProofs[0].sigS
-        ));
+            signers,
+            instProofs[0]
+        ), "invalid beacon instruction");
 
         // Verify instruction on bridge
-        address[] memory signers;
         uint latestSwapID = bridgeCommittees[bridgeCommittees.length-1].swapID;
         require(cm.id > latestSwapID, "cannot submit candidate for old swaps");
         if (cm.id == latestSwapID + 1) {
@@ -173,7 +165,7 @@ contract IncognitoProxy is AdminPausable {
             instHash,
             signers,
             instProofs[1]
-        ));
+        ), "invalid bridge instruction");
 
         // Store candidates
         // blockHash is from beacon block, we need to prove that block is final
@@ -365,69 +357,6 @@ contract IncognitoProxy is AdminPausable {
         );
     }
 
-    // TODO: remove if not used
-    /**
-     * @dev Checks if an instruction is confirmed on chain (beacon or bridge)
-     * @notice A confirmation means that the instruction is included in a block
-     * that has enough validators' signatures
-     * @param isBeacon: check on beacon or bridge
-     * @param instHash: keccak256 hash of the instruction's content
-     * @param blkHeight: height of the block containing the instruction
-     * @param instPath: merkle path of the instruction
-     * @param instPathIsLeft: whether each node on the path is the left or right child
-     * @param instRoot: root of the merkle tree contains all instructions
-     * @param blkData: merkle has of the block body
-     * @param sigIdx: indices of the validators who signed this block
-     * @param sigV: part of the signatures of the validators
-     * @param sigR: part of the signatures of the validators
-     * @param sigS: part of the signatures of the validators
-     * @return bool: whether the instruction is valid and confirmed
-     */
-    function instructionApproved(
-        bool isBeacon,
-        bytes32 instHash,
-        uint blkHeight,
-        bytes32[] memory instPath,
-        bool[] memory instPathIsLeft,
-        bytes32 instRoot,
-        bytes32 blkData,
-        uint[] memory sigIdx,
-        uint8[] memory sigV,
-        bytes32[] memory sigR,
-        bytes32[] memory sigS
-    ) public view returns (bool) {
-        // TODO: receive finality proof and check it
-        // Find committee in charge of this block
-        address[] memory signers;
-        uint _;
-        if (isBeacon) {
-            (signers, _) = findBeaconCommitteeFromHeight(blkHeight);
-        } else {
-            (signers, _) = findBridgeCommitteeFromHeight(blkHeight);
-        }
-
-        // Extract signers that signed this block (require sigIdx to be strictly increasing)
-        signers = filterSigners(sigIdx, signers);
-
-        // Build proof
-        InstructionProof memory instProof = InstructionProof({
-            path: instPath,
-            isLeft: instPathIsLeft,
-            root: instRoot,
-            blkData: blkData,
-            sigIdx: sigIdx,
-            sigV: sigV,
-            sigR: sigR,
-            sigS: sigS
-        });
-
-        return instructionApprovedBySigners(
-            instHash,
-            signers,
-            instProof
-        );
-    }
-
     function instructionApprovedBySigners(
         bytes32 instHash,
         address[] memory signers,
@@ -453,49 +382,6 @@ contract IncognitoProxy is AdminPausable {
             instProof.path,
             instProof.isLeft
         );
-    }
-
-    /**
-     * @dev Finds the beacon committee in charge of signing a block height
-     * @notice This functions does a binary search of all committees (since genesis block)
-     * @param blkHeight: to search for
-     * @return committee: address of the committee members
-     * @return id: index of the committee
-     */
-    function findBeaconCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {
-        uint l = 0;
-        uint r = beaconCommittees.length;
-        require(r > 0);
-        r = r - 1;
-        while (l != r) {
-            uint m = (l + r + 1) / 2;
-            if (beaconCommittees[m].startBlock <= blkHeight) {
-                l = m;
-            } else {
-                r = m - 1;
-            }
-        }
-        return (beaconCommittees[l].pubkeys, l);
-    }
-
-    /**
-     * @dev Finds the bridge committee in charge of signing a block height
-     * @notice The same as findBeaconCommitteeFromHeight but for bridge chain
-     */
-    function findBridgeCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {
-        uint l = 0;
-        uint r = bridgeCommittees.length;
-        require(r > 0);
-        r = r - 1;
-        while (l != r) {
-            uint m = (l + r + 1) / 2;
-            if (bridgeCommittees[m].startBlock <= blkHeight) {
-                l = m;
-            } else {
-                r = m - 1;
-            }
-        }
-        return (bridgeCommittees[l].pubkeys, l);
     }
 
     /**
