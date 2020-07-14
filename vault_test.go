@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"strings"
 	"testing"
@@ -100,78 +101,90 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 	}
 }
 
-// func TestFixedIsWithdrawedFalse(t *testing.T) {
-// 	proof := getFixedBurnProofETH()
+func TestFixedIsWithdrawedFalse(t *testing.T) {
+	data := getFixedWithdrawETHTestcase()
 
-// 	p, _, err := setupFixedCommittee()
-// 	assert.Nil(t, err)
+	p, c, err := setupFixedCommittee()
+	assert.Nil(t, err)
 
-// 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
-// 	assert.Nil(t, err)
+	_, _, err = deposit(p, big.NewInt(int64(5e18)))
+	assert.Nil(t, err)
 
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 
-// 	// First withdraw, must success
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
-// 	bal := p.getBalance(withdrawer)
-// 	assert.Equal(t, bal, big.NewInt(1000000000000))
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-// 	// Deploy new Vault
-// 	prevVault := p.vAddr
-// 	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
+	// First withdraw, must success
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bal := p.getBalance(withdrawer)
+	assert.Equal(t, bal, big.NewInt(1000000000000))
 
-// 	// Deposit to new vault
-// 	proof = getFixedBurnProofERC20()
+	// Deploy new Vault
+	prevVault := p.vAddr
+	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
+	assert.Nil(t, err)
+	p.sim.Commit()
 
-// 	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
-// 	assert.Nil(t, err)
-// 	assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(int64(1e9))), newBalance)
+	// Deposit to new vault
+	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
+	assert.Nil(t, err)
+	assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(int64(1e9))), newBalance)
 
-// 	// New withdraw, must success
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
+	data = getFixedWithdrawERC20Testcase()
 
-// 	assert.Equal(t, big.NewInt(2000), getBalanceERC20(p.token, withdrawer))
-// }
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-// func TestFixedIsWithdrawedTrue(t *testing.T) {
-// 	proof := getFixedBurnProofETH()
+	// New withdraw, must success
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.Nil(t, err)
+	p.sim.Commit()
 
-// 	p, _, err := setupFixedCommittee()
-// 	assert.Nil(t, err)
+	assert.Equal(t, big.NewInt(2000), getBalanceERC20(p.token, withdrawer))
+}
 
-// 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
-// 	assert.Nil(t, err)
+func TestFixedIsWithdrawedTrue(t *testing.T) {
+	data := getFixedWithdrawETHTestcase()
 
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	p, c, err := setupFixedCommittee()
+	assert.Nil(t, err)
 
-// 	// First withdraw, must success
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
-// 	bal := p.getBalance(withdrawer)
-// 	assert.Equal(t, bal, big.NewInt(1000000000000))
+	_, _, err = deposit(p, big.NewInt(int64(5e18)))
+	assert.Nil(t, err)
 
-// 	// Deploy new Vault
-// 	prevVault := p.vAddr
-// 	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 
-// 	// Deposit to new vault
-// 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
-// 	assert.Nil(t, err)
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-// 	// Withdraw with old proof, must fail
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.NotNil(t, err)
-// 	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(1000000000000))
-// }
+	// First withdraw, must success
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bal := p.getBalance(withdrawer)
+	assert.Equal(t, bal, big.NewInt(1000000000000))
+
+	// Deploy new Vault
+	prevVault := p.vAddr
+	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// Deposit to new vault
+	_, _, err = deposit(p, big.NewInt(int64(5e18)))
+	assert.Nil(t, err)
+
+	// Withdraw with old proof, must fail
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.NotNil(t, err)
+	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(1000000000000))
+}
 
 func TestFixedMoveERC20(t *testing.T) {
 	p, _, _ := setupFixedCommittee() // New SimulatedBackend each time => ERC20 address is fixed
@@ -671,29 +684,29 @@ func TestFixedDepositCustomERC20s(t *testing.T) {
 // 	}
 // }
 
-// func swapOnce(t *testing.T, p *Platform, swapProof *decodedProof) {
-// 	tx, err := SwapBridge(p.inc, auth, swapProof)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	p.sim.Commit()
-// 	printReceipt(p.sim, tx)
-// }
+func swapOnce(t *testing.T, p *Platform, swapProof *decodedProof) {
+	tx, err := SwapBridge(p.inc, auth, swapProof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+}
 
-// func withdrawOnce(t *testing.T, p *Platform, burnProof *decodedProof) *big.Int {
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
-// 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
+func withdrawOnce(t *testing.T, p *Platform, burnProof *decodedProof) *big.Int {
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
-// 	tx, err := Withdraw(p.v, auth, burnProof)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	p.sim.Commit()
-// 	printReceipt(p.sim, tx)
+	tx, err := Withdraw(p.v, auth, burnProof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
 
-// 	fmt.Printf("withdrawer new balance: %d\n", p.getBalance(withdrawer))
-// 	return p.getBalance(withdrawer)
-// }
+	fmt.Printf("withdrawer new balance: %d\n", p.getBalance(withdrawer))
+	return p.getBalance(withdrawer)
+}
 
 func TestFixedParseBurnInst(t *testing.T) {
 	token := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3}
@@ -755,85 +768,97 @@ type burnInst struct {
 	amount *big.Int
 }
 
-// func TestFixedWithdrawTwice(t *testing.T) {
-// 	proof := getFixedBurnProofETH()
+func TestFixedWithdrawTwice(t *testing.T) {
+	data := getFixedWithdrawETHTestcase()
 
-// 	p, _, err := setupFixedCommittee()
-// 	assert.Nil(t, err)
+	p, c, err := setupFixedCommittee()
+	assert.Nil(t, err)
 
-// 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
-// 	assert.Nil(t, err)
+	_, _, err = deposit(p, big.NewInt(int64(5e18)))
+	assert.Nil(t, err)
 
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 
-// 	// First withdraw, must success
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.Nil(t, err)
-// 	p.sim.Commit()
-// 	bal := p.getBalance(withdrawer)
-// 	assert.Equal(t, bal, big.NewInt(1000000000000))
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-// 	// Second withdraw, must fail
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.NotNil(t, err)
-// }
+	// First withdraw, must success
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bal := p.getBalance(withdrawer)
+	assert.Equal(t, bal, big.NewInt(1000000000000))
 
-// func TestFixedWithdrawETH(t *testing.T) {
-// 	proof := getFixedBurnProofETH()
+	// Second withdraw, must fail
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.NotNil(t, err)
+}
 
-// 	p, _, err := setupFixedCommittee()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+func TestFixedWithdrawETH(t *testing.T) {
+	data := getFixedWithdrawETHTestcase()
 
-// 	oldBalance, newBalance, err := deposit(p, big.NewInt(int64(5e18)))
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
+	p, c, err := setupFixedCommittee()
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
-// 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
+	oldBalance, newBalance, err := deposit(p, big.NewInt(int64(5e18)))
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
 
-// 	tx, err := Withdraw(p.v, auth, proof)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	p.sim.Commit()
-// 	printReceipt(p.sim, tx)
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
-// 	bal := p.getBalance(withdrawer)
-// 	fmt.Printf("withdrawer new balance: %d\n", bal)
-// 	if bal.Int64() != int64(1000000000000) {
-// 		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 1000000000, bal)
-// 	}
-// }
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-// func TestFixedWithdrawPaused(t *testing.T) {
-// 	proof := getFixedBurnProofETH()
+	tx, err := WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	if err != nil {
+		t.Error(err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
 
-// 	p, _, err := setupFixedCommittee()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	bal := p.getBalance(withdrawer)
+	fmt.Printf("withdrawer new balance: %d\n", bal)
+	if bal.Int64() != int64(1000000000000) {
+		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 1000000000, bal)
+	}
+}
 
-// 	oldBalance, newBalance, err := deposit(p, big.NewInt(int64(5e18)))
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
+func TestFixedWithdrawPaused(t *testing.T) {
+	data := getFixedWithdrawETHTestcase()
 
-// 	// Pause first
-// 	_, err = p.v.Pause(auth)
-// 	assert.Nil(t, err)
+	p, c, err := setupFixedCommittee()
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
-// 	_, err = Withdraw(p.v, auth, proof)
-// 	assert.NotNil(t, err)
+	oldBalance, newBalance, err := deposit(p, big.NewInt(int64(5e18)))
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
 
-// 	bal := p.getBalance(withdrawer)
-// 	assert.Zero(t, bal.Int64())
-// }
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
+
+	// Pause first
+	_, err = p.v.Pause(auth)
+	assert.Nil(t, err)
+
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	assert.NotNil(t, err)
+
+	bal := p.getBalance(withdrawer)
+	assert.Zero(t, bal.Int64())
+}
 
 func TestFixedWithdrawERC20Decimals(t *testing.T) {
 	b2e27, _ := big.NewInt(1).SetString("2000000000000000000000000000", 10)
@@ -905,10 +930,10 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 			data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
 
 			// The blocks with withdraw instructions are final
-			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.beaconHashes))
-			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.bridgeHashes))
+			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-			_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+			_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 			if assert.Nil(t, err) {
 				p.sim.Commit()
 
@@ -921,37 +946,40 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 
 }
 
-// func TestFixedWithdrawERC20(t *testing.T) {
-// 	proof := getFixedBurnProofERC20()
+func TestFixedWithdrawERC20(t *testing.T) {
+	data := getFixedWithdrawERC20Testcase()
 
-// 	p, _, err := setupFixedCommittee()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	p, c, err := setupFixedCommittee()
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	fmt.Printf("deposit erc20 to vault: %d -> %d\n", oldBalance, newBalance)
+	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("deposit erc20 to vault: %d -> %d\n", oldBalance, newBalance)
 
-// 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
-// 	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
 
-// 	auth.GasLimit = 8000000
-// 	tx, err := Withdraw(p.v, auth, proof)
-// 	if err != nil {
-// 		fmt.Println("err:", err)
-// 	}
-// 	p.sim.Commit()
-// 	printReceipt(p.sim, tx)
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
-// 	bal := getBalanceERC20(p.token, withdrawer)
-// 	fmt.Printf("withdrawer new balance: %d\n", bal)
-// 	if bal.Int64() != int64(2000) {
-// 		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 2000, bal)
-// 	}
-// }
+	tx, err := WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+
+	bal := getBalanceERC20(p.token, withdrawer)
+	fmt.Printf("withdrawer new balance: %d\n", bal)
+	if bal.Int64() != int64(2000) {
+		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 2000, bal)
+	}
+}
 
 func TestFixedWithdrawCustomERC20s(t *testing.T) {
 	testCases := []struct {
@@ -996,11 +1024,11 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 			data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
 
 			// The blocks with withdraw instructions are final
-			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.beaconHashes))
-			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.bridgeHashes))
+			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
 			auth.GasLimit = 0
-			_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+			_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 			if assert.Nil(t, err) {
 				p.sim.Commit()
 
@@ -1029,11 +1057,11 @@ func TestFixedWithdrawModifiedProof(t *testing.T) {
 	data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, withdraw)
 
 	// The blocks with withdraw instructions are final
-	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.beaconHashes))
-	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.bridgeHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
 
 	auth.GasLimit = 0
-	_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 	assert.NotNil(t, err)
 	p.sim.Commit()
 
@@ -1041,7 +1069,7 @@ func TestFixedWithdrawModifiedProof(t *testing.T) {
 	meta = 97
 	shardID = 2
 	auth.GasLimit = 0
-	_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 	assert.NotNil(t, err)
 	p.sim.Commit()
 }
@@ -1069,12 +1097,12 @@ func setupFinalityWithBlocks(p *Platform, isBeacon bool, c *committees, blkHashe
 }
 
 type withdrawTestcase struct {
-	inst           []byte
-	heights        [2]*big.Int
-	minedProofs    [2]vault.VaultMinedProof
-	ancestorProofs [2]vault.VaultMerkleProof
-	beaconHashes   [][]byte
-	bridgeHashes   [][]byte
+	Inst           []byte
+	Heights        [2]*big.Int
+	MinedProofs    [2]vault.VaultMinedProof
+	AncestorProofs [2]vault.VaultMerkleProof
+	BeaconHashes   [][]byte
+	BridgeHashes   [][]byte
 }
 
 func buildWithdrawTestcase(
@@ -1086,25 +1114,25 @@ func buildWithdrawTestcase(
 	// Proofs on beacon
 	inst, mp, blkData, blkHash, withdrawHeight := buildWithdrawData(meta, shard, tokenID, amount)
 	minedBeacon := buildVaultMinedProof(signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:]))
-	beaconHashes := randomMerkleHashes(1234)
+	beaconHashes := randomMerkleHashes(5)
 	beaconHashes[withdrawHeight] = blkHash[:]
 	ancestorBeacon := buildVaultAncestorProof(buildInstructionMerklePath(beaconHashes, withdrawHeight))
 
 	// Proofs on bridge
 	minedBridge := buildVaultMinedProof(signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:]))
-	bridgeHashes := randomMerkleHashes(4567)
+	bridgeHashes := randomMerkleHashes(7)
 	bridgeHashes[withdrawHeight] = blkHash[:] // Use the same block hash
 	ancestorBridge := buildVaultAncestorProof(buildInstructionMerklePath(bridgeHashes, withdrawHeight))
 
 	minedProofs := [2]vault.VaultMinedProof{minedBeacon, minedBridge}
 	ancestorProofs := [2]vault.VaultMerkleProof{ancestorBeacon, ancestorBridge}
 	return withdrawTestcase{
-		inst:           inst,
-		heights:        [2]*big.Int{big.NewInt(int64(withdrawHeight)), big.NewInt(int64(withdrawHeight))},
-		minedProofs:    minedProofs,
-		ancestorProofs: ancestorProofs,
-		beaconHashes:   beaconHashes,
-		bridgeHashes:   bridgeHashes,
+		Inst:           inst,
+		Heights:        [2]*big.Int{big.NewInt(int64(withdrawHeight)), big.NewInt(int64(withdrawHeight))},
+		MinedProofs:    minedProofs,
+		AncestorProofs: ancestorProofs,
+		BeaconHashes:   beaconHashes,
+		BridgeHashes:   bridgeHashes,
 	}
 }
 
@@ -1161,18 +1189,18 @@ type committees struct {
 	bridgePrivs [][]byte
 }
 
-func getFixedBurnProofETH() *decodedProof {
-	proofMarshalled := `{"Instruction":"SAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOci2LcdzAFS1H0kOFVqRdM1fWMfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6NSlEAAQph4uU2jzYJA/wwowaQNkV1YDSZxF3b7zhinToad2CgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","Heights":[13,15],"InstPaths":[[[85,90,80,85,102,77,35,181,79,15,218,226,21,248,182,95,46,161,151,187,156,132,212,157,64,83,229,28,33,225,60,39],[90,120,63,154,71,105,58,60,79,100,14,227,126,162,217,227,120,234,73,47,138,250,88,120,245,244,79,86,210,74,95,107]],[]],"InstPathIsLefts":[[false,false],[]],"InstRoots":[[232,220,37,58,255,80,189,228,5,6,217,133,81,89,207,211,88,46,172,168,207,11,240,31,39,121,213,208,161,87,191,205],[189,164,48,17,53,82,33,194,160,26,125,127,160,224,216,173,239,49,214,141,169,214,192,76,85,66,30,230,107,198,183,59]],"BlkData":[[85,105,22,139,166,247,192,177,35,127,254,184,33,212,88,184,142,32,141,79,0,92,62,215,250,238,97,155,250,103,212,226],[43,69,182,160,171,28,79,48,143,171,86,32,244,96,9,226,26,232,37,254,92,251,3,56,247,81,147,139,97,238,181,249]],"SigIdxs":[[0,2,3],[0,1,2,3]],"SigVs":["HBsb","GxwcHA=="],"SigRs":[[[64,129,127,189,84,17,9,178,133,57,35,78,163,181,179,201,225,45,218,234,194,20,180,7,17,207,92,110,26,73,205,24],[195,54,155,40,185,122,123,141,83,10,38,226,70,217,107,128,172,33,9,9,218,212,254,215,89,20,84,138,200,144,225,255],[46,36,148,21,139,126,174,64,59,164,229,133,213,79,228,67,35,172,234,237,175,125,35,138,2,114,186,151,184,76,242,134]],[[78,44,39,129,74,56,101,155,93,226,145,64,149,247,158,112,186,70,242,82,115,255,142,140,101,38,183,206,197,186,152,138],[119,42,151,249,112,98,99,187,116,121,228,46,126,106,38,166,45,217,156,48,83,103,34,168,246,123,178,82,208,197,9,8],[190,186,249,188,241,169,26,152,54,224,240,95,81,179,223,224,224,81,209,193,57,97,3,165,197,40,229,2,208,20,113,131],[80,12,25,116,195,24,37,40,247,144,182,31,57,127,236,239,190,90,236,59,218,97,205,16,88,102,235,156,220,144,198,234]]],"SigSs":[[[118,52,192,85,239,241,154,66,156,98,190,204,10,253,210,148,162,165,195,201,212,206,135,182,178,209,193,172,240,180,99,110],[61,45,9,108,235,184,112,73,21,154,9,116,162,95,175,207,11,22,215,160,46,209,83,59,118,230,83,209,241,17,168,127],[59,15,150,127,223,9,234,160,9,170,195,109,79,118,137,45,250,156,249,145,226,175,235,60,65,86,182,85,224,162,235,145]],[[101,235,22,155,225,149,55,249,33,205,164,198,58,228,75,33,48,196,171,76,14,181,90,194,239,204,40,159,26,179,46,3],[121,162,14,137,255,11,150,184,16,237,220,66,226,26,240,69,154,30,136,46,68,254,217,190,122,100,41,254,221,122,158,66],[84,26,159,168,124,109,132,10,52,124,177,99,8,53,85,52,194,213,247,52,147,255,17,146,245,114,252,139,176,126,82,203],[39,215,56,10,60,107,131,198,45,193,242,191,111,195,106,238,112,77,177,198,3,88,157,118,76,170,148,65,187,106,118,172]]]}`
-	proof := &decodedProof{}
-	json.Unmarshal([]byte(proofMarshalled), proof)
+func getFixedWithdrawETHTestcase() withdrawTestcase {
+	proofMarshalled := `{"Inst":"SAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOci2LcdzAFS1H0kOFVqRdM1fWMfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6NSlEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","Heights":[1,1],"MinedProofs":[{"Path":[[69,140,57,202,18,243,117,115,210,255,106,184,55,208,232,179,196,86,183,105,150,159,17,75,160,127,248,148,167,128,150,52],[115,252,56,132,6,179,222,231,240,3,125,26,71,61,70,90,159,125,100,42,68,20,135,213,30,213,111,73,100,186,193,254],[131,104,128,31,239,132,213,93,236,139,112,177,118,104,42,34,234,145,3,115,108,15,172,178,254,99,123,93,172,227,51,142],[30,251,61,55,94,214,161,84,42,147,8,32,0,142,99,65,241,8,131,88,6,183,97,84,15,147,145,249,31,178,229,182]],"IsLeft":[true,true,true,false],"Root":[38,235,86,174,96,116,239,193,162,63,91,14,177,17,131,254,104,187,205,89,109,230,83,165,242,11,40,61,176,177,50,76],"BlkData":[91,178,8,62,98,213,43,158,20,109,216,97,90,28,170,95,112,5,236,251,200,77,165,191,254,249,192,23,109,148,128,150]},{"Path":[[69,140,57,202,18,243,117,115,210,255,106,184,55,208,232,179,196,86,183,105,150,159,17,75,160,127,248,148,167,128,150,52],[115,252,56,132,6,179,222,231,240,3,125,26,71,61,70,90,159,125,100,42,68,20,135,213,30,213,111,73,100,186,193,254],[131,104,128,31,239,132,213,93,236,139,112,177,118,104,42,34,234,145,3,115,108,15,172,178,254,99,123,93,172,227,51,142],[30,251,61,55,94,214,161,84,42,147,8,32,0,142,99,65,241,8,131,88,6,183,97,84,15,147,145,249,31,178,229,182]],"IsLeft":[true,true,true,false],"Root":[38,235,86,174,96,116,239,193,162,63,91,14,177,17,131,254,104,187,205,89,109,230,83,165,242,11,40,61,176,177,50,76],"BlkData":[91,178,8,62,98,213,43,158,20,109,216,97,90,28,170,95,112,5,236,251,200,77,165,191,254,249,192,23,109,148,128,150]}],"AncestorProofs":[{"Path":[[35,123,155,188,139,10,64,255,62,121,59,251,16,118,195,247,31,248,61,206,240,234,35,7,112,32,129,203,97,226,165,250],[191,253,59,228,153,81,29,219,21,60,230,199,67,122,244,6,160,11,33,197,169,246,197,92,101,140,193,228,46,64,10,200],[119,245,52,233,159,242,214,16,171,220,44,9,57,196,100,176,73,73,67,72,195,77,156,85,248,130,47,31,9,4,138,100]],"IsLeft":[true,false,false]},{"Path":[[27,72,212,23,178,200,114,35,19,65,195,30,201,106,11,31,74,71,203,12,63,59,59,180,13,13,64,17,200,86,90,145],[184,100,0,62,240,63,21,137,35,14,46,155,151,216,241,194,253,89,213,126,73,99,17,8,88,247,7,249,62,157,98,88],[184,82,205,7,124,174,148,49,236,92,95,85,191,185,242,71,82,205,28,101,100,222,193,114,217,122,161,69,163,166,177,232]],"IsLeft":[true,false,false]}],"BeaconHashes":["x3+cxbOptBWckvZyeSwvTy1O/LTapQAZn4z9Sn7kGpU=","a0AIBEvJ4g8bGZpwlYEOl3ELYWdsrOByAtmvMGvSU1I=","PjsBCu6yRvsZ3tIQHFSpUPozDjn7icUoOCE/tx9uaxE=","mo6cZ0bHOTrwzrcrgVA1XE3cWUAlJb7+uDwezG2G5ZM=","UgmXv5SGe1C7I7bIC2T1k1D9RRA37DOEhW9djQOtp84="],"BridgeHashes":["9LJw6vQduaRddRiEsGqWMF/trCGWFCcJBSevT3CDnxg=","a0AIBEvJ4g8bGZpwlYEOl3ELYWdsrOByAtmvMGvSU1I=","aZpQTciElevIoFGK4Z1/S7+iNQqWn9393EfgSPSEcvU=","3kZ0cRvsnpgTvfkxV31l2TTfDG/0BS1soyTXgdebDGk=","+aF6UsNQRNL0isHo6V/7zqYMA36mghlUQFH3HcrvtTM=","dRjbq+aOCPrKYGZjjG6o9cWmVg23sSk8B5Zw6vN7M3A=","NbvyeTHdjjhiRvzS4MxvUUHICq6ySPK2PlaQlCTublU="]}`
+	proof := withdrawTestcase{}
+	json.Unmarshal([]byte(proofMarshalled), &proof)
 
 	return proof
 }
 
-func getFixedBurnProofERC20() *decodedProof {
-	proofMarshalled := `{"Instruction":"SAEAAAAAAAAAAAAAAAA+xcl8giIrHqZzLSXw/CizXak4DgAAAAAAAAAAAAAAAOci2LcdzAFS1H0kOFVqRdM1fWMfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB9ATWg+enEgVZfeVa3dN1q9UUIeUGdRvAV/yeF06Qe6iXQAAAAAAAAAAAAAAAEfiaoY5HjglF+JXeXDguanESiMB","Heights":[125,127],"InstPaths":[[[17,221,161,166,191,238,13,140,202,175,128,24,145,162,251,223,153,109,242,78,201,65,81,171,124,219,161,20,197,170,219,0],[84,130,181,135,17,33,19,11,216,117,72,234,53,166,213,97,82,240,41,81,39,156,166,254,197,254,129,111,208,88,140,22],[198,35,36,192,5,218,31,215,52,199,187,191,144,207,19,4,228,179,194,5,13,198,213,34,151,75,136,6,173,172,50,134]],[]],"InstPathIsLefts":[[false,false,false],[]],"InstRoots":[[81,96,141,86,165,75,80,243,103,191,248,250,215,87,76,175,0,82,106,87,133,37,47,247,120,243,226,119,211,128,157,135],[9,70,219,61,171,231,41,225,224,130,248,32,95,180,80,179,67,237,159,252,91,57,113,91,222,166,1,243,99,121,54,122]],"BlkData":[[82,27,63,139,96,16,9,27,44,28,16,224,177,26,73,253,215,199,165,214,1,216,35,197,246,35,46,105,196,216,64,173],[172,39,66,38,128,89,242,151,1,14,54,207,142,15,59,110,126,126,195,234,164,117,41,82,150,155,183,4,231,148,53,42]],"SigIdxs":[[0,1,2,3],[0,1,2,3]],"SigVs":["GxwbHA==","GxwbHA=="],"SigRs":[[[6,196,6,82,61,137,152,169,215,249,81,205,46,199,144,13,111,180,67,100,66,170,215,133,234,146,207,26,48,163,121,86],[87,58,198,80,229,65,170,168,50,112,63,182,254,185,229,98,126,66,61,87,101,207,253,224,14,42,160,154,185,6,221,139],[175,225,221,74,177,235,142,81,72,131,11,51,82,58,102,93,253,25,184,45,91,44,225,138,198,114,229,149,210,31,248,98],[83,79,139,76,91,47,237,200,132,49,208,84,126,196,194,90,142,170,239,92,195,194,107,251,141,140,238,198,34,39,111,231]],[[8,49,248,38,235,197,250,7,179,42,42,4,65,128,206,235,148,32,5,145,41,30,229,184,232,38,158,50,133,22,105,104],[3,201,1,66,25,137,91,9,137,46,255,5,212,155,24,232,41,215,229,171,255,132,192,51,52,78,182,144,165,193,62,228],[46,245,113,58,17,213,226,210,86,42,144,229,190,49,65,7,184,173,14,89,6,81,11,235,145,209,31,127,60,156,74,163],[153,65,194,100,24,19,188,17,150,74,179,196,155,50,166,145,30,152,85,17,73,64,144,168,86,185,154,191,254,190,81,79]]],"SigSs":[[[26,192,98,189,190,254,107,245,67,17,148,121,223,22,16,130,126,17,223,243,167,153,85,119,111,176,228,2,182,0,165,166],[110,244,64,23,134,72,133,224,168,45,123,139,249,121,158,187,230,215,194,214,3,31,53,5,237,163,58,155,114,92,203,78],[33,148,100,187,251,227,27,42,194,39,163,207,210,141,89,33,183,188,206,199,129,147,174,64,18,31,29,87,125,248,109,132],[127,66,101,105,146,1,150,63,202,148,228,90,191,0,43,114,23,166,171,113,9,70,95,140,229,84,40,64,47,253,253,201]],[[39,250,172,17,160,109,49,223,126,154,191,233,3,145,215,96,252,82,76,178,212,176,10,193,189,215,191,181,79,39,167,236],[69,121,234,127,246,5,236,92,233,240,149,49,224,212,85,94,50,13,183,7,214,156,216,9,28,159,85,18,207,236,165,22],[96,179,216,187,70,50,194,18,46,253,255,169,118,225,36,52,56,29,19,178,119,149,106,54,187,101,38,134,190,70,229,103],[4,147,185,79,168,172,162,20,197,235,205,10,11,59,52,83,18,206,41,102,231,208,89,64,55,41,78,252,76,12,136,123]]]}`
-	proof := &decodedProof{}
-	json.Unmarshal([]byte(proofMarshalled), proof)
+func getFixedWithdrawERC20Testcase() withdrawTestcase {
+	proofMarshalled := `{"Inst":"SAEAAAAAAAAAAAAAAAA+xcl8giIrHqZzLSXw/CizXak4DgAAAAAAAAAAAAAAAOci2LcdzAFS1H0kOFVqRdM1fWMfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","Heights":[1,1],"MinedProofs":[{"Path":[[75,137,251,165,84,129,75,50,4,80,125,51,158,120,6,254,173,159,38,3,230,90,143,2,206,54,144,233,29,90,238,125],[203,67,0,59,234,162,156,96,70,31,227,158,247,182,125,5,232,117,13,61,67,32,178,67,34,153,223,152,22,57,190,143],[150,207,254,137,201,127,81,187,173,0,67,147,10,198,232,119,149,237,177,167,14,193,39,151,159,213,178,188,102,219,107,138],[208,7,228,151,38,18,221,83,217,237,12,112,96,202,106,255,246,200,83,97,81,34,25,143,234,149,34,198,120,250,149,62]],"IsLeft":[true,true,true,false],"Root":[71,188,123,220,178,59,217,197,164,176,110,125,5,73,19,216,214,236,66,139,222,172,224,145,230,204,119,154,164,101,87,217],"BlkData":[201,64,59,236,218,87,244,111,123,188,226,203,189,150,141,113,221,79,212,18,48,125,109,15,158,49,126,14,63,204,99,220]},{"Path":[[75,137,251,165,84,129,75,50,4,80,125,51,158,120,6,254,173,159,38,3,230,90,143,2,206,54,144,233,29,90,238,125],[203,67,0,59,234,162,156,96,70,31,227,158,247,182,125,5,232,117,13,61,67,32,178,67,34,153,223,152,22,57,190,143],[150,207,254,137,201,127,81,187,173,0,67,147,10,198,232,119,149,237,177,167,14,193,39,151,159,213,178,188,102,219,107,138],[208,7,228,151,38,18,221,83,217,237,12,112,96,202,106,255,246,200,83,97,81,34,25,143,234,149,34,198,120,250,149,62]],"IsLeft":[true,true,true,false],"Root":[71,188,123,220,178,59,217,197,164,176,110,125,5,73,19,216,214,236,66,139,222,172,224,145,230,204,119,154,164,101,87,217],"BlkData":[201,64,59,236,218,87,244,111,123,188,226,203,189,150,141,113,221,79,212,18,48,125,109,15,158,49,126,14,63,204,99,220]}],"AncestorProofs":[{"Path":[[77,57,213,183,42,135,89,142,178,134,163,38,81,112,72,69,59,49,127,82,145,234,230,177,163,112,247,136,53,246,117,32],[50,39,9,89,197,180,132,111,193,149,153,43,226,71,97,36,218,153,65,212,181,5,24,30,44,232,103,124,252,161,201,233],[207,50,50,163,169,252,127,217,163,28,1,27,32,68,50,102,224,100,104,78,85,101,227,172,135,149,59,5,49,53,149,212]],"IsLeft":[true,false,false]},{"Path":[[236,75,18,152,146,226,171,69,58,4,92,23,39,39,185,203,148,232,36,149,98,37,135,116,81,188,81,69,194,43,89,175],[93,226,74,131,18,254,240,170,185,52,165,24,241,120,212,134,220,102,201,94,196,93,30,154,5,252,114,210,212,159,114,128],[228,61,129,143,252,59,51,233,253,244,249,24,192,145,52,126,42,81,151,212,126,5,38,96,129,117,135,75,165,251,189,70]],"IsLeft":[true,false,false]}],"BeaconHashes":["gTVDkUoETuf3Trm53yBIm2r01rYm9rDwgHOVn8xoItQ=","RPFv0sG80pAmHamkX/UvXRFqYcA+MRPZ/Ry3xQ1ThyY=","TpLFtydwWrsPim/oloxglQztXGQssE7bVeWcMK9JBSY=","I4krIPklXmpB7y9AjLgFav2e30R4u5yxm6vicYbcqrc=","Yu8wqcMDsKuLL54M4sL3m2PochbqYbs862qfLCvIduU="],"BridgeHashes":["9iaiGrKdVq3tqGi55LD1P0IXBACZIfra6SfDiKvL+r8=","RPFv0sG80pAmHamkX/UvXRFqYcA+MRPZ/Ry3xQ1ThyY=","mwlYTOn+x+g8vPGtzaZ6KIDA3BwdPHPPLxn2yH50FFE=","4pmGZXU0FOLTi3HMg2ejZ/a3527GUl+DzNaHziiHwUA=","tcY3ONRXtXo74aCqzCQpvLxnh6D3T+sb6QCktzHkGls=","YiJfZdYb+EmRDi+GroGoAarK0acoXqEMMOQXQ9MQSuU=","PLomxVWVG8w4pQJNNOECXPxHIc0b8h21YlJnuuSOibE="]}`
+	proof := withdrawTestcase{}
+	json.Unmarshal([]byte(proofMarshalled), &proof)
 
 	return proof
 }
