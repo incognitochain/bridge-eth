@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	ec "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/incognitochain/bridge-eth/blockchain"
 	"github.com/incognitochain/bridge-eth/bridge/nextVault"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/common"
@@ -834,87 +835,91 @@ type burnInst struct {
 // 	assert.Zero(t, bal.Int64())
 // }
 
-// func TestFixedWithdrawERC20Decimals(t *testing.T) {
-// 	b2e27, _ := big.NewInt(1).SetString("2000000000000000000000000000", 10)
-// 	testCases := []struct {
-// 		desc     string
-// 		decimal  int
-// 		deposit  *big.Int
-// 		withdraw *big.Int
-// 		remain   *big.Int
-// 		err      bool
-// 	}{
-// 		{
-// 			desc:     "DAI (d=18)",
-// 			decimal:  18,
-// 			deposit:  big.NewInt(int64(5e18)),
-// 			withdraw: big.NewInt(int64(4e9)),
-// 			remain:   big.NewInt(int64(1e18)),
-// 		},
-// 		{
-// 			desc:     "ZIL (d=12)",
-// 			decimal:  12,
-// 			deposit:  big.NewInt(int64(3e12)),
-// 			withdraw: big.NewInt(int64(3e8)),
-// 			remain:   big.NewInt(int64(2.7e12)),
-// 		},
-// 		{
-// 			desc:     "ABC (d=27)",
-// 			decimal:  27,
-// 			deposit:  b2e27,
-// 			withdraw: big.NewInt(int64(2e9)),
-// 			remain:   big.NewInt(int64(0)),
-// 		},
-// 		{
-// 			desc:     "XYZ (d=9)",
-// 			decimal:  9,
-// 			deposit:  big.NewInt(int64(4e9)),
-// 			withdraw: big.NewInt(int64(1)),
-// 			remain:   big.NewInt(int64(4e9 - 1)),
-// 		},
-// 		{
-// 			desc:     "USDT (d=6)",
-// 			decimal:  6,
-// 			deposit:  big.NewInt(int64(8e6)),
-// 			withdraw: big.NewInt(int64(7e6)),
-// 			remain:   big.NewInt(int64(1e6)),
-// 		},
-// 		{
-// 			desc:     "IJK (d=0)",
-// 			decimal:  0,
-// 			deposit:  big.NewInt(9),
-// 			withdraw: big.NewInt(2),
-// 			remain:   big.NewInt(7),
-// 		},
-// 	}
+func TestFixedWithdrawERC20Decimals(t *testing.T) {
+	b2e27, _ := big.NewInt(1).SetString("2000000000000000000000000000", 10)
+	testCases := []struct {
+		desc     string
+		decimal  int
+		deposit  *big.Int
+		withdraw *big.Int
+		remain   *big.Int
+		err      bool
+	}{
+		{
+			desc:     "DAI (d=18)",
+			decimal:  18,
+			deposit:  big.NewInt(int64(5e18)),
+			withdraw: big.NewInt(int64(4e9)),
+			remain:   big.NewInt(int64(1e18)),
+		},
+		{
+			desc:     "ZIL (d=12)",
+			decimal:  12,
+			deposit:  big.NewInt(int64(3e12)),
+			withdraw: big.NewInt(int64(3e8)),
+			remain:   big.NewInt(int64(2.7e12)),
+		},
+		{
+			desc:     "ABC (d=27)",
+			decimal:  27,
+			deposit:  b2e27,
+			withdraw: big.NewInt(int64(2e9)),
+			remain:   big.NewInt(int64(0)),
+		},
+		{
+			desc:     "XYZ (d=9)",
+			decimal:  9,
+			deposit:  big.NewInt(int64(4e9)),
+			withdraw: big.NewInt(int64(1)),
+			remain:   big.NewInt(int64(4e9 - 1)),
+		},
+		{
+			desc:     "USDT (d=6)",
+			decimal:  6,
+			deposit:  big.NewInt(int64(8e6)),
+			withdraw: big.NewInt(int64(7e6)),
+			remain:   big.NewInt(int64(1e6)),
+		},
+		{
+			desc:     "IJK (d=0)",
+			decimal:  0,
+			deposit:  big.NewInt(9),
+			withdraw: big.NewInt(2),
+			remain:   big.NewInt(7),
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		t.Run(tc.desc, func(t *testing.T) {
-// 			decimals := []int{tc.decimal}
-// 			p, c, err := setupFixedERC20s(decimals)
-// 			assert.Nil(t, err)
-// 			tinfo := p.tokens[tc.decimal]
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			decimals := []int{tc.decimal}
+			p, c, err := setupFixedERC20s(decimals)
+			assert.Nil(t, err)
+			tinfo := p.tokens[tc.decimal]
 
-// 			// Deposit, must success
-// 			_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.deposit)
-// 			assert.Nil(t, err)
+			// Deposit, must success
+			_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.deposit)
+			assert.Nil(t, err)
 
-// 			meta := 72
-// 			shardID := 1
-// 			proof := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
+			meta := 72
+			shardID := 1
+			data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
 
-// 			_, err = Withdraw(p.v, auth, proof)
-// 			if assert.Nil(t, err) {
-// 				p.sim.Commit()
+			// The blocks with withdraw instructions are final
+			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.beaconHashes))
+			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.bridgeHashes))
 
-// 				// Check balance
-// 				bal := getBalanceERC20(tinfo.c, p.vAddr)
-// 				assert.Zero(t, tc.remain.Cmp(bal))
-// 			}
-// 		})
-// 	}
+			_, err = WithdrawNew(p.v, auth, data.inst, data.heights, data.minedProofs, data.ancestorProofs)
+			if assert.Nil(t, err) {
+				p.sim.Commit()
 
-// }
+				// Check balance
+				bal := getBalanceERC20(tinfo.c, p.vAddr)
+				assert.Zero(t, tc.remain.Cmp(bal))
+			}
+		})
+	}
+
+}
 
 // func TestFixedWithdrawERC20(t *testing.T) {
 // 	proof := getFixedBurnProofERC20()
@@ -1047,33 +1052,80 @@ func setupFixedERC20s(decimals []int) (*Platform, *committees, error) {
 	return p, c, err
 }
 
-func buildWithdrawTestcase(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int) *decodedProof {
-	inst, mp, blkData, blkHash := buildWithdrawData(meta, shard, tokenID, amount)
-	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	ipBridge := signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:])
-	return &decodedProof{
-		Instruction: inst,
-		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
+func setupFinalityWithBlocks(p *Platform, isBeacon bool, c *committees, blkHashes [][]byte) error {
+	root := blockchain.GetKeccak256MerkleRoot(blkHashes)
+	finalityInsts, finalityProofs := buildFinalityTestcase(c, isBeacon, []byte{73, 73}, [][]byte{root, root}, []int{123456780, 123456790})
+	_, err := p.inc.SubmitFinalityProof(auth, finalityInsts, finalityProofs, big.NewInt(int64(0)), isBeacon)
+	if err == nil {
+		p.sim.Commit()
+	}
+	return err
+}
 
-		InstPaths:       [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
-		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft, ipBridge.instPathIsLeft},
-		InstRoots:       [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
-		BlkData:         [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
-		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
-		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
-		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
-		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
+type withdrawTestcase struct {
+	inst           []byte
+	heights        [2]*big.Int
+	minedProofs    [2]vault.VaultMinedProof
+	ancestorProofs [2]vault.VaultMerkleProof
+	beaconHashes   [][]byte
+	bridgeHashes   [][]byte
+}
+
+func buildWithdrawTestcase(
+	c *committees,
+	meta, shard int,
+	tokenID ec.Address,
+	amount *big.Int,
+) withdrawTestcase {
+	// Proofs on beacon
+	inst, mp, blkData, blkHash, withdrawHeight := buildWithdrawData(meta, shard, tokenID, amount)
+	minedBeacon := buildVaultMinedProof(signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:]))
+	beaconHashes := randomMerkleHashes(1234)
+	beaconHashes[withdrawHeight] = blkHash[:]
+	ancestorBeacon := buildVaultAncestorProof(buildInstructionMerklePath(beaconHashes, withdrawHeight))
+
+	// Proofs on bridge
+	minedBridge := buildVaultMinedProof(signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:]))
+	bridgeHashes := randomMerkleHashes(4567)
+	bridgeHashes[withdrawHeight] = blkHash[:] // Use the same block hash
+	ancestorBridge := buildVaultAncestorProof(buildInstructionMerklePath(bridgeHashes, withdrawHeight))
+
+	minedProofs := [2]vault.VaultMinedProof{minedBeacon, minedBridge}
+	ancestorProofs := [2]vault.VaultMerkleProof{ancestorBeacon, ancestorBridge}
+	return withdrawTestcase{
+		inst:           inst,
+		heights:        [2]*big.Int{big.NewInt(int64(withdrawHeight)), big.NewInt(int64(withdrawHeight))},
+		minedProofs:    minedProofs,
+		ancestorProofs: ancestorProofs,
+		beaconHashes:   beaconHashes,
+		bridgeHashes:   bridgeHashes,
 	}
 }
 
-func buildWithdrawData(meta, shard int, tokenID ec.Address, amount *big.Int) ([]byte, *merklePath, []byte, []byte) {
+func buildVaultMinedProof(proof *instProof) vault.VaultMinedProof {
+	return vault.VaultMinedProof{
+		Path:    proof.instPath,
+		IsLeft:  proof.instPathIsLeft,
+		Root:    proof.instRoot,
+		BlkData: proof.blkData,
+	}
+}
+
+func buildVaultAncestorProof(proof *merklePath) vault.VaultMerkleProof {
+	return vault.VaultMerkleProof{
+		Path:   proof.path,
+		IsLeft: proof.left,
+	}
+}
+
+func buildWithdrawData(meta, shard int, tokenID ec.Address, amount *big.Int) ([]byte, *merklePath, []byte, []byte, int) {
 	// Build instruction merkle tree
 	numInst := 10
 	startNodeID := 7
-	height := big.NewInt(1)
+	height := 1
 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 	inst := buildDecodedWithdrawInst(meta, shard, tokenID, withdrawer, amount)
-	instWithHeight := append(inst, toBytes32BigEndian(height.Bytes())...)
+	instWithHeight := append(inst, toBytes32BigEndian(big.NewInt(int64(height)).Bytes())...)
 	data := randomMerkleHashes(numInst)
 	data[startNodeID] = instWithHeight
 	mp := buildInstructionMerklePath(data, startNodeID)
@@ -1082,7 +1134,7 @@ func buildWithdrawData(meta, shard int, tokenID ec.Address, amount *big.Int) ([]
 	h := randomMerkleHashes(1)
 	blkData := h[0]
 	blkHash := common.Keccak256(blkData, mp.root[:])
-	return inst, mp, blkData, blkHash[:]
+	return inst, mp, blkData, blkHash[:], height
 }
 
 func buildDecodedWithdrawInst(meta, shard int, tokenID, withdrawer ec.Address, amount *big.Int) []byte {

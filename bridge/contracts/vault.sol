@@ -247,15 +247,15 @@ contract Vault is AdminPausable {
         require(!isWithdrawed(instHash), errorToString(Errors.ALREADY_USED));
 
         // Verify instruction is in a beacon block
-        bytes32 beaconBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[0].blkData, minedProofs[0].root))));
         require(leafInMerkleTree(
             beaconInstHash,
-            beaconBlk,
+            minedProofs[0].root,
             minedProofs[0].path,
             minedProofs[0].isLeft
         ), errorToString(Errors.INVALID_DATA));
 
         // Verify the finality of the beacon block
+        bytes32 beaconBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[0].blkData, minedProofs[0].root))));
         require(incognito.blockIsFinal(
             true,
             beaconBlk,
@@ -264,15 +264,15 @@ contract Vault is AdminPausable {
         ), errorToString(Errors.INVALID_DATA));
 
         // Verify instruction is in a bridge block
-        bytes32 bridgeBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[1].blkData, minedProofs[1].root))));
         require(leafInMerkleTree(
             bridgeInstHash,
-            bridgeBlk,
+            minedProofs[1].root,
             minedProofs[1].path,
             minedProofs[1].isLeft
         ), errorToString(Errors.INVALID_DATA));
 
         // Verify the finality of the bridge block
+        bytes32 bridgeBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[1].blkData, minedProofs[1].root))));
         require(incognito.blockIsFinal(
             false,
             bridgeBlk,
@@ -301,7 +301,7 @@ contract Vault is AdminPausable {
         MerkleProof[2] memory ancestorProofs
     ) public isNotPaused nonReentrant {
         (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
-        require(meta == 72 && shard == 1); // Check instruction type
+        require(meta == 72 && shard == 1, "invalid metadata"); // Check instruction type
 
         // Check if balance is enough
         if (token == ETH_TOKEN) {

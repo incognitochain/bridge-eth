@@ -273,7 +273,7 @@ contract IncognitoProxy is AdminPausable {
                 keccak256(insts[i]),
                 signersTmp,
                 instProofs[i]
-            ));
+            ), "invalid signatures");
         }
 
         // Validate instruction's data
