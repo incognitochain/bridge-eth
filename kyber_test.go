@@ -85,7 +85,8 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.ETHPrivKey = ETHPrivKey
 	v2.c = getFixedCommittee()
 	v2.auth = bind.NewKeyedTransactor(ETHPrivKey)
-	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
+	var inc *incognito_proxy.IncognitoProxy
+	v2.IncAddr, _, inc, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
 	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
@@ -97,6 +98,13 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.KyberMultiProxy, _, _, err = dappMulti.DeployDappMulti(v2.auth, v2.ETHClient, v2.KyberContractAddr, v2.VaultAddress)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Kyber multi proxy address: %s\n", v2.KyberMultiProxy.Hex())
+	v2.p = &Platform{
+		contracts: &contracts{
+			inc: inc,
+			v:   v2.v,
+		},
+	}
+	auth = v2.auth
 }
 
 func (v2 *KyberTestSuite) TearDownTest() {
@@ -119,8 +127,8 @@ func (v2 *KyberTestSuite) TestKyberTrade() {
 	_, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
-	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
+	data := setupWithdrawWithFinality(v2.T(), v2.p, v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	_, err = SubmitBurnProofNew(v2.p.v, v2.auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 	require.Equal(v2.T(), nil, err)
 
 	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
@@ -160,8 +168,8 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	_, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
-	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
+	data := setupWithdrawWithFinality(v2.T(), v2.p, v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	_, err = SubmitBurnProofNew(v2.p.v, v2.auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 	require.Equal(v2.T(), nil, err)
 
 	bal, err := v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
@@ -211,8 +219,8 @@ func (v2 *KyberTestSuite) TestVaultMultiExecute() {
 	_, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
-	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
+	wtest := setupWithdrawWithFinality(v2.T(), v2.p, v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	_, err = SubmitBurnProofNew(v2.p.v, v2.auth, wtest.Inst, wtest.Heights, wtest.MinedProofs, wtest.AncestorProofs)
 	require.Equal(v2.T(), nil, err)
 
 	// Trade eth to erc20

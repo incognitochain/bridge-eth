@@ -1099,7 +1099,7 @@ func setupFinalityWithBlocks(p *Platform, isBeacon bool, c *committees, blkHashe
 	root := blockchain.GetKeccak256MerkleRoot(blkHashes)
 	finalityInsts, finalityProofs := buildFinalityTestcase(c, isBeacon, []byte{73, 73}, [][]byte{root, root}, []int{123456780, 123456790})
 	_, err := p.inc.SubmitFinalityProof(auth, finalityInsts, finalityProofs, big.NewInt(int64(0)), isBeacon)
-	if err == nil {
+	if err == nil && p.sim != nil {
 		p.sim.Commit()
 	}
 	return err
