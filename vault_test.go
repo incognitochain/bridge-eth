@@ -927,11 +927,8 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 
 			meta := 72
 			shardID := 1
-			data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
-
-			// The blocks with withdraw instructions are final
-			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
-			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
+			withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+			data := setupWithdrawWithFinality(t, p, c, meta, shardID, tinfo.addr, tc.withdraw, withdrawer)
 
 			_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
 			if assert.Nil(t, err) {
@@ -1021,11 +1018,8 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 
 			meta := 72
 			shardID := 1
-			data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
-
-			// The blocks with withdraw instructions are final
-			assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
-			assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
+			withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+			data := setupWithdrawWithFinality(t, p, c, meta, shardID, tinfo.addr, tc.withdraw, withdrawer)
 
 			auth.GasLimit = 0
 			_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
@@ -1054,11 +1048,8 @@ func TestFixedWithdrawModifiedProof(t *testing.T) {
 	// wrong meta
 	meta := 98
 	shardID := 1
-	data := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, withdraw)
-
-	// The blocks with withdraw instructions are final
-	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
-	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	data := setupWithdrawWithFinality(t, p, c, meta, shardID, tinfo.addr, withdraw, withdrawer)
 
 	auth.GasLimit = 0
 	_, err = WithdrawNew(p.v, auth, data.Inst, data.Heights, data.MinedProofs, data.AncestorProofs)
@@ -1086,6 +1077,24 @@ func setupFixedERC20s(decimals []int) (*Platform, *committees, error) {
 	return p, c, err
 }
 
+func setupWithdrawWithFinality(
+	t *testing.T,
+	p *Platform,
+	c *committees,
+	meta, shardID int,
+	tokenAddr ec.Address,
+	amount *big.Int,
+	withdrawer ec.Address,
+) withdrawTestcase {
+	data := buildWithdrawTestcase(c, meta, shardID, tokenAddr, amount, withdrawer)
+
+	// The blocks with withdraw instructions are final
+	assert.Nil(t, setupFinalityWithBlocks(p, true, c, data.BeaconHashes))
+	assert.Nil(t, setupFinalityWithBlocks(p, false, c, data.BridgeHashes))
+
+	return data
+}
+
 func setupFinalityWithBlocks(p *Platform, isBeacon bool, c *committees, blkHashes [][]byte) error {
 	root := blockchain.GetKeccak256MerkleRoot(blkHashes)
 	finalityInsts, finalityProofs := buildFinalityTestcase(c, isBeacon, []byte{73, 73}, [][]byte{root, root}, []int{123456780, 123456790})
@@ -1110,9 +1119,10 @@ func buildWithdrawTestcase(
 	meta, shard int,
 	tokenID ec.Address,
 	amount *big.Int,
+	withdrawer ec.Address,
 ) withdrawTestcase {
 	// Proofs on beacon
-	inst, mp, blkData, blkHash, withdrawHeight := buildWithdrawData(meta, shard, tokenID, amount)
+	inst, mp, blkData, blkHash, withdrawHeight := buildWithdrawData(meta, shard, tokenID, amount, withdrawer)
 	minedBeacon := buildVaultMinedProof(signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:]))
 	beaconHashes := randomMerkleHashes(5)
 	beaconHashes[withdrawHeight] = blkHash[:]
@@ -1152,12 +1162,11 @@ func buildVaultAncestorProof(proof *merklePath) vault.VaultMerkleProof {
 	}
 }
 
-func buildWithdrawData(meta, shard int, tokenID ec.Address, amount *big.Int) ([]byte, *merklePath, []byte, []byte, int) {
+func buildWithdrawData(meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer ec.Address) ([]byte, *merklePath, []byte, []byte, int) {
 	// Build instruction merkle tree
 	numInst := 10
 	startNodeID := 7
 	height := 1
-	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 	inst := buildDecodedWithdrawInst(meta, shard, tokenID, withdrawer, amount)
 	instWithHeight := append(inst, toBytes32BigEndian(big.NewInt(int64(height)).Bytes())...)
 	data := randomMerkleHashes(numInst)

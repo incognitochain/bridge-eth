@@ -37,24 +37,27 @@ func WithdrawNew(
 
 func SubmitBurnProof(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	return nil, nil
-	// tx, err := v.SubmitBurnProof(
-	// 	auth,
-	// 	proof.Instruction,
-	// 	proof.Heights,
+}
 
-	// 	proof.InstPaths,
-	// 	proof.InstPathIsLefts,
-	// 	proof.InstRoots,
-	// 	proof.BlkData,
-	// 	proof.SigIdxs,
-	// 	proof.SigVs,
-	// 	proof.SigRs,
-	// 	proof.SigSs,
-	// )
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return tx, nil
+func SubmitBurnProofNew(
+	v *vault.Vault,
+	auth *bind.TransactOpts,
+	inst []byte,
+	heights [2]*big.Int,
+	minedProofs [2]vault.VaultMinedProof,
+	ancestorProofs [2]vault.VaultMerkleProof,
+) (*types.Transaction, error) {
+	tx, err := v.SubmitBurnProof(
+		auth,
+		inst,
+		heights,
+		minedProofs,
+		ancestorProofs,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
 // TODO: update for deploy_test
