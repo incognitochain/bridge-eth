@@ -66,8 +66,9 @@ type decodedProof struct {
 	Heights     [2]*big.Int
 
 	InstPaths       [2][][32]byte
-	InstPathIsLefts [2][]bool
-	InstRoots       [2][32]byte
+	InstIDs         [2]*big.Int
+	InstPathIsLefts [2][]bool   // TODO: remove
+	InstRoots       [2][32]byte // TODO: remove
 	BlkData         [2][32]byte
 	SigIdxs         [2][]*big.Int
 	SigVs           [2][]uint8

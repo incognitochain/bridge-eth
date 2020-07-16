@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 	"testing"
@@ -115,7 +116,7 @@ func TestFixedSubmitBridgeCandidate(t *testing.T) {
 			desc: "Invalid bridge inst",
 			in: func() *decodedProof {
 				proof := buildBridgeCandidateTestcase(c, 789, 1, 71, 1)
-				proof.InstRoots[1][0] = proof.InstRoots[1][0] + 1
+				proof.InstPaths[1][0][0] = proof.InstPaths[1][0][0] + 1
 				return proof
 			}(),
 			err: true,
@@ -136,7 +137,7 @@ func TestFixedSubmitBridgeCandidate(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			p, _, _ := setupFixedCommittee()
 			inst, instProofs := buildIncognitoProxyInstructionProof(tc.in)
-			_, err := p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
+			tx, err := p.inc.SubmitBridgeCandidate(auth, inst, instProofs)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -145,6 +146,7 @@ func TestFixedSubmitBridgeCandidate(t *testing.T) {
 				return
 			}
 			p.sim.Commit()
+			printReceipt(p.sim, tx)
 
 			comm, err := p.inc.BridgeCandidates(nil, big.NewInt(1))
 			if err != nil {
@@ -180,8 +182,7 @@ func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incogn
 	for i := 0; i < 2; i++ {
 		instProofs[i] = incognito_proxy.IncognitoProxyInstructionProof{
 			Path:    proof.InstPaths[i],
-			IsLeft:  proof.InstPathIsLefts[i],
-			Root:    proof.InstRoots[i],
+			Id:      proof.InstIDs[i],
 			BlkData: proof.BlkData[i],
 			SigIdx:  proof.SigIdxs[i],
 			SigV:    proof.SigVs[i],
@@ -214,14 +215,14 @@ func buildRandomBridgeCandidate(c *committees, startBlock, swapID, meta, shard i
 	return &decodedProof{
 		Instruction: inst,
 
-		InstPaths:       [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
-		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft, ipBridge.instPathIsLeft},
-		InstRoots:       [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
-		BlkData:         [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
-		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
-		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
-		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
-		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
+		InstPaths: [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
+		InstIDs:   [2]*big.Int{ipBeacon.instID, ipBridge.instID},
+		InstRoots: [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
+		BlkData:   [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
+		SigIdxs:   [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
+		SigVs:     [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
+		SigRs:     [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
+		SigSs:     [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
 	}, newComm
 }
 
@@ -291,7 +292,7 @@ func TestFixedSubmitBeaconCandidate(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			p, _, _ := setupFixedCommittee()
 			inst, instProofs := buildIncognitoProxyInstructionProof(tc.in)
-			_, err := p.inc.SubmitBeaconCandidate(auth, inst, instProofs[0])
+			tx, err := p.inc.SubmitBeaconCandidate(auth, inst, instProofs[0])
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -300,6 +301,7 @@ func TestFixedSubmitBeaconCandidate(t *testing.T) {
 				return
 			}
 			p.sim.Commit()
+			printReceipt(p.sim, tx)
 
 			comm, err := p.inc.BeaconCandidates(nil, big.NewInt(1))
 			if err != nil {
@@ -429,7 +431,7 @@ func TestFixedSubmitFinalityProof(t *testing.T) {
 				tc.init(instProofs)
 			}
 
-			_, err := p.inc.SubmitFinalityProof(auth, insts, instProofs, big.NewInt(int64(tc.swapID)), tc.isBeacon)
+			tx, err := p.inc.SubmitFinalityProof(auth, insts, instProofs, big.NewInt(int64(tc.swapID)), tc.isBeacon)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -438,6 +440,7 @@ func TestFixedSubmitFinalityProof(t *testing.T) {
 				return
 			}
 			p.sim.Commit()
+			printReceipt(p.sim, tx)
 
 			// Check finality result
 			assertFinalityUpdated(t, p, tc.isBeacon)
@@ -500,8 +503,7 @@ func buildFinalityInstructionProof(
 	proof := signAndReturnInstProof(privs, true, mp, blkData, blkHash[:])
 	return inst, incognito_proxy.IncognitoProxyInstructionProof{
 		Path:    proof.instPath,
-		IsLeft:  proof.instPathIsLeft,
-		Root:    proof.instRoot,
+		Id:      proof.instID,
 		BlkData: proof.blkData,
 		SigIdx:  proof.sigIdx,
 		SigV:    proof.sigV,
@@ -568,7 +570,7 @@ func TestFixedPromoteCandidate(t *testing.T) {
 			swapID:   1,
 			in: func() promoteCandidateTestcase {
 				t := buildPromoteCandidateTestcase(c, false, 1)
-				t.promoteProof.IsLeft[0] = !t.promoteProof.IsLeft[0]
+				t.promoteProof.Id.Add(t.promoteProof.Id, big.NewInt(1))
 				return t
 			}(),
 			err: true,
@@ -603,7 +605,7 @@ func TestFixedPromoteCandidate(t *testing.T) {
 			p.sim.Commit()
 
 			// Promote candidate and check results
-			_, err = p.inc.PromoteCandidate(auth, big.NewInt(int64(tc.swapID)), tc.isBeacon, tc.in.promoteProof)
+			tx, err := p.inc.PromoteCandidate(auth, big.NewInt(int64(tc.swapID)), tc.isBeacon, tc.in.promoteProof)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -612,6 +614,7 @@ func TestFixedPromoteCandidate(t *testing.T) {
 				return
 			}
 			p.sim.Commit()
+			printReceipt(p.sim, tx)
 
 			var c incognito_proxy.IncognitoProxyCommittee
 			if tc.isBeacon {
@@ -762,8 +765,8 @@ func buildPromoteCandidateProof(blockHashes [][]byte, candidateBlockHeight int) 
 
 func buildIncognitoProxyMerkleProof(merkleProof *merklePath) incognito_proxy.IncognitoProxyMerkleProof {
 	promoteProof := incognito_proxy.IncognitoProxyMerkleProof{
-		Path:   merkleProof.path,
-		IsLeft: merkleProof.left,
+		Path: merkleProof.path,
+		Id:   merkleProof.id,
 	}
 	return promoteProof
 }
@@ -788,17 +791,17 @@ func signAndReturnInstProof(
 	}
 
 	return &instProof{
-		isBeacon:       isBeacon,
-		instHash:       mp.leaf,
-		blkHeight:      big.NewInt(0),
-		instPath:       mp.path,
-		instPathIsLeft: mp.left,
-		instRoot:       mp.root,
-		blkData:        toByte32(blkData),
-		sigIdx:         sigIdx,
-		sigV:           sigV,
-		sigR:           sigR,
-		sigS:           sigS,
+		isBeacon:  isBeacon,
+		instHash:  mp.leaf,
+		blkHeight: big.NewInt(0),
+		instPath:  mp.path,
+		instID:    mp.id,
+		instRoot:  mp.root,
+		blkData:   toByte32(blkData),
+		sigIdx:    sigIdx,
+		sigV:      sigV,
+		sigR:      sigR,
+		sigS:      sigS,
 	}
 }
 
@@ -807,6 +810,7 @@ type instProof struct {
 	instHash       [32]byte
 	blkHeight      *big.Int
 	instPath       [][32]byte
+	instID         *big.Int
 	instPathIsLeft []bool
 	instRoot       [32]byte
 	blkData        [32]byte
@@ -1158,63 +1162,60 @@ func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
 	}
 }
 
-func TestFixedLeafInMerkleTree(t *testing.T) {
+func TestFixedCalcMerkleRoot(t *testing.T) {
 	p, _, _ := setupFixedCommittee()
 	testCases := []struct {
 		desc string
 		in   *merklePath
-		out  bool
-		err  bool
+		same bool
 	}{
 		{
 			desc: "In merkle tree",
 			in:   buildMerklePathTestcase(8, 6, 6),
-			out:  true,
+			same: true,
 		},
 		{
-			desc: "Not in merkle tree",
+			desc: "Wrong id",
 			in:   buildMerklePathTestcase(8, 6, 4),
-			out:  false,
+			same: false,
 		},
 		{
 			desc: "Random leaf",
-			in:   buildMerklePathTestcase(8, 6, -1),
-			out:  false,
+			in:   buildMerklePathTestcase(8, 6, -6),
+			same: false,
 		},
 		{
 			desc: "Big tree",
 			in:   buildMerklePathTestcase(100000, 12345, 12345),
-			out:  true,
+			same: true,
 		},
 		{
 			desc: "Single node",
 			in:   buildMerklePathTestcase(1, 0, 0),
-			out:  true,
+			same: true,
 		},
 		{
-			desc: "Invalid left.length",
+			desc: "Wrong length",
 			in: func() *merklePath {
 				mp := buildMerklePathTestcase(10, 9, 9)
-				mp.left = mp.left[:len(mp.left)-2]
+				mp.path = mp.path[:len(mp.path)-2]
 				return mp
 			}(),
-			err: true,
+			same: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			isIn, err := p.inc.LeafInMerkleTree(nil, tc.in.leaf, tc.in.root, tc.in.path, tc.in.left)
-			isErr := err != nil
-			if isErr != tc.err {
-				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
-			}
-			if tc.err {
+			root, err := p.inc.CalcMerkleRoot(nil, tc.in.leaf, tc.in.id, tc.in.path)
+			if !assert.Nil(t, err) {
 				return
 			}
 
-			if tc.out != isIn {
-				t.Errorf("check inst in merkle tree error, expect %v, got %v", tc.out, isIn)
+			if tc.same {
+				assert.Equal(t, tc.in.root, root)
+			} else {
+				assert.NotEqual(t, tc.in.root, root)
 			}
 		})
 	}
@@ -1230,6 +1231,7 @@ func buildMerklePathTestcase(numInst, startNodeID, leafID int) *merklePath {
 	} else {
 		mp.leaf = toByte32(mp.merkles[leafID])
 	}
+	mp.id = big.NewInt(int64(math.Abs(float64(leafID))))
 	return mp
 }
 
@@ -1249,6 +1251,7 @@ func buildInstructionMerklePath(data [][]byte, startNodeID int) *merklePath {
 		root:    toByte32(merkles[len(merkles)-1]),
 		path:    path,
 		left:    left,
+		id:      big.NewInt(int64(startNodeID)),
 	}
 }
 
@@ -1268,6 +1271,7 @@ type merklePath struct {
 	root    [32]byte
 	path    [][32]byte
 	left    []bool
+	id      *big.Int
 }
 
 func TestFixedIncognitoProxyConstructor(t *testing.T) {

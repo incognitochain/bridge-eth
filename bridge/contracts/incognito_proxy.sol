@@ -10,17 +10,17 @@ import "./pause.sol";
  */
 contract IncognitoProxy is AdminPausable {
     struct MerkleProof {
-        bytes32[] path;
         bool[] isLeft;
+        uint id;
+        bytes32[] path;
     }
 
     struct InstructionProof {
+        uint8[] sigV;
+        uint id;
         bytes32[] path;
-        bool[] isLeft;
-        bytes32 root;
         bytes32 blkData;
         uint[] sigIdx;
-        uint8[] sigV;
         bytes32[] sigR;
         bytes32[] sigS;
     }
@@ -147,6 +147,7 @@ contract IncognitoProxy is AdminPausable {
         // TODO: find correct committee to swap instead of just getting the last one
         bytes32 instHash = keccak256(inst);
         address[] memory signers = filterSigners(instProofs[0].sigIdx, beaconCommittees[beaconCommittees.length-1].pubkeys);
+        bytes32 root = calcMerkleRoot(instHash, instProofs[0].id, instProofs[0].path);
         require(instructionApprovedBySigners(
             instHash,
             signers,
@@ -171,7 +172,7 @@ contract IncognitoProxy is AdminPausable {
         // blockHash is from beacon block, we need to prove that block is final
         // before promoting this candidates to committee
         signers = extractCommitteeFromInstruction(inst, cm.numVals);
-        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[0].blkData, instProofs[0].root))));
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProofs[0].blkData, root))));
         bridgeCandidates[cm.id] = Candidate({
             pubkeys: signers,
             startBlock: cm.startHeight,
@@ -215,7 +216,8 @@ contract IncognitoProxy is AdminPausable {
 
         // Store candidates
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, cm.numVals);
-        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, instProof.root))));
+        bytes32 root = calcMerkleRoot(instHash, instProof.id, instProof.path);
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, root))));
         beaconCandidates[cm.id] = Candidate({
             pubkeys: pubkeys,
             startBlock: cm.startHeight,
@@ -307,8 +309,8 @@ contract IncognitoProxy is AdminPausable {
         require(blockIsFinal(
             true,
             blockHash,
-            proof.path,
-            proof.isLeft
+            proof.id,
+            proof.path
         ));
 
         // Move candidate to committee
@@ -338,8 +340,8 @@ contract IncognitoProxy is AdminPausable {
     function blockIsFinal(
         bool isBeacon,
         bytes32 blockHash,
-        bytes32[] memory path,
-        bool[] memory isLeft
+        uint blockID,
+        bytes32[] memory path
     ) public view returns (bool) {
         bytes32 blockRoot;
         if (isBeacon) {
@@ -347,14 +349,7 @@ contract IncognitoProxy is AdminPausable {
         } else {
             blockRoot = bridgeFinality.rootHash;
         }
-
-        // TODO: check case manipulate path (length 0/1)
-        return leafInMerkleTree(
-            blockHash,
-            blockRoot,
-            path,
-            isLeft
-        );
+        return calcMerkleRoot(blockHash, blockID, path) == blockRoot;
     }
 
     function instructionApprovedBySigners(
@@ -362,8 +357,11 @@ contract IncognitoProxy is AdminPausable {
         address[] memory signers,
         InstructionProof memory instProof
     ) public view returns (bool) {
+        // Get root of instruction merkle trr
+        bytes32 root = calcMerkleRoot(instHash, instProof.id, instProof.path);
+
         // Get double block hash from instRoot and other data
-        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, instProof.root))));
+        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(instProof.blkData, root))));
 
         // Check if enough validators signed this block
         if (instProof.sigV.length <= signers.length * 2 / 3) {
@@ -371,45 +369,29 @@ contract IncognitoProxy is AdminPausable {
         }
 
         // Check that signature is correct
-        if (!verifySig(signers, blk, instProof.sigV, instProof.sigR, instProof.sigS)) {
-            return false;
-        }
-
-        // Check that inst is in block
-        return leafInMerkleTree(
-            instHash,
-            instProof.root,
-            instProof.path,
-            instProof.isLeft
-        );
+        return verifySig(signers, blk, instProof.sigV, instProof.sigR, instProof.sigS);
     }
 
+    // TODO: doc
     /**
      * @dev Checks if a value is in a merkle tree
-     * @param leaf: the value to check
-     * @param root: of the merkle tree
-     * @param path: merkle path of the value to check
-     * @param left: whether each node on the path is the left or right child
-     * @return bool: whether the value is in the merkle tree
      */
-    function leafInMerkleTree(
+    function calcMerkleRoot(
         bytes32 leaf,
-        bytes32 root,
-        bytes32[] memory path,
-        bool[] memory left
-    ) public pure returns (bool) {
-        require(left.length == path.length);
-        bytes32 hash = leaf;
+        uint id,
+        bytes32[] memory path
+    ) public pure returns (bytes32) {
         for (uint i = 0; i < path.length; i++) {
-            if (left[i]) {
-                hash = keccak256(abi.encodePacked(path[i], hash));
+            if (id & 1 > 0) {
+                leaf = keccak256(abi.encodePacked(path[i], leaf));
             } else if (path[i] == 0x0) {
-                hash = keccak256(abi.encodePacked(hash, hash));
+                leaf = keccak256(abi.encodePacked(leaf, leaf));
             } else {
-                hash = keccak256(abi.encodePacked(hash, path[i]));
+                leaf = keccak256(abi.encodePacked(leaf, path[i]));
             }
+            id = id >> 1;
         }
-        return hash == root;
+        return leaf;
     }
 
     /**
