@@ -42,9 +42,15 @@ interface Incognito {
     function blockIsFinal(
         bool isBeacon,
         bytes32 blockHash,
-        bytes32[] calldata path,
-        bool[] calldata isLeft
+        uint blockID,
+        bytes32[] calldata path
     ) external view returns (bool);
+
+    function calcMerkleRoot(
+        bytes32 leaf,
+        uint id,
+        bytes32[] calldata path
+    ) external pure returns (bytes32);
 }
 
 /**
@@ -66,15 +72,14 @@ contract Vault is AdminPausable {
     using SafeMath for uint;
 
     struct MinedProof {
-        bytes32[] path;
-        bool[] isLeft;
-        bytes32 root;
+        uint id;
         bytes32 blkData;
+        bytes32[] path;
     }
 
     struct MerkleProof {
+        uint id;
         bytes32[] path;
-        bool[] isLeft;
     }
 
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
@@ -245,38 +250,27 @@ contract Vault is AdminPausable {
         bytes32 bridgeInstHash = keccak256(abi.encodePacked(inst, heights[1]));
         require(!isWithdrawed(instHash), errorToString(Errors.ALREADY_USED));
 
-        // Verify instruction is in a beacon block
-        require(leafInMerkleTree(
-            beaconInstHash,
-            minedProofs[0].root,
-            minedProofs[0].path,
-            minedProofs[0].isLeft
-        ), errorToString(Errors.INVALID_DATA));
-
+        // Get instruction merkle root
+        bytes32 root = incognito.calcMerkleRoot(beaconInstHash, minedProofs[0].id, minedProofs[0].path);
         // Verify the finality of the beacon block
-        bytes32 beaconBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[0].blkData, minedProofs[0].root))));
+        bytes32 beaconBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[0].blkData, root))));
         require(incognito.blockIsFinal(
             true,
             beaconBlk,
-            ancestorProofs[0].path,
-            ancestorProofs[0].isLeft
+            ancestorProofs[0].id,
+            ancestorProofs[0].path
         ), errorToString(Errors.INVALID_DATA));
 
-        // Verify instruction is in a bridge block
-        require(leafInMerkleTree(
-            bridgeInstHash,
-            minedProofs[1].root,
-            minedProofs[1].path,
-            minedProofs[1].isLeft
-        ), errorToString(Errors.INVALID_DATA));
+        // Get instruction merkle root
+        root = incognito.calcMerkleRoot(bridgeInstHash, minedProofs[1].id, minedProofs[1].path);
 
         // Verify the finality of the bridge block
-        bytes32 bridgeBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[1].blkData, minedProofs[1].root))));
+        bytes32 bridgeBlk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(minedProofs[1].blkData, root))));
         require(incognito.blockIsFinal(
             false,
             bridgeBlk,
-            ancestorProofs[1].path,
-            ancestorProofs[1].isLeft
+            ancestorProofs[1].id,
+            ancestorProofs[1].path
         ), errorToString(Errors.INVALID_DATA));
 
         // Mark as withdrawed
@@ -343,7 +337,7 @@ contract Vault is AdminPausable {
         MerkleProof[2] memory ancestorProofs
     ) public isNotPaused nonReentrant {
         (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
-        require(meta == 97 && shard == 1); // Check instruction type
+        require(meta == 97 && shard == 1, "invalid meta or shard"); // Check instruction type
         // Check if balance is enough
         if (token == ETH_TOKEN) {
             require(address(this).balance >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
@@ -715,33 +709,5 @@ contract Vault is AdminPausable {
             return address(this).balance;
         }
         return IERC20(token).balanceOf(address(this));
-    }
-
-    /**
-     * @dev Checks if a value is in a merkle tree
-     * @param leaf: the value to check
-     * @param root: of the merkle tree
-     * @param path: merkle path of the value to check
-     * @param left: whether each node on the path is the left or right child
-     * @return bool: whether the value is in the merkle tree
-     */
-    function leafInMerkleTree(
-        bytes32 leaf,
-        bytes32 root,
-        bytes32[] memory path,
-        bool[] memory left
-    ) public pure returns (bool) {
-        require(left.length == path.length);
-        bytes32 hash = leaf;
-        for (uint i = 0; i < path.length; i++) {
-            if (left[i]) {
-                hash = keccak256(abi.encodePacked(path[i], hash));
-            } else if (path[i] == 0x0) {
-                hash = keccak256(abi.encodePacked(hash, hash));
-            } else {
-                hash = keccak256(abi.encodePacked(hash, path[i]));
-            }
-        }
-        return hash == root;
     }
 }
