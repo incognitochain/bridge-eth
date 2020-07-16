@@ -65,15 +65,15 @@ type decodedProof struct {
 	Instruction []byte
 	Heights     [2]*big.Int
 
-	InstPaths       [2][][32]byte
-	InstIDs         [2]*big.Int
-	InstPathIsLefts [2][]bool   // TODO: remove
-	InstRoots       [2][32]byte // TODO: remove
-	BlkData         [2][32]byte
-	SigIdxs         [2][]*big.Int
-	SigVs           [2][]uint8
-	SigRs           [2][][32]byte
-	SigSs           [2][][32]byte
+	InstPaths [2][][32]byte
+	InstIDs   [2]*big.Int
+	BlkData   [2][32]byte
+	SigIdxs   [2][]*big.Int
+	SigVs     [2][]uint8
+	SigRs     [2][][32]byte
+	SigSs     [2][][32]byte
+
+	instRoots [2][32]byte // Temporary storage
 }
 
 func getAndDecodeBurnProof(txID string) (*decodedProof, error) {
@@ -230,18 +230,13 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	fmt.Printf("beaconHeight: %d\n", beaconHeight)
 	fmt.Printf("bridgeHeight: %d\n", bridgeHeight)
 
-	beaconInstRoot := decode32(r.Result.BeaconInstRoot)
 	beaconInstPath := make([][32]byte, len(r.Result.BeaconInstPath))
-	beaconInstPathIsLeft := make([]bool, len(r.Result.BeaconInstPath))
 	for i, path := range r.Result.BeaconInstPath {
 		beaconInstPath[i] = decode32(path)
-		beaconInstPathIsLeft[i] = r.Result.BeaconInstPathIsLeft[i]
 	}
 	// fmt.Printf("beaconInstRoot: %x\n", beaconInstRoot)
 
 	beaconBlkData := toByte32(decode(r.Result.BeaconBlkData))
-	fmt.Printf("data: %s %s\n", r.Result.BeaconBlkData, r.Result.BeaconInstRoot)
-	fmt.Printf("expected beaconBlkHash: %x\n", keccak256(beaconBlkData[:], beaconInstRoot[:]))
 
 	beaconSigVs, beaconSigRs, beaconSigSs, err := decodeSigs(r.Result.BeaconSigs)
 	if err != nil {
@@ -254,12 +249,9 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	}
 
 	// For bridge
-	bridgeInstRoot := decode32(r.Result.BridgeInstRoot)
 	bridgeInstPath := make([][32]byte, len(r.Result.BridgeInstPath))
-	bridgeInstPathIsLeft := make([]bool, len(r.Result.BridgeInstPath))
 	for i, path := range r.Result.BridgeInstPath {
 		bridgeInstPath[i] = decode32(path)
-		bridgeInstPathIsLeft[i] = r.Result.BridgeInstPathIsLeft[i]
 	}
 	// fmt.Printf("bridgeInstRoot: %x\n", bridgeInstRoot)
 	bridgeBlkData := toByte32(decode(r.Result.BridgeBlkData))
@@ -277,8 +269,6 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 
 	// Merge beacon and bridge proof
 	instPaths := [2][][32]byte{beaconInstPath, bridgeInstPath}
-	instPathIsLefts := [2][]bool{beaconInstPathIsLeft, bridgeInstPathIsLeft}
-	instRoots := [2][32]byte{beaconInstRoot, bridgeInstRoot}
 	blkData := [2][32]byte{beaconBlkData, bridgeBlkData}
 	sigIdxs := [2][]*big.Int{beaconSigIdxs, bridgeSigIdxs}
 	sigVs := [2][]uint8{beaconSigVs, bridgeSigVs}
@@ -286,16 +276,14 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	sigSs := [2][][32]byte{beaconSigSs, bridgeSigSs}
 
 	return &decodedProof{
-		Instruction:     inst,
-		Heights:         heights,
-		InstPaths:       instPaths,
-		InstPathIsLefts: instPathIsLefts,
-		InstRoots:       instRoots,
-		BlkData:         blkData,
-		SigIdxs:         sigIdxs,
-		SigVs:           sigVs,
-		SigRs:           sigRs,
-		SigSs:           sigSs,
+		Instruction: inst,
+		Heights:     heights,
+		InstPaths:   instPaths,
+		BlkData:     blkData,
+		SigIdxs:     sigIdxs,
+		SigVs:       sigVs,
+		SigRs:       sigRs,
+		SigSs:       sigSs,
 	}, nil
 }
 

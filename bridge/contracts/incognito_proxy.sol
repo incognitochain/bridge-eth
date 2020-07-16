@@ -10,7 +10,6 @@ import "./pause.sol";
  */
 contract IncognitoProxy is AdminPausable {
     struct MerkleProof {
-        bool[] isLeft;
         uint id;
         bytes32[] path;
     }

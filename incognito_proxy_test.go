@@ -217,12 +217,13 @@ func buildRandomBridgeCandidate(c *committees, startBlock, swapID, meta, shard i
 
 		InstPaths: [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
 		InstIDs:   [2]*big.Int{ipBeacon.instID, ipBridge.instID},
-		InstRoots: [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
 		BlkData:   [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
 		SigIdxs:   [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
 		SigVs:     [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
 		SigRs:     [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
 		SigSs:     [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
+
+		instRoots: [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
 	}, newComm
 }
 
@@ -633,9 +634,9 @@ func TestFixedPromoteCandidateSkippingSwapID(t *testing.T) {
 
 	// Build candidate proof
 	candidateProof, c2 := buildRandomBridgeCandidate(c, 123, 1, 71, 1)
-	blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.InstRoots[0][:])
+	blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.instRoots[0][:])
 	candidateProof2, _ := buildRandomBridgeCandidate(c2, 234, 2, 71, 1)
-	blkHash2 := common.Keccak256(candidateProof2.BlkData[0][:], candidateProof2.InstRoots[0][:])
+	blkHash2 := common.Keccak256(candidateProof2.BlkData[0][:], candidateProof2.instRoots[0][:])
 
 	// Submit both candidates, must success
 	inst, instProofs := buildIncognitoProxyInstructionProof(candidateProof)
@@ -685,7 +686,7 @@ func TestFixedPromoteManyCandidate(t *testing.T) {
 	for i := 0; i < numCandidates; i++ {
 		// Build candidate proof
 		candidateProof, c = buildRandomBridgeCandidate(c, 123+i, i+1, 71, 1)
-		blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.InstRoots[0][:])
+		blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.instRoots[0][:])
 		data[456+i] = blkHash[:]
 		candidateBlockHeights = append(candidateBlockHeights, 456+i)
 
@@ -738,7 +739,7 @@ func buildPromoteCandidateTestcase(c *committees, isBeacon bool, swapID int) pro
 		meta = 70
 	}
 	candidateProof, _ := buildRandomBridgeCandidate(c, startBlock, swapID, meta, shard)
-	blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.InstRoots[0][:])
+	blkHash := common.Keccak256(candidateProof.BlkData[0][:], candidateProof.instRoots[0][:])
 
 	// Build promotion proof
 	numBlocks := 789
@@ -806,18 +807,17 @@ func signAndReturnInstProof(
 }
 
 type instProof struct {
-	isBeacon       bool
-	instHash       [32]byte
-	blkHeight      *big.Int
-	instPath       [][32]byte
-	instID         *big.Int
-	instPathIsLeft []bool
-	instRoot       [32]byte
-	blkData        [32]byte
-	sigIdx         []*big.Int
-	sigV           []uint8
-	sigR           [][32]byte
-	sigS           [][32]byte
+	isBeacon  bool
+	instHash  [32]byte
+	blkHeight *big.Int
+	instPath  [][32]byte
+	instID    *big.Int
+	instRoot  [32]byte
+	blkData   [32]byte
+	sigIdx    []*big.Int
+	sigV      []uint8
+	sigR      [][32]byte
+	sigS      [][32]byte
 }
 
 func TestFixedVerifySig(t *testing.T) {
