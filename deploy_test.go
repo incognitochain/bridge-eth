@@ -37,6 +37,20 @@ func TestDecodeSwapBridgeInst(t *testing.T) {
 	fmt.Printf("numVals: %d\n", big.NewInt(0).SetBytes(proof.Instruction[34:66]))
 }
 
+func TestDecodeBurnInst(t *testing.T) {
+	// Get proof
+	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("inst: %x\n", proof.Instruction)
+	fmt.Printf("instType: %d\n", proof.Instruction[0])
+	fmt.Printf("shard: %d\n", proof.Instruction[1])
+	fmt.Printf("token: 0x%x\n", proof.Instruction[14:34])
+	fmt.Printf("receiver: 0x%x\n", proof.Instruction[46:66])
+	fmt.Printf("amount: %d\n", big.NewInt(0).SetBytes(proof.Instruction[66:98]))
+}
+
 func TestSwapBridge(t *testing.T) {
 	// Enter nonce here
 	nonce := uint64(0)
@@ -239,7 +253,7 @@ func transfer(
 }
 
 func TestInstructionUsed(t *testing.T) {
-	proof, err := getAndDecodeBurnProof("4600db42637741fac7d8514f0ebabab431a67f7e4d2df55f3e2ce1e88e4b3fe9")
+	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
 	if err != nil {
 		t.Fatal(err)
 	}
