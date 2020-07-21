@@ -92,7 +92,22 @@ type decodedProof struct {
 }
 
 func GetAndDecodeBridgeCandidateProof(url string, block int) (*CandidateProof, error) {
-	body := getBridgeSwapProof(url, block)
+	proof, err := parseGetInstructionProofBody(getBridgeSwapProof(url, block))
+	if err != nil {
+		return nil, err
+	}
+	return buildCandidateProof(proof)
+}
+
+func GetAndDecodeBeaconCandidateProof(url string, block int) (*CandidateProof, error) {
+	proof, err := parseGetInstructionProofBody(getBeaconSwapProof(url, block))
+	if err != nil {
+		return nil, err
+	}
+	return buildCandidateProof(proof)
+}
+
+func parseGetInstructionProofBody(body string) (*decodedProof, error) {
 	if len(body) < 1 {
 		return nil, fmt.Errorf("no bridge swap proof found")
 	}
@@ -107,7 +122,7 @@ func GetAndDecodeBridgeCandidateProof(url string, block int) (*CandidateProof, e
 	if err != nil {
 		return nil, err
 	}
-	return buildCandidateProof(proof)
+	return proof, nil
 }
 
 func buildCandidateProof(proof *decodedProof) (*CandidateProof, error) {
@@ -160,9 +175,7 @@ func getBridgeSwapProof(url string, block int) string {
 	return string(body)
 }
 
-func getBeaconSwapProof(block int) string {
-	url := "http://127.0.0.1:9344"
-
+func getBeaconSwapProof(url string, block int) string {
 	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getbeaconswapproof\",\n    \"params\": [\n    \t%d\n    ]\n}", block))
 
 	req, _ := http.NewRequest("POST", url, payload)

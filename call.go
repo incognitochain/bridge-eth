@@ -75,10 +75,9 @@ func SubmitBridgeCandidate(
 func SubmitBeaconCandidate(
 	inc *incognito_proxy.IncognitoProxy,
 	auth *bind.TransactOpts,
-	inst []byte,
-	instProof incognito_proxy.IncognitoProxyInstructionProof,
+	proof *CandidateProof,
 ) (*types.Transaction, error) {
-	tx, err := inc.SubmitBeaconCandidate(auth, inst, instProof)
+	tx, err := inc.SubmitBeaconCandidate(auth, proof.Instruction, proof.InstProofs[0])
 	if err != nil {
 		return nil, err
 	}

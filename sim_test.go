@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/ecdsa"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"testing"
@@ -66,35 +65,22 @@ func TestSimulatedSubmitBridgeCandidate(t *testing.T) {
 	}
 }
 
-func TestSimulatedSwapBeacon(t *testing.T) {
-	body := getBeaconSwapProof(20)
-	if len(body) < 1 {
-		t.Fatal(fmt.Errorf("empty beacon swap proof"))
-	}
-
-	r := getProofResult{}
-	if err := json.Unmarshal([]byte(body), &r); err != nil {
-		t.Fatalf("%+v", err)
-	}
-	if len(r.Result.Instruction) == 0 {
-		t.Fatal("invalid swap proof")
-	}
-	proof, err := decodeProof(&r)
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
-	// a, _ := json.Marshal(proof)
-	// fmt.Printf("proof: %s\n", string(a))
-
+func TestSimulatedSubmitBeaconCandidate(t *testing.T) {
 	p, err := setupWithHardcodedCommittee()
 	// p, err := setupWithLocalCommittee()
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 
-	auth.GasLimit = 7000000
+	url := "http://127.0.0.1:20103"
+	proof, err := GetAndDecodeBeaconCandidateProof(url, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	auth.GasLimit = 0
 	fmt.Printf("inst len: %d\n", len(proof.Instruction))
-	tx, err := SwapBeacon(p.inc, auth, proof)
+	tx, err := SubmitBeaconCandidate(p.inc, auth, proof)
 	if err != nil {
 		fmt.Println("err:", err)
 	}
