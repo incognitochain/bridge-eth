@@ -177,22 +177,6 @@ func TestFixedSubmitManyBridgeCandidates(t *testing.T) {
 	}
 }
 
-func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incognito_proxy.IncognitoProxyInstructionProof) {
-	instProofs := [2]incognito_proxy.IncognitoProxyInstructionProof{}
-	for i := 0; i < 2; i++ {
-		instProofs[i] = incognito_proxy.IncognitoProxyInstructionProof{
-			Path:    proof.InstPaths[i],
-			Id:      proof.InstIDs[i],
-			BlkData: proof.BlkData[i],
-			SigIdx:  proof.SigIdxs[i],
-			SigV:    proof.SigVs[i],
-			SigR:    proof.SigRs[i],
-			SigS:    proof.SigSs[i],
-		}
-	}
-	return proof.Instruction, instProofs
-}
-
 func buildRandomBridgeCandidate(c *committees, startBlock, swapID, meta, shard int) (*decodedProof, *committees) {
 	n := 4
 	addrs := []string{}

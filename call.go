@@ -60,6 +60,31 @@ func SubmitBurnProofNew(
 	return tx, nil
 }
 
+func SubmitBridgeCandidate(
+	inc *incognito_proxy.IncognitoProxy,
+	auth *bind.TransactOpts,
+	proof *CandidateProof,
+) (*types.Transaction, error) {
+	tx, err := inc.SubmitBridgeCandidate(auth, proof.Instruction, proof.InstProofs)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func SubmitBeaconCandidate(
+	inc *incognito_proxy.IncognitoProxy,
+	auth *bind.TransactOpts,
+	inst []byte,
+	instProof incognito_proxy.IncognitoProxyInstructionProof,
+) (*types.Transaction, error) {
+	tx, err := inc.SubmitBeaconCandidate(auth, inst, instProof)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
 // TODO: update for deploy_test
 func SwapBridge(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	auth.GasPrice = big.NewInt(20000000000)

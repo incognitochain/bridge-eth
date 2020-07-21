@@ -5,10 +5,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/big"
-	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -43,26 +40,26 @@ func init() {
 	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
 }
 
-func TestSimulatedSwapBridge(t *testing.T) {
+func TestSimulatedSubmitBridgeCandidate(t *testing.T) {
 	p, err := setupWithHardcodedCommittee()
 	// _, err := setupWithLocalCommittee()
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 
-	blocks := []int{10, 20, 30}
+	blocks := []int{35}
 	for _, b := range blocks {
-		url := "http://54.39.158.106:19032"
-		proof, err := getAndDecodeBridgeSwapProof(url, b)
+		url := "http://127.0.0.1:20103"
+		proof, err := GetAndDecodeBridgeCandidateProof(url, b)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		auth.GasLimit = 7000000
+		auth.GasLimit = 0
 		fmt.Printf("inst len: %d\n", len(proof.Instruction))
-		tx, err := SwapBridge(p.inc, auth, proof)
+		tx, err := SubmitBridgeCandidate(p.inc, auth, proof)
 		if err != nil {
-			fmt.Println("err:", err)
+			t.Fatal(err)
 		}
 		p.sim.Commit()
 		printReceipt(p.sim, tx)
@@ -479,79 +476,6 @@ func printReceipt(sim *backends.SimulatedBackend, tx *types.Transaction) {
 		fmt.Printf(fmt.Sprintf("logs: %s\n", format), d)
 		// fmt.Println(topic)
 	}
-}
-
-func getAndDecodeBridgeSwapProof(url string, block int) (*decodedProof, error) {
-	body := getBridgeSwapProof(url, block)
-	if len(body) < 1 {
-		return nil, fmt.Errorf("no bridge swap proof found")
-	}
-	r := getProofResult{}
-	if err := json.Unmarshal([]byte(body), &r); err != nil {
-		return nil, err
-	}
-	if len(r.Result.Instruction) == 0 {
-		return nil, fmt.Errorf("invalid swap proof")
-	}
-	proof, err := decodeProof(&r)
-	if err != nil {
-		return nil, err
-	}
-	return proof, nil
-}
-
-func getBridgeSwapProof(url string, block int) string {
-	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getbridgeswapproof\",\n    \"params\": [\n    \t%d\n    ]\n}", block))
-
-	req, _ := http.NewRequest("POST", url, payload)
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "*/*")
-	req.Header.Add("Cache-Control", "no-cache")
-	req.Header.Add("Host", "127.0.0.1:9338")
-	req.Header.Add("accept-encoding", "gzip, deflate")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("err:", err)
-		return ""
-	}
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-
-	//fmt.Println(string(body))
-	return string(body)
-}
-
-func getBeaconSwapProof(block int) string {
-	url := "http://127.0.0.1:9344"
-
-	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getbeaconswapproof\",\n    \"params\": [\n    \t%d\n    ]\n}", block))
-
-	req, _ := http.NewRequest("POST", url, payload)
-
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Accept", "*/*")
-	req.Header.Add("Cache-Control", "no-cache")
-	req.Header.Add("Host", "127.0.0.1:9338")
-	req.Header.Add("accept-encoding", "gzip, deflate")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("cache-control", "no-cache")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("err:", err)
-		return ""
-	}
-
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-
-	//fmt.Println(string(body))
-	return string(body)
 }
 
 func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {

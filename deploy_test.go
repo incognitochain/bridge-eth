@@ -25,7 +25,7 @@ func TestDecodeSwapBridgeInst(t *testing.T) {
 	// Get proof
 	url := "https://testnet.incognito.org/fullnode"
 	block := 1623371
-	proof, err := getAndDecodeBridgeSwapProof(url, block)
+	proof, err := GetAndDecodeBridgeCandidateProof(url, block)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestSwapBridge(t *testing.T) {
 
 	// Get proof
 	url := "https://mainnet.incognito.org/fullnode:433"
-	proof, err := getAndDecodeBridgeSwapProof(url, block)
+	proof, err := GetAndDecodeBridgeCandidateProof(url, block)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestSwapBridge(t *testing.T) {
 	if nonce > 0 {
 		auth.Nonce = big.NewInt(int64(nonce))
 	}
-	tx, err := SwapBridge(c, auth, proof)
+	tx, err := SubmitBridgeCandidate(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
 	}

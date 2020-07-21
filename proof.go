@@ -61,9 +61,24 @@ type getProofResult struct {
 	}
 }
 
+type CandidateProof struct {
+	Instruction []byte
+	InstProofs  [2]incognito_proxy.IncognitoProxyInstructionProof
+}
+
+type FinalityProof struct {
+	Instructions [2][]byte
+	InstProofs   [2]incognito_proxy.IncognitoProxyInstructionProof
+}
+
+type PromoteProof struct {
+	IsBeacon    bool
+	SwapID      *big.Int
+	MerkleProof incognito_proxy.IncognitoProxyMerkleProof
+}
+
 type decodedProof struct {
 	Instruction []byte
-	Heights     [2]*big.Int
 
 	InstPaths [2][][32]byte
 	InstIDs   [2]*big.Int
@@ -74,6 +89,103 @@ type decodedProof struct {
 	SigSs     [2][][32]byte
 
 	instRoots [2][32]byte // Temporary storage
+}
+
+func GetAndDecodeBridgeCandidateProof(url string, block int) (*CandidateProof, error) {
+	body := getBridgeSwapProof(url, block)
+	if len(body) < 1 {
+		return nil, fmt.Errorf("no bridge swap proof found")
+	}
+	r := getProofResult{}
+	if err := json.Unmarshal([]byte(body), &r); err != nil {
+		return nil, err
+	}
+	if len(r.Result.Instruction) == 0 {
+		return nil, fmt.Errorf("invalid swap proof")
+	}
+	proof, err := decodeProof(&r)
+	if err != nil {
+		return nil, err
+	}
+	return buildCandidateProof(proof)
+}
+
+func buildCandidateProof(proof *decodedProof) (*CandidateProof, error) {
+	inst, instProofs := buildIncognitoProxyInstructionProof(proof)
+	return &CandidateProof{
+		Instruction: inst,
+		InstProofs:  instProofs,
+	}, nil
+}
+
+func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incognito_proxy.IncognitoProxyInstructionProof) {
+	instProofs := [2]incognito_proxy.IncognitoProxyInstructionProof{}
+	for i := 0; i < 2; i++ {
+		instProofs[i] = incognito_proxy.IncognitoProxyInstructionProof{
+			Path:    proof.InstPaths[i],
+			Id:      proof.InstIDs[i],
+			BlkData: proof.BlkData[i],
+			SigIdx:  proof.SigIdxs[i],
+			SigV:    proof.SigVs[i],
+			SigR:    proof.SigRs[i],
+			SigS:    proof.SigSs[i],
+		}
+	}
+	return proof.Instruction, instProofs
+}
+
+func getBridgeSwapProof(url string, block int) string {
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getbridgeswapproof\",\n    \"params\": [\n    \t%d\n    ]\n}", block))
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "*/*")
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Host", "127.0.0.1:9338")
+	req.Header.Add("accept-encoding", "gzip, deflate")
+	req.Header.Add("Connection", "keep-alive")
+	req.Header.Add("cache-control", "no-cache")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("err:", err)
+		return ""
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	//fmt.Println(string(body))
+	return string(body)
+}
+
+func getBeaconSwapProof(block int) string {
+	url := "http://127.0.0.1:9344"
+
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getbeaconswapproof\",\n    \"params\": [\n    \t%d\n    ]\n}", block))
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "*/*")
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("Host", "127.0.0.1:9338")
+	req.Header.Add("accept-encoding", "gzip, deflate")
+	req.Header.Add("Connection", "keep-alive")
+	req.Header.Add("cache-control", "no-cache")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("err:", err)
+		return ""
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	//fmt.Println(string(body))
+	return string(body)
 }
 
 func getAndDecodeBurnProof(txID string) (*decodedProof, error) {
@@ -223,18 +335,14 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	fmt.Printf("inst: %d %x\n", len(inst), inst)
 	fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
 
-	// Block heights
-	beaconHeight := big.NewInt(0).SetBytes(decode(r.Result.BeaconHeight))
-	bridgeHeight := big.NewInt(0).SetBytes(decode(r.Result.BridgeHeight))
-	heights := [2]*big.Int{beaconHeight, bridgeHeight}
-	fmt.Printf("beaconHeight: %d\n", beaconHeight)
-	fmt.Printf("bridgeHeight: %d\n", bridgeHeight)
-
+	// Decode beacon data
 	beaconInstPath := make([][32]byte, len(r.Result.BeaconInstPath))
 	for i, path := range r.Result.BeaconInstPath {
 		beaconInstPath[i] = decode32(path)
 	}
 	// fmt.Printf("beaconInstRoot: %x\n", beaconInstRoot)
+
+	beaconInstID := big.NewInt(r.Result.BeaconInstID)
 
 	beaconBlkData := toByte32(decode(r.Result.BeaconBlkData))
 
@@ -253,6 +361,9 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	for i, path := range r.Result.BridgeInstPath {
 		bridgeInstPath[i] = decode32(path)
 	}
+
+	bridgeInstID := big.NewInt(r.Result.BridgeInstID)
+
 	// fmt.Printf("bridgeInstRoot: %x\n", bridgeInstRoot)
 	bridgeBlkData := toByte32(decode(r.Result.BridgeBlkData))
 
@@ -269,6 +380,7 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 
 	// Merge beacon and bridge proof
 	instPaths := [2][][32]byte{beaconInstPath, bridgeInstPath}
+	instIDs := [2]*big.Int{beaconInstID, bridgeInstID}
 	blkData := [2][32]byte{beaconBlkData, bridgeBlkData}
 	sigIdxs := [2][]*big.Int{beaconSigIdxs, bridgeSigIdxs}
 	sigVs := [2][]uint8{beaconSigVs, bridgeSigVs}
@@ -277,8 +389,8 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 
 	return &decodedProof{
 		Instruction: inst,
-		Heights:     heights,
 		InstPaths:   instPaths,
+		InstIDs:     instIDs,
 		BlkData:     blkData,
 		SigIdxs:     sigIdxs,
 		SigVs:       sigVs,
