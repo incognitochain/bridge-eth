@@ -88,6 +88,39 @@ func TestSimulatedSubmitBeaconCandidate(t *testing.T) {
 	printReceipt(p.sim, tx)
 }
 
+func TestSimulatedSubmitFinality(t *testing.T) {
+	p, err := setupWithHardcodedCommittee()
+	// p, err := setupWithLocalCommittee()
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	url := "http://127.0.0.1:20103"
+	proof, err := GetAndDecodeFinalityProof(url, false, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err := SubmitFinalityProof(p.inc, auth, proof)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+
+	proof, err = GetAndDecodeFinalityProof(url, true, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err = SubmitFinalityProof(p.inc, auth, proof)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+}
+
 func TestSimulatedBurnETH(t *testing.T) {
 	proof, err := getAndDecodeBurnProof("3056832abff4fae1ed18163ded4d24cd94c1a6f1dc2ee0819170c85d508b7266")
 	if err != nil {

@@ -53,7 +53,7 @@ type tokenInfo struct {
 }
 
 type getProofResult struct {
-	Result jsonresult.GetInstructionProof
+	Result interface{}
 	Error  struct {
 		Code       int
 		Message    string
@@ -67,6 +67,8 @@ type CandidateProof struct {
 }
 
 type FinalityProof struct {
+	IsBeacon     bool
+	SwapID       *big.Int
 	Instructions [2][]byte
 	InstProofs   [2]incognito_proxy.IncognitoProxyInstructionProof
 }
@@ -111,14 +113,11 @@ func parseGetInstructionProofBody(body string) (*decodedProof, error) {
 	if len(body) < 1 {
 		return nil, fmt.Errorf("no bridge swap proof found")
 	}
-	r := getProofResult{}
+	r := getProofResult{Result: &jsonresult.GetInstructionProof{}}
 	if err := json.Unmarshal([]byte(body), &r); err != nil {
 		return nil, err
 	}
-	if len(r.Result.Instruction) == 0 {
-		return nil, fmt.Errorf("invalid swap proof")
-	}
-	proof, err := decodeProof(&r)
+	proof, err := decodeGetInstructionProof(r.Result.(*jsonresult.GetInstructionProof))
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +130,35 @@ func buildCandidateProof(proof *decodedProof) (*CandidateProof, error) {
 		Instruction: inst,
 		InstProofs:  instProofs,
 	}, nil
+}
+
+func GetAndDecodeFinalityProof(url string, isBeacon bool, block int) (*FinalityProof, error) {
+	shardID := 1
+	if isBeacon {
+		shardID = -1
+	}
+	encodedProof, err := parseGetFinalityProofBody(getFinalityProof(url, block, shardID))
+	if err != nil {
+		return nil, err
+	}
+
+	proof, err := decodeGetFinalityProof(encodedProof)
+	if err != nil {
+		return nil, err
+	}
+	proof.IsBeacon = isBeacon
+	return proof, nil
+}
+
+func parseGetFinalityProofBody(body string) (*jsonresult.GetFinalityProof, error) {
+	if len(body) < 1 {
+		return nil, fmt.Errorf("no bridge swap proof found")
+	}
+	r := getProofResult{Result: &jsonresult.GetFinalityProof{}}
+	if err := json.Unmarshal([]byte(body), &r); err != nil {
+		return nil, err
+	}
+	return r.Result.(*jsonresult.GetFinalityProof), nil
 }
 
 func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incognito_proxy.IncognitoProxyInstructionProof) {
@@ -147,6 +175,23 @@ func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incogn
 		}
 	}
 	return proof.Instruction, instProofs
+}
+
+func getFinalityProof(url string, block int, shardID int) string {
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getfinalityproof\",\n    \"params\": [\n    \t%d,\n    \t%d\n]\n}", block, shardID))
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("err:", err)
+		return ""
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	return string(body)
 }
 
 func getBridgeSwapProof(url string, block int) string {
@@ -207,12 +252,12 @@ func getAndDecodeBurnProof(txID string) (*decodedProof, error) {
 		return nil, fmt.Errorf("burn proof not found")
 	}
 
-	r := getProofResult{}
+	r := getProofResult{Result: &jsonresult.GetInstructionProof{}}
 	err := json.Unmarshal([]byte(body), &r)
 	if err != nil {
 		return nil, err
 	}
-	return decodeProof(&r)
+	return decodeGetInstructionProof(r.Result.(*jsonresult.GetInstructionProof))
 }
 
 func getAndDecodeBurnProofV2(
@@ -228,12 +273,12 @@ func getAndDecodeBurnProofV2(
 		return nil, fmt.Errorf("burn proof for deposit to SC not found")
 	}
 
-	r := getProofResult{}
+	r := getProofResult{Result: &jsonresult.GetInstructionProof{}}
 	err = json.Unmarshal([]byte(body), &r)
 	if err != nil {
 		return nil, err
 	}
-	return decodeProof(&r)
+	return decodeGetInstructionProof(r.Result.(*jsonresult.GetInstructionProof))
 }
 
 func getCommittee(url string) ([]common.Address, []common.Address, error) {
@@ -343,50 +388,50 @@ func getBurnProofV2(
 	return string(body), nil
 }
 
-func decodeProof(r *getProofResult) (*decodedProof, error) {
-	inst := decode(r.Result.Instruction)
+func decodeGetInstructionProof(result *jsonresult.GetInstructionProof) (*decodedProof, error) {
+	inst := decode(result.Instruction)
 	fmt.Printf("inst: %d %x\n", len(inst), inst)
 	fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
 
 	// Decode beacon data
-	beaconInstPath := make([][32]byte, len(r.Result.BeaconInstPath))
-	for i, path := range r.Result.BeaconInstPath {
+	beaconInstPath := make([][32]byte, len(result.BeaconInstPath))
+	for i, path := range result.BeaconInstPath {
 		beaconInstPath[i] = decode32(path)
 	}
 	// fmt.Printf("beaconInstRoot: %x\n", beaconInstRoot)
 
-	beaconInstID := big.NewInt(r.Result.BeaconInstID)
+	beaconInstID := big.NewInt(result.BeaconInstID)
 
-	beaconBlkData := toByte32(decode(r.Result.BeaconBlkData))
+	beaconBlkData := toByte32(decode(result.BeaconBlkData))
 
-	beaconSigVs, beaconSigRs, beaconSigSs, err := decodeSigs(r.Result.BeaconSigs)
+	beaconSigVs, beaconSigRs, beaconSigSs, err := decodeSigs(result.BeaconSigs)
 	if err != nil {
 		return nil, err
 	}
 
 	beaconSigIdxs := []*big.Int{}
-	for _, sIdx := range r.Result.BeaconSigIdxs {
+	for _, sIdx := range result.BeaconSigIdxs {
 		beaconSigIdxs = append(beaconSigIdxs, big.NewInt(int64(sIdx)))
 	}
 
 	// For bridge
-	bridgeInstPath := make([][32]byte, len(r.Result.BridgeInstPath))
-	for i, path := range r.Result.BridgeInstPath {
+	bridgeInstPath := make([][32]byte, len(result.BridgeInstPath))
+	for i, path := range result.BridgeInstPath {
 		bridgeInstPath[i] = decode32(path)
 	}
 
-	bridgeInstID := big.NewInt(r.Result.BridgeInstID)
+	bridgeInstID := big.NewInt(result.BridgeInstID)
 
 	// fmt.Printf("bridgeInstRoot: %x\n", bridgeInstRoot)
-	bridgeBlkData := toByte32(decode(r.Result.BridgeBlkData))
+	bridgeBlkData := toByte32(decode(result.BridgeBlkData))
 
-	bridgeSigVs, bridgeSigRs, bridgeSigSs, err := decodeSigs(r.Result.BridgeSigs)
+	bridgeSigVs, bridgeSigRs, bridgeSigSs, err := decodeSigs(result.BridgeSigs)
 	if err != nil {
 		return nil, err
 	}
 
 	bridgeSigIdxs := []*big.Int{}
-	for _, sIdx := range r.Result.BridgeSigIdxs {
+	for _, sIdx := range result.BridgeSigIdxs {
 		bridgeSigIdxs = append(bridgeSigIdxs, big.NewInt(int64(sIdx)))
 		// fmt.Printf("bridgeSigIdxs[%d]: %d\n", i, j)
 	}
@@ -409,6 +454,51 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 		SigVs:       sigVs,
 		SigRs:       sigRs,
 		SigSs:       sigSs,
+	}, nil
+}
+
+func decodeGetFinalityProof(result *jsonresult.GetFinalityProof) (*FinalityProof, error) {
+	insts := [2][]byte{}
+	for i, inst := range result.Instructions {
+		insts[i] = decode(inst)
+	}
+
+	instProofs := [2]incognito_proxy.IncognitoProxyInstructionProof{}
+	for i := 0; i < 2; i++ {
+		instPath := make([][32]byte, len(result.InstPaths[i]))
+		for j, path := range result.InstPaths[i] {
+			instPath[j] = decode32(path)
+		}
+
+		instID := big.NewInt(result.IDs[i])
+		blkData := toByte32(decode(result.BlkData[i]))
+
+		sigV, sigR, sigS, err := decodeSigs(result.Sigs[i])
+		if err != nil {
+			return nil, err
+		}
+
+		sigIdx := []*big.Int{}
+		for _, sIdx := range result.SigIdxs[i] {
+			sigIdx = append(sigIdx, big.NewInt(int64(sIdx)))
+		}
+
+		instProofs[i] = incognito_proxy.IncognitoProxyInstructionProof{
+			Path:    instPath,
+			Id:      instID,
+			BlkData: blkData,
+			SigIdx:  sigIdx,
+			SigV:    sigV,
+			SigR:    sigR,
+			SigS:    sigS,
+		}
+	}
+
+	swapID := big.NewInt(int64(result.SwapID))
+	return &FinalityProof{
+		SwapID:       swapID,
+		Instructions: insts,
+		InstProofs:   instProofs,
 	}, nil
 }
 

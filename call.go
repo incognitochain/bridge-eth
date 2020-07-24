@@ -84,6 +84,14 @@ func SubmitBeaconCandidate(
 	return tx, nil
 }
 
+func SubmitFinalityProof(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *FinalityProof) (*types.Transaction, error) {
+	tx, err := inc.SubmitFinalityProof(auth, proof.Instructions, proof.InstProofs, proof.SwapID, proof.IsBeacon)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
 // TODO: update for deploy_test
 func SwapBridge(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	auth.GasPrice = big.NewInt(20000000000)
