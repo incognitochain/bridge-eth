@@ -49,6 +49,7 @@ contract IncognitoProxy is AdminPausable {
         bytes32 rootHash;
     }
 
+    // TODO: save last committee only
     Committee[] public beaconCommittees; // All beacon committees from genesis block
     Committee[] public bridgeCommittees; // All bridge committees from genesis block
     mapping(uint => Candidate) public bridgeCandidates;
@@ -251,6 +252,7 @@ contract IncognitoProxy is AdminPausable {
         uint swapID,
         bool isBeacon
     ) public isNotPaused {
+        // TODO: optimize: first block check merkle proof instead of sigs
         // Extract the committee signed the instructions
         // Using the same committee for both blocks: we do not support two
         // adjacent blocks with increasing timeslots but signed by 2 different committees
