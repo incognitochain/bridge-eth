@@ -21,6 +21,40 @@ import (
 	"github.com/pkg/errors"
 )
 
+func TestGetNonceOfPendingTx(t *testing.T) {
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	tx := "0xcb086f05903f80f206cc3c3a1c9f47ccf9d40bd64ba85b065f8419456d0b8617"
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	a, _, err := client.TransactionByHash(ctx, common.HexToHash(tx))
+	if err != nil {
+		t.Fatalf("failed getting nonce: %+v", err)
+	}
+	fmt.Println(big.NewInt(int64(a.Nonce())))
+}
+
+func TestGetTxStatus(t *testing.T) {
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	tx := "0x635431d7a220fb21c14e152f79663b74bc6c97eda3b2f821ac7c1cdb1c60c3c8"
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	receipt, err := client.TransactionReceipt(ctx, common.HexToHash(tx))
+	if err != nil {
+		t.Fatalf("failed getting status: %+v", err)
+	}
+	fmt.Println(receipt.Status)
+}
+
 func TestDecodeSwapBridgeInst(t *testing.T) {
 	// Get proof
 	url := "https://mainnet.incognito.org/fullnode:433"
