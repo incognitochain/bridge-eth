@@ -98,7 +98,19 @@ func GetAndDecodeBridgeCandidateProof(url string, block int) (*CandidateProof, e
 	if err != nil {
 		return nil, err
 	}
+	printCandidateInstruction(proof.Instruction)
 	return buildCandidateProof(proof)
+}
+
+func printCandidateInstruction(inst []byte) {
+	fmt.Println("=============================")
+	fmt.Println("Bridge candidate instruction:")
+	fmt.Printf("meta: %d\n", inst[0])
+	fmt.Printf("shard: %d\n", inst[1])
+	fmt.Printf("height: %d\n", big.NewInt(0).SetBytes(inst[2:34]))
+	fmt.Printf("numVals: %d\n", big.NewInt(0).SetBytes(inst[34:66]))
+	fmt.Printf("swapID: %d\n", big.NewInt(0).SetBytes(inst[66:98]))
+	fmt.Println("=============================")
 }
 
 func GetAndDecodeBeaconCandidateProof(url string, block int) (*CandidateProof, error) {
@@ -152,13 +164,50 @@ func GetAndDecodeFinalityProof(url string, isBeacon bool, block int) (*FinalityP
 
 func parseGetFinalityProofBody(body string) (*jsonresult.GetFinalityProof, error) {
 	if len(body) < 1 {
-		return nil, fmt.Errorf("no bridge swap proof found")
+		return nil, fmt.Errorf("no finality proof found")
 	}
 	r := getProofResult{Result: &jsonresult.GetFinalityProof{}}
 	if err := json.Unmarshal([]byte(body), &r); err != nil {
 		return nil, err
 	}
 	return r.Result.(*jsonresult.GetFinalityProof), nil
+}
+
+func GetAndDecodePromoteProof(
+	url string,
+	isBeacon bool,
+	swapID *big.Int,
+	ancestorBlock,
+	anchorBlock int,
+) (*PromoteProof, error) {
+	shardID := -1 // Must prove finality on beacon
+	encodedProof, err := parseGetAncestorProofBody(getAncestorProof(url, ancestorBlock, anchorBlock, shardID))
+	if err != nil {
+		return nil, err
+	}
+
+	ancestorProof, err := decodeGetAncestorProof(encodedProof)
+	if err != nil {
+		return nil, err
+	}
+
+	promoteProof := &PromoteProof{
+		IsBeacon:    isBeacon,
+		SwapID:      swapID,
+		MerkleProof: ancestorProof,
+	}
+	return promoteProof, nil
+}
+
+func parseGetAncestorProofBody(body string) (*jsonresult.GetAncestorProof, error) {
+	if len(body) < 1 {
+		return nil, fmt.Errorf("no ancestor proof found")
+	}
+	r := getProofResult{Result: &jsonresult.GetAncestorProof{}}
+	if err := json.Unmarshal([]byte(body), &r); err != nil {
+		return nil, err
+	}
+	return r.Result.(*jsonresult.GetAncestorProof), nil
 }
 
 func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incognito_proxy.IncognitoProxyInstructionProof) {
@@ -179,6 +228,23 @@ func buildIncognitoProxyInstructionProof(proof *decodedProof) ([]byte, [2]incogn
 
 func getFinalityProof(url string, block int, shardID int) string {
 	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getfinalityproof\",\n    \"params\": [\n    \t%d,\n    \t%d\n]\n}", block, shardID))
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("err:", err)
+		return ""
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	return string(body)
+}
+
+func getAncestorProof(url string, ancestorBlock, anchorBlock int, shardID int) string {
+	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getancestorproof\",\n    \"params\": [\n    \t%d,\n    \t%d,\n\t%d]\n}", shardID, ancestorBlock, anchorBlock))
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -391,7 +457,7 @@ func getBurnProofV2(
 func decodeGetInstructionProof(result *jsonresult.GetInstructionProof) (*decodedProof, error) {
 	inst := decode(result.Instruction)
 	fmt.Printf("inst: %d %x\n", len(inst), inst)
-	fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
+	// fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
 
 	// Decode beacon data
 	beaconInstPath := make([][32]byte, len(result.BeaconInstPath))
@@ -502,6 +568,18 @@ func decodeGetFinalityProof(result *jsonresult.GetFinalityProof) (*FinalityProof
 	}, nil
 }
 
+func decodeGetAncestorProof(result *jsonresult.GetAncestorProof) (incognito_proxy.IncognitoProxyMerkleProof, error) {
+	proof := incognito_proxy.IncognitoProxyMerkleProof{
+		Id:   big.NewInt(result.ID),
+		Path: make([][32]byte, len(result.Path)),
+	}
+
+	for i, p := range result.Path {
+		proof.Path[i] = decode32(p)
+	}
+
+	return proof, nil
+}
 func decodeSigs(sigs []string) (
 	sigVs []uint8,
 	sigRs [][32]byte,

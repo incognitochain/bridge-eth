@@ -92,6 +92,14 @@ func SubmitFinalityProof(inc *incognito_proxy.IncognitoProxy, auth *bind.Transac
 	return tx, nil
 }
 
+func PromoteCandidate(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *PromoteProof) (*types.Transaction, error) {
+	tx, err := inc.PromoteCandidate(auth, proof.SwapID, proof.IsBeacon, proof.MerkleProof)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
 // TODO: update for deploy_test
 func SwapBridge(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	auth.GasPrice = big.NewInt(20000000000)

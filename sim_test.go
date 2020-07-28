@@ -121,6 +121,54 @@ func TestSimulatedSubmitFinality(t *testing.T) {
 	printReceipt(p.sim, tx)
 }
 
+func TestSimulatedPromoteCandidate(t *testing.T) {
+	p, err := setupWithHardcodedCommittee()
+	// p, err := setupWithLocalCommittee()
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	block := 15
+	url := "http://127.0.0.1:20103"
+	proof, err := GetAndDecodeBridgeCandidateProof(url, block)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err := SubmitBridgeCandidate(p.inc, auth, proof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+
+	finalBlock := block + 1
+	finalityProof, err := GetAndDecodeFinalityProof(url, true, finalBlock)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err = SubmitFinalityProof(p.inc, auth, finalityProof)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+
+	swapID := big.NewInt(1)
+	promoteProof, err := GetAndDecodePromoteProof(url, false, swapID, block, finalBlock)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tx, err = PromoteCandidate(p.inc, auth, promoteProof)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+}
+
 func TestSimulatedBurnETH(t *testing.T) {
 	proof, err := getAndDecodeBurnProof("3056832abff4fae1ed18163ded4d24cd94c1a6f1dc2ee0819170c85d508b7266")
 	if err != nil {
