@@ -133,10 +133,11 @@ contract IncognitoProxy is AdminPausable {
      * @notice All params except inst are the list of 2 elements corresponding to the proof on beacon and bridge
      */
 
-    function submitBridgeCandidate(
+    function submitBridgeCandidate( // 1.07M
         bytes memory inst,
         InstructionProof[2] memory instProofs
     ) public isNotPaused {
+        // DATA: 110k
         // Parse instruction and check metadata
         CommitteeMeta memory cm; // Temp var to by pass max local var in a function
         (cm.meta, cm.shard, cm.startHeight, cm.numVals, cm.id) = extractMetaFromInstruction(inst);
@@ -146,19 +147,19 @@ contract IncognitoProxy is AdminPausable {
         // NOTE: assuming no swap candidate for beacon
         // TODO: find correct committee to swap instead of just getting the last one
         bytes32 instHash = keccak256(inst);
-        address[] memory signers = filterSigners(instProofs[0].sigIdx, beaconCommittees[beaconCommittees.length-1].pubkeys);
+        address[] memory signers = filterSigners(instProofs[0].sigIdx, beaconCommittees[beaconCommittees.length-1].pubkeys); // 9k
         bytes32 root = calcMerkleRoot(instHash, instProofs[0].id, instProofs[0].path);
         require(instructionApprovedBySigners(
             instHash,
             signers,
             instProofs[0]
-        ), "invalid beacon instruction");
+        ), "invalid beacon instruction"); // 26k
 
         // Verify instruction on bridge
         uint latestSwapID = bridgeCommittees[bridgeCommittees.length-1].swapID;
         require(cm.id > latestSwapID, "cannot submit candidate for old swaps");
         if (cm.id == latestSwapID + 1) {
-            signers = filterSigners(instProofs[1].sigIdx, bridgeCommittees[bridgeCommittees.length-1].pubkeys);
+            signers = filterSigners(instProofs[1].sigIdx, bridgeCommittees[bridgeCommittees.length-1].pubkeys); // 47k
         } else {
             signers = filterSigners(instProofs[1].sigIdx, bridgeCandidates[cm.id-1].pubkeys);
         }
@@ -166,7 +167,7 @@ contract IncognitoProxy is AdminPausable {
             instHash,
             signers,
             instProofs[1]
-        ), "invalid bridge instruction");
+        ), "invalid bridge instruction"); // 140k
 
         // Store candidates
         // blockHash is from beacon block, we need to prove that block is final
@@ -177,7 +178,7 @@ contract IncognitoProxy is AdminPausable {
             pubkeys: signers,
             startBlock: cm.startHeight,
             beaconBlockHash: blk
-        });
+        }); // 730k
 
         emit SubmittedBridgeCandidate(bridgeCommittees.length, cm.startHeight);
     }
@@ -246,18 +247,19 @@ contract IncognitoProxy is AdminPausable {
     }
 
     // TODO: doc
-    function submitFinalityProof(
+    function submitFinalityProof( // 500k bridge, 150k beacon
         bytes[2] memory insts,
         InstructionProof[2] memory instProofs,
         uint swapID,
         bool isBeacon
     ) public isNotPaused {
+        // DATA: 140k
         // TODO: optimize: first block check merkle proof instead of sigs
         // Extract the committee signed the instructions
         // Using the same committee for both blocks: we do not support two
         // adjacent blocks with increasing timeslots but signed by 2 different committees
         require(swapID >= getLatestSwapID(isBeacon), "proof must be signed by new committee/candidate");
-        address[] memory signers = loadCandidates(swapID, isBeacon);
+        address[] memory signers = loadCandidates(swapID, isBeacon); // 30k
 
         // Check if both BlockMerkleRoot instructions are valid
         for (uint i = 0; i < 2; i++) {
@@ -269,7 +271,7 @@ contract IncognitoProxy is AdminPausable {
                 signersTmp,
                 instProofs[i]
             ), "invalid signatures");
-        }
+        } // 300k
 
         // Validate instruction's data
         (uint8 meta0, bytes32 rootHash, uint proposeTime0) = extractDataFromBlockMerkleInstruction(insts[0]);
@@ -293,11 +295,12 @@ contract IncognitoProxy is AdminPausable {
     }
 
     // TODO: doc
-    function promoteCandidate(
+    function promoteCandidate( // 800k bridge
         uint swapID,
         bool isBeacon,
         MerkleProof memory proof
     ) public isNotPaused {
+        // DATA: 7k
         // Extract block data
         bytes32 blockHash;
         if (isBeacon) {
@@ -332,7 +335,7 @@ contract IncognitoProxy is AdminPausable {
                 pubkeys: bridgeCandidates[swapID].pubkeys,
                 startBlock: bridgeCandidates[swapID].startBlock,
                 swapID: swapID
-            }));
+            })); // 770k
         }
         emit CandidatePromoted(swapID, isBeacon);
     }

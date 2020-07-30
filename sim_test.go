@@ -46,23 +46,21 @@ func TestSimulatedSubmitBridgeCandidate(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 
-	blocks := []int{35}
-	for _, b := range blocks {
-		url := "http://127.0.0.1:20103"
-		proof, err := GetAndDecodeBridgeCandidateProof(url, b)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		auth.GasLimit = 0
-		fmt.Printf("inst len: %d\n", len(proof.Instruction))
-		tx, err := SubmitBridgeCandidate(p.inc, auth, proof)
-		if err != nil {
-			t.Fatal(err)
-		}
-		p.sim.Commit()
-		printReceipt(p.sim, tx)
+	block := 24
+	url := "http://127.0.0.1:20103"
+	proof, err := GetAndDecodeBridgeCandidateProof(url, block)
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	auth.GasLimit = 0
+	fmt.Printf("inst len: %d\n", len(proof.Instruction))
+	tx, err := SubmitBridgeCandidate(p.inc, auth, proof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
 }
 
 func TestSimulatedSubmitBeaconCandidate(t *testing.T) {
@@ -96,7 +94,7 @@ func TestSimulatedSubmitFinality(t *testing.T) {
 	}
 
 	url := "http://127.0.0.1:20103"
-	proof, err := GetAndDecodeFinalityProof(url, false, 3)
+	proof, err := GetAndDecodeFinalityProof(url, false, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +106,7 @@ func TestSimulatedSubmitFinality(t *testing.T) {
 	p.sim.Commit()
 	printReceipt(p.sim, tx)
 
-	proof, err = GetAndDecodeFinalityProof(url, true, 5)
+	proof, err = GetAndDecodeFinalityProof(url, true, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +126,7 @@ func TestSimulatedPromoteCandidate(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 
-	block := 15
+	block := 24
 	url := "http://127.0.0.1:20103"
 	proof, err := GetAndDecodeBridgeCandidateProof(url, block)
 	if err != nil {
@@ -142,7 +140,7 @@ func TestSimulatedPromoteCandidate(t *testing.T) {
 	p.sim.Commit()
 	printReceipt(p.sim, tx)
 
-	finalBlock := block + 1
+	finalBlock := block + 2
 	finalityProof, err := GetAndDecodeFinalityProof(url, true, finalBlock)
 	if err != nil {
 		t.Fatal(err)
