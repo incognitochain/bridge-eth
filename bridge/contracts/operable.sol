@@ -1,6 +1,8 @@
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
+import "./pause.sol";
+
 contract Operable is AdminPausable {
     address public operator;
 
