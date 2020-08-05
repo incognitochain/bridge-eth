@@ -146,7 +146,7 @@ contract Vault is AdminPausable {
      * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
      * @param incognitoAddress: Incognito Address to receive pETH
      */
-    function deposit(string memory incognitoAddress) public payable isNotPaused {
+    function deposit(string memory incognitoAddress) public payable isNotPaused nonReentrant {
         require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
@@ -161,7 +161,7 @@ contract Vault is AdminPausable {
      * @param amount: to deposit to the vault and mint on Incognito Chain
      * @param incognitoAddress: Incognito Address to receive pERC20
      */
-    function depositERC20(address token, uint amount, string memory incognitoAddress) public payable isNotPaused {
+    function depositERC20(address token, uint amount, string memory incognitoAddress) public payable isNotPaused nonReentrant {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
