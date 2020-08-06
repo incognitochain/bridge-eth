@@ -85,7 +85,7 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.ETHPrivKey = ETHPrivKey
 	v2.c = getFixedCommittee()
 	v2.auth = bind.NewKeyedTransactor(ETHPrivKey)
-	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
+	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
 	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
@@ -119,7 +119,7 @@ func (v2 *KyberTestSuite) TestKyberTrade() {
 	_, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, deposit, address)
 	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
 	require.Equal(v2.T(), nil, err)
 
@@ -160,7 +160,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	_, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, deposit, address)
 	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
 	require.Equal(v2.T(), nil, err)
 
@@ -211,7 +211,7 @@ func (v2 *KyberTestSuite) TestVaultMultiExecute() {
 	_, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, deposit, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, deposit, address)
 	_, err = SubmitBurnProof(v2.v, v2.auth, proof)
 	require.Equal(v2.T(), nil, err)
 

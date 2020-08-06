@@ -37,51 +37,6 @@ func TestDecodeSwapBridgeInst(t *testing.T) {
 	fmt.Printf("numVals: %d\n", big.NewInt(0).SetBytes(proof.Instruction[34:66]))
 }
 
-func TestSwapBridge(t *testing.T) {
-	// Enter nonce here
-	nonce := uint64(0)
-
-	// Enter gasPrice here
-	gasPrice := big.NewInt(5000000000) // 5 GWei
-
-	// Enter block here
-	block := 455353
-
-	// Get proof
-	url := "https://mainnet.incognito.org/fullnode:433"
-	proof, err := getAndDecodeBridgeSwapProof(url, block)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Connect to ETH
-	privKey, client, err := connect()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer client.Close()
-
-	// Get contract instance
-	incAddr := common.HexToAddress(IncognitoProxyAddress)
-	c, err := incognito_proxy.NewIncognitoProxy(incAddr, client)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Swap
-	auth := bind.NewKeyedTransactor(privKey)
-	auth.GasPrice = gasPrice
-	if nonce > 0 {
-		auth.Nonce = big.NewInt(int64(nonce))
-	}
-	tx, err := SwapBridge(c, auth, proof)
-	if err != nil {
-		t.Fatal(err)
-	}
-	txHash := tx.Hash()
-	fmt.Printf("swapped, txHash: %x\n", txHash[:])
-}
-
 func TestSwapBeacon(t *testing.T) {
 	// Get proof
 	proof := getFixedSwapBeaconProof()
@@ -437,7 +392,7 @@ func TestDeployProxyAndVault(t *testing.T) {
 	auth.Value = big.NewInt(0)
 	// auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000
-	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, client, admin, cmtee.beacons, cmtee.bridges)
+	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, client, admin, cmtee.beacons)
 	if err != nil {
 		t.Fatal(err)
 	}

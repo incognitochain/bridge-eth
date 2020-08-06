@@ -43,32 +43,6 @@ func init() {
 	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
 }
 
-func TestSimulatedSwapBridge(t *testing.T) {
-	p, err := setupWithHardcodedCommittee()
-	// _, err := setupWithLocalCommittee()
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
-
-	blocks := []int{10, 20, 30}
-	for _, b := range blocks {
-		url := "http://54.39.158.106:19032"
-		proof, err := getAndDecodeBridgeSwapProof(url, b)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		auth.GasLimit = 7000000
-		fmt.Printf("inst len: %d\n", len(proof.Instruction))
-		tx, err := SwapBridge(p.inc, auth, proof)
-		if err != nil {
-			fmt.Println("err:", err)
-		}
-		p.sim.Commit()
-		printReceipt(p.sim, tx)
-	}
-}
-
 func TestSimulatedSwapBeacon(t *testing.T) {
 	body := getBeaconSwapProof(20)
 	if len(body) < 1 {
@@ -106,7 +80,7 @@ func TestSimulatedSwapBeacon(t *testing.T) {
 }
 
 func TestSimulatedBurnETH(t *testing.T) {
-	proof, err := getAndDecodeBurnProof("3056832abff4fae1ed18163ded4d24cd94c1a6f1dc2ee0819170c85d508b7266")
+	proof, err := getAndDecodeBurnProof("d2e1685eec22f83455980e0a48eafc2a4a03d0b8c5e9aa3671698972fb8b1099")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,10 +99,9 @@ func TestSimulatedBurnETH(t *testing.T) {
 	}
 	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
 
-	withdrawer := common.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := common.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
-	auth.GasLimit = 8000000
 	tx, err := Withdraw(p.v, auth, proof)
 	if err != nil {
 		fmt.Println("err:", err)
@@ -140,7 +113,7 @@ func TestSimulatedBurnETH(t *testing.T) {
 }
 
 func TestSimulatedBurnERC20(t *testing.T) {
-	proof, err := getAndDecodeBurnProof("5da2ee413a5d78f25f016fd41994875054afd64d776b95f76515489c9e0f5a13")
+	proof, err := getAndDecodeBurnProof("9d33bdb2d2c614c9576176f5e173515073cdda6c8b970b56ddab506bc3b774d2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,16 +126,16 @@ func TestSimulatedBurnERC20(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 
+	fmt.Printf("token: %s\n", p.tokenAddr.String())
 	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Printf("deposit erc20 to vault: %d -> %d\n", oldBalance, newBalance)
 
-	withdrawer := common.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := common.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
 
-	auth.GasLimit = 8000000
 	tx, err := Withdraw(p.v, auth, proof)
 	if err != nil {
 		fmt.Println("err:", err)
@@ -275,7 +248,7 @@ func setup(
 
 	// IncognitoProxy
 	admin := auth.From
-	p.incAddr, tx, p.inc, err = incognito_proxy.DeployIncognitoProxy(auth, sim, admin, beaconComm, bridgeComm)
+	p.incAddr, tx, p.inc, err = incognito_proxy.DeployIncognitoProxy(auth, sim, admin, beaconComm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deploy IncognitoProxy contract: %v", err)
 	}

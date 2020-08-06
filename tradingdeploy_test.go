@@ -62,7 +62,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// Genesis committee
 	// for testnet & local env
-	beaconComm, bridgeComm, err := convertCommittees(
+	beaconComm, _, err := convertCommittees(
 		testnetBeaconCommitteePubKeys, testnetBridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
@@ -79,7 +79,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	auth.Value = big.NewInt(0)
 	// auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000
-	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.ETHClient, admin, beaconComm, bridgeComm)
+	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.ETHClient, admin, beaconComm)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// incAddr := common.HexToAddress(IncognitoProxyAddress)

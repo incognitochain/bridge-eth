@@ -9,10 +9,10 @@ import (
 // getCommitteeHardcoded is for deploying scripts
 func getCommitteeHardcoded() *committees {
 	beaconComm := []string{
-		"0x3cD69B1A595B7A9589391538d29ee7663326e4d3",
-		"0xc687470342f4E80ECEf6bBd25e276266d40b8429",
-		"0x2A40c96b41AdEc5641F28eF923e270B73e29bb53",
-		"0x131B772A9ADe1793F000024eAb23b77bEd3BFe64",
+		"0xD7d93b7fa42b60b6076f3017fCA99b69257A912D",
+		"0xf25ee30cfed2d2768C51A6Eb6787890C1c364cA4",
+		"0x0D8c517557f3edE116988DD7EC0bAF83b96fe0Cb",
+		"0xc225fcd5CE8Ad42863182Ab71acb6abD9C4ddCbE",
 	}
 	bridgeComm := []string{
 		"0x28655822DAf6c4B32303B06e875F92dC6e242cE4",
@@ -30,16 +30,16 @@ func getCommitteeHardcoded() *committees {
 // getFixedCommittee is for unittest
 func getFixedCommittee() *committees {
 	beaconCommPrivs := []string{
-		"5a417f54357fff96fe4c2a9cafd322ed72b52bf046beb69a9730a26181088489",
-		"b9cd32581922f447acb1cfd148069fc40cbbce1e8badb84c4b509486e6f713ce",
-		"22e23970b853407e16ccb174443f27c37dbbea05729aba546ee649e0aef2d9cb",
-		"4d16dadc89656fbda140e2fe467631ddac3ed9cc326cef3a8f1b1bd5f3cfd155",
+		"aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f",
+		"ca71365ceddfa8e0813cf184463bd48f0b62c9d7d5825cf95263847628816e82",
+		"1e4d2244506211200640567630e3951abadbc2154cf772e4f0d2ff0770290c7c",
+		"c7146b500240ed7aac9445e2532ae8bf6fc7108f6ea89fde5eebdf2fb6cefa5a",
 	}
 	beaconComm := []string{
-		"0xA5301a0d25103967bf0e29db1576cba3408fD9bB",
-		"0x9BC0faE7BB432828759B6e391e0cC99995057791",
-		"0x6cbc2937FEe477bbda360A842EeEbF92c2FAb613",
-		"0xcabF3DB93eB48a61d41486AcC9281B6240411403",
+		"0xD7d93b7fa42b60b6076f3017fCA99b69257A912D",
+		"0xf25ee30cfed2d2768C51A6Eb6787890C1c364cA4",
+		"0x0D8c517557f3edE116988DD7EC0bAF83b96fe0Cb",
+		"0xc225fcd5CE8Ad42863182Ab71acb6abD9C4ddCbE",
 	}
 	beaconPrivs := make([][]byte, len(beaconCommPrivs))
 	for i, p := range beaconCommPrivs {

@@ -239,8 +239,8 @@ func depositERC20Detail(
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	txHash := tx.Hash()
-	fmt.Printf("erc20 deposited, txHash: %x\n", txHash[:])
+	// txHash := tx.Hash()
+	// fmt.Printf("erc20 deposited, txHash: %x\n", txHash[:])
 	return tx, nil
 }
 
@@ -272,9 +272,9 @@ func approveERC20Detail(
 	gasPrice *big.Int,
 ) (*types.Transaction, error) {
 	// Check balance
-	userAddr := crypto.PubkeyToAddress(privKey.PublicKey)
-	bal, _ := token.BalanceOf(nil, userAddr)
-	fmt.Printf("erc20 balance: %d\n", bal)
+	// userAddr := crypto.PubkeyToAddress(privKey.PublicKey)
+	// bal, _ := token.BalanceOf(nil, userAddr)
+	// fmt.Printf("erc20 balance: %d\n", bal)
 
 	// Approve
 	auth := bind.NewKeyedTransactor(privKey)
@@ -292,8 +292,8 @@ func approveERC20Detail(
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	txHash := tx.Hash()
-	fmt.Printf("erc20 approved, txHash: %x\n", txHash[:])
+	// txHash := tx.Hash()
+	// fmt.Printf("erc20 approved, txHash: %x\n", txHash[:])
 	return tx, nil
 }
 

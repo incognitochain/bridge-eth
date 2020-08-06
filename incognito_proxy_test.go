@@ -37,15 +37,6 @@ func TestCompareCommittee(t *testing.T) {
 	for _, addr := range comm.Pubkeys {
 		fmt.Printf("beaconOld: %s\n", addr)
 	}
-
-	comm, err = c.inc.GetBridgeCommittee(nil, committeeIdx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("Start block: ", comm.StartBlock.String())
-	for _, addr := range comm.Pubkeys {
-		fmt.Printf("bridgeOld: %s\n", addr)
-	}
 }
 
 func TestGetBridgeCommitteeOnChain(t *testing.T) {
@@ -126,10 +117,10 @@ func TestFixedFindBeaconCommitteeFromHeight(t *testing.T) {
 
 func repeatSwapBeacon(c *committees, startBlock, meta, shard int) *decodedProof {
 	addrs := []string{
-		"A5301a0d25103967bf0e29db1576cba3408fD9bB",
-		"9BC0faE7BB432828759B6e391e0cC99995057791",
-		"6cbc2937FEe477bbda360A842EeEbF92c2FAb613",
-		"cabF3DB93eB48a61d41486AcC9281B6240411403",
+		"D7d93b7fa42b60b6076f3017fCA99b69257A912D",
+		"f25ee30cfed2d2768C51A6Eb6787890C1c364cA4",
+		"0D8c517557f3edE116988DD7EC0bAF83b96fe0Cb",
+		"c225fcd5CE8Ad42863182Ab71acb6abD9C4ddCbE",
 	}
 	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, addrs)
 	ip := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
@@ -147,200 +138,12 @@ func repeatSwapBeacon(c *committees, startBlock, meta, shard int) *decodedProof 
 	}
 }
 
-func TestFixedFindBridgeCommitteeFromHeight(t *testing.T) {
-	testCases := []struct {
-		desc   string
-		length int
-		find   int64
-		pos    int64
-	}{
-		{
-			desc:   "A lot of committees",
-			length: 100,
-			find:   50,
-			pos:    50,
-		},
-		{
-
-			desc:   "Only 1 committee",
-			length: 0,
-			find:   50,
-			pos:    0,
-		},
-		{
-
-			desc:   "2 committees, get left",
-			length: 1,
-			find:   0,
-			pos:    0,
-		},
-		{
-
-			desc:   "2 committees, get right",
-			length: 1,
-			find:   1,
-			pos:    1,
-		},
-		{
-
-			desc:   "Get first committee",
-			length: 10,
-			find:   0,
-			pos:    0,
-		},
-		{
-			desc:   "Get last committee",
-			length: 10,
-			find:   10000000,
-			pos:    10,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			p, c, _ := setupFixedCommittee()
-			for i := 0; i < tc.length; i++ {
-				in := repeatSwapBridge(c, i+1, 71, 1)
-				_, err := p.inc.SwapBridgeCommittee(auth, in.Instruction, in.InstPaths, in.InstPathIsLefts, in.InstRoots, in.BlkData, in.SigIdxs, in.SigVs, in.SigRs, in.SigSs)
-				if err != nil {
-					t.Fatal(err)
-				}
-				p.sim.Commit()
-			}
-			_, pos, err := p.inc.FindBridgeCommitteeFromHeight(nil, big.NewInt(tc.find))
-			if err != nil || pos.Int64() != tc.pos {
-				t.Errorf("invalid committee position, expect %d, got %d, err = %v", tc.pos, pos, err)
-			}
-		})
-	}
-}
-
 func repeatSwapBridge(c *committees, startBlock, meta, shard int) *decodedProof {
 	addrs := []string{
 		"3c78124783E8e39D1E084FdDD0E097334ba2D945",
 		"76E34d8a527961286E55532620Af5b84F3C6538F",
 		"68686dB6874588D2404155D00A73F82a50FDd190",
 		"1533ac4d2922C150551f2F5dc2b0c1eDE382b890",
-	}
-	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, addrs)
-	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	ipBridge := signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:])
-	return &decodedProof{
-		Instruction: inst,
-
-		InstPaths:       [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
-		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft, ipBridge.instPathIsLeft},
-		InstRoots:       [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
-		BlkData:         [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
-		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
-		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
-		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
-		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
-	}
-}
-
-// TestFixedSwapBridgePaused makes sure swapping committee isn't allowed when contract is paused
-func TestFixedSwapBridgePaused(t *testing.T) {
-	p, c, _ := setupFixedCommittee()
-
-	in := buildSwapBeaconTestcase(c, 789, 70, 1)
-
-	// Pause first, must success
-	_, err := p.inc.Pause(auth)
-	if err != nil {
-		t.Fatalf("%+v", errors.Errorf("expect error == nil, got %v", err))
-	}
-
-	// Must fail
-	_, err = p.inc.SwapBridgeCommittee(auth, in.Instruction, in.InstPaths, in.InstPathIsLefts, in.InstRoots, in.BlkData, in.SigIdxs, in.SigVs, in.SigRs, in.SigSs)
-
-	// Check tx
-	if err == nil {
-		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
-	}
-	p.sim.Commit()
-
-	// New committee mustn't be inserted
-	_, err = p.inc.BridgeCommittees(nil, big.NewInt(1))
-	if err == nil {
-		t.Fatalf("%+v", errors.Errorf("expect error != nil, got %v", err))
-	}
-}
-
-func TestFixedSwapBridgeCommittee(t *testing.T) {
-	_, c, _ := setupFixedCommittee()
-
-	testCases := []struct {
-		desc string
-		in   *decodedProof
-		out  int
-		err  bool
-	}{
-		{
-			desc: "Valid bridge swap instruction",
-			in:   buildSwapBridgeTestcase(c, 789, 71, 1),
-			out:  789,
-		},
-		{
-			desc: "Invalid beacon inst",
-			in: func() *decodedProof {
-				proof := buildSwapBridgeTestcase(c, 789, 71, 1)
-				proof.BlkData[1][0] = proof.BlkData[1][0] + 1
-				return proof
-			}(),
-			err: true,
-		},
-		{
-			desc: "Invalid bridge inst",
-			in: func() *decodedProof {
-				proof := buildSwapBridgeTestcase(c, 789, 71, 1)
-				proof.InstRoots[1][0] = proof.InstRoots[1][0] + 1
-				return proof
-			}(),
-			err: true,
-		},
-		{
-			desc: "Invalid meta",
-			in:   buildSwapBridgeTestcase(c, 789, 70, 1),
-			err:  true,
-		},
-		{
-			desc: "Invalid shard",
-			in:   buildSwapBridgeTestcase(c, 789, 71, 2),
-			err:  true,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			p, _, _ := setupFixedCommittee()
-			_, err := p.inc.SwapBridgeCommittee(auth, tc.in.Instruction, tc.in.InstPaths, tc.in.InstPathIsLefts, tc.in.InstRoots, tc.in.BlkData, tc.in.SigIdxs, tc.in.SigVs, tc.in.SigRs, tc.in.SigSs)
-			isErr := err != nil
-			if isErr != tc.err {
-				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
-			}
-			if tc.err {
-				return
-			}
-			p.sim.Commit()
-
-			startBlock, err := p.inc.BridgeCommittees(nil, big.NewInt(1))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if startBlock.Int64() != int64(tc.out) {
-				t.Errorf("swap bridge failed, expect %v, got %v", tc.out, startBlock)
-			}
-		})
-	}
-}
-
-func buildSwapBridgeTestcase(c *committees, startBlock, meta, shard int) *decodedProof {
-	addrs := []string{
-		"834f98e1b7324450b798359c9febba74fb1fd888",
-		"1250ba2c592ac5d883a0b20112022f541898e65b",
-		"2464c00eab37be5a679d6e5f7c8f87864b03bfce",
-		"6d4850ab610be9849566c09da24b37c5cfa93e50",
 	}
 	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, addrs)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
@@ -491,11 +294,6 @@ func TestFixedInstructionApproved(t *testing.T) {
 			out:  true,
 		},
 		{
-			desc: "Valid bridge swap instruction",
-			in:   buildInstructionApprovedTestcase(false, c),
-			out:  true,
-		},
-		{
 			desc: "SigIdx incorrect",
 			in: func() *instProof {
 				p := buildInstructionApprovedTestcase(true, c)
@@ -540,7 +338,7 @@ func TestFixedInstructionApproved(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			res, err := p.inc.InstructionApproved(nil, tc.in.isBeacon, tc.in.instHash, tc.in.blkHeight, tc.in.instPath, tc.in.instPathIsLeft, tc.in.instRoot, tc.in.blkData, tc.in.sigIdx, tc.in.sigV, tc.in.sigR, tc.in.sigS)
+			res, err := p.inc.InstructionApproved(nil, tc.in.instHash, tc.in.blkHeight, tc.in.instPath, tc.in.instPathIsLeft, tc.in.instRoot, tc.in.blkData, tc.in.sigIdx, tc.in.sigV, tc.in.sigR, tc.in.sigS)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -735,6 +533,17 @@ func TestFixedVerifySig(t *testing.T) {
 }
 
 func getFixedCommitteeSig() *committeeSig {
+	beacons := []string{
+		"0xA5301a0d25103967bf0e29db1576cba3408fD9bB",
+		"0x9BC0faE7BB432828759B6e391e0cC99995057791",
+		"0x6cbc2937FEe477bbda360A842EeEbF92c2FAb613",
+		"0xcabF3DB93eB48a61d41486AcC9281B6240411403",
+	}
+	addrs := []ec.Address{}
+	for _, beacon := range beacons {
+		addrs = append(addrs, ec.HexToAddress(beacon))
+	}
+
 	validationData := "{\"ProducerBLSSig\":\"D4sg/eVi8yI+rX9WOwCWBEG+4mWXjGNorl2m3ppRCvE=\",\"ProducerBriSig\":null,\"ValidatiorsIdx\":[0,1,2,3],\"AggSig\":\"AriRXDvXcPDqkMNAQjHR61f3xis6YLNskuYF7vQJNzE=\",\"BridgeSig\":[\"/tSXMa9s1PKAxDC9H6etSMPcnAOEqqQYum3TfWtOKQpyvHxA1jllDkLmB68M6pp54bTUWenqXMQVWW+2GAcBjgA=\",\"MJyhaCCm8B6uwK/w6/OMqr7AW1Szo1etRfTcru0ZenZUwea0LVXhPo2QRKeO+Q1n12J2yRv4sUkhRLLL9zw1SwE=\",\"DOpccVDrw6SbGqs4+YP/Ti1nx4gg/xpsuHB7DBuhO2RMl8hAaUz2TVZ6hv+r8z0YLiUw/k6FEFY+5dg/EjMRAQA=\",\"qPEXt4KgFR8ZMw7JelEeEwsWQ7gW/IrzWMpx++zjQ6dLdeXwKcGwxoaBWhWnEpma+MVVQw1LvzzuvtzIBGZDKgE=\"]}"
 	d, _ := DecodeValidationData(validationData)
 	vs := []byte{}
@@ -748,10 +557,10 @@ func getFixedCommitteeSig() *committeeSig {
 	}
 
 	hash, _ := common.Hash{}.NewHashFromStr("cb53ba7574335ecfa0fddcb136b387330af322784fb759c80ca7bb790a1c0f9d")
-	c := getFixedCommittee()
+	// c := getFixedCommittee()
 	msgHash := toByte32(crypto.Keccak256Hash(hash.GetBytes()).Bytes())
 	return &committeeSig{
-		addrs:   c.beacons,
+		addrs:   addrs,
 		msgHash: msgHash,
 		v:       vs,
 		r:       rs,
@@ -784,24 +593,6 @@ func DecodeValidationData(data string) (*ValidationData, error) {
 	return &valData, nil
 }
 
-// TestFixedSwapBridgeFixedProof the same as the next test but for bridge
-func TestFixedSwapBridgeFixedProof(t *testing.T) {
-	proof := getFixedSwapBridgeProof()
-
-	// p, err := setupWithLocalCommittee()
-	p, _, err := setupFixedCommittee()
-	if err != nil {
-		t.Error(err)
-	}
-
-	tx, err := SwapBridge(p.inc, auth, proof)
-	if err != nil {
-		t.Error(err)
-	}
-	p.sim.Commit()
-	printReceipt(p.sim, tx)
-}
-
 // TestFixedSwapBeaconTwice submits a swap proof twice to make sure it isn't reusable
 func TestFixedSwapBeaconTwice(t *testing.T) {
 	p, c, err := setupFixedCommittee()
@@ -820,23 +611,25 @@ func TestFixedSwapBeaconTwice(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-// TestFixedSwapBeaconFixedProof decodes a fixed proof and submit to make sure proof
-// format wasn't changed without updating bot
-func TestFixedSwapBeaconFixedProof(t *testing.T) {
-	proof := getFixedSwapBeaconProof()
+// TODO: update proof of this test
+// // TestFixedSwapBeaconFixedProof decodes a fixed proof and submit to make sure proof
+// // format wasn't changed without updating bot
+// func TestFixedSwapBeaconFixedProof(t *testing.T) {
+// 	proof := getFixedSwapBeaconProof()
 
-	p, _, err := setupFixedCommittee()
-	if err != nil {
-		t.Error(err)
-	}
+// 	p, _, err := setupFixedCommittee()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	tx, err := SwapBeacon(p.inc, auth, proof)
-	if err != nil {
-		t.Error(err)
-	}
-	p.sim.Commit()
-	printReceipt(p.sim, tx)
-}
+// 	tx, err := SwapBeacon(p.inc, auth, proof)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	p.sim.Commit()
+// 	printReceipt(p.sim, tx)
+// }
 
 func TestFixedExtractMetaFromInstruction(t *testing.T) {
 	p, _, _ := setupFixedCommittee()
@@ -1094,13 +887,6 @@ func TestFixedIncognitoProxyConstructor(t *testing.T) {
 	if beaconStart.Uint64() != uint64(0) {
 		t.Errorf("incorrect startBlock, expect 0, got %d", beaconStart)
 	}
-	bridgeStart, err := p.inc.BridgeCommittees(nil, big.NewInt(0))
-	if err != nil {
-		t.Error(err)
-	}
-	if bridgeStart.Uint64() != uint64(0) {
-		t.Errorf("incorrect startBlock, expect 0, got %d", bridgeStart)
-	}
 }
 
 func buildDecodedSwapConfirmInst(meta, shard, height int, addrs []string) []byte {
@@ -1115,13 +901,6 @@ func buildDecodedSwapConfirmInst(meta, shard, height int, addrs []string) []byte
 	decoded = append(decoded, toBytes32BigEndian(big.NewInt(int64(len(addrs))).Bytes())...)
 	decoded = append(decoded, a...)
 	return decoded
-}
-
-func getFixedSwapBridgeProof() *decodedProof {
-	proofMarshalled := `{"Instruction":"RwEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAPHgSR4Po450eCE/d0OCXM0ui2UUAAAAAAAAAAAAAAAB2402KUnlhKG5VUyYgr1uE88ZTjwAAAAAAAAAAAAAAAGhobbaHRYjSQEFV0Apz+CpQ/dGQAAAAAAAAAAAAAAAAFTOsTSkiwVBVHy9dwrDB7eOCuJAAAAAAAAAAAAAAAAApvTTlHqui8K9X+Wq3yAn5EP+ItA==","BeaconHeight":null,"BridgeHeight":null,"InstPaths":[[[88,140,70,183,2,23,101,172,69,86,34,176,184,117,64,160,85,82,228,181,203,117,123,125,103,133,131,40,37,146,221,45],[255,180,222,138,116,33,250,156,148,107,1,251,2,193,86,175,149,35,124,138,118,164,80,32,160,18,232,179,23,153,29,138]],[[77,131,10,179,224,59,122,235,216,18,200,37,72,214,28,194,124,156,152,68,191,168,120,213,233,125,18,1,7,231,120,29]]],"InstPathIsLefts":[[false,false],[true]],"InstRoots":[[246,33,171,205,186,148,38,13,162,221,242,161,124,79,164,114,243,145,134,185,213,231,248,31,146,95,157,166,182,119,207,159],[180,112,69,218,29,1,113,71,57,188,201,181,133,160,215,199,181,199,206,124,81,228,14,17,103,32,170,202,142,158,137,187]],"BlkData":[[162,231,15,82,145,236,218,38,82,74,53,255,21,106,108,255,49,25,186,18,220,223,225,21,148,115,60,223,174,153,25,219],[163,34,83,153,105,147,63,92,129,38,131,191,118,215,180,33,183,78,159,54,169,216,222,92,116,242,40,145,183,176,121,195]],"SigIdxs":[[0,1,2,3],[0,1,2,3]],"SigVs":["HBsbGw==","GxwcHA=="],"SigRs":[[[122,158,222,191,249,77,177,45,79,125,211,76,100,66,99,84,123,188,206,22,43,136,245,204,4,196,103,106,137,193,194,240],[171,198,85,94,254,163,51,184,184,83,82,33,95,89,35,217,159,7,246,236,26,235,149,157,239,229,54,56,159,4,243,218],[40,72,83,120,178,178,158,218,12,198,235,219,76,120,230,107,242,60,97,120,232,250,22,63,111,108,212,236,112,37,112,56],[92,64,94,182,180,147,220,249,220,98,20,57,24,89,185,24,137,222,52,0,45,58,132,236,144,194,99,55,225,229,171,176]],[[241,220,136,208,241,17,4,61,189,221,87,249,132,229,40,147,190,105,44,154,227,71,37,136,244,248,165,118,105,28,234,34],[230,19,246,136,131,47,99,248,182,122,208,89,128,253,194,149,35,224,127,70,166,54,251,38,113,110,148,60,52,143,40,138],[147,197,97,112,153,58,202,80,138,238,197,91,40,110,21,187,118,8,131,56,189,13,216,122,97,105,172,133,6,72,12,107],[143,164,230,153,92,129,175,244,143,250,101,62,6,168,174,128,108,202,159,46,52,209,248,52,29,89,203,204,80,103,37,194]]],"SigSs":[[[71,191,26,215,147,217,74,139,212,164,210,176,198,29,231,135,208,189,53,131,126,137,22,22,126,39,164,218,11,114,211,103],[81,14,15,166,105,139,180,202,32,164,27,13,132,108,13,221,82,136,57,91,20,76,104,33,160,102,185,19,99,62,122,28],[63,124,97,144,229,31,134,239,62,254,141,43,14,251,84,64,217,79,125,200,72,98,67,244,197,194,124,16,232,51,126,101],[121,206,180,155,162,60,187,253,97,42,198,174,80,56,130,237,25,237,198,218,151,85,176,95,2,222,208,65,51,89,50,179]],[[26,22,150,125,176,0,110,250,194,183,122,233,35,161,235,66,250,71,158,154,141,82,127,83,44,192,190,199,119,109,52,62],[85,175,185,87,227,57,252,47,170,105,170,147,215,245,102,143,143,251,163,48,126,18,26,68,200,17,223,178,63,59,110,190],[114,53,172,67,216,64,249,23,254,202,14,50,56,181,72,183,196,47,245,38,237,184,212,57,62,246,109,241,135,42,234,41],[13,119,178,123,51,14,72,185,202,141,83,32,153,165,213,118,169,66,113,118,47,15,204,26,142,221,70,252,132,249,73,78]]]}`
-	proof := &decodedProof{}
-	json.Unmarshal([]byte(proofMarshalled), proof)
-	return proof
 }
 
 func getFixedSwapBeaconProof() *decodedProof {
