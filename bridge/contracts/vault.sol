@@ -40,7 +40,6 @@ library SafeMath {
  */
 interface Incognito {
     function instructionApproved(
-        bool,
         bytes32,
         uint,
         bytes32[] calldata,
@@ -61,7 +60,7 @@ interface Withdrawable {
     function isWithdrawed(bytes32)  external view returns (bool);
     function isSigDataUsed(bytes32)  external view returns (bool);
     function getDepositedBalance(address, address)  external view returns (uint);
-    function updateAssets(address[] calldata, uint[] calldata) external returns (bool); 
+    function updateAssets(address[] calldata, uint[] calldata) external returns (bool);
 }
 
 /**
@@ -82,7 +81,16 @@ contract Vault is AdminPausable {
     address payable public newVault;
     bool public notEntered = true;
 
-    // error code 
+    struct BurnInstData {
+        uint8 meta; // type of the instruction
+        uint8 shard; // ID of the Incognito shard containing the instruction, must be 1
+        address token; // ETH address of the token contract (0x0 for ETH)
+        address payable to; // ETH address of the receiver of the token
+        uint amount; // burned amount (on Incognito)
+        bytes32 itx; // Incognito's burning tx
+    }
+
+    // error code
     enum Errors {
         EMPTY,
         NO_REENTRANCE,
@@ -104,7 +112,7 @@ contract Vault is AdminPausable {
     event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
-     
+
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
      * Calling a `nonReentrant` function from another `nonReentrant`
@@ -124,7 +132,7 @@ contract Vault is AdminPausable {
         // By storing the original value once again, a refund is triggered (see
         // https://eips.ethereum.org/EIPS/eip-2200)
         notEntered = true;
-    } 
+    }
 
     /**
      * @dev Creates new Vault to hold assets for Incognito Chain
@@ -175,7 +183,7 @@ contract Vault is AdminPausable {
         erc20Interface.transferFrom(msg.sender, address(this), amount);
         require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
-    
+
         emit Deposit(token, incognitoAddress, emitAmount);
     }
 
@@ -197,27 +205,29 @@ contract Vault is AdminPausable {
     }
 
     /**
-     * @dev Parses a burn instruction and returns individual components
+     * @dev Parses a burn instruction and returns the components
      * @param inst: the full instruction, containing both metadata and body
-     * @return flag:
-     * @return meta: type of the instruction, 72 for burning instruction
-     * @return shard: ID of the Incognito shard containing the instruction, must be 1
-     * @return token: ETH address of the token contract (0x0 for ETH)
-     * @return to: ETH address of the receiver of the token
      */
-    function parseBurnInst(bytes memory inst) public pure returns (uint8, uint8, address, address payable, uint) {
-        uint8 meta = uint8(inst[0]);
-        uint8 shard = uint8(inst[1]);
+    function parseBurnInst(bytes memory inst) public pure returns (BurnInstData memory) {
+        BurnInstData memory data;
+        data.meta = uint8(inst[0]);
+        data.shard = uint8(inst[1]);
         address token;
         address payable to;
         uint amount;
+        bytes32 itx;
         assembly {
             // skip first 0x20 bytes (stored length of inst)
             token := mload(add(inst, 0x22)) // [3:34]
             to := mload(add(inst, 0x42)) // [34:66]
             amount := mload(add(inst, 0x62)) // [66:98]
+            itx := mload(add(inst, 0x82)) // [98:130]
         }
-        return (meta, shard, token, to, amount);
+        data.token = token;
+        data.to = to;
+        data.amount = amount;
+        data.itx = itx;
+        return data;
     }
 
     /**
@@ -228,52 +238,32 @@ contract Vault is AdminPausable {
      */
     function verifyInst(
         bytes memory inst,
-        uint[2] memory heights,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        uint heights,
+        bytes32[] memory instPaths,
+        bool[] memory instPathIsLefts,
+        bytes32 instRoots,
+        bytes32 blkData,
+        uint[] memory sigIdxs,
+        uint8[] memory sigVs,
+        bytes32[] memory sigRs,
+        bytes32[] memory sigSs
     ) internal {
         // Each instruction can only by redeemed once
-        bytes32 instHash = keccak256(inst);
-        bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights[0]));
-        bytes32 bridgeInstHash = keccak256(abi.encodePacked(inst, heights[1]));
-        require(!isWithdrawed(instHash), errorToString(Errors.ALREADY_USED));
+        bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights));
 
         // Verify instruction on beacon
         require(incognito.instructionApproved(
-            true,
             beaconInstHash,
-            heights[0],
-            instPaths[0],
-            instPathIsLefts[0],
-            instRoots[0],
-            blkData[0],
-            sigIdxs[0],
-            sigVs[0],
-            sigRs[0],
-            sigSs[0]
+            heights,
+            instPaths,
+            instPathIsLefts,
+            instRoots,
+            blkData,
+            sigIdxs,
+            sigVs,
+            sigRs,
+            sigSs
         ), errorToString(Errors.INVALID_DATA));
-
-        // Verify instruction on bridge
-        require(incognito.instructionApproved(
-            false,
-            bridgeInstHash,
-            heights[1],
-            instPaths[1],
-            instPathIsLefts[1],
-            instRoots[1],
-            blkData[1],
-            sigIdxs[1],
-            sigVs[1],
-            sigRs[1],
-            sigSs[1]
-        ), errorToString(Errors.INVALID_DATA));
-        withdrawed[instHash] = true;
     }
 
     /**
@@ -281,8 +271,6 @@ contract Vault is AdminPausable {
      * @notice This function takes a burn instruction on Incognito Chain, checks
      * for its validity and returns the token back to ETH chain
      * @notice This only works when the contract is not Paused
-     * @notice All params except inst are the list of 2 elements corresponding to
-     * the proof on beacon and bridge
      * @param inst: the decoded instruction as a list of bytes
      * @param heights: the blocks containing the instruction
      * @param instPaths: merkle path of the instruction
@@ -296,28 +284,32 @@ contract Vault is AdminPausable {
      */
     function withdraw(
         bytes memory inst,
-        uint[2] memory heights,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        uint heights,
+        bytes32[] memory instPaths,
+        bool[] memory instPathIsLefts,
+        bytes32 instRoots,
+        bytes32 blkData,
+        uint[] memory sigIdxs,
+        uint8[] memory sigVs,
+        bytes32[] memory sigRs,
+        bytes32[] memory sigSs
     ) public isNotPaused nonReentrant {
-        (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
-        require(meta == 72 && shard == 1); // Check instruction type
+        BurnInstData memory data = parseBurnInst(inst);
+        require(data.meta == 241 && data.shard == 1); // Check instruction type
+
+        // Not withdrawed
+        require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
+        withdrawed[data.itx] = true;
 
         // Check if balance is enough
-        if (token == ETH_TOKEN) {
-            require(address(this).balance >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+        if (data.token == ETH_TOKEN) {
+            require(address(this).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         } else {
-            uint8 decimals = getDecimals(token);
+            uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
-                burned = burned * (10 ** (uint(decimals) - 9));
+                data.amount = data.amount * (10 ** (uint(decimals) - 9));
             }
-            require(IERC20(token).balanceOf(address(this)) >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
 
         verifyInst(
@@ -334,14 +326,14 @@ contract Vault is AdminPausable {
         );
 
         // Send and notify
-        if (token == ETH_TOKEN) {
-          (bool success, ) =  to.call{value: burned}("");
+        if (data.token == ETH_TOKEN) {
+          (bool success, ) =  data.to.call{value: data.amount}("");
           require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
-            IERC20(token).transfer(to, burned);
+            IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         }
-        emit Withdraw(token, to, burned);
+        emit Withdraw(data.token, data.to, data.amount);
     }
 
     /**
@@ -350,8 +342,6 @@ contract Vault is AdminPausable {
      * @notice This function takes a burn instruction on Incognito Chain, checks
      * for its validity and returns the token back to ETH chain
      * @notice This only works when the contract is not Paused
-     * @notice All params except inst are the list of 2 elements corresponding to
-     * the proof on beacon and bridge
      * @param inst: the decoded instruction as a list of bytes
      * @param heights: the blocks containing the instruction
      * @param instPaths: merkle path of the instruction
@@ -365,27 +355,32 @@ contract Vault is AdminPausable {
      */
     function submitBurnProof(
         bytes memory inst,
-        uint[2] memory heights,
-        bytes32[][2] memory instPaths,
-        bool[][2] memory instPathIsLefts,
-        bytes32[2] memory instRoots,
-        bytes32[2] memory blkData,
-        uint[][2] memory sigIdxs,
-        uint8[][2] memory sigVs,
-        bytes32[][2] memory sigRs,
-        bytes32[][2] memory sigSs
+        uint heights,
+        bytes32[] memory instPaths,
+        bool[] memory instPathIsLefts,
+        bytes32 instRoots,
+        bytes32 blkData,
+        uint[] memory sigIdxs,
+        uint8[] memory sigVs,
+        bytes32[] memory sigRs,
+        bytes32[] memory sigSs
     ) public isNotPaused nonReentrant {
-        (uint8 meta, uint8 shard, address token, address payable to, uint burned) = parseBurnInst(inst);
-        require(meta == 97 && shard == 1); // Check instruction type
+        BurnInstData memory data = parseBurnInst(inst);
+        require(data.meta == 243 && data.shard == 1); // Check instruction type
+
+        // Not withdrawed
+        require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
+        withdrawed[data.itx] = true;
+
         // Check if balance is enough
-        if (token == ETH_TOKEN) {
-            require(address(this).balance >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+        if (data.token == ETH_TOKEN) {
+            require(address(this).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         } else {
-            uint8 decimals = getDecimals(token);
+            uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
-                burned = burned * (10 ** (uint(decimals) - 9));
+                data.amount = data.amount * (10 ** (uint(decimals) - 9));
             }
-            require(IERC20(token).balanceOf(address(this)) >= burned.safeAdd(totalDepositedToSCAmount[token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
 
         verifyInst(
@@ -401,8 +396,8 @@ contract Vault is AdminPausable {
             sigSs
         );
 
-        withdrawRequests[to][token] = withdrawRequests[to][token].safeAdd(burned);
-        totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeAdd(burned);
+        withdrawRequests[data.to][data.token] = withdrawRequests[data.to][data.token].safeAdd(data.amount);
+        totalDepositedToSCAmount[data.token] = totalDepositedToSCAmount[data.token].safeAdd(data.amount);
     }
 
     /**
@@ -453,11 +448,11 @@ contract Vault is AdminPausable {
     ) public isNotPaused nonReentrant {
         // verify owner signs data
         address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp, amount), signData);
-        
+
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
-        
+
         // convert denomination from ethereum's to incognito's (pcoin)
         uint emitAmount = amount;
         if (token != ETH_TOKEN) {
@@ -491,7 +486,7 @@ contract Vault is AdminPausable {
     ) public payable isNotPaused nonReentrant {
         //verify ower signs data from input
         address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amount), signData);
-        
+
         require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
 
         // update balance of verifier
@@ -536,11 +531,11 @@ contract Vault is AdminPausable {
         for(uint i = 0; i < tokens.length; i++){
             // check balance is enough or not
             require(withdrawRequests[verifier][tokens[i]] >= amounts[i], errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
-    
+
             // update balances of verifier
             totalDepositedToSCAmount[tokens[i]] = totalDepositedToSCAmount[tokens[i]].safeSub(amounts[i]);
             withdrawRequests[verifier][tokens[i]] = withdrawRequests[verifier][tokens[i]].safeSub(amounts[i]);
-            
+
             if (tokens[i] == ETH_TOKEN) {
                 ethAmount = ethAmount.safeAdd(amounts[i]);
             } else {
@@ -550,7 +545,7 @@ contract Vault is AdminPausable {
                 require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
             }
         }
-        
+
         // get balance of recipient token before trade to compare after trade.
         uint[] memory balancesBeforeTrade = new uint[](recipientTokens.length);
         for(uint i = 0; i < recipientTokens.length; i++) {
@@ -559,15 +554,15 @@ contract Vault is AdminPausable {
                 balancesBeforeTrade[i] = balancesBeforeTrade[i].safeSub(msg.value);
             }
         }
-        
+
         //return array Addresses and Amounts
         (address[] memory returnedTokenAddresses,uint[] memory returnedAmounts) = callExtFuncMulti(ethAmount, callData, exchangeAddress);
-        
+
         require(returnedTokenAddresses.length == recipientTokens.length && returnedAmounts.length == returnedTokenAddresses.length, errorToString(Errors.INVALID_RETURN_DATA));
-        
+
         //update withdrawRequests
         for(uint i = 0; i < returnedAmounts.length; i++) {
-            require(returnedTokenAddresses[i] == recipientTokens[i] 
+            require(returnedTokenAddresses[i] == recipientTokens[i]
                     && balanceOf(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], errorToString(Errors.INVALID_RETURN_DATA));
             withdrawRequests[verifier][recipientTokens[i]] = withdrawRequests[verifier][recipientTokens[i]].safeAdd(returnedAmounts[i]);
             totalDepositedToSCAmount[recipientTokens[i]] = totalDepositedToSCAmount[recipientTokens[i]].safeAdd(returnedAmounts[i]);
@@ -592,7 +587,7 @@ contract Vault is AdminPausable {
 
         return returnedAmount;
     }
-    
+
     /**
      * @dev multi trade
      */
@@ -603,7 +598,7 @@ contract Vault is AdminPausable {
 
         return abi.decode(result, (address[], uint[]));
     }
-    
+
     /**
      * @dev verify sign data
      */
@@ -613,10 +608,10 @@ contract Vault is AdminPausable {
         address verifier = sigToAddress(signData, hash);
        // mark data hash of sig as used
         sigDataUsed[hash] = true;
-        
+
         return verifier;
      }
-    
+
     /**
      * @dev Get the amount of specific coin for specific wallet
      */
@@ -667,7 +662,7 @@ contract Vault is AdminPausable {
             totalDepositedToSCAmount[assets[i]] = 0;
         }
         require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
-        
+
         emit MoveAssets(assets);
     }
 
@@ -722,7 +717,7 @@ contract Vault is AdminPausable {
 	}
 
     /**
-     * @dev convert enum to string value 
+     * @dev convert enum to string value
      */
      function errorToString(Errors error) internal pure returns(string memory) {
         uint8 erroNum = uint8(error);
@@ -738,7 +733,7 @@ contract Vault is AdminPausable {
         for (uint j = 0; j <= i; j++) {
             s[j] = reversed[i - j];
         }
-        return string(s); 
+        return string(s);
     }
 
     /**
