@@ -35,6 +35,36 @@ func TestClaimVaultAdmin(t *testing.T) {
 	}
 }
 
+func TestClaimAllVaultAdmin(t *testing.T) {
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get vault instance
+	c, err := vault.NewVault(common.HexToAddress(VaultAddress), client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	auth := bind.NewKeyedTransactor(privKey)
+	_, err = c.Claim(auth)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get prev vault instance
+	c, err = vault.NewVault(common.HexToAddress(PrevVault), client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.Claim(auth)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestDeployNewVaultToMigrate(t *testing.T) {
 	privKey, client, err := connect()
 	if err != nil {
