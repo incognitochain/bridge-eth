@@ -21,6 +21,40 @@ import (
 	"github.com/pkg/errors"
 )
 
+func TestGetNonceOfPendingTx(t *testing.T) {
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	tx := "0xcb086f05903f80f206cc3c3a1c9f47ccf9d40bd64ba85b065f8419456d0b8617"
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	a, _, err := client.TransactionByHash(ctx, common.HexToHash(tx))
+	if err != nil {
+		t.Fatalf("failed getting nonce: %+v", err)
+	}
+	fmt.Println(big.NewInt(int64(a.Nonce())))
+}
+
+func TestGetTxStatus(t *testing.T) {
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	tx := "0x635431d7a220fb21c14e152f79663b74bc6c97eda3b2f821ac7c1cdb1c60c3c8"
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	receipt, err := client.TransactionReceipt(ctx, common.HexToHash(tx))
+	if err != nil {
+		t.Fatalf("failed getting status: %+v", err)
+	}
+	fmt.Println(receipt.Status)
+}
+
 func TestDecodeSwapBridgeInst(t *testing.T) {
 	// Get proof
 	url := "https://mainnet.incognito.org/fullnode:433"
@@ -193,9 +227,35 @@ func transfer(
 	return signedTx.Hash().String(), nil
 }
 
+func TestInstructionUsed(t *testing.T) {
+	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
+	if err != nil {
+		t.Fatal(err)
+	}
+	instHash := crypto.Keccak256(proof.Instruction)
+
+	// Connect to ETH
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Get contract instance
+	vaultAddr := common.HexToAddress(VaultAddress)
+	c, err := vault.NewVault(vaultAddr, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h := [32]byte{}
+	copy(h[:], instHash)
+	fmt.Println(c.IsWithdrawed(nil, h))
+}
+
 func TestBurn(t *testing.T) {
 	// Get proof
-	proof, err := getAndDecodeBurnProof("59333c998a206e99621faf150f46588bbdfeb6279538266de893cc309e7cf4c5")
+	proof, err := getAndDecodeBurnProof("f9a347693a0c81168cfc12bd909455d1d53ee3d1527f2bf48d7d3615448ad862")
 	if err != nil {
 		t.Fatal(err)
 	}
