@@ -21,6 +21,40 @@ import (
 	"github.com/pkg/errors"
 )
 
+func TestGetNonceOfPendingTx(t *testing.T) {
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	tx := "0xcb086f05903f80f206cc3c3a1c9f47ccf9d40bd64ba85b065f8419456d0b8617"
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	a, _, err := client.TransactionByHash(ctx, common.HexToHash(tx))
+	if err != nil {
+		t.Fatalf("failed getting nonce: %+v", err)
+	}
+	fmt.Println(big.NewInt(int64(a.Nonce())))
+}
+
+func TestGetTxStatus(t *testing.T) {
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	tx := "0x635431d7a220fb21c14e152f79663b74bc6c97eda3b2f821ac7c1cdb1c60c3c8"
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	receipt, err := client.TransactionReceipt(ctx, common.HexToHash(tx))
+	if err != nil {
+		t.Fatalf("failed getting status: %+v", err)
+	}
+	fmt.Println(receipt.Status)
+}
+
 func TestDecodeSwapBridgeInst(t *testing.T) {
 	// Get proof
 	url := "https://mainnet.incognito.org/fullnode:433"
@@ -35,6 +69,20 @@ func TestDecodeSwapBridgeInst(t *testing.T) {
 	fmt.Printf("shard: %d\n", proof.Instruction[1])
 	fmt.Printf("startHeight: %d\n", big.NewInt(0).SetBytes(proof.Instruction[2:34]))
 	fmt.Printf("numVals: %d\n", big.NewInt(0).SetBytes(proof.Instruction[34:66]))
+}
+
+func TestDecodeBurnInst(t *testing.T) {
+	// Get proof
+	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("inst: %x\n", proof.Instruction)
+	fmt.Printf("instType: %d\n", proof.Instruction[0])
+	fmt.Printf("shard: %d\n", proof.Instruction[1])
+	fmt.Printf("token: 0x%x\n", proof.Instruction[14:34])
+	fmt.Printf("receiver: 0x%x\n", proof.Instruction[46:66])
+	fmt.Printf("amount: %d\n", big.NewInt(0).SetBytes(proof.Instruction[66:98]))
 }
 
 func TestSwapBridge(t *testing.T) {
@@ -236,6 +284,32 @@ func transfer(
 		return "", errors.WithStack(err)
 	}
 	return signedTx.Hash().String(), nil
+}
+
+func TestInstructionUsed(t *testing.T) {
+	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
+	if err != nil {
+		t.Fatal(err)
+	}
+	instHash := crypto.Keccak256(proof.Instruction)
+
+	// Connect to ETH
+	_, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Get contract instance
+	vaultAddr := common.HexToAddress(VaultAddress)
+	c, err := vault.NewVault(vaultAddr, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h := [32]byte{}
+	copy(h[:], instHash)
+	fmt.Println(c.IsWithdrawed(nil, h))
 }
 
 func TestBurn(t *testing.T) {
