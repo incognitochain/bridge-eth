@@ -73,7 +73,7 @@ func TestFixedRetireExpired(t *testing.T) {
 	p, _ := setupPauseContract(genesisAcc.Address)
 
 	// Advance time till expired
-	err := p.sim.AdjustTime(366 * 24 * time.Hour)
+	err := p.sim.AdjustTime(3 * 366 * 24 * time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +134,7 @@ func TestFixedExtendExpired(t *testing.T) {
 	p, _ := setupPauseContract(genesisAcc.Address)
 
 	// Advance time till expired
-	err := p.sim.AdjustTime(366 * 24 * time.Hour)
+	err := p.sim.AdjustTime(3 * 366 * 24 * time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestFixedUnpauseExpired(t *testing.T) {
 	}
 
 	// Advance time till expired
-	err = p.sim.AdjustTime(366 * 24 * time.Hour)
+	err = p.sim.AdjustTime(3 * 366 * 24 * time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +300,7 @@ func TestFixedPauseExpired(t *testing.T) {
 	p, _ := setupPauseContract(genesisAcc.Address)
 
 	// Advance time till expired
-	err := p.sim.AdjustTime(366 * 24 * time.Hour)
+	err := p.sim.AdjustTime(3 * 366 * 24 * time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
