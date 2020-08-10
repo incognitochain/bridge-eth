@@ -111,7 +111,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// Deploy kbntrade
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKbntrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr, vaultAddr)
+	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr, vaultAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed kbntrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
@@ -121,7 +121,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// Deploy kbnMultitrade
-	kbnMultiTradeAddr, tx, _, err := kbnmultiTrade.DeployKbnmultiTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr, vaultAddr)
+	kbnMultiTradeAddr, tx, _, err := kbnmultiTrade.DeployKBNMultiTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr, vaultAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed kbnMultitrade")
 	fmt.Printf("addr: %s\n", kbnMultiTradeAddr.Hex())

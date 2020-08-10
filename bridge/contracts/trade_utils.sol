@@ -2,6 +2,10 @@ pragma solidity ^0.6.6;
 
 import './IERC20.sol';
 
+interface GetLocker {
+    function locker() external returns (address payable);
+}
+
 contract TradeUtils {
 	IERC20 constant public ETH_CONTRACT_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
 	address payable public incognitoSmartContract;
@@ -19,11 +23,12 @@ contract TradeUtils {
     }
 
 	function transfer(IERC20 token, uint amount) internal {
+        address payable locker = GetLocker(incognitoSmartContract).locker();
 		if (token == ETH_CONTRACT_ADDRESS) {
 			require(address(this).balance >= amount);
-			incognitoSmartContract.transfer(amount);
+			locker.transfer(amount);
 		} else {
-			token.transfer(incognitoSmartContract, amount);
+			token.transfer(locker, amount);
 			require(checkSuccess());
 		}
 	}

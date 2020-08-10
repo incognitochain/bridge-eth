@@ -10,8 +10,6 @@ import (
 
 	"github.com/incognitochain/bridge-eth/bridge/dapp"
 
-	"github.com/incognitochain/bridge-eth/bridge/nextVault"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
@@ -205,7 +203,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	v2.p.sim.Commit()
 
 	// update newVault then user must be able to request withdraw
-	nextVaultAddr, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	nextVaultAddr, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr, v2.p.lockerAddr)
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
@@ -348,16 +346,16 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 	}
 
 	for _, tc := range testCases {
-		beforeExecute := v2.p.getBalance(v2.p.vAddr)
+		beforeExecute := v2.p.getBalance(v2.p.lockerAddr)
 		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp, genesisAcc.PrivateKey)
 		if tc.iserr {
 			require.NotEqual(v2.T(), nil, err)
 			v2.p.sim.Commit()
-			require.Equal(v2.T(), beforeExecute, v2.p.getBalance(v2.p.vAddr))
+			require.Equal(v2.T(), beforeExecute, v2.p.getBalance(v2.p.lockerAddr))
 		} else {
 			require.Equal(v2.T(), nil, err)
 			v2.p.sim.Commit()
-			require.NotEqual(v2.T(), beforeExecute, v2.p.getBalance(v2.p.vAddr))
+			require.NotEqual(v2.T(), beforeExecute, v2.p.getBalance(v2.p.lockerAddr))
 		}
 	}
 }
@@ -467,16 +465,16 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 	}
 
 	for _, tc := range testCases {
-		beforeExecute := getBalanceERC20(tinfo.c, v2.p.vAddr)
+		beforeExecute := getBalanceERC20(tinfo.c, v2.p.lockerAddr)
 		_, err = runExecuteVault(auth, tc.dapp, tc.srcToken, tc.srcQty, tc.destToken, tc.input, tc.vault, tc.timestamp, genesisAcc.PrivateKey)
 		if tc.iserr {
 			require.NotEqual(v2.T(), nil, err)
 			v2.p.sim.Commit()
-			require.Equal(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
+			require.Equal(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.lockerAddr))
 		} else {
 			require.Equal(v2.T(), nil, err)
 			v2.p.sim.Commit()
-			require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
+			require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.lockerAddr))
 		}
 	}
 }
@@ -504,7 +502,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
 
 	// update newVault then user must be able to request execute
-	nextVaultAddr, _, _, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	nextVaultAddr, _, _, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr, v2.p.lockerAddr)
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
@@ -515,6 +513,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	_, err = v2.v.MoveAssets(auth, []common.Address{tinfo.addr})
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
+
+	// update locker's Vault address
+	_, err = v2.p.locker.ChangeVault(auth, nextVaultAddr)
+	require.Equal(v2.T(), nil, err)
 
 	wrapNextVault, err := vault.NewVault(nextVaultAddr, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
@@ -527,7 +529,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
-	beforeExecute := getBalanceERC20(tinfo.c, nextVaultAddr)
+	beforeExecute := getBalanceERC20(tinfo.c, v2.p.lockerAddr)
 	require.Equal(v2.T(), beforeExecute, deposit)
 
 	dappAbi, err := abi.JSON(strings.NewReader(dapp.DappABI))
@@ -544,7 +546,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, nextVaultAddr))
+	require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.lockerAddr))
 }
 
 func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
@@ -585,7 +587,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
 	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal, withdraw)
-	require.Equal(v2.T(), withdraw, v2.p.getBalance(v2.p.vAddr))
+	require.Equal(v2.T(), withdraw, v2.p.getBalance(v2.p.lockerAddr))
 }
 
 func (v2 *VaulV2TestSuite) TestVaultV2sigToAddress() {
@@ -631,7 +633,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	require.Equal(v2.T(), true, isUsed)
 
 	// update vault to next version and check sig used
-	_, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	_, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr, v2.p.lockerAddr)
 	require.Equal(v2.T(), nil, err)
 	isUsed, err = nextVault.IsSigDataUsed(nil, data32)
 	require.Equal(v2.T(), nil, err)
@@ -683,9 +685,9 @@ func buildWithdrawDataV2(meta, shard int, tokenID ec.Address, amount *big.Int, w
 func setupNextVault(
 	auth *bind.TransactOpts,
 	backend *backends.SimulatedBackend,
-	admin, incAddr, prevVault common.Address,
-) (common.Address, *types.Transaction, *nextVault.NextVault, error) {
-	addr, tx, v, err := nextVault.DeployNextVault(auth, backend, admin, incAddr, prevVault)
+	admin, incAddr, prevVault, locker common.Address,
+) (common.Address, *types.Transaction, *vault.Vault, error) {
+	addr, tx, v, err := vault.DeployVault(auth, backend, admin, incAddr, prevVault, locker)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault contract: %v", err)
 	}

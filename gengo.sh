@@ -15,6 +15,6 @@ then
 
     abigen -abi $filepath/$filename.abi -bin $filepath/$filename.bin -pkg $pkgname -out $filepath/$filename.go
 else
-    abigen -sol $fullfile -pkg $pkgname -out $filepath/$filename.go
+    abigen -sol $fullfile -pkg $pkgname -out $filepath/$pkgname.go
 fi
 

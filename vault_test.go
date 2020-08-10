@@ -14,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	ec "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/incognitochain/bridge-eth/bridge/nextVault"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/common"
 	"github.com/incognitochain/bridge-eth/erc20"
@@ -215,7 +214,7 @@ func TestFixedMoveERC20(t *testing.T) {
 			assert.Nil(t, err)
 
 			// Deploy new vault to have updateAssets method
-			newVault, _, _, err := nextVault.DeployNextVault(auth, p.sim, auth.From, p.incAddr, p.vAddr)
+			newVault, _, _, err := vault.DeployVault(auth, p.sim, auth.From, p.incAddr, p.vAddr, p.lockerAddr)
 			assert.Nil(t, err)
 
 			// Deposit to make sure there's ERC20 to move
@@ -303,7 +302,7 @@ func TestFixedMoveETH(t *testing.T) {
 			newVault := ec.Address{}
 			if tc.newVault {
 				// Deploy new vault to have updateAssets method
-				newVault, _, _, err = nextVault.DeployNextVault(auth, p.sim, auth.From, p.incAddr, p.vAddr)
+				newVault, _, _, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, p.vAddr, p.lockerAddr)
 				assert.Nil(t, err)
 			}
 
