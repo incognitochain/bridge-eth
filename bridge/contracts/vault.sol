@@ -53,6 +53,10 @@ interface Incognito {
     ) external view returns (bool);
 }
 
+interface Locker {
+    function give(address to, address token, uint amount) external;
+}
+
 /**
  * @dev Interface of the previous Vault contract to query burn proof status
  */
@@ -78,6 +82,7 @@ contract Vault is AdminPausable {
     mapping(address => mapping(address => uint)) public withdrawRequests;
     mapping(address => mapping(address => bool)) public migration;
     mapping(address => uint) public totalDepositedToSCAmount;
+    Locker public locker;
     Incognito public incognito;
     Withdrawable public prevVault;
     address payable public newVault;
@@ -154,9 +159,10 @@ contract Vault is AdminPausable {
      * After migrating all assets to a new Vault, we still need to refer
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
-    constructor(address admin, address incognitoProxyAddress, address _prevVault) public AdminPausable(admin) {
+    constructor(address admin, address incognitoProxyAddress, address _prevVault, address _locker) public AdminPausable(admin) {
         incognito = Incognito(incognitoProxyAddress);
         prevVault = Withdrawable(_prevVault);
+        locker = Locker(_locker);
         newVault = address(0);
     }
 
@@ -167,7 +173,8 @@ contract Vault is AdminPausable {
      * @param incognitoAddress: Incognito Address to receive pETH
      */
     function deposit(string memory incognitoAddress) public payable isNotPaused nonReentrant {
-        require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
+        (bool success, ) = address(locker).call{value: msg.value}("");
+        require(success, "failed deposit eth");
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
 
@@ -184,7 +191,7 @@ contract Vault is AdminPausable {
     function depositERC20(address token, uint amount, string memory incognitoAddress) public payable isNotPaused nonReentrant {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
-        uint tokenBalance = erc20Interface.balanceOf(address(this));
+        uint tokenBalance = erc20Interface.balanceOf(address(locker));
         uint beforeTransfer = tokenBalance;
         uint emitAmount = amount;
         if (decimals > 9) {
@@ -192,9 +199,9 @@ contract Vault is AdminPausable {
             tokenBalance = tokenBalance / (10 ** (uint(decimals) - 9));
         }
         require(emitAmount <= 10 ** 18 && tokenBalance <= 10 ** 18 && emitAmount.safeAdd(tokenBalance) <= 10 ** 18, errorToString(Errors.VALUE_OVER_FLOW));
-        erc20Interface.transferFrom(msg.sender, address(this), amount);
+        erc20Interface.transferFrom(msg.sender, address(locker), amount);
         require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
+        require(erc20Interface.balanceOf(address(locker)).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
 
         emit Deposit(token, incognitoAddress, emitAmount);
     }
@@ -315,13 +322,13 @@ contract Vault is AdminPausable {
 
         // Check if balance is enough
         if (data.token == ETH_TOKEN) {
-            require(address(this).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(address(locker).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         } else {
             uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
                 data.amount = data.amount * (10 ** (uint(decimals) - 9));
             }
-            require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(IERC20(data.token).balanceOf(address(locker)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
 
         verifyInst(
@@ -338,13 +345,7 @@ contract Vault is AdminPausable {
         );
 
         // Send and notify
-        if (data.token == ETH_TOKEN) {
-          (bool success, ) =  data.to.call{value: data.amount}("");
-          require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-        } else {
-            IERC20(data.token).transfer(data.to, data.amount);
-            require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        }
+        locker.give(data.to, data.token, data.amount);
         emit Withdraw(data.token, data.to, data.amount);
     }
 
@@ -386,13 +387,13 @@ contract Vault is AdminPausable {
 
         // Check if balance is enough
         if (data.token == ETH_TOKEN) {
-            require(address(this).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(address(locker).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         } else {
             uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
                 data.amount = data.amount * (10 ** (uint(decimals) - 9));
             }
-            require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(IERC20(data.token).balanceOf(address(locker)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
 
         verifyInst(
@@ -512,17 +513,8 @@ contract Vault is AdminPausable {
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
 
-        // define number of eth spent for forwarder.
-        uint ethAmount = msg.value;
-        if (token == ETH_TOKEN) {
-            ethAmount = ethAmount.safeAdd(amount);
-        } else {
-            // transfer token to exchangeAddress.
-            require(IERC20(token).balanceOf(address(this)) >= amount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-            IERC20(token).transfer(exchangeAddress, amount);
-            require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        }
-        uint returnedAmount = callExtFunc(recipientToken, ethAmount, callData, exchangeAddress);
+        locker.give(exchangeAddress, token, amount); // transfer token to exchangeAddress
+        uint returnedAmount = callExtFunc(recipientToken, callData, exchangeAddress);
 
         // update withdrawRequests
         withdrawRequests[verifier][recipientToken] = withdrawRequests[verifier][recipientToken].safeAdd(returnedAmount);
@@ -545,8 +537,6 @@ contract Vault is AdminPausable {
         require(tokens.length == amounts.length && recipientTokens.length > 0, errorToString(Errors.INVALID_DATA));
         //verify ower signs data from input
         address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amounts), signData);
-        // define number of eth spent for forwarder.
-        uint ethAmount = msg.value;
         for(uint i = 0; i < tokens.length; i++){
             // migrate from preVault
             migrateBalance(verifier, tokens[i]);
@@ -557,34 +547,24 @@ contract Vault is AdminPausable {
             totalDepositedToSCAmount[tokens[i]] = totalDepositedToSCAmount[tokens[i]].safeSub(amounts[i]);
             withdrawRequests[verifier][tokens[i]] = withdrawRequests[verifier][tokens[i]].safeSub(amounts[i]);
 
-            if (tokens[i] == ETH_TOKEN) {
-                ethAmount = ethAmount.safeAdd(amounts[i]);
-            } else {
-            // transfer token to exchangeAddress.
-                require(IERC20(tokens[i]).balanceOf(address(this)) >= amounts[i], errorToString(Errors.TOKEN_NOT_ENOUGH));
-                IERC20(tokens[i]).transfer(exchangeAddress, amounts[i]);
-                require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-            }
+            locker.give(exchangeAddress, tokens[i], amounts[i]); // transfer token to exchangeAddress
         }
 
         // get balance of recipient token before trade to compare after trade.
         uint[] memory balancesBeforeTrade = new uint[](recipientTokens.length);
         for(uint i = 0; i < recipientTokens.length; i++) {
-            balancesBeforeTrade[i] = balanceOf(recipientTokens[i]);
-            if (recipientTokens[i] == ETH_TOKEN) {
-                balancesBeforeTrade[i] = balancesBeforeTrade[i].safeSub(msg.value);
-            }
+            balancesBeforeTrade[i] = balanceOfLocker(recipientTokens[i]);
         }
 
         //return array Addresses and Amounts
-        (address[] memory returnedTokenAddresses,uint[] memory returnedAmounts) = callExtFuncMulti(ethAmount, callData, exchangeAddress);
+        (address[] memory returnedTokenAddresses,uint[] memory returnedAmounts) = callExtFuncMulti(callData, exchangeAddress);
 
         require(returnedTokenAddresses.length == recipientTokens.length && returnedAmounts.length == returnedTokenAddresses.length, errorToString(Errors.INVALID_RETURN_DATA));
 
         //update withdrawRequests
         for(uint i = 0; i < returnedAmounts.length; i++) {
             require(returnedTokenAddresses[i] == recipientTokens[i]
-                    && balanceOf(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], errorToString(Errors.INVALID_RETURN_DATA));
+                    && balanceOfLocker(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], errorToString(Errors.INVALID_RETURN_DATA));
             withdrawRequests[verifier][recipientTokens[i]] = withdrawRequests[verifier][recipientTokens[i]].safeAdd(returnedAmounts[i]);
             totalDepositedToSCAmount[recipientTokens[i]] = totalDepositedToSCAmount[recipientTokens[i]].safeAdd(returnedAmounts[i]);
         }
@@ -593,18 +573,14 @@ contract Vault is AdminPausable {
     /**
      * @dev single trade
      */
-    function callExtFunc(address recipientToken, uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (uint) {
-         // get balance of recipient token before trade to compare after trade.
-        uint balanceBeforeTrade = balanceOf(recipientToken);
-        if (recipientToken == ETH_TOKEN) {
-            balanceBeforeTrade = balanceBeforeTrade.safeSub(msg.value);
-        }
-        require(address(this).balance >= ethAmount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
-        require(success);
+    function callExtFunc(address recipientToken, bytes memory callData, address exchangeAddress) internal returns (uint) {
+        // get balance of recipient token before trade to compare after trade.
+        uint balanceBeforeTrade = balanceOfLocker(recipientToken);
+        (bool success, bytes memory result) = exchangeAddress.call{value: 0}(callData);
+        require(success, "failed calling ext func");
 
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
-        require(returnedTokenAddress == recipientToken && balanceOf(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
+        require(returnedTokenAddress == recipientToken && balanceOfLocker(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
 
         return returnedAmount;
     }
@@ -612,9 +588,8 @@ contract Vault is AdminPausable {
     /**
      * @dev multi trade
      */
-    function callExtFuncMulti(uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (address[] memory, uint[] memory) {
-        require(address(this).balance >= ethAmount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
+    function callExtFuncMulti(bytes memory callData, address exchangeAddress) internal returns (address[] memory, uint[] memory) {
+        (bool success, bytes memory result) = exchangeAddress.call{value: 0}(callData);
         require(success, errorToString(Errors.INTERNAL_TX_ERROR));
 
         return abi.decode(result, (address[], uint[]));
@@ -673,7 +648,7 @@ contract Vault is AdminPausable {
     }
 
     /**
-     * @dev Move some assets to newVault
+     * @dev Migrate totalDepositedToSCAmount for each asset to a new Vault
      * @notice This only works when the contract is Paused
      * @notice This can only be called by Admin
      * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
@@ -682,18 +657,7 @@ contract Vault is AdminPausable {
         require(newVault != address(0), errorToString(Errors.NULL_VALUE));
         uint[] memory amounts = new uint[](assets.length);
         for (uint i = 0; i < assets.length; i++) {
-            if (assets[i] == ETH_TOKEN) {
-                amounts[i] = totalDepositedToSCAmount[ETH_TOKEN];
-                (bool success, ) = newVault.call{value: address(this).balance}("");
-                require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-            } else {
-                uint bal = IERC20(assets[i]).balanceOf(address(this));
-                if (bal > 0) {
-                    IERC20(assets[i]).transfer(newVault, bal);
-                    require(checkSuccess());
-                }
-                amounts[i] = totalDepositedToSCAmount[assets[i]];
-            }
+            amounts[i] = totalDepositedToSCAmount[assets[i]];
             totalDepositedToSCAmount[assets[i]] = 0;
         }
         require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
@@ -702,14 +666,14 @@ contract Vault is AdminPausable {
     }
 
     /**
-     * @dev Move total number of assets to newVault
+     * @dev Save the totalDepositedToSCAmount for each asset from an old Vault
      * @notice This only works when the preVault is Paused
      * @notice This can only be called by preVault
      * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
      * @param amounts: total number of the ERC20 tokens to move, 0x0 for ETH
      */
     function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
-        require(assets.length == amounts.length,  errorToString(Errors.NOT_EQUAL));
+        require(assets.length == amounts.length, errorToString(Errors.NOT_EQUAL));
         require(Withdrawable(prevVault).paused(), errorToString(Errors.PREVAULT_NOT_PAUSED));
         for (uint i = 0; i < assets.length; i++) {
             totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
@@ -731,6 +695,17 @@ contract Vault is AdminPausable {
         require(newIncognitoProxy != address(0), errorToString(Errors.NULL_VALUE));
         incognito = Incognito(newIncognitoProxy);
         emit UpdateIncognitoProxy(newIncognitoProxy);
+    }
+
+    /**
+     * @dev Changes the Locker to use
+     * @notice This only works when the contract is Paused
+     * @notice This can only be called by Admin
+     * @param newLocker: address of the new contract
+     */
+    function updateLocker(address newLocker) public onlyAdmin isPaused {
+        require(newLocker != address(0), errorToString(Errors.NULL_VALUE));
+        locker = Locker(newLocker);
     }
 
     /**
@@ -799,13 +774,10 @@ contract Vault is AdminPausable {
         return uint8(erc20.decimals());
     }
 
-    /**
-     * @dev Get the amount of coin deposited to this smartcontract
-     */
-    function balanceOf(address token) public view returns (uint) {
+    function balanceOfLocker(address token) public view returns (uint) {
         if (token == ETH_TOKEN) {
-            return address(this).balance;
+            return address(locker).balance;
         }
-        return IERC20(token).balanceOf(address(this));
+        return IERC20(token).balanceOf(address(locker));
     }
 }
