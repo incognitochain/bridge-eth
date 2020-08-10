@@ -675,11 +675,24 @@ contract Vault is AdminPausable {
     function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
         require(assets.length == amounts.length, errorToString(Errors.NOT_EQUAL));
         require(Withdrawable(prevVault).paused(), errorToString(Errors.PREVAULT_NOT_PAUSED));
+        require(address(locker) != address(0), "locker address is null");
         for (uint i = 0; i < assets.length; i++) {
             totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
-        }
-        emit UpdateTokenTotal(assets, amounts);
 
+            // Move assets to locker if available
+            if (assets[i] == ETH_TOKEN && address(this).balance > 0) {
+                (bool success, ) = address(locker).call{value: address(this).balance}("");
+                require(success, "failed migrating eth");
+            } else if (assets[i] != ETH_TOKEN) {
+                uint bal = IERC20(assets[i]).balanceOf(address(this));
+                if (bal > 0) {
+                    IERC20(assets[i]).transfer(address(locker), bal);
+                    require(checkSuccess(), "failed migrating token");
+                }
+            }
+        }
+
+        emit UpdateTokenTotal(assets, amounts);
         return true;
     }
 

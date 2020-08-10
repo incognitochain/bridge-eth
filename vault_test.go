@@ -120,7 +120,7 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 
 	// Deploy new Vault
 	prevVault := p.vAddr
-	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
+	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault, p.lockerAddr)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -159,7 +159,7 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 
 	// Deploy new Vault
 	prevVault := p.vAddr
-	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
+	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault, p.lockerAddr)
 	assert.Nil(t, err)
 	p.sim.Commit()
 

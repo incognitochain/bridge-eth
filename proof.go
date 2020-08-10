@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
+	"github.com/incognitochain/bridge-eth/bridge/locker"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/common/base58"
 	"github.com/incognitochain/bridge-eth/consensus/signatureschemes/bridgesig"
@@ -24,12 +25,14 @@ import (
 )
 
 type contracts struct {
-	v         *vault.Vault
-	vAddr     common.Address
-	inc       *incognito_proxy.IncognitoProxy
-	incAddr   common.Address
-	token     *erc20.Erc20
-	tokenAddr common.Address
+	v          *vault.Vault
+	vAddr      common.Address
+	inc        *incognito_proxy.IncognitoProxy
+	incAddr    common.Address
+	token      *erc20.Erc20
+	tokenAddr  common.Address
+	locker     *locker.Locker
+	lockerAddr common.Address
 
 	tokens       map[int]tokenInfo       // mapping from decimal => token
 	customErc20s map[string]*TokenerInfo // mapping from name => token

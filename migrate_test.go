@@ -74,6 +74,7 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 
 	admin := common.HexToAddress(Admin)
 	incAddr := common.HexToAddress(IncognitoProxyAddress)
+	lockerAddr := common.HexToAddress(LockerAddress)
 	prevVaultAddr := common.HexToAddress(VaultAddress)
 	fmt.Println("Admin address:", admin.Hex())
 	fmt.Println("IncognitoProxy address:", incAddr.Hex())
@@ -82,7 +83,7 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	// Deploy vault
 	auth := bind.NewKeyedTransactor(privKey)
 	auth.GasPrice = big.NewInt(int64(25000000000))
-	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVaultAddr)
+	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVaultAddr, lockerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}

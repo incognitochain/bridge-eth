@@ -32,8 +32,8 @@ contract Locker is AdminPausable {
         notEntered = true;
     }
 
-    modifier onlyVault() {
-        require(msg.sender == vault, "not vault");
+    modifier onlyValidVault() {
+        require(msg.sender == vault && vault != address(0), "not vault");
         _;
     }
 
@@ -53,6 +53,7 @@ contract Locker is AdminPausable {
     function unlock(address[] memory assets) public onlyAdmin isPaused nonReentrant {
         require(nextLocker != address(0), "null nextLocker");
         for (uint i = 0; i < assets.length; i++) {
+            // No need to check for result; if it fails, move on
             if (assets[i] == ETH_TOKEN) {
                 nextLocker.call{value: address(this).balance}("");
             } else {
@@ -64,7 +65,7 @@ contract Locker is AdminPausable {
         }
     }
 
-    function give(address to, address token, uint amount) public onlyVault isNotPaused nonReentrant {
+    function give(address to, address token, uint amount) public onlyValidVault isNotPaused nonReentrant {
         if (token  == ETH_TOKEN) {
             require(address(this).balance >= amount, "not enough eth");
             (bool success, ) =  to.call{value: amount}("");

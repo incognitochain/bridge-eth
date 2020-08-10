@@ -22,6 +22,7 @@ import (
 
 type TradingMainnetDeployTestSuite struct {
 	suite.Suite
+	LockerAddr        common.Address
 	VaultAddr         common.Address
 	KyberContractAddr common.Address
 	ZRXContractAddr   common.Address
@@ -112,6 +113,7 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 		tradingDeploySuite.Admin,
 		tradingDeploySuite.IncProxyAddr,
 		tradingDeploySuite.PrevVault,
+		tradingDeploySuite.LockerAddr,
 	)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 

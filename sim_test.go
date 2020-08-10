@@ -19,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
+	"github.com/incognitochain/bridge-eth/bridge/locker"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/erc20"
 	"github.com/incognitochain/bridge-eth/erc20/bnb"
@@ -256,9 +257,18 @@ func setup(
 	// fmt.Printf("deployed bridge, addr: %x ", p.incAddr)
 	// printReceipt(sim, tx)
 
+	// Locker
+	p.lockerAddr, _, p.locker, err = locker.DeployLocker(auth, sim, admin, common.Address{})
+	if err != nil {
+		return nil, err
+	}
+	sim.Commit()
+	// fmt.Printf("deployed locker, addr: %x ", p.lockerAddr)
+	// printReceipt(sim, tx)
+
 	// Vault
 	prevVault := common.Address{}
-	addr, _, v, err := setupVault(auth, sim, admin, p.incAddr, prevVault)
+	addr, _, v, err := setupVault(auth, sim, admin, p.incAddr, prevVault, p.lockerAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -267,15 +277,22 @@ func setup(
 	// fmt.Printf("deployed vault, addr: %x ", p.vAddr)
 	// printReceipt(sim, tx)
 
+	// Update locker's Vault address
+	_, err = p.locker.ChangeVault(auth, p.vAddr)
+	if err != nil {
+		return nil, err
+	}
+	sim.Commit()
+
 	return p, nil
 }
 
 func setupVault(
 	auth *bind.TransactOpts,
 	backend *backends.SimulatedBackend,
-	admin, incAddr, prevVault common.Address,
+	admin, incAddr, prevVault, locker common.Address,
 ) (common.Address, *types.Transaction, *vault.Vault, error) {
-	addr, tx, v, err := vault.DeployVault(auth, backend, admin, incAddr, prevVault)
+	addr, tx, v, err := vault.DeployVault(auth, backend, admin, incAddr, prevVault, locker)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault contract: %v", err)
 	}

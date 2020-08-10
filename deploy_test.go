@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
+	"github.com/incognitochain/bridge-eth/bridge/locker"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/pkg/errors"
 )
@@ -465,9 +466,17 @@ func TestDeployProxyAndVault(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Locker
+	lockerAddr, _, _, err := locker.DeployLocker(auth, client, admin, common.Address{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("deployed locker")
+	fmt.Printf("addr: %s\n", lockerAddr.Hex())
+
 	// Deploy vault
 	prevVault := common.Address{}
-	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVault)
+	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVault, lockerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}

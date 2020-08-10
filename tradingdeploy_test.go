@@ -10,6 +10,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	kbnmultiTrade "github.com/incognitochain/bridge-eth/bridge/kbnmultitrade"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
+	"github.com/incognitochain/bridge-eth/bridge/locker"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
@@ -90,9 +91,17 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
+	lockerAddr, _, _, err := locker.DeployLocker(auth, tradingDeploySuite.ETHClient, admin, common.Address{})
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Printf("Locker address: %s\n", lockerAddr.Hex())
+
+	// Wait until tx is confirmed
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
+
 	// Deploy vault
 	prevVault := common.Address{}
-	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingDeploySuite.ETHClient, admin, incAddr, prevVault)
+	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingDeploySuite.ETHClient, admin, incAddr, prevVault, lockerAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed vault")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())

@@ -160,7 +160,7 @@ func (tradingSuite *VaultUpgradeTestSuite) moveAssetsToNewVault() {
 	auth.GasLimit = 5000000
 	admin := common.HexToAddress(Admin)
 	prevVault := tradingSuite.VaultAddr
-	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingSuite.ETHClient, admin, tradingSuite.IncProxyAddress, prevVault)
+	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingSuite.ETHClient, admin, tradingSuite.IncProxyAddress, prevVault, common.Address{})
 	tradingSuite.VaultAddr = vaultAddr
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("deployed new vault: ", tradingSuite.VaultAddr.Hex())

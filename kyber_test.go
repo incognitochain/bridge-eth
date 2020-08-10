@@ -18,6 +18,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/dappMulti"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
+	"github.com/incognitochain/bridge-eth/bridge/locker"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 
 	"github.com/stretchr/testify/require"
@@ -88,9 +89,15 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
-	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
+	lockerAddr, _, locker, err := locker.DeployLocker(v2.auth, v2.ETHClient, v2.auth.From, common.Address{})
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Locker address: %s\n", lockerAddr.Hex())
+	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{}, lockerAddr)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Vault address: %s\n", v2.VaultAddress.Hex())
+	_, err = locker.ChangeVault(v2.auth, v2.VaultAddress)
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Updated locker's Vault address")
 	v2.KyberProxy, _, _, err = kbntrade.DeployKbntrade(v2.auth, v2.ETHClient, v2.KyberContractAddr, v2.VaultAddress)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Kyber proxy address: %s\n", v2.KyberProxy.Hex())
