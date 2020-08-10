@@ -24,7 +24,7 @@ interface UniswapV2 {
   function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
-contract UNiswapV2Trade is TradeUtils {
+contract UniswapV2Trade is TradeUtils {
     // Variables
     UniswapV2 public uniswapV2;
     address public wETH;
@@ -65,6 +65,7 @@ contract UNiswapV2Trade is TradeUtils {
             path[1] = address(destToken);
             amounts = ethToToken(path, srcQty, amountOutMin);
         }
+        require(amounts.length >= 2);
         require(amounts[amounts.length - 1] >= amountOutMin && amounts[0] == srcQty);
         return (address(destToken), amounts[amounts.length - 1]);
     }
