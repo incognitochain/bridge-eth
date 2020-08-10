@@ -173,12 +173,12 @@ func lockSimERC20WithBalance(
 	tokenAddr common.Address,
 	amount *big.Int,
 ) (*big.Int, *big.Int, error) {
-	initBalance := getBalanceERC20(token, p.vAddr)
+	initBalance := getBalanceERC20(token, p.lockerAddr)
 	// fmt.Printf("bal: %d\n", getBalanceERC20(token, genesisAcc.Address))
 	if _, _, err := lockSimERC20WithTxs(p, token, tokenAddr, amount); err != nil {
 		return nil, nil, err
 	}
-	newBalance := getBalanceERC20(token, p.vAddr)
+	newBalance := getBalanceERC20(token, p.lockerAddr)
 	return initBalance, newBalance, nil
 }
 
@@ -545,7 +545,7 @@ func getBeaconSwapProof(block int) string {
 }
 
 func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
-	initBalance := p.getBalance(p.vAddr)
+	initBalance := p.getBalance(p.lockerAddr)
 	auth := bind.NewKeyedTransactor(genesisAcc.PrivateKey)
 	auth.GasLimit = 0
 	auth.Value = amount
@@ -554,6 +554,6 @@ func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 		return nil, nil, errors.WithStack(err)
 	}
 	p.sim.Commit()
-	newBalance := p.getBalance(p.vAddr)
+	newBalance := p.getBalance(p.lockerAddr)
 	return initBalance, newBalance, nil
 }

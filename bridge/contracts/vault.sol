@@ -175,6 +175,7 @@ contract Vault is AdminPausable {
     function deposit(string memory incognitoAddress) public payable isNotPaused nonReentrant {
         (bool success, ) = address(locker).call{value: msg.value}("");
         require(success, "failed deposit eth");
+        require(address(locker).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
 

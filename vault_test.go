@@ -124,6 +124,11 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
+	// Update locker's Vault address
+	_, err = p.locker.ChangeVault(auth, p.vAddr)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
 	// Deposit to new vault
 	proof = getFixedBurnProofERC20()
 
@@ -163,6 +168,11 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
+	// Update locker's Vault address
+	_, err = p.locker.ChangeVault(auth, p.vAddr)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
 	// Deposit to new vault
 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
 	assert.Nil(t, err)
@@ -180,7 +190,7 @@ func TestFixedMoveERC20(t *testing.T) {
 		addr  ec.Address
 		value int64
 	}
-	randAcc := newAccount()
+	// randAcc := newAccount()
 
 	testCases := []struct {
 		desc     string
@@ -192,11 +202,11 @@ func TestFixedMoveERC20(t *testing.T) {
 			desc:   "Success",
 			assets: []initAsset{initAsset{erc20Addr, 1000}},
 		},
-		{
-			desc:   "One asset failed",
-			assets: []initAsset{initAsset{erc20Addr, 1000}, initAsset{randAcc.Address, 0}}, // Dummy address as erc20
-			err:    true,
-		},
+		// {
+		// 	desc:   "One asset failed",
+		// 	assets: []initAsset{initAsset{erc20Addr, 1000}, initAsset{randAcc.Address, 0}}, // Dummy address as erc20
+		// 	err:    true,
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -240,7 +250,7 @@ func TestFixedMoveERC20(t *testing.T) {
 				for _, a := range tc.assets {
 					token, err := erc20.NewErc20(a.addr, p.sim)
 					assert.Nil(t, err)
-					assert.Equal(t, big.NewInt(a.value), getBalanceERC20(token, newVault))
+					assert.Equal(t, big.NewInt(a.value), getBalanceERC20(token, p.lockerAddr))
 				}
 			}
 		})
@@ -329,7 +339,7 @@ func TestFixedMoveETH(t *testing.T) {
 				assert.NotNil(t, err)
 			} else {
 				assert.Nil(t, err)
-				assert.Equal(t, newBalance, p.getBalance(newVault))
+				assert.Equal(t, newBalance, p.getBalance(p.lockerAddr))
 			}
 		})
 	}
@@ -503,10 +513,10 @@ func TestFixedDepositERC20Decimals(t *testing.T) {
 			assert.Nil(t, err)
 
 			tinfo := p.tokens[tc.decimal]
-			oldBalance := getBalanceERC20(tinfo.c, p.vAddr)
+			oldBalance := getBalanceERC20(tinfo.c, p.lockerAddr)
 			_, tx, err := lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.value)
 			if assert.Nil(t, err) {
-				newBalance := getBalanceERC20(tinfo.c, p.vAddr)
+				newBalance := getBalanceERC20(tinfo.c, p.lockerAddr)
 				assert.Equal(t, oldBalance.Add(oldBalance, tc.value), newBalance)
 
 				emitted, err := extractAmountInDepositERC20Event(p.sim, tx)
@@ -625,11 +635,11 @@ func TestFixedDepositCustomERC20s(t *testing.T) {
 				assert.Equal(t, tc.decimal, decimal)
 			}
 
-			oldBalance := getBalanceERC20(c, p.vAddr)
+			oldBalance := getBalanceERC20(c, p.lockerAddr)
 			_, tx, err := lockSimERC20WithTxs(p, c, addr, tc.value)
 			if !tc.err {
 				if assert.Nil(t, err) {
-					newBalance := getBalanceERC20(c, p.vAddr)
+					newBalance := getBalanceERC20(c, p.lockerAddr)
 					assert.Equal(t, oldBalance.Add(oldBalance, tc.value), newBalance)
 
 					emitted, err := extractAmountInDepositERC20Event(p.sim, tx)
@@ -882,7 +892,7 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 				p.sim.Commit()
 
 				// Check balance
-				bal := getBalanceERC20(tinfo.c, p.vAddr)
+				bal := getBalanceERC20(tinfo.c, p.lockerAddr)
 				assert.Zero(t, tc.remain.Cmp(bal))
 			}
 		})
@@ -969,7 +979,7 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 				p.sim.Commit()
 
 				// Check balance
-				bal := getBalanceERC20(tinfo.c, p.vAddr)
+				bal := getBalanceERC20(tinfo.c, p.lockerAddr)
 				assert.Zero(t, tc.remain.Cmp(bal))
 			}
 		})
