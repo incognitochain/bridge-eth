@@ -66,9 +66,9 @@ contract Locker is AdminPausable {
     }
 
     function give(address to, address token, uint amount) public onlyValidVault isNotPaused nonReentrant {
-        if (token  == ETH_TOKEN) {
+        if (token == ETH_TOKEN) {
             require(address(this).balance >= amount, "not enough eth");
-            (bool success, ) =  to.call{value: amount}("");
+            (bool success, ) = to.call{value: amount}("");
             require(success, "failed to give eth");
         } else {
             uint bal = IERC20(token).balanceOf(address(this));
