@@ -81,7 +81,7 @@ func TestSimulatedSwapBeacon(t *testing.T) {
 }
 
 func TestSimulatedBurnETH(t *testing.T) {
-	proof, err := getAndDecodeBurnProof("6e247d7f65aa36cad86309d04984ba924c102c85e7783ffa804ab47b861a8d81")
+	proof, err := getAndDecodeBurnProof("3dc429c3b3df1bffbe64cc802e245447d7efa3a0a441aefdd81bae532be580df")
 	if err != nil {
 		t.Fatal(err)
 	}

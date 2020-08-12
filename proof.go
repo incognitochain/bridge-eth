@@ -46,6 +46,7 @@ type TokenerInfo struct {
 type Tokener interface {
 	BalanceOf(*bind.CallOpts, common.Address) (*big.Int, error)
 	Approve(*bind.TransactOpts, common.Address, *big.Int) (*types.Transaction, error)
+	Transfer(*bind.TransactOpts, common.Address, *big.Int) (*types.Transaction, error)
 }
 
 var _ Tokener = (*bnb.Bnb)(nil)

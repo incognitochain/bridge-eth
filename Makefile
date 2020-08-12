@@ -12,7 +12,7 @@ burn: build
 erc20: build
 	go test -run=TestSimulatedErc20
 
-build: bridge/incognito_proxy/incognito_proxy.go bridge/vault/vault.go bridge/locker/locker.go bridge/pause/pause.go erc20/fail/fail.go erc20/dless/dless.go bridge/kbntrade/kbntrade.go bridge/kbnmultitrade/kbnmultitrade.go
+build: bridge/incognito_proxy/incognito_proxy.go bridge/vault/vault.go bridge/locker/locker.go bridge/pause/pause.go erc20/fail/fail.go erc20/dless/dless.go bridge/kbntrade/kbntrade.go bridge/kbnmultitrade/kbnmultitrade.go bridge/reentrancer/reentrancer.go
 
 .PHONY: all beacon bridge burn erc20 build
 
@@ -36,6 +36,9 @@ bridge/kbnmultitrade/kbnmultitrade.go: bridge/contracts/simpleMultiKnbTrade.sol
 
 bridge/pause/pause.go: bridge/contracts/pause.sol
 	./gengo.sh bridge/contracts/pause.sol bridge/pause
+
+bridge/reentrancer/reentrancer.go: bridge/contracts/reentrancer.sol
+	./gengo.sh bridge/contracts/reentrancer.sol bridge/reentrancer
 
 erc20/fail/fail.go: erc20/fail/fail.sol
 	./gengo.sh erc20/fail/fail.sol erc20/fail
