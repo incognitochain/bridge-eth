@@ -97,24 +97,6 @@ contract Vault is AdminPausable {
         bytes32 itx; // Incognito's burning tx
     }
 
-    // error code
-    enum Errors {
-        EMPTY,
-        NO_REENTRANCE,
-        MAX_UINT_REACHED,
-        VALUE_OVER_FLOW,
-        INTERNAL_TX_ERROR,
-        ALREADY_USED,
-        INVALID_DATA,
-        TOKEN_NOT_ENOUGH,
-        WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH,
-        INVALID_RETURN_DATA,
-        NOT_EQUAL,
-        NULL_VALUE,
-        ONLY_PREVAULT,
-        PREVAULT_NOT_PAUSED
-    }
-
     event Deposit(address token, string incognitoAddress, uint amount);
     event Withdraw(address token, address to, uint amount);
     event Migrate(address newVault);
@@ -126,7 +108,7 @@ contract Vault is AdminPausable {
      * modifier for contract version
      */
      modifier onlyPreVault(){
-        require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), errorToString(Errors.ONLY_PREVAULT));
+        require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), "not prevVault");
         _;
      }
 
@@ -139,7 +121,7 @@ contract Vault is AdminPausable {
      */
     modifier nonReentrant() {
         // On the first call to nonReentrant, notEntered will be true
-        require(notEntered, errorToString(Errors.NO_REENTRANCE));
+        require(notEntered, "reentranted");
 
         // Any calls to nonReentrant after this point will fail
         notEntered = false;
@@ -176,7 +158,7 @@ contract Vault is AdminPausable {
     function deposit(string memory incognitoAddress) public payable isNotPaused nonReentrant {
         (bool success, ) = address(locker).call{value: msg.value}("");
         require(success, "failed deposit eth");
-        require(address(locker).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
+        require(address(locker).balance <= 10 ** 27, "max eth reached");
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
 
@@ -200,10 +182,10 @@ contract Vault is AdminPausable {
             emitAmount = emitAmount / (10 ** (uint(decimals) - 9));
             tokenBalance = tokenBalance / (10 ** (uint(decimals) - 9));
         }
-        require(emitAmount <= 10 ** 18 && tokenBalance <= 10 ** 18 && emitAmount.safeAdd(tokenBalance) <= 10 ** 18, errorToString(Errors.VALUE_OVER_FLOW));
+        require(emitAmount <= 10 ** 18 && tokenBalance <= 10 ** 18 && emitAmount.safeAdd(tokenBalance) <= 10 ** 18, "max erc20 reached");
         erc20Interface.transferFrom(msg.sender, address(locker), amount);
-        require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        require(erc20Interface.balanceOf(address(locker)).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
+        require(checkSuccess(), "failed transferFrom");
+        require(erc20Interface.balanceOf(address(locker)).safeSub(beforeTransfer) == amount, "new balance incorrect");
 
         emit Deposit(token, incognitoAddress, emitAmount);
     }
@@ -282,7 +264,7 @@ contract Vault is AdminPausable {
             sigVs,
             sigRs,
             sigSs
-        ), errorToString(Errors.INVALID_DATA));
+        ), "instruction not approved");
     }
 
     /**
@@ -317,18 +299,18 @@ contract Vault is AdminPausable {
         require(data.meta == 241 && data.shard == 1); // Check instruction type
 
         // Not withdrawed
-        require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
+        require(!isWithdrawed(data.itx), "already used");
         withdrawed[data.itx] = true;
 
         // Check if balance is enough
         if (data.token == ETH_TOKEN) {
-            require(address(locker).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(address(locker).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), "token not enough");
         } else {
             uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
                 data.amount = data.amount * (10 ** (uint(decimals) - 9));
             }
-            require(IERC20(data.token).balanceOf(address(locker)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(IERC20(data.token).balanceOf(address(locker)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), "token not enough");
         }
 
         verifyInst(
@@ -382,18 +364,18 @@ contract Vault is AdminPausable {
         require(data.meta == 243 && data.shard == 1); // Check instruction type
 
         // Not withdrawed
-        require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
+        require(!isWithdrawed(data.itx), "itx used");
         withdrawed[data.itx] = true;
 
         // Check if balance is enough
         if (data.token == ETH_TOKEN) {
-            require(address(locker).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(address(locker).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), "not enough eth");
         } else {
             uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
                 data.amount = data.amount * (10 ** (uint(decimals) - 9));
             }
-            require(IERC20(data.token).balanceOf(address(locker)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+            require(IERC20(data.token).balanceOf(address(locker)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), "not enough erc20");
         }
 
         verifyInst(
@@ -467,7 +449,7 @@ contract Vault is AdminPausable {
         // migrate from preVault
         migrateBalance(verifier, token);
 
-        require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
+        require(withdrawRequests[verifier][token] >= amount, "not enough token");
         withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
 
@@ -507,7 +489,7 @@ contract Vault is AdminPausable {
 
         // migrate from preVault
         migrateBalance(verifier, token);
-        require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
+        require(withdrawRequests[verifier][token] >= amount, "not enough token");
 
         // update balance of verifier
         totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
@@ -534,14 +516,14 @@ contract Vault is AdminPausable {
         bytes memory timestamp,
         bytes memory signData
     ) public payable isNotPaused nonReentrant {
-        require(tokens.length == amounts.length && recipientTokens.length > 0, errorToString(Errors.INVALID_DATA));
+        require(tokens.length == amounts.length && recipientTokens.length > 0, "mismatch token and amount");
         //verify ower signs data from input
         address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amounts), signData);
         for(uint i = 0; i < tokens.length; i++){
             // migrate from preVault
             migrateBalance(verifier, tokens[i]);
             // check balance is enough or not
-            require(withdrawRequests[verifier][tokens[i]] >= amounts[i], errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
+            require(withdrawRequests[verifier][tokens[i]] >= amounts[i], "not enough token");
 
             // update balances of verifier
             totalDepositedToSCAmount[tokens[i]] = totalDepositedToSCAmount[tokens[i]].safeSub(amounts[i]);
@@ -559,12 +541,12 @@ contract Vault is AdminPausable {
         //return array Addresses and Amounts
         (address[] memory returnedTokenAddresses,uint[] memory returnedAmounts) = callExtFuncMulti(callData, exchangeAddress);
 
-        require(returnedTokenAddresses.length == recipientTokens.length && returnedAmounts.length == returnedTokenAddresses.length, errorToString(Errors.INVALID_RETURN_DATA));
+        require(returnedTokenAddresses.length == recipientTokens.length && returnedAmounts.length == returnedTokenAddresses.length, "mismatch return token and return amount");
 
         //update withdrawRequests
         for(uint i = 0; i < returnedAmounts.length; i++) {
             require(returnedTokenAddresses[i] == recipientTokens[i]
-                    && balanceOfLocker(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], errorToString(Errors.INVALID_RETURN_DATA));
+                    && balanceOfLocker(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], "return amount incorrect");
             withdrawRequests[verifier][recipientTokens[i]] = withdrawRequests[verifier][recipientTokens[i]].safeAdd(returnedAmounts[i]);
             totalDepositedToSCAmount[recipientTokens[i]] = totalDepositedToSCAmount[recipientTokens[i]].safeAdd(returnedAmounts[i]);
         }
@@ -580,7 +562,7 @@ contract Vault is AdminPausable {
         require(success, "failed calling ext func");
 
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
-        require(returnedTokenAddress == recipientToken && balanceOfLocker(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
+        require(returnedTokenAddress == recipientToken && balanceOfLocker(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, "return amount incorrect");
 
         return returnedAmount;
     }
@@ -590,7 +572,7 @@ contract Vault is AdminPausable {
      */
     function callExtFuncMulti(bytes memory callData, address exchangeAddress) internal returns (address[] memory, uint[] memory) {
         (bool success, bytes memory result) = exchangeAddress.call{value: 0}(callData);
-        require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+        require(success, "failed calling exchange");
 
         return abi.decode(result, (address[], uint[]));
     }
@@ -600,7 +582,7 @@ contract Vault is AdminPausable {
      */
      function verifySignData(bytes memory data, bytes memory signData) internal returns(address){
         bytes32 hash = keccak256(data);
-        require(!isSigDataUsed(hash), errorToString(Errors.ALREADY_USED));
+        require(!isSigDataUsed(hash), "sig used");
         address verifier = sigToAddress(signData, hash);
        // mark data hash of sig as used
         sigDataUsed[hash] = true;
@@ -642,7 +624,7 @@ contract Vault is AdminPausable {
      * @param _newVault: address to save
      */
     function migrate(address payable _newVault) public onlyAdmin isPaused {
-        require(_newVault != address(0), errorToString(Errors.NULL_VALUE));
+        require(_newVault != address(0), "invalid newVault");
         newVault = _newVault;
         emit Migrate(_newVault);
     }
@@ -654,13 +636,13 @@ contract Vault is AdminPausable {
      * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
      */
     function moveAssets(address[] memory assets) public onlyAdmin isPaused {
-        require(newVault != address(0), errorToString(Errors.NULL_VALUE));
+        require(newVault != address(0), "invalid newVault");
         uint[] memory amounts = new uint[](assets.length);
         for (uint i = 0; i < assets.length; i++) {
             amounts[i] = totalDepositedToSCAmount[assets[i]];
             totalDepositedToSCAmount[assets[i]] = 0;
         }
-        require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
+        require(Withdrawable(newVault).updateAssets(assets, amounts), "failed updateAssets");
 
         emit MoveAssets(assets);
     }
@@ -673,8 +655,8 @@ contract Vault is AdminPausable {
      * @param amounts: total number of the ERC20 tokens to move, 0x0 for ETH
      */
     function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
-        require(assets.length == amounts.length, errorToString(Errors.NOT_EQUAL));
-        require(Withdrawable(prevVault).paused(), errorToString(Errors.PREVAULT_NOT_PAUSED));
+        require(assets.length == amounts.length, "mismatch assets and amounts");
+        require(Withdrawable(prevVault).paused(), "prevVault not paused");
         require(address(locker) != address(0), "locker address is null");
         for (uint i = 0; i < assets.length; i++) {
             totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
@@ -705,7 +687,7 @@ contract Vault is AdminPausable {
      * @param newIncognitoProxy: address of the new contract
      */
     function updateIncognitoProxy(address newIncognitoProxy) public onlyAdmin isPaused {
-        require(newIncognitoProxy != address(0), errorToString(Errors.NULL_VALUE));
+        require(newIncognitoProxy != address(0), "invalid newIncognitoProxy");
         incognito = Incognito(newIncognitoProxy);
         emit UpdateIncognitoProxy(newIncognitoProxy);
     }
@@ -717,7 +699,7 @@ contract Vault is AdminPausable {
      * @param newLocker: address of the new contract
      */
     function updateLocker(address newLocker) public onlyAdmin isPaused {
-        require(newLocker != address(0), errorToString(Errors.NULL_VALUE));
+        require(newLocker != address(0), "invalid newLocker");
         locker = Locker(newLocker);
     }
 
@@ -756,26 +738,6 @@ contract Vault is AdminPausable {
 		}
 		return returnValue != 0;
 	}
-
-    /**
-     * @dev convert enum to string value
-     */
-     function errorToString(Errors error) internal pure returns(string memory) {
-        uint8 erroNum = uint8(error);
-        uint maxlength = 10;
-        bytes memory reversed = new bytes(maxlength);
-        uint i = 0;
-        while (erroNum != 0) {
-            uint8 remainder = erroNum % 10;
-            erroNum = erroNum / 10;
-            reversed[i++] = byte(48 + remainder);
-        }
-        bytes memory s = new bytes(i + 1);
-        for (uint j = 0; j <= i; j++) {
-            s[j] = reversed[i - j];
-        }
-        return string(s);
-    }
 
     /**
      * @dev Get the decimals of an ERC20 token, return 0 if it isn't defined
