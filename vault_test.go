@@ -99,6 +99,46 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 	}
 }
 
+func TestFixedVaultUpdateLocker(t *testing.T) {
+	randAcc := newAccount()
+	p, _, err := setupFixedCommittee(randAcc.Address)
+	assert.Nil(t, err)
+
+	// Helper function to lock and return error message
+	lockErr := func(acc *account) string {
+		txOpt := bind.NewKeyedTransactor(acc.PrivateKey)
+		txOpt.GasLimit = 1000000
+		tx, err := p.v.UpdateLocker(txOpt, acc.Address)
+		assert.Nil(t, err)
+		p.sim.Commit()
+		reason, _ := errorReason(context.Background(), p.sim, tx, nil, txOpt.From)
+		return reason
+	}
+
+	checkLockerAddr := func(exp ec.Address) {
+		lockerAddr, _ := p.v.Locker(nil)
+		assert.Equal(t, exp, lockerAddr)
+	}
+
+	// Test: not paused => fail to update
+	strContains(t, lockErr(genesisAcc), "not paused right now")
+	checkLockerAddr(p.lockerAddr) // No change
+
+	// Test: paused but not admin => fail to update
+	_, err = p.v.Pause(auth)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	strContains(t, lockErr(randAcc), "not admin")
+	checkLockerAddr(p.lockerAddr) // No change
+
+	// Test: paused and called by admin => update
+	auth.GasLimit = 0
+	_, err = p.v.UpdateLocker(auth, randAcc.Address)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	checkLockerAddr(randAcc.Address)
+}
+
 func TestFixedIsWithdrawedFalse(t *testing.T) {
 	proof := getFixedBurnProofETH()
 
