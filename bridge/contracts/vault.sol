@@ -156,6 +156,7 @@ contract Vault is AdminPausable {
      * @param admin: authorized address to Pause and migrate contract
      * @param incognitoProxyAddress: contract containing Incognito's committees
      * @param _prevVault: previous version of the Vault to refer back if necessary
+     * @param _locker: address of the contract that actually holds the assets
      * After migrating all assets to a new Vault, we still need to refer
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
@@ -252,8 +253,6 @@ contract Vault is AdminPausable {
 
     /**
      * @dev Verifies that a burn instruction is valid
-     * @notice All params except inst are the list of 2 elements corresponding to
-     * the proof on beacon and bridge
      * @notice All params are the same as in `withdraw`
      */
     function verifyInst(

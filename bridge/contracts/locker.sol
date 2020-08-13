@@ -41,15 +41,34 @@ contract Locker is AdminPausable {
         vault = _vault;
     }
 
+    /**
+     * @dev Save the address of the Vault that is able to move assets out of this Locker
+     * @notice Can only be called by admin
+     * @param newVault: address of the Vault
+     */
     function changeVault(address newVault) public onlyAdmin nonReentrant {
         vault = newVault;
     }
 
+    /**
+     * @dev Set the next locker that will inherit the funds from this locker
+     * @notice This only works when the contract is Paused
+     * @notice Can only be called by admin
+     * @param _nextLocker: address of the next locker contract
+     */
     function setNextLocker(address payable _nextLocker) public onlyAdmin isPaused nonReentrant {
         require(_nextLocker != address(0), "null nextLocker");
         nextLocker = _nextLocker;
     }
 
+    /**
+     * @dev Move assets to the next Locker
+     * @notice This should only be used when we are migrating to a new Locker
+     * For normal usage (withdrawing), use `give` since it checks for transfer's results
+     * @notice This only works when the contract is Paused
+     * @notice Can only be called by admin
+     * @param assets: list of address of the assets to move
+     */
     function unlock(address[] memory assets) public onlyAdmin isPaused nonReentrant {
         require(nextLocker != address(0), "null nextLocker");
         for (uint i = 0; i < assets.length; i++) {
@@ -65,6 +84,17 @@ contract Locker is AdminPausable {
         }
     }
 
+    /**
+     * @dev Transfer some amount of asset to a specified address
+     * @notice This should be used for normal operation (withdrawing).
+     * For migrating funds, consider using `unlock` since it can transfer many assets
+     * in the same transaction.
+     * @notice This only works when the contract is not Paused
+     * @notice Can only be called by Vault
+     * @param to: address to transfer asset to
+     * @param token: asset to transfer (0x0 for ETH)
+     * @param amount: amount to transfer
+     */
     function give(address to, address token, uint amount) public onlyValidVault isNotPaused nonReentrant {
         if (token == ETH_TOKEN) {
             require(address(this).balance >= amount, "not enough eth");
