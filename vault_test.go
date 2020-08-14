@@ -15,6 +15,7 @@ import (
 	ec "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultv4"
 	"github.com/incognitochain/bridge-eth/common"
 	"github.com/incognitochain/bridge-eth/erc20"
 	"github.com/pkg/errors"
@@ -498,6 +499,47 @@ func TestFixedVaultUpdateAssets(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bigEqual(t, big.NewInt(10), getDeposit(newVault))
+}
+
+func TestFixedVaultUpdateAssetsV4ToV5(t *testing.T) {
+	p, _, err := setupFixedCommittee()
+	assert.Nil(t, err)
+
+	// Deploy a vault v4
+	oldVaultAddr, _, oldVault, err := vaultv4.DeployVault(auth, p.sim, auth.From, p.incAddr, ec.Address{})
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// Deploy vault v5 and set prevVault to v4
+	randAcc := newAccount()
+	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, oldVaultAddr, randAcc.Address)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// Prepare assets in vault v4
+	eth := ec.Address{}
+	dai := p.contracts.customErc20s["DAI"]
+	fail := p.contracts.customErc20s["FAIL"]
+	assert.Nil(t, skipTx(dai.c.Transfer(auth, oldVaultAddr, big.NewInt(1000))))
+	assert.Nil(t, skipTx(fail.c.Transfer(auth, oldVaultAddr, big.NewInt(10000))))
+	assert.Nil(t, transferETH(p.sim, genesisAcc.PrivateKey, oldVaultAddr, big.NewInt(10)))
+	assert.Nil(t, skipTx(oldVault.Pause(auth)))
+	assert.Nil(t, skipTx(oldVault.Migrate(auth, p.vAddr)))
+	p.sim.Commit()
+
+	// Test: fail one asset, tx revert
+	_, err = oldVault.MoveAssets(auth, []ec.Address{eth, dai.addr, fail.addr})
+	assert.NotNil(t, err)
+
+	// Test: move successfully
+	bigEqual(t, big.NewInt(0), p.getBalance(randAcc.Address))
+	bigEqual(t, big.NewInt(0), getBalanceERC20(dai.c, randAcc.Address))
+	_, err = oldVault.MoveAssets(auth, []ec.Address{eth, dai.addr})
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bigEqual(t, big.NewInt(10), p.getBalance(randAcc.Address))
+	bigEqual(t, big.NewInt(1000), getBalanceERC20(dai.c, randAcc.Address))
+	bigEqual(t, big.NewInt(10000), getBalanceERC20(fail.c, oldVaultAddr))
 }
 
 func TestFixedDepositETH(t *testing.T) {
