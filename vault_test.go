@@ -445,6 +445,61 @@ func TestFixedMigrate(t *testing.T) {
 	}
 }
 
+func TestFixedVaultUpdateAssets(t *testing.T) {
+	p, c, err := setupFixedCommittee()
+	assert.Nil(t, err)
+
+	checkReason := func(tx *types.Transaction, err error, substr string) {
+		assert.Nil(t, err)
+		p.sim.Commit()
+		reason, _ := errorReason(context.Background(), p.sim, tx, nil, auth.From)
+		strContains(t, reason, substr)
+	}
+
+	// Deploy a new vault (same version) to receive asset
+	newVaultAddr, _, newVault, err := setupVault(auth, p.sim, auth.From, p.incAddr, p.vAddr, ec.Address{})
+	assert.Nil(t, err)
+	assert.Nil(t, skipTx(p.v.Pause(auth)))
+	assert.Nil(t, skipTx(p.v.Migrate(auth, newVaultAddr)))
+
+	// Test: not called by prevVault => fail
+	auth.GasLimit = 1000000
+	tx, err := newVault.UpdateAssets(auth, []ec.Address{}, []*big.Int{})
+	checkReason(tx, err, "not prevVault")
+
+	// Test: locker not set => fail to update assets
+	tx, err = p.v.MoveAssets(auth, []ec.Address{})
+	checkReason(tx, err, "locker address is null")
+
+	// Test: old Vault has no token => doesn't transfer
+	auth.GasLimit = 0
+	assert.Nil(t, skipTx(newVault.Pause(auth)))
+	assert.Nil(t, skipTx(newVault.UpdateLocker(auth, auth.From)))
+
+	_, err = p.v.MoveAssets(auth, []ec.Address{p.customErc20s["FAIL"].addr})
+	assert.Nil(t, err) // If FAIL token called => error won't be nil
+	p.sim.Commit()
+
+	// Test: totalDepositedToSCAmount set correctly
+	eth := ec.Address{}
+	getDeposit := func(v *vault.Vault) *big.Int {
+		bal, _ := v.TotalDepositedToSCAmount(nil, eth)
+		return bal
+	}
+	proof := buildWithdrawTestcase(c, 243, 1, eth, big.NewInt(10))
+	assert.Nil(t, transferETH(p.sim, genesisAcc.PrivateKey, p.lockerAddr, big.NewInt(10)))
+	assert.Nil(t, skipTx(p.v.Unpause(auth)))
+	assert.Nil(t, skipTx(SubmitBurnProof(p.v, auth, proof)))
+	assert.Nil(t, skipTx(p.v.Pause(auth)))
+	p.sim.Commit()
+	bigEqual(t, big.NewInt(10), getDeposit(p.v))
+
+	_, err = p.v.MoveAssets(auth, []ec.Address{eth})
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bigEqual(t, big.NewInt(10), getDeposit(newVault))
+}
+
 func TestFixedDepositETH(t *testing.T) {
 	p, _, err := setupFixedCommittee()
 	assert.Nil(t, err)

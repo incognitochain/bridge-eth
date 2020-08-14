@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
-	"strings"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -441,12 +440,4 @@ func transferETH(
 
 	sim.Commit()
 	return nil
-}
-
-func bigEqual(t *testing.T, x, y *big.Int) {
-	assert.True(t, x.Cmp(y) == 0, "expected %v, got %v", x, y)
-}
-
-func strContains(t *testing.T, container, substr string) {
-	assert.True(t, strings.Contains(container, substr), "expected to contain `%v`, got `%v`", substr, container)
 }
