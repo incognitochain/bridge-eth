@@ -248,7 +248,7 @@ func setup(
 
 	// IncognitoProxy
 	admin := auth.From
-	p.incAddr, tx, p.inc, err = incognito_proxy.DeployIncognitoProxy(auth, sim, admin, beaconComm)
+	p.incAddr, tx, p.inc, err = incognito_proxy.DeployIncognitoProxy(auth, sim, admin, beaconComm, bridgeComm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deploy IncognitoProxy contract: %v", err)
 	}

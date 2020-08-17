@@ -40,6 +40,7 @@ library SafeMath {
  */
 interface Incognito {
     function instructionApproved(
+        bool,
         bytes32,
         uint,
         bytes32[] calldata,
@@ -265,6 +266,7 @@ contract Vault is AdminPausable {
 
         // Verify instruction on beacon
         require(incognito.instructionApproved(
+            true, // Only check instruction on beacon
             beaconInstHash,
             heights,
             instPaths,

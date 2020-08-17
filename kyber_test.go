@@ -85,7 +85,7 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.ETHPrivKey = ETHPrivKey
 	v2.c = getFixedCommittee()
 	v2.auth = bind.NewKeyedTransactor(ETHPrivKey)
-	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons)
+	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
 	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
