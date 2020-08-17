@@ -99,7 +99,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
-	tradingSuite.VaultAddr = common.HexToAddress("0xF4667fe380179fB66FF5A2B4269c37513275BfD6")
+	tradingSuite.VaultAddr = common.HexToAddress("0x88D9531eCCDee7fDd2061D2053F92B1E00596804")
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
