@@ -15,8 +15,10 @@ contract IncognitoProxy is AdminPausable {
     }
 
     Committee[] public beaconCommittees; // All beacon committees from genesis block
+    Committee[] public bridgeCommittees; // All bridge committees from genesis block
 
     event BeaconCommitteeSwapped(uint id, uint startHeight);
+    event BridgeCommitteeSwapped(uint id, uint startHeight);
 
     /**
      * @dev Sets the genesis committees and the address of admin
@@ -30,13 +32,20 @@ contract IncognitoProxy is AdminPausable {
      * @notice Admin can also be a smart contract implementing a DAO and making decisions through a voting system
      * @param admin: ETH address
      * @param beaconCommittee: genesis committee members of beacon chain
+     * @param bridgeCommittee: genesis committee members of bridge
      */
     constructor(
         address admin,
-        address[] memory beaconCommittee
+        address[] memory beaconCommittee,
+        address[] memory bridgeCommittee
     ) public AdminPausable(admin) {
         beaconCommittees.push(Committee({
             pubkeys: beaconCommittee,
+            startBlock: 0
+        }));
+
+        bridgeCommittees.push(Committee({
+            pubkeys: bridgeCommittee,
             startBlock: 0
         }));
     }
@@ -49,6 +58,89 @@ contract IncognitoProxy is AdminPausable {
      */
     function getBeaconCommittee(uint i) public view returns(Committee memory) {
         return beaconCommittees[i];
+    }
+
+    /**
+     * @dev Gets a bridge committee in the past
+     * @notice the same as getBeaconCommittee but for bridge
+     */
+    function getBridgeCommittee(uint i) public view returns(Committee memory) {
+        return bridgeCommittees[i];
+    }
+
+    /**
+     * @dev Updates the latest committee of the bridge
+     * @notice This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committee
+     * @notice This only works when the contract is not Paused
+     * @notice All params except inst are the list of 2 elements corresponding to the proof on beacon and bridge
+     * @param inst: the decoded instruction as a list of bytes
+     * @param instPaths: merkle path of the instruction
+     * @param instPathIsLefts: whether each node on the path is the left or right child
+     * @param instRoots: root of the merkle tree contains all instructions
+     * @param blkData: merkle has of the block body
+     * @param sigIdxs: indices of the validators who signed this block
+     * @param sigVs: part of the signatures of the validators
+     * @param sigRs: part of the signatures of the validators
+     * @param sigSs: part of the signatures of the validators
+     */
+    function swapBridgeCommittee(
+        bytes memory inst,
+        bytes32[][2] memory instPaths,
+        bool[][2] memory instPathIsLefts,
+        bytes32[2] memory instRoots,
+        bytes32[2] memory blkData,
+        uint[][2] memory sigIdxs,
+        uint8[][2] memory sigVs,
+        bytes32[][2] memory sigRs,
+        bytes32[][2] memory sigSs
+    ) public isNotPaused {
+        bytes32 instHash = keccak256(inst);
+
+        // Verify instruction on beacon
+        require(instructionApproved(
+            true,
+            instHash,
+            beaconCommittees[beaconCommittees.length-1].startBlock,
+            instPaths[0],
+            instPathIsLefts[0],
+            instRoots[0],
+            blkData[0],
+            sigIdxs[0],
+            sigVs[0],
+            sigRs[0],
+            sigSs[0]
+        ));
+
+        // Verify instruction on bridge
+        require(instructionApproved(
+            false,
+            instHash,
+            bridgeCommittees[bridgeCommittees.length-1].startBlock,
+            instPaths[1],
+            instPathIsLefts[1],
+            instRoots[1],
+            blkData[1],
+            sigIdxs[1],
+            sigVs[1],
+            sigRs[1],
+            sigSs[1]
+        ));
+
+        // Parse instruction and check metadata
+        (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
+        require(meta == 71 && shard == 1);
+
+        // Make sure 1 instruction can't be used twice (using startHeight)
+        require(startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, "cannot change old committee");
+
+        // Swap committee
+        address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
+        bridgeCommittees.push(Committee({
+            pubkeys: pubkeys,
+            startBlock: startHeight
+        }));
+
+        emit BridgeCommitteeSwapped(bridgeCommittees.length, startHeight);
     }
 
     /**
@@ -73,6 +165,7 @@ contract IncognitoProxy is AdminPausable {
 
         // Verify instruction on beacon
         require(instructionApproved(
+            true,
             instHash,
             beaconCommittees[beaconCommittees.length-1].startBlock,
             instPath,
@@ -106,6 +199,7 @@ contract IncognitoProxy is AdminPausable {
      * @dev Checks if an instruction is confirmed on chain (beacon or bridge)
      * @notice A confirmation means that the instruction is included in a block
      * that has enough validators' signatures
+     * @param isBeacon: check on beacon or bridge
      * @param instHash: keccak256 hash of the instruction's content
      * @param blkHeight: height of the block containing the instruction
      * @param instPath: merkle path of the instruction
@@ -119,6 +213,7 @@ contract IncognitoProxy is AdminPausable {
      * @return bool: whether the instruction is valid and confirmed
      */
     function instructionApproved(
+        bool isBeacon,
         bytes32 instHash,
         uint blkHeight,
         bytes32[] memory instPath,
@@ -131,7 +226,13 @@ contract IncognitoProxy is AdminPausable {
         bytes32[] memory sigS
     ) public view returns (bool) {
         // Find committee in charge of this block
-        (address[] memory signers, ) = findBeaconCommitteeFromHeight(blkHeight);
+        address[] memory signers;
+        uint _;
+        if (isBeacon) {
+            (signers, _) = findBeaconCommitteeFromHeight(blkHeight);
+        } else {
+            (signers, _) = findBridgeCommitteeFromHeight(blkHeight);
+        }
 
         // Extract signers that signed this block (require sigIdx to be strictly increasing)
         require(sigV.length == sigIdx.length);
@@ -187,6 +288,26 @@ contract IncognitoProxy is AdminPausable {
             }
         }
         return (beaconCommittees[l].pubkeys, l);
+    }
+
+    /**
+     * @dev Finds the bridge committee in charge of signing a block height
+     * @notice The same as findBeaconCommitteeFromHeight but for bridge chain
+     */
+    function findBridgeCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {
+        uint l = 0;
+        uint r = bridgeCommittees.length;
+        require(r > 0);
+        r = r - 1;
+        while (l != r) {
+            uint m = (l + r + 1) / 2;
+            if (bridgeCommittees[m].startBlock <= blkHeight) {
+                l = m;
+            } else {
+                r = m - 1;
+            }
+        }
+        return (bridgeCommittees[l].pubkeys, l);
     }
 
     /**

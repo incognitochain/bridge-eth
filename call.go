@@ -1,8 +1,6 @@
 package main
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
@@ -54,7 +52,7 @@ func SubmitBurnProof(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProo
 }
 
 func SwapBeacon(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
-	auth.GasPrice = big.NewInt(20000000000)
+	// auth.GasPrice = big.NewInt(20000000000)
 	tx, err := inc.SwapBeaconCommittee(
 		auth,
 		proof.Instruction,
@@ -67,6 +65,27 @@ func SwapBeacon(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, pr
 		proof.SigVs[0],
 		proof.SigRs[0],
 		proof.SigSs[0],
+	)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func SwapBridge(inc *incognito_proxy.IncognitoProxy, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
+	// auth.GasPrice = big.NewInt(20000000000)
+	tx, err := inc.SwapBridgeCommittee(
+		auth,
+		proof.Instruction,
+
+		proof.InstPaths,
+		proof.InstPathIsLefts,
+		proof.InstRoots,
+		proof.BlkData,
+		proof.SigIdxs,
+		proof.SigVs,
+		proof.SigRs,
+		proof.SigSs,
 	)
 	if err != nil {
 		return nil, err
