@@ -629,11 +629,11 @@ func TestFixedVerifySig(t *testing.T) {
 		out  bool
 		err  bool
 	}{
-		// {
-		// 	desc: "Valid sig", // TODO: update sig
-		// 	in:   getFixedCommitteeSig(),
-		// 	out:  true,
-		// },
+		{
+			desc: "Valid sig", // TODO: update sig
+			in:   getFixedCommitteeSig(),
+			out:  true,
+		},
 		{
 			desc: "Invalid committee",
 			in: func() *committeeSig {
@@ -674,7 +674,7 @@ func TestFixedVerifySig(t *testing.T) {
 			desc: "Invalid s",
 			in: func() *committeeSig {
 				sig := getFixedCommitteeSig()
-				sig.s[3][4] = 123
+				sig.s[2][3] = 123
 				return sig
 			}(),
 			out: false,
@@ -686,8 +686,7 @@ func TestFixedVerifySig(t *testing.T) {
 				sig.addrs = sig.addrs[:2]
 				return sig
 			}(),
-			err: false,
-			out: false,
+			err: true,
 		},
 		{
 			desc: "Not enough v",
@@ -736,7 +735,7 @@ func TestFixedVerifySig(t *testing.T) {
 }
 
 func getFixedCommitteeSig() *committeeSig {
-	validationData := "{\"ProducerBLSSig\":\"D4sg/eVi8yI+rX9WOwCWBEG+4mWXjGNorl2m3ppRCvE=\",\"ProducerBriSig\":null,\"ValidatiorsIdx\":[0,1,2,3],\"AggSig\":\"AriRXDvXcPDqkMNAQjHR61f3xis6YLNskuYF7vQJNzE=\",\"BridgeSig\":[\"/tSXMa9s1PKAxDC9H6etSMPcnAOEqqQYum3TfWtOKQpyvHxA1jllDkLmB68M6pp54bTUWenqXMQVWW+2GAcBjgA=\",\"MJyhaCCm8B6uwK/w6/OMqr7AW1Szo1etRfTcru0ZenZUwea0LVXhPo2QRKeO+Q1n12J2yRv4sUkhRLLL9zw1SwE=\",\"DOpccVDrw6SbGqs4+YP/Ti1nx4gg/xpsuHB7DBuhO2RMl8hAaUz2TVZ6hv+r8z0YLiUw/k6FEFY+5dg/EjMRAQA=\",\"qPEXt4KgFR8ZMw7JelEeEwsWQ7gW/IrzWMpx++zjQ6dLdeXwKcGwxoaBWhWnEpma+MVVQw1LvzzuvtzIBGZDKgE=\"]}"
+	validationData := "{\"ProducerBLSSig\":\"1SKoBm9JkUg2xQ9+S9ByC+80sGQdr+FdZhx1G0TuB6hzKVBaU5ZHd8gogL0y3FnSYWq9j80tbY4KdIVl2CKGYgA=\",\"ProducerBriSig\":null,\"ValidatiorsIdx\":[0,1,2],\"AggSig\":\"B/kNlcM0oWzcjIp7n4Vh5nIeKLaWBvwif5RxFG+WdJY=\",\"BridgeSig\":[\"1SKoBm9JkUg2xQ9+S9ByC+80sGQdr+FdZhx1G0TuB6hzKVBaU5ZHd8gogL0y3FnSYWq9j80tbY4KdIVl2CKGYgA=\",\"SHgreB0MQUO0CVB6rwQO1oy+Z5pu8ykNiuJVTty7bjtVPI96njnop1ddVMn6AXueJYcjifFV5MaGBcXQp0eEUgE=\",\"ZF3v5YTdiet+HWPbtzm8wS21QCRuK0UzweGtFDyNojxIUL3Z3/nfkO+Q5CPKeEgRoEjogzBezcATZS2rFukr0AE=\"]}"
 	d, _ := DecodeValidationData(validationData)
 	vs := []byte{}
 	rs := [][32]byte{}
@@ -748,7 +747,7 @@ func getFixedCommitteeSig() *committeeSig {
 		ss = append(ss, toByte32(s))
 	}
 
-	hash, _ := common.Hash{}.NewHashFromStr("cb53ba7574335ecfa0fddcb136b387330af322784fb759c80ca7bb790a1c0f9d")
+	hash, _ := common.Hash{}.NewHashFromStr("c98b9ba5d9760429cbe89596e69ce86cfa2ed3ef0631b1891d7057ef51c4750f")
 	c := getFixedCommittee()
 	msgHash := toByte32(crypto.Keccak256Hash(hash.GetBytes()).Bytes())
 	return &committeeSig{
