@@ -96,7 +96,7 @@ func (tradingSuite *UniswapTradingTestSuite) getExpectedAmount(
 	if destToken == tradingSuite.EtherAddressStr {
 		destToken = tradingSuite.WETHAddr
 	}
-	c, err := uniswap.NewUniswap(tradingSuite.UniswapTradeDeployedAddr, tradingSuite.ETHClient)
+	c, err := uniswap.NewUniswapV2Trade(tradingSuite.UniswapTradeDeployedAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	amounts, err := c.GetAmountsOut(nil, common.HexToAddress(srcToken), srcQty, common.HexToAddress(destToken))
 	require.Equal(tradingSuite.T(), nil, err)
@@ -111,7 +111,7 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	srcTokenIDStr string,
 	destTokenIDStr string,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapV2TradeABI))
 
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)

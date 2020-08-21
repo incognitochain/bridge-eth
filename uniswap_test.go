@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	crand "crypto/rand"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -44,7 +45,7 @@ type UniswapTestSuite struct {
 
 	WETH              common.Address
 	DAIAddress        common.Address
-	ETHUniswapAddress common.Address
+	ETHUniswapRouterAddress common.Address
 	MRKAddressStr     common.Address
 }
 
@@ -55,14 +56,14 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	var err error
 	v2.WETH = common.HexToAddress("0xd0a1e359811322d97991e03f863a0c30c2cf029c")
 	v2.EtherAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
-	v2.ETHUniswapAddress = common.HexToAddress("0x179AB1dbd0cD15031F5238eC5E4A38A75fD53Ec9")
+	v2.ETHUniswapRouterAddress = common.HexToAddress("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
 	v2.DAIAddress = common.HexToAddress("0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa")
 	v2.MRKAddressStr = common.HexToAddress("0xef13c0c8abcaf5767160018d268f9697ae4f5375")
 	v2.EthPrivateKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
-	v2.ETHUniswapAddress = common.HexToAddress("0xf164fC0Ec4E93095b804a4795bBe1e041497b92a")
-	v2.VaultAddress = common.HexToAddress("0x649d49836a881024070E52C8227960F7fd65ebf2")
+	v2.VaultAddress = common.HexToAddress("0xe200E404E4B9f700Eb8AF5D0bd59057a2097E61B")
 	v2.EthHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	v2.UniswapProxy = common.HexToAddress("0x179AB1dbd0cD15031F5238eC5E4A38A75fD53Ec9")
+	v2.UniswapProxy = common.HexToAddress("0x0DBdaA169F10d8859c39831f8e85b17dAa58fAF8")
+	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
 	v2.connectToETH()
 	v2.c = getFixedCommittee()
 	v2.auth = bind.NewKeyedTransactor(v2.ETHPrivKey)
@@ -84,7 +85,7 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	// require.Equal(v2.T(), nil, err)
 	// fmt.Printf("Vault address: %s\n", v2.VaultAddress.Hex())
 
-	// v2.UniswapProxy, tx, _, err = uniswap.DeployUniswap(v2.auth, v2.ETHClient, v2.ETHUniswapAddress, v2.VaultAddress)
+	// v2.UniswapProxy, tx, _, err = uniswap.DeployUniswapV2Trade(v2.auth, v2.ETHClient, v2.ETHUniswapRouterAddress)
 	// require.Equal(v2.T(), nil, err)
 	// err = wait(v2.ETHClient, tx.Hash())
 	// require.Equal(v2.T(), nil, err)
@@ -131,17 +132,14 @@ func TestVaultV2Uniswap(t *testing.T) {
 func (v2 *UniswapTestSuite) TestUniswapTrade() {
 	address := crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey)
 	rand.Seed(time.Now().UnixNano())
-	// range value to create unique proof from inc
-	var min int64 = 1e9
-	var max int64 = 9e16
-	deposit := big.NewInt(rand.Int63n(max-min+1) + min)
+	deposit := big.NewInt(int64(1e12))
 	v2.auth.Value = deposit
 	tx, err := v2.v.Deposit(v2.auth, "")
 	require.Equal(v2.T(), nil, err)
 	err = wait(v2.ETHClient, tx.Hash())
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
-	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, deposit, address)
+	proof := buildWithdrawTestcaseV2Uniswap(v2.c, 243, 1, v2.EtherAddress, deposit, address)
 	tx, err = SubmitBurnProof(v2.v, v2.auth, proof)
 	require.Equal(v2.T(), nil, err)
 	err = wait(v2.ETHClient, tx.Hash())
@@ -192,13 +190,15 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 }
 
 func (v2 *UniswapTestSuite) TestUniswapProxyBadcases() {
-	// call kyberproxy to trade directly => only vault can call uniswap
+	// anyone can call kyberproxy to trade directly 
 	deposit := big.NewInt(int64(8e9))
 	v2.auth.Value = deposit
-	expectedRate := v2.getExpectedRate(v2.WETH, v2.DAIAddress, deposit)
-	uniswap, err := uniswap.NewUniswap(v2.UniswapProxy, v2.ETHClient)
-	_, err = uniswap.Trade(v2.auth, v2.WETH, deposit, v2.DAIAddress, expectedRate)
-	require.NotEqual(v2.T(), nil, err)
+	expectedRate := v2.getExpectedRate(v2.EtherAddress, v2.DAIAddress, deposit)
+	uniswap, err := uniswap.NewUniswapV2Trade(v2.UniswapProxy, v2.ETHClient)
+	tx, err := uniswap.Trade(v2.auth, v2.EtherAddress, deposit, v2.DAIAddress, expectedRate)
+	require.Equal(v2.T(), nil, err)
+	err = wait(v2.ETHClient, tx.Hash())
+	require.Equal(v2.T(), nil, err)
 
 	// send eth to proxy directly
 	amountSendToProxy := big.NewInt(int64(8e9))
@@ -208,7 +208,7 @@ func (v2 *UniswapTestSuite) TestUniswapProxyBadcases() {
 	require.Equal(v2.T(), nil, err)
 	nonce, err := v2.ETHClient.PendingNonceAt(context.Background(), crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey))
 	require.Equal(v2.T(), nil, err)
-	tx := types.NewTransaction(nonce, v2.UniswapProxy, amountSendToProxy, gasLimit, gasPrice, data)
+	tx = types.NewTransaction(nonce, v2.UniswapProxy, amountSendToProxy, gasLimit, gasPrice, data)
 	chainID, err := v2.ETHClient.NetworkID(context.Background())
 	require.Equal(v2.T(), nil, err)
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), v2.ETHPrivKey)
@@ -225,12 +225,12 @@ func (v2 *UniswapTestSuite) getExpectedRate(
 	srcQty *big.Int,
 ) *big.Int {
 	if srcToken == v2.EtherAddress {
-		srcToken = v2.ETHUniswapAddress
+		srcToken = v2.WETH
 	}
 	if destToken == v2.EtherAddress {
-		destToken = v2.ETHUniswapAddress
+		destToken = v2.WETH
 	}
-	c, err := uniswap.NewUniswap(v2.UniswapProxy, v2.ETHClient)
+	c, err := uniswap.NewUniswapV2Trade(v2.UniswapProxy, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	amounts, err := c.GetAmountsOut(nil, srcToken, srcQty, destToken)
 	require.Equal(v2.T(), nil, err)
@@ -248,7 +248,7 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 	expectRate *big.Int,
 	isErrorExpected bool,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapV2TradeABI))
 	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectRate)
 	tx, err := runExecuteVault(v2.auth, v2.UniswapProxy, srcToken, srcQty, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
 	if !isErrorExpected {
@@ -259,4 +259,54 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 	} else {
 		require.NotEqual(v2.T(), nil, err)
 	}
+}
+
+
+func buildWithdrawTestcaseV2Uniswap(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
+	inst, mp, blkData, blkHash := buildWithdrawDataV2Uniswap(meta, shard, tokenID, amount, withdrawer)
+	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
+	return &decodedProof{
+		Instruction: inst,
+		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
+
+		InstPaths:       [2][][32]byte{ipBeacon.instPath},
+		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft},
+		InstRoots:       [2][32]byte{ipBeacon.instRoot},
+		BlkData:         [2][32]byte{ipBeacon.blkData},
+		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx},
+		SigVs:           [2][]uint8{ipBeacon.sigV},
+		SigRs:           [2][][32]byte{ipBeacon.sigR},
+		SigSs:           [2][][32]byte{ipBeacon.sigS},
+	}
+}
+
+func buildWithdrawDataV2Uniswap(meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) ([]byte, *merklePath, []byte, []byte) {
+	// Build instruction merkle tree
+	numInst := 10
+	startNodeID := 7
+	height := big.NewInt(1)
+	inst := buildDecodedWithdrawInstUniswap(meta, shard, tokenID, withdrawer, amount)
+	instWithHeight := append(inst, toBytes32BigEndian(height.Bytes())...)
+	data := randomMerkleHashes(numInst)
+	data[startNodeID] = instWithHeight
+	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+
+	// Generate random blkHash
+	h := randomMerkleHashes(1)
+	blkData := h[0]
+	blkHash := rawsha3(append(blkData, mp.root[:]...))
+	return inst, mp, blkData, blkHash[:]
+}
+
+func buildDecodedWithdrawInstUniswap(meta, shard int, tokenID, withdrawer common.Address, amount *big.Int) []byte {
+	decoded := []byte{byte(meta)}
+	decoded = append(decoded, byte(shard))
+	decoded = append(decoded, toBytes32BigEndian(tokenID[:])...)
+	decoded = append(decoded, toBytes32BigEndian(withdrawer[:])...)
+	decoded = append(decoded, toBytes32BigEndian(amount.Bytes())...)
+	txId := make([]byte, 32)
+	crand.Read(txId)
+	decoded = append(decoded, toBytes32BigEndian(txId)...) // txID
+	decoded = append(decoded, make([]byte, 16)...)                     // incTokenID, variable length
+	return decoded
 }

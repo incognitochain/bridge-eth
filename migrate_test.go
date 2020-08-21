@@ -110,7 +110,7 @@ func TestDeployKBNTrade(t *testing.T) {
 	// Deploy KBNTrade
 	auth := bind.NewKeyedTransactor(privKey)
 	auth.GasPrice = big.NewInt(int64(23000000000))
-	kbnTradeAddr, _, _, err := kbntrade.DeployKbntrade(auth, client, kbnProxy, newVault)
+	kbnTradeAddr, _, _, err := kbntrade.DeployKBNTrade(auth, client, kbnProxy)
 	if err != nil {
 		t.Fatal(err)
 	}

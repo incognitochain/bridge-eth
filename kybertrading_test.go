@@ -114,7 +114,7 @@ func (tradingSuite *KyberTradingTestSuite) getExpectedRate(
 	if destToken == tradingSuite.EtherAddressStr {
 		destToken = tradingSuite.EtherAddressStrKyber
 	}
-	c, err := kbntrade.NewKbntrade(tradingSuite.KyberTradeDeployedAddr, tradingSuite.ETHClient)
+	c, err := kbntrade.NewKBNTrade(tradingSuite.KyberTradeDeployedAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	expectRate, slippageRate, err := c.GetConversionRates(nil, common.HexToAddress(srcToken), srcQty, common.HexToAddress(destToken))
 	require.Equal(tradingSuite.T(), nil, err)
@@ -128,7 +128,7 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	srcTokenIDStr string,
 	destTokenIDStr string,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KBNTradeABI))
 
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
