@@ -21,9 +21,8 @@ contract KBNTrade is TradeUtils {
      * @dev Contract constructor
      * @param _kyberNetworkProxyContract KyberNetworkProxy contract address
      */
-    constructor(KyberNetwork _kyberNetworkProxyContract, address payable _incognitoSmartContract) public {
+    constructor(KyberNetwork _kyberNetworkProxyContract) public {
         kyberNetworkProxyContract = _kyberNetworkProxyContract;
-        incognitoSmartContract = _incognitoSmartContract;
     }
 
     // Reciever function which allows transfer eth.
@@ -39,7 +38,7 @@ contract KBNTrade is TradeUtils {
         return kyberNetworkProxyContract.getExpectedRate(srcToken, destToken, srcQty);
     }
 
-    function trade(IERC20 srcToken, uint srcQty, IERC20 destToken, uint minConversionRate) public payable isIncognitoSmartContract returns (address, uint) {
+    function trade(IERC20 srcToken, uint srcQty, IERC20 destToken, uint minConversionRate) public payable returns (address, uint) {
         require(balanceOf(srcToken) >= srcQty);
         require(srcToken != destToken);
         uint amount = 0;
