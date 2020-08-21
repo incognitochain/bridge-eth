@@ -41,7 +41,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) SetupSuite() {
 	tradingDeploySuite.KyberContractAddr = common.HexToAddress("0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D")
 	tradingDeploySuite.ZRXContractAddr = common.HexToAddress("0xf1ec01d6236d3cd881a0bf0130ea25fe4234003e")
 	tradingDeploySuite.WETHAddr = common.HexToAddress("0xd0a1e359811322d97991e03f863a0c30c2cf029c")
-	tradingDeploySuite.UniswapRouteContractAddr = common.HexToAddress("0xf164fC0Ec4E93095b804a4795bBe1e041497b92a")
+	// uniswap router v2
+	tradingDeploySuite.UniswapRouteContractAddr = common.HexToAddress("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
 }
 
 func (tradingDeploySuite *TradingDeployTestSuite) TearDownSuite() {
@@ -105,7 +106,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// Deploy kbntrade
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKbntrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr, vaultAddr)
+	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed kbntrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
@@ -136,7 +137,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	fmt.Printf("addr: %s\n", zrxTradeAddr.Hex())
 
 	// Deploy uniswaptrade
-	uniswapAddr, tx, _, err := uniswap.DeployUniswap(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr, vaultAddr)
+	uniswapAddr, tx, _, err := uniswap.DeployUniswapV2Trade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed uniswap adapter")
 	fmt.Printf("addr: %s\n", uniswapAddr.Hex())
