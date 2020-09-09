@@ -126,10 +126,10 @@ func TestFixedFindBeaconCommitteeFromHeight(t *testing.T) {
 
 func repeatSwapBeacon(c *committees, startBlock, meta, shard int) *decodedProof {
 	addrs := []string{
-		"A5301a0d25103967bf0e29db1576cba3408fD9bB",
-		"9BC0faE7BB432828759B6e391e0cC99995057791",
-		"6cbc2937FEe477bbda360A842EeEbF92c2FAb613",
-		"cabF3DB93eB48a61d41486AcC9281B6240411403",
+		"D7d93b7fa42b60b6076f3017fCA99b69257A912D",
+		"f25ee30cfed2d2768C51A6Eb6787890C1c364cA4",
+		"0D8c517557f3edE116988DD7EC0bAF83b96fe0Cb",
+		"c225fcd5CE8Ad42863182Ab71acb6abD9C4ddCbE",
 	}
 	inst, mp, blkData, blkHash := buildSwapData(meta, shard, startBlock, addrs)
 	ip := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
@@ -630,7 +630,7 @@ func TestFixedVerifySig(t *testing.T) {
 		err  bool
 	}{
 		{
-			desc: "Valid sig",
+			desc: "Valid sig", // TODO: update sig
 			in:   getFixedCommitteeSig(),
 			out:  true,
 		},
@@ -674,7 +674,7 @@ func TestFixedVerifySig(t *testing.T) {
 			desc: "Invalid s",
 			in: func() *committeeSig {
 				sig := getFixedCommitteeSig()
-				sig.s[3][4] = 123
+				sig.s[2][3] = 123
 				return sig
 			}(),
 			out: false,
@@ -735,7 +735,7 @@ func TestFixedVerifySig(t *testing.T) {
 }
 
 func getFixedCommitteeSig() *committeeSig {
-	validationData := "{\"ProducerBLSSig\":\"D4sg/eVi8yI+rX9WOwCWBEG+4mWXjGNorl2m3ppRCvE=\",\"ProducerBriSig\":null,\"ValidatiorsIdx\":[0,1,2,3],\"AggSig\":\"AriRXDvXcPDqkMNAQjHR61f3xis6YLNskuYF7vQJNzE=\",\"BridgeSig\":[\"/tSXMa9s1PKAxDC9H6etSMPcnAOEqqQYum3TfWtOKQpyvHxA1jllDkLmB68M6pp54bTUWenqXMQVWW+2GAcBjgA=\",\"MJyhaCCm8B6uwK/w6/OMqr7AW1Szo1etRfTcru0ZenZUwea0LVXhPo2QRKeO+Q1n12J2yRv4sUkhRLLL9zw1SwE=\",\"DOpccVDrw6SbGqs4+YP/Ti1nx4gg/xpsuHB7DBuhO2RMl8hAaUz2TVZ6hv+r8z0YLiUw/k6FEFY+5dg/EjMRAQA=\",\"qPEXt4KgFR8ZMw7JelEeEwsWQ7gW/IrzWMpx++zjQ6dLdeXwKcGwxoaBWhWnEpma+MVVQw1LvzzuvtzIBGZDKgE=\"]}"
+	validationData := "{\"ProducerBLSSig\":\"1SKoBm9JkUg2xQ9+S9ByC+80sGQdr+FdZhx1G0TuB6hzKVBaU5ZHd8gogL0y3FnSYWq9j80tbY4KdIVl2CKGYgA=\",\"ProducerBriSig\":null,\"ValidatiorsIdx\":[0,1,2],\"AggSig\":\"B/kNlcM0oWzcjIp7n4Vh5nIeKLaWBvwif5RxFG+WdJY=\",\"BridgeSig\":[\"1SKoBm9JkUg2xQ9+S9ByC+80sGQdr+FdZhx1G0TuB6hzKVBaU5ZHd8gogL0y3FnSYWq9j80tbY4KdIVl2CKGYgA=\",\"SHgreB0MQUO0CVB6rwQO1oy+Z5pu8ykNiuJVTty7bjtVPI96njnop1ddVMn6AXueJYcjifFV5MaGBcXQp0eEUgE=\",\"ZF3v5YTdiet+HWPbtzm8wS21QCRuK0UzweGtFDyNojxIUL3Z3/nfkO+Q5CPKeEgRoEjogzBezcATZS2rFukr0AE=\"]}"
 	d, _ := DecodeValidationData(validationData)
 	vs := []byte{}
 	rs := [][32]byte{}
@@ -747,7 +747,7 @@ func getFixedCommitteeSig() *committeeSig {
 		ss = append(ss, toByte32(s))
 	}
 
-	hash, _ := common.Hash{}.NewHashFromStr("cb53ba7574335ecfa0fddcb136b387330af322784fb759c80ca7bb790a1c0f9d")
+	hash, _ := common.Hash{}.NewHashFromStr("c98b9ba5d9760429cbe89596e69ce86cfa2ed3ef0631b1891d7057ef51c4750f")
 	c := getFixedCommittee()
 	msgHash := toByte32(crypto.Keccak256Hash(hash.GetBytes()).Bytes())
 	return &committeeSig{
@@ -784,23 +784,23 @@ func DecodeValidationData(data string) (*ValidationData, error) {
 	return &valData, nil
 }
 
-// TestFixedSwapBridgeFixedProof the same as the next test but for bridge
-func TestFixedSwapBridgeFixedProof(t *testing.T) {
-	proof := getFixedSwapBridgeProof()
+// // TestFixedSwapBridgeFixedProof the same as the next test but for bridge
+// func TestFixedSwapBridgeFixedProof(t *testing.T) {
+// 	proof := getFixedSwapBridgeProof()
 
-	// p, err := setupWithLocalCommittee()
-	p, _, err := setupFixedCommittee()
-	if err != nil {
-		t.Error(err)
-	}
+// 	// p, err := setupWithLocalCommittee()
+// 	p, _, err := setupFixedCommittee()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	tx, err := SwapBridge(p.inc, auth, proof)
-	if err != nil {
-		t.Error(err)
-	}
-	p.sim.Commit()
-	printReceipt(p.sim, tx)
-}
+// 	tx, err := SwapBridge(p.inc, auth, proof)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	p.sim.Commit()
+// 	printReceipt(p.sim, tx)
+// }
 
 // TestFixedSwapBeaconTwice submits a swap proof twice to make sure it isn't reusable
 func TestFixedSwapBeaconTwice(t *testing.T) {
@@ -820,23 +820,23 @@ func TestFixedSwapBeaconTwice(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-// TestFixedSwapBeaconFixedProof decodes a fixed proof and submit to make sure proof
-// format wasn't changed without updating bot
-func TestFixedSwapBeaconFixedProof(t *testing.T) {
-	proof := getFixedSwapBeaconProof()
+// // TestFixedSwapBeaconFixedProof decodes a fixed proof and submit to make sure proof
+// // format wasn't changed without updating bot
+// func TestFixedSwapBeaconFixedProof(t *testing.T) {
+// 	proof := getFixedSwapBeaconProof()
 
-	p, _, err := setupFixedCommittee()
-	if err != nil {
-		t.Error(err)
-	}
+// 	p, _, err := setupFixedCommittee()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	tx, err := SwapBeacon(p.inc, auth, proof)
-	if err != nil {
-		t.Error(err)
-	}
-	p.sim.Commit()
-	printReceipt(p.sim, tx)
-}
+// 	tx, err := SwapBeacon(p.inc, auth, proof)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	p.sim.Commit()
+// 	printReceipt(p.sim, tx)
+// }
 
 func TestFixedExtractMetaFromInstruction(t *testing.T) {
 	p, _, _ := setupFixedCommittee()

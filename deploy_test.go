@@ -71,65 +71,6 @@ func TestDecodeSwapBridgeInst(t *testing.T) {
 	fmt.Printf("numVals: %d\n", big.NewInt(0).SetBytes(proof.Instruction[34:66]))
 }
 
-func TestDecodeBurnInst(t *testing.T) {
-	// Get proof
-	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("inst: %x\n", proof.Instruction)
-	fmt.Printf("instType: %d\n", proof.Instruction[0])
-	fmt.Printf("shard: %d\n", proof.Instruction[1])
-	fmt.Printf("token: 0x%x\n", proof.Instruction[14:34])
-	fmt.Printf("receiver: 0x%x\n", proof.Instruction[46:66])
-	fmt.Printf("amount: %d\n", big.NewInt(0).SetBytes(proof.Instruction[66:98]))
-}
-
-func TestSwapBridge(t *testing.T) {
-	// Enter nonce here
-	nonce := uint64(0)
-
-	// Enter gasPrice here
-	gasPrice := big.NewInt(5000000000) // 5 GWei
-
-	// Enter block here
-	block := 455353
-
-	// Get proof
-	url := "https://mainnet.incognito.org/fullnode:433"
-	proof, err := getAndDecodeBridgeSwapProof(url, block)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Connect to ETH
-	privKey, client, err := connect()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer client.Close()
-
-	// Get contract instance
-	incAddr := common.HexToAddress(IncognitoProxyAddress)
-	c, err := incognito_proxy.NewIncognitoProxy(incAddr, client)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Swap
-	auth := bind.NewKeyedTransactor(privKey)
-	auth.GasPrice = gasPrice
-	if nonce > 0 {
-		auth.Nonce = big.NewInt(int64(nonce))
-	}
-	tx, err := SwapBridge(c, auth, proof)
-	if err != nil {
-		t.Fatal(err)
-	}
-	txHash := tx.Hash()
-	fmt.Printf("swapped, txHash: %x\n", txHash[:])
-}
-
 func TestSwapBeacon(t *testing.T) {
 	// Get proof
 	proof := getFixedSwapBeaconProof()
@@ -557,7 +498,7 @@ func connect() (*ecdsa.PrivateKey, *ethclient.Client, error) {
 	}
 	fmt.Printf("Sign Txs with address: %s\n", crypto.PubkeyToAddress(privKey.PublicKey).Hex())
 
-	network := "mainnet"
+	network := "kovan"
 	fmt.Printf("Connecting to network %s\n", network)
 	client, err := ethclient.Dial(fmt.Sprintf("https://%s.infura.io/v3/29fead42346b4bfa88dd5fd7e56b6406", network))
 	if err != nil {

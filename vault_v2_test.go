@@ -92,7 +92,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2SubmitBurnProof() {
 	v2.p.sim.Commit()
 
 	// wrong shard
-	meta = 97
+	meta = 243
 	shardID = 2
 	proof = buildWithdrawTestcase(v2.c, meta, shardID, tinfo.addr, withdraw)
 
@@ -159,7 +159,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	_, _, err := lockSimERC20WithTxs(v2.p, tinfo.c, tinfo.addr, deposit)
 	require.Equal(v2.T(), nil, err)
 
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, tinfo.addr, withdraw, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, tinfo.addr, withdraw, address)
 	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth, proof)
 	require.Equal(v2.T(), nil, err)
@@ -256,7 +256,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteETHtoERC20() {
 	v2.p.sim.Commit()
 	_, _, err = deposit(v2.p, big.NewInt(int64(5e18)))
 	require.Equal(v2.T(), nil, err)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, withdraw, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, withdraw, address)
 	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth, proof)
 	require.Equal(v2.T(), nil, err)
@@ -375,7 +375,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteERC20toETH() {
 	v2.p.sim.Commit()
 	_, _, err = lockSimERC20WithTxs(v2.p, tinfo.c, tinfo.addr, withdraw)
 	require.Equal(v2.T(), nil, err)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, tinfo.addr, withdraw, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, tinfo.addr, withdraw, address)
 	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth, proof)
 	require.Equal(v2.T(), nil, err)
@@ -492,7 +492,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	_, _, err := lockSimERC20WithTxs(v2.p, tinfo.c, tinfo.addr, deposit)
 	require.Equal(v2.T(), nil, err)
 
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, tinfo.addr, withdraw, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, tinfo.addr, withdraw, address)
 	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth, proof)
 	require.Equal(v2.T(), nil, err)
@@ -560,7 +560,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
 	v2.p.sim.Commit()
 	_, _, err = deposit(v2.p, big.NewInt(int64(5e18)))
 	require.Equal(v2.T(), nil, err)
-	proof := buildWithdrawTestcaseV2(v2.c, 97, 1, v2.EtherAddress, withdraw, address)
+	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, withdraw, address)
 	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth, proof)
 	require.Equal(v2.T(), nil, err)
@@ -647,19 +647,18 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 func buildWithdrawTestcaseV2(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	ipBridge := signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:])
 	return &decodedProof{
 		Instruction: inst,
 		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
 
-		InstPaths:       [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
-		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft, ipBridge.instPathIsLeft},
-		InstRoots:       [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
-		BlkData:         [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
-		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
-		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
-		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
-		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
+		InstPaths:       [2][][32]byte{ipBeacon.instPath},
+		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft},
+		InstRoots:       [2][32]byte{ipBeacon.instRoot},
+		BlkData:         [2][32]byte{ipBeacon.blkData},
+		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx},
+		SigVs:           [2][]uint8{ipBeacon.sigV},
+		SigRs:           [2][][32]byte{ipBeacon.sigR},
+		SigSs:           [2][][32]byte{ipBeacon.sigS},
 	}
 }
 

@@ -9,7 +9,7 @@ contract AdminPausable {
     constructor(address _admin) public {
         admin = _admin;
         paused = false;
-        expire = block.timestamp + 365 * 1 days;
+        expire = block.timestamp + 3 * 365 days;
     }
 
     event Paused(address pauser);

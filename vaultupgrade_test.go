@@ -102,7 +102,7 @@ func (tradingSuite *VaultUpgradeTestSuite) executeWithKyber(
 	srcTokenIDStr string,
 	destTokenIDStr string,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KBNTradeABI))
 
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
@@ -166,7 +166,7 @@ func (tradingSuite *VaultUpgradeTestSuite) moveAssetsToNewVault() {
 	fmt.Println("deployed new vault: ", tradingSuite.VaultAddr.Hex())
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKbntrade(auth, tradingSuite.ETHClient, tradingSuite.KyberContractAddr, vaultAddr)
+	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingSuite.ETHClient, tradingSuite.KyberContractAddr)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("deployed kbntrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())

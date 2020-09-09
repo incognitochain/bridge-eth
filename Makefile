@@ -12,7 +12,13 @@ burn: build
 erc20: build
 	go test -run=TestSimulatedErc20
 
-build: bridge/incognito_proxy/incognito_proxy.go bridge/vault/vault.go bridge/pause/pause.go erc20/fail/fail.go erc20/dless/dless.go
+build: bridge/incognito_proxy/incognito_proxy.go \
+	bridge/vault/vault.go \
+	bridge/pause/pause.go \
+	erc20/fail/fail.go \
+	erc20/dless/dless.go \
+	bridge/kbntrade/kbn_trade.go \
+	bridge/uniswap/uniswap_trade.go
 
 .PHONY: all beacon bridge burn erc20 build
 
@@ -24,6 +30,12 @@ bridge/incognito_proxy/incognito_proxy.go: bridge/contracts/incognito_proxy.sol
 
 bridge/vault/vault.go: bridge/contracts/vault.sol
 	./gengo.sh bridge/contracts/vault.sol bridge/vault
+
+bridge/kbntrade/kbn_trade.go: bridge/contracts/kbn_trade.sol
+	./gengo.sh bridge/contracts/kbn_trade.sol bridge/kbntrade
+
+bridge/uniswap/uniswap_trade.go: bridge/contracts/uniswap_trade.sol
+	./gengo.sh bridge/contracts/uniswap_trade.sol bridge/uniswap
 
 bridge/pause/pause.go: bridge/contracts/pause.sol
 	./gengo.sh bridge/contracts/pause.sol bridge/pause

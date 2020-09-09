@@ -4,12 +4,6 @@ import './IERC20.sol';
 
 contract TradeUtils {
 	IERC20 constant public ETH_CONTRACT_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
-	address payable public incognitoSmartContract;
-
-	modifier isIncognitoSmartContract {
-	    require(msg.sender == incognitoSmartContract);
-	    _;
-	}
 
 	function balanceOf(IERC20 token) internal view returns (uint256) {
 		if (token == ETH_CONTRACT_ADDRESS) {
@@ -21,9 +15,9 @@ contract TradeUtils {
 	function transfer(IERC20 token, uint amount) internal {
 		if (token == ETH_CONTRACT_ADDRESS) {
 			require(address(this).balance >= amount);
-			incognitoSmartContract.transfer(amount);
+			msg.sender.transfer(amount);
 		} else {
-			token.transfer(incognitoSmartContract, amount);
+			token.transfer(msg.sender, amount);
 			require(checkSuccess());
 		}
 	}

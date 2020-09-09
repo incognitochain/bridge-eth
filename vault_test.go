@@ -85,9 +85,9 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			if tc.err {
 				// Check error message != nil
 				receipt, _ := bind.WaitMined(context.Background(), p.sim, tx)
-				reason, err := errorReason(context.Background(), p.sim, tx, receipt.BlockNumber, tc.caller.Address)
+				reason, _ := errorReason(context.Background(), p.sim, tx, receipt.BlockNumber, tc.caller.Address)
 				assert.True(nil, len(reason) > 0)
-				fmt.Println(reason, err)
+				// fmt.Println(reason, err)
 			} else {
 				assert.Nil(t, err)
 
@@ -109,14 +109,14 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
 	assert.Nil(t, err)
 
-	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
 	// First withdraw, must success
 	_, err = Withdraw(p.v, auth, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bal := p.getBalance(withdrawer)
-	assert.Equal(t, bal, big.NewInt(1000000000000))
+	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Deploy new Vault
 	prevVault := p.vAddr
@@ -136,7 +136,7 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
-	assert.Equal(t, big.NewInt(2000), getBalanceERC20(p.token, withdrawer))
+	assert.Equal(t, big.NewInt(150), getBalanceERC20(p.token, withdrawer))
 }
 
 func TestFixedIsWithdrawedTrue(t *testing.T) {
@@ -148,14 +148,14 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
 	assert.Nil(t, err)
 
-	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
 	// First withdraw, must success
 	_, err = Withdraw(p.v, auth, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bal := p.getBalance(withdrawer)
-	assert.Equal(t, bal, big.NewInt(1000000000000))
+	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Deploy new Vault
 	prevVault := p.vAddr
@@ -170,7 +170,7 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	// Withdraw with old proof, must fail
 	_, err = Withdraw(p.v, auth, proof)
 	assert.NotNil(t, err)
-	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(1000000000000))
+	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(150000000000))
 }
 
 func TestFixedMoveERC20(t *testing.T) {
@@ -644,42 +644,6 @@ func TestFixedDepositCustomERC20s(t *testing.T) {
 	}
 }
 
-func TestFixedWithdrawAfterSwap(t *testing.T) {
-	p, _, err := setupFixedCommittee()
-	if err != nil {
-		t.Error(err)
-	}
-
-	burnProofs := getFixedBurnProofAfterSwap()
-	swapProofs := getFixedSwapProofsToBurn()
-
-	oldBalance, newBalance, err := deposit(p, big.NewInt(int64(5e18)))
-	if err != nil {
-		t.Error(err)
-	}
-	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
-
-	swapOnce(t, p, swapProofs[0])
-	bal := withdrawOnce(t, p, burnProofs[0])
-	if bal.Uint64() != uint64(1000000000000) {
-		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 1000000000000, bal)
-	}
-	swapOnce(t, p, swapProofs[1])
-	bal = withdrawOnce(t, p, burnProofs[1])
-	if bal.Uint64() != uint64(3000000000000) {
-		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 3000000000000, bal)
-	}
-}
-
-func swapOnce(t *testing.T, p *Platform, swapProof *decodedProof) {
-	tx, err := SwapBridge(p.inc, auth, swapProof)
-	if err != nil {
-		t.Fatal(err)
-	}
-	p.sim.Commit()
-	printReceipt(p.sim, tx)
-}
-
 func withdrawOnce(t *testing.T, p *Platform, burnProof *decodedProof) *big.Int {
 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
@@ -699,30 +663,35 @@ func TestFixedParseBurnInst(t *testing.T) {
 	token := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3}
 	to := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 6}
 	amount := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 8, 9}
+	itx := [32]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12}
 	in := &burnInst{
 		meta:   72,
 		shard:  1,
 		token:  ec.BytesToAddress(token),
 		to:     ec.BytesToAddress(to),
 		amount: big.NewInt(0).SetBytes(amount),
+		itx:    itx,
 	}
 	data := []byte{in.meta, in.shard}
 	data = append(data, token[:]...)
 	data = append(data, to[:]...)
 	data = append(data, amount[:]...)
+	data = append(data, itx[:]...)
 
 	p, _, err := setupFixedCommittee()
 	if err != nil {
 		t.Error(err)
 	}
-	resMeta, resShard, resToken, resTo, resAmount, err := p.v.ParseBurnInst(nil, data)
+	burnData, err := p.v.ParseBurnInst(nil, data)
 	out := &burnInst{
-		meta:   resMeta,
-		shard:  resShard,
-		token:  resToken,
-		to:     resTo,
-		amount: resAmount,
+		meta:   burnData.Meta,
+		shard:  burnData.Shard,
+		token:  burnData.Token,
+		to:     burnData.To,
+		amount: burnData.Amount,
+		itx:    burnData.Itx,
 	}
+
 	if err != nil {
 		t.Error(err)
 	}
@@ -731,19 +700,22 @@ func TestFixedParseBurnInst(t *testing.T) {
 
 func checkBurnInst(t *testing.T, in, out *burnInst) {
 	if in.meta != out.meta {
-		t.Error(errors.Errorf("incorrect meta: expect %x, got %x", out.meta, in.meta))
+		t.Error(errors.Errorf("incorrect meta: expect %x, got %x", in.meta, out.meta))
 	}
 	if in.shard != out.shard {
-		t.Error(errors.Errorf("incorrect shard: expect %x, got %x", out.shard, in.shard))
+		t.Error(errors.Errorf("incorrect shard: expect %x, got %x", in.shard, out.shard))
 	}
 	if !bytes.Equal(in.token[:], out.token[:]) {
-		t.Error(errors.Errorf("incorrect token: expect %x, got %x", out.token, in.token))
+		t.Error(errors.Errorf("incorrect token: expect %x, got %x", in.token, out.token))
 	}
 	if !bytes.Equal(in.to[:], out.to[:]) {
-		t.Error(errors.Errorf("incorrect to: expect %x, got %x", out.to, in.to))
+		t.Error(errors.Errorf("incorrect to: expect %x, got %x", in.to, out.to))
 	}
 	if in.amount.Cmp(out.amount) != 0 {
-		t.Error(errors.Errorf("incorrect amount: expect %x, got %x", out.amount, in.amount))
+		t.Error(errors.Errorf("incorrect amount: expect %x, got %x", in.amount, out.amount))
+	}
+	if !bytes.Equal(in.itx[:], out.itx[:]) {
+		t.Error(errors.Errorf("incorrect itx: expect %x, got %x", in.itx, out.itx))
 	}
 }
 
@@ -753,6 +725,7 @@ type burnInst struct {
 	token  ec.Address
 	to     ec.Address
 	amount *big.Int
+	itx    [32]byte
 }
 
 func TestFixedWithdrawTwice(t *testing.T) {
@@ -764,14 +737,14 @@ func TestFixedWithdrawTwice(t *testing.T) {
 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
 	assert.Nil(t, err)
 
-	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
 	// First withdraw, must success
 	_, err = Withdraw(p.v, auth, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bal := p.getBalance(withdrawer)
-	assert.Equal(t, bal, big.NewInt(1000000000000))
+	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Second withdraw, must fail
 	_, err = Withdraw(p.v, auth, proof)
@@ -792,7 +765,7 @@ func TestFixedWithdrawETH(t *testing.T) {
 	}
 	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
 
-	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
 	tx, err := Withdraw(p.v, auth, proof)
@@ -804,8 +777,8 @@ func TestFixedWithdrawETH(t *testing.T) {
 
 	bal := p.getBalance(withdrawer)
 	fmt.Printf("withdrawer new balance: %d\n", bal)
-	if bal.Int64() != int64(1000000000000) {
-		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 1000000000, bal)
+	if bal.Int64() != int64(150000000000) {
+		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 150000000000, bal)
 	}
 }
 
@@ -900,7 +873,7 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 			_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.deposit)
 			assert.Nil(t, err)
 
-			meta := 72
+			meta := 241
 			shardID := 1
 			proof := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
 
@@ -931,10 +904,9 @@ func TestFixedWithdrawERC20(t *testing.T) {
 	}
 	fmt.Printf("deposit erc20 to vault: %d -> %d\n", oldBalance, newBalance)
 
-	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
 
-	auth.GasLimit = 8000000
 	tx, err := Withdraw(p.v, auth, proof)
 	if err != nil {
 		fmt.Println("err:", err)
@@ -944,7 +916,7 @@ func TestFixedWithdrawERC20(t *testing.T) {
 
 	bal := getBalanceERC20(p.token, withdrawer)
 	fmt.Printf("withdrawer new balance: %d\n", bal)
-	if bal.Int64() != int64(2000) {
+	if bal.Int64() != int64(150) {
 		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 2000, bal)
 	}
 }
@@ -987,7 +959,7 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 			_, _, err = lockSimERC20WithTxs(p, tinfo.c, tinfo.addr, tc.deposit)
 			assert.Nil(t, err)
 
-			meta := 72
+			meta := 241
 			shardID := 1
 			proof := buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, tc.withdraw)
 
@@ -1051,19 +1023,18 @@ func setupFixedERC20s(decimals []int) (*Platform, *committees, error) {
 func buildWithdrawTestcase(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int) *decodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawData(meta, shard, tokenID, amount)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	ipBridge := signAndReturnInstProof(c.bridgePrivs, false, mp, blkData, blkHash[:])
 	return &decodedProof{
 		Instruction: inst,
 		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
 
-		InstPaths:       [2][][32]byte{ipBeacon.instPath, ipBridge.instPath},
-		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft, ipBridge.instPathIsLeft},
-		InstRoots:       [2][32]byte{ipBeacon.instRoot, ipBridge.instRoot},
-		BlkData:         [2][32]byte{ipBeacon.blkData, ipBridge.blkData},
-		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx, ipBridge.sigIdx},
-		SigVs:           [2][]uint8{ipBeacon.sigV, ipBridge.sigV},
-		SigRs:           [2][][32]byte{ipBeacon.sigR, ipBridge.sigR},
-		SigSs:           [2][][32]byte{ipBeacon.sigS, ipBridge.sigS},
+		InstPaths:       [2][][32]byte{ipBeacon.instPath},
+		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft},
+		InstRoots:       [2][32]byte{ipBeacon.instRoot},
+		BlkData:         [2][32]byte{ipBeacon.blkData},
+		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx},
+		SigVs:           [2][]uint8{ipBeacon.sigV},
+		SigRs:           [2][][32]byte{ipBeacon.sigR},
+		SigSs:           [2][][32]byte{ipBeacon.sigS},
 	}
 }
 
@@ -1105,7 +1076,7 @@ type committees struct {
 }
 
 func getFixedBurnProofETH() *decodedProof {
-	proofMarshalled := `{"Instruction":"SAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOci2LcdzAFS1H0kOFVqRdM1fWMfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6NSlEAAQph4uU2jzYJA/wwowaQNkV1YDSZxF3b7zhinToad2CgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","Heights":[13,15],"InstPaths":[[[85,90,80,85,102,77,35,181,79,15,218,226,21,248,182,95,46,161,151,187,156,132,212,157,64,83,229,28,33,225,60,39],[90,120,63,154,71,105,58,60,79,100,14,227,126,162,217,227,120,234,73,47,138,250,88,120,245,244,79,86,210,74,95,107]],[]],"InstPathIsLefts":[[false,false],[]],"InstRoots":[[232,220,37,58,255,80,189,228,5,6,217,133,81,89,207,211,88,46,172,168,207,11,240,31,39,121,213,208,161,87,191,205],[189,164,48,17,53,82,33,194,160,26,125,127,160,224,216,173,239,49,214,141,169,214,192,76,85,66,30,230,107,198,183,59]],"BlkData":[[85,105,22,139,166,247,192,177,35,127,254,184,33,212,88,184,142,32,141,79,0,92,62,215,250,238,97,155,250,103,212,226],[43,69,182,160,171,28,79,48,143,171,86,32,244,96,9,226,26,232,37,254,92,251,3,56,247,81,147,139,97,238,181,249]],"SigIdxs":[[0,2,3],[0,1,2,3]],"SigVs":["HBsb","GxwcHA=="],"SigRs":[[[64,129,127,189,84,17,9,178,133,57,35,78,163,181,179,201,225,45,218,234,194,20,180,7,17,207,92,110,26,73,205,24],[195,54,155,40,185,122,123,141,83,10,38,226,70,217,107,128,172,33,9,9,218,212,254,215,89,20,84,138,200,144,225,255],[46,36,148,21,139,126,174,64,59,164,229,133,213,79,228,67,35,172,234,237,175,125,35,138,2,114,186,151,184,76,242,134]],[[78,44,39,129,74,56,101,155,93,226,145,64,149,247,158,112,186,70,242,82,115,255,142,140,101,38,183,206,197,186,152,138],[119,42,151,249,112,98,99,187,116,121,228,46,126,106,38,166,45,217,156,48,83,103,34,168,246,123,178,82,208,197,9,8],[190,186,249,188,241,169,26,152,54,224,240,95,81,179,223,224,224,81,209,193,57,97,3,165,197,40,229,2,208,20,113,131],[80,12,25,116,195,24,37,40,247,144,182,31,57,127,236,239,190,90,236,59,218,97,205,16,88,102,235,156,220,144,198,234]]],"SigSs":[[[118,52,192,85,239,241,154,66,156,98,190,204,10,253,210,148,162,165,195,201,212,206,135,182,178,209,193,172,240,180,99,110],[61,45,9,108,235,184,112,73,21,154,9,116,162,95,175,207,11,22,215,160,46,209,83,59,118,230,83,209,241,17,168,127],[59,15,150,127,223,9,234,160,9,170,195,109,79,118,137,45,250,156,249,145,226,175,235,60,65,86,182,85,224,162,235,145]],[[101,235,22,155,225,149,55,249,33,205,164,198,58,228,75,33,48,196,171,76,14,181,90,194,239,204,40,159,26,179,46,3],[121,162,14,137,255,11,150,184,16,237,220,66,226,26,240,69,154,30,136,46,68,254,217,190,122,100,41,254,221,122,158,66],[84,26,159,168,124,109,132,10,52,124,177,99,8,53,85,52,194,213,247,52,147,255,17,146,245,114,252,139,176,126,82,203],[39,215,56,10,60,107,131,198,45,193,242,191,111,195,106,238,112,77,177,198,3,88,157,118,76,170,148,65,187,106,118,172]]]}`
+	proofMarshalled := `{"Instruction":"8QEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGUDPzFfIUg0vWpl3OaHvLDzKwpaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIuyyXACZEIv7colpcTaq6cW40ANKKvzqSAoOmFU0+CLsXmjh0gAAAAAAAAAAAAAAAEfiaoY5HjglF+JXeXDguUkjAYkH","Heights":[33,0],"InstPaths":[[[81,128,122,156,93,95,148,221,131,254,176,133,70,173,96,57,147,107,47,38,241,101,54,34,51,100,40,200,252,1,115,236],[18,60,102,250,2,112,216,34,125,20,15,217,97,146,109,93,89,233,63,149,197,71,20,219,187,65,55,128,84,209,228,212]],[]],"InstPathIsLefts":[[false,false],[]],"InstRoots":[[255,223,40,111,59,194,238,62,168,29,252,182,100,59,29,43,28,214,225,75,126,246,43,30,220,164,82,133,231,18,163,74],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"BlkData":[[59,169,78,78,247,91,205,135,200,55,83,26,216,147,188,213,176,186,12,136,47,225,2,107,103,218,238,41,10,105,196,96],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"SigIdxs":[[0,1,2],[]],"SigVs":["Gxsb",""],"SigRs":[[[6,100,31,240,234,244,103,181,94,1,59,174,104,200,69,40,195,178,86,210,241,197,64,71,94,188,254,68,199,235,143,30],[169,97,169,84,9,155,83,245,168,215,20,191,128,40,160,17,149,204,247,48,164,184,194,177,144,69,226,104,199,120,88,53],[201,150,71,2,51,250,103,72,249,64,87,28,106,111,133,4,254,70,87,181,34,17,229,187,60,241,122,148,92,234,29,213]],[]],"SigSs":[[[13,155,215,88,194,60,9,190,130,72,62,127,108,179,187,233,81,19,181,136,5,47,198,71,106,151,255,246,134,168,55,0],[33,60,211,216,217,80,194,178,139,15,72,93,135,242,246,54,147,101,95,237,167,145,86,242,44,169,102,110,213,160,99,31],[86,186,183,14,47,64,155,15,125,228,23,3,97,154,147,5,105,178,164,114,76,205,190,237,145,28,148,153,231,59,135,167]],[]]}`
 	proof := &decodedProof{}
 	json.Unmarshal([]byte(proofMarshalled), proof)
 
@@ -1113,7 +1084,7 @@ func getFixedBurnProofETH() *decodedProof {
 }
 
 func getFixedBurnProofERC20() *decodedProof {
-	proofMarshalled := `{"Instruction":"SAEAAAAAAAAAAAAAAAA+xcl8giIrHqZzLSXw/CizXak4DgAAAAAAAAAAAAAAAOci2LcdzAFS1H0kOFVqRdM1fWMfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB9ATWg+enEgVZfeVa3dN1q9UUIeUGdRvAV/yeF06Qe6iXQAAAAAAAAAAAAAAAEfiaoY5HjglF+JXeXDguanESiMB","Heights":[125,127],"InstPaths":[[[17,221,161,166,191,238,13,140,202,175,128,24,145,162,251,223,153,109,242,78,201,65,81,171,124,219,161,20,197,170,219,0],[84,130,181,135,17,33,19,11,216,117,72,234,53,166,213,97,82,240,41,81,39,156,166,254,197,254,129,111,208,88,140,22],[198,35,36,192,5,218,31,215,52,199,187,191,144,207,19,4,228,179,194,5,13,198,213,34,151,75,136,6,173,172,50,134]],[]],"InstPathIsLefts":[[false,false,false],[]],"InstRoots":[[81,96,141,86,165,75,80,243,103,191,248,250,215,87,76,175,0,82,106,87,133,37,47,247,120,243,226,119,211,128,157,135],[9,70,219,61,171,231,41,225,224,130,248,32,95,180,80,179,67,237,159,252,91,57,113,91,222,166,1,243,99,121,54,122]],"BlkData":[[82,27,63,139,96,16,9,27,44,28,16,224,177,26,73,253,215,199,165,214,1,216,35,197,246,35,46,105,196,216,64,173],[172,39,66,38,128,89,242,151,1,14,54,207,142,15,59,110,126,126,195,234,164,117,41,82,150,155,183,4,231,148,53,42]],"SigIdxs":[[0,1,2,3],[0,1,2,3]],"SigVs":["GxwbHA==","GxwbHA=="],"SigRs":[[[6,196,6,82,61,137,152,169,215,249,81,205,46,199,144,13,111,180,67,100,66,170,215,133,234,146,207,26,48,163,121,86],[87,58,198,80,229,65,170,168,50,112,63,182,254,185,229,98,126,66,61,87,101,207,253,224,14,42,160,154,185,6,221,139],[175,225,221,74,177,235,142,81,72,131,11,51,82,58,102,93,253,25,184,45,91,44,225,138,198,114,229,149,210,31,248,98],[83,79,139,76,91,47,237,200,132,49,208,84,126,196,194,90,142,170,239,92,195,194,107,251,141,140,238,198,34,39,111,231]],[[8,49,248,38,235,197,250,7,179,42,42,4,65,128,206,235,148,32,5,145,41,30,229,184,232,38,158,50,133,22,105,104],[3,201,1,66,25,137,91,9,137,46,255,5,212,155,24,232,41,215,229,171,255,132,192,51,52,78,182,144,165,193,62,228],[46,245,113,58,17,213,226,210,86,42,144,229,190,49,65,7,184,173,14,89,6,81,11,235,145,209,31,127,60,156,74,163],[153,65,194,100,24,19,188,17,150,74,179,196,155,50,166,145,30,152,85,17,73,64,144,168,86,185,154,191,254,190,81,79]]],"SigSs":[[[26,192,98,189,190,254,107,245,67,17,148,121,223,22,16,130,126,17,223,243,167,153,85,119,111,176,228,2,182,0,165,166],[110,244,64,23,134,72,133,224,168,45,123,139,249,121,158,187,230,215,194,214,3,31,53,5,237,163,58,155,114,92,203,78],[33,148,100,187,251,227,27,42,194,39,163,207,210,141,89,33,183,188,206,199,129,147,174,64,18,31,29,87,125,248,109,132],[127,66,101,105,146,1,150,63,202,148,228,90,191,0,43,114,23,166,171,113,9,70,95,140,229,84,40,64,47,253,253,201]],[[39,250,172,17,160,109,49,223,126,154,191,233,3,145,215,96,252,82,76,178,212,176,10,193,189,215,191,181,79,39,167,236],[69,121,234,127,246,5,236,92,233,240,149,49,224,212,85,94,50,13,183,7,214,156,216,9,28,159,85,18,207,236,165,22],[96,179,216,187,70,50,194,18,46,253,255,169,118,225,36,52,56,29,19,178,119,149,106,54,187,101,38,134,190,70,229,103],[4,147,185,79,168,172,162,20,197,235,205,10,11,59,52,83,18,206,41,102,231,208,89,64,55,41,78,252,76,12,136,123]]]}`
+	proofMarshalled := `{"Instruction":"8QEAAAAAAAAAAAAAAAA+xcl8giIrHqZzLSXw/CizXak4DgAAAAAAAAAAAAAAAGUDPzFfIUg0vWpl3OaHvLDzKwpaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJbSdLfDa1Cr3VYLl4ts2s1zUFFz4fV2YVfJFMbSsr0znQAAAAAAAAAAAAAAAEfiaoY5HjglF+JXeXDguUkjAYkH","Heights":[15,0],"InstPaths":[[[136,186,65,147,239,181,190,142,214,159,2,117,171,15,9,105,71,141,155,62,239,116,88,196,157,24,167,32,245,36,221,1],[106,227,68,210,43,29,33,208,190,164,164,161,159,4,204,119,142,127,140,222,188,178,45,244,146,181,195,175,250,117,217,114]],[]],"InstPathIsLefts":[[false,false],[]],"InstRoots":[[127,160,71,129,109,184,166,121,19,25,59,89,83,153,193,58,240,83,249,0,249,143,19,228,48,229,13,168,192,9,192,230],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"BlkData":[[102,85,181,151,207,137,206,234,233,222,117,14,43,67,215,255,239,29,188,124,177,86,153,40,217,181,145,240,133,193,99,33],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"SigIdxs":[[0,1,2],[]],"SigVs":["Gxwb",""],"SigRs":[[[253,172,12,148,201,181,195,119,163,155,75,54,115,175,243,89,43,178,145,252,249,247,209,171,61,56,81,169,193,104,89,211],[180,160,173,123,99,137,33,255,23,121,245,168,42,247,117,81,248,153,176,135,124,94,210,238,143,164,37,74,199,111,58,18],[72,45,230,92,164,167,160,57,255,199,62,154,130,226,201,37,253,148,42,235,219,216,129,217,80,117,225,105,255,53,113,124]],[]],"SigSs":[[[76,41,207,94,96,165,93,152,149,218,171,27,6,30,193,242,134,194,196,17,159,70,97,125,140,109,105,46,180,107,164,39],[79,56,186,10,166,129,81,109,140,170,236,217,193,205,219,197,167,179,26,107,204,144,7,247,56,213,40,220,30,60,61,37],[50,222,220,40,70,209,16,139,240,192,158,136,37,52,156,68,183,124,74,164,180,101,105,147,46,62,57,201,214,64,59,43]],[]]}`
 	proof := &decodedProof{}
 	json.Unmarshal([]byte(proofMarshalled), proof)
 
