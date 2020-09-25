@@ -143,7 +143,7 @@ func TestSignMessAndBroadcast(t *testing.T) {
 	}
 
 	// Change mess need to sign here
-	data := []byte("someoneoutthere")
+	data := []byte("@sooutthere")
 
 	// Enter gasLimit and gasPrice here
 	gasLimit := uint64(35000)
