@@ -260,7 +260,7 @@ contract Vault is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) internal {
+    ) view internal {
         // Each instruction can only by redeemed once
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights));
 
@@ -532,67 +532,6 @@ contract Vault is AdminPausable {
     }
 
     /**
-     * @dev execute multi trade.
-     * The tokens array must contain unique token address for trading
-     */
-    function executeMulti(
-        address[] memory tokens,
-        uint[] memory amounts,
-        address[] memory recipientTokens,
-        address exchangeAddress,
-        bytes memory callData,
-        bytes memory timestamp,
-        bytes memory signData
-    ) public payable isNotPaused nonReentrant {
-        require(tokens.length == amounts.length && recipientTokens.length > 0, errorToString(Errors.INVALID_DATA));
-        //verify ower signs data from input
-        address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amounts), signData);
-        // define number of eth spent for forwarder.
-        uint ethAmount = msg.value;
-        for(uint i = 0; i < tokens.length; i++){
-            // migrate from preVault
-            migrateBalance(verifier, tokens[i]);
-            // check balance is enough or not
-            require(withdrawRequests[verifier][tokens[i]] >= amounts[i], errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
-
-            // update balances of verifier
-            totalDepositedToSCAmount[tokens[i]] = totalDepositedToSCAmount[tokens[i]].safeSub(amounts[i]);
-            withdrawRequests[verifier][tokens[i]] = withdrawRequests[verifier][tokens[i]].safeSub(amounts[i]);
-
-            if (tokens[i] == ETH_TOKEN) {
-                ethAmount = ethAmount.safeAdd(amounts[i]);
-            } else {
-            // transfer token to exchangeAddress.
-                require(IERC20(tokens[i]).balanceOf(address(this)) >= amounts[i], errorToString(Errors.TOKEN_NOT_ENOUGH));
-                IERC20(tokens[i]).transfer(exchangeAddress, amounts[i]);
-                require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-            }
-        }
-
-        // get balance of recipient token before trade to compare after trade.
-        uint[] memory balancesBeforeTrade = new uint[](recipientTokens.length);
-        for(uint i = 0; i < recipientTokens.length; i++) {
-            balancesBeforeTrade[i] = balanceOf(recipientTokens[i]);
-            if (recipientTokens[i] == ETH_TOKEN) {
-                balancesBeforeTrade[i] = balancesBeforeTrade[i].safeSub(msg.value);
-            }
-        }
-
-        //return array Addresses and Amounts
-        (address[] memory returnedTokenAddresses,uint[] memory returnedAmounts) = callExtFuncMulti(ethAmount, callData, exchangeAddress);
-
-        require(returnedTokenAddresses.length == recipientTokens.length && returnedAmounts.length == returnedTokenAddresses.length, errorToString(Errors.INVALID_RETURN_DATA));
-
-        //update withdrawRequests
-        for(uint i = 0; i < returnedAmounts.length; i++) {
-            require(returnedTokenAddresses[i] == recipientTokens[i]
-                    && balanceOf(recipientTokens[i]).safeSub(balancesBeforeTrade[i]) == returnedAmounts[i], errorToString(Errors.INVALID_RETURN_DATA));
-            withdrawRequests[verifier][recipientTokens[i]] = withdrawRequests[verifier][recipientTokens[i]].safeAdd(returnedAmounts[i]);
-            totalDepositedToSCAmount[recipientTokens[i]] = totalDepositedToSCAmount[recipientTokens[i]].safeAdd(returnedAmounts[i]);
-        }
-    }
-
-    /**
      * @dev single trade
      */
     function callExtFunc(address recipientToken, uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (uint) {
@@ -609,17 +548,6 @@ contract Vault is AdminPausable {
         require(returnedTokenAddress == recipientToken && balanceOf(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
 
         return returnedAmount;
-    }
-
-    /**
-     * @dev multi trade
-     */
-    function callExtFuncMulti(uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (address[] memory, uint[] memory) {
-        require(address(this).balance >= ethAmount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
-        require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-
-        return abi.decode(result, (address[], uint[]));
     }
 
     /**
