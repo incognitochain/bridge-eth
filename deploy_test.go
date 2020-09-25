@@ -126,6 +126,36 @@ func TestResendETH(t *testing.T) {
 	fmt.Printf("sent, txHash: %s\n", txHash)
 }
 
+func TestSignMessAndBroadcast(t *testing.T) {
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	// Enter receiver address here
+	addr := crypto.PubkeyToAddress(privKey.PublicKey)
+
+	// Enter nonce here
+	nonce, err := client.PendingNonceAt(context.Background(), crypto.PubkeyToAddress(privKey.PublicKey))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Change mess need to sign here
+	data := []byte("someoneoutthere")
+
+	// Enter gasLimit and gasPrice here
+	gasLimit := uint64(35000)
+	gasPrice := big.NewInt(100000000000) // 100 GWei
+
+	txHash, err := transferWithdata(client, privKey, addr.Hex(), nonce, big.NewInt(0), gasLimit, gasPrice, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("sent, txHash: %s\n", txHash)
+}
+
 func TestReburn(t *testing.T) {
 	// Get proof
 	proof, err := getAndDecodeBurnProof("59333c998a206e99621faf150f46588bbdfeb6279538266de893cc309e7cf4c5")
@@ -226,6 +256,36 @@ func transfer(
 	}
 	return signedTx.Hash().String(), nil
 }
+
+func transferWithdata(
+	client *ethclient.Client,
+	privKey *ecdsa.PrivateKey,
+	to string,
+	nonce uint64,
+	value *big.Int,
+	gasLimit uint64,
+	gasPrice *big.Int,
+	data []byte,
+) (string, error) {
+	toAddress := common.HexToAddress(to)
+	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, data)
+
+	chainID, err := client.NetworkID(context.Background())
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privKey)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return signedTx.Hash().String(), nil
+}
+
 
 func TestInstructionUsed(t *testing.T) {
 	proof, err := getAndDecodeBurnProof("40db51b1811fcf4d6b2220e83ec8b4743f0d56558da933791218f8a9dfe22e6f")
