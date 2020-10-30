@@ -1,16 +1,10 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 contract AdminPausable {
     address public admin;
     address public successor;
     bool public paused;
     uint public expire;
-
-    constructor(address _admin) public {
-        admin = _admin;
-        paused = false;
-        expire = block.timestamp + 3 * 365 days;
-    }
 
     event Paused(address pauser);
     event Unpaused(address pauser);

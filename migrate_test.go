@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/pkg/errors"
 )
 
@@ -82,12 +83,16 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	// Deploy vault
 	auth := bind.NewKeyedTransactor(privKey)
 	auth.GasPrice = big.NewInt(int64(25000000000))
-	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVaultAddr)
+	vaultDelegatorAddr, _, _, err := vault.DeployVault(auth, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, admin, vaultDelegatorAddr, incAddr, prevVaultAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println("deployed vault")
-	fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	fmt.Printf("addr: %s\n", vaultProxy.Hex())
 }
 
 func TestDeployKBNTrade(t *testing.T) {

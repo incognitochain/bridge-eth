@@ -10,6 +10,7 @@ import (
 
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -109,9 +110,6 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	vaultAddr, tx, _, err := vault.DeployVault(
 		auth,
 		ethClient,
-		tradingDeploySuite.Admin,
-		tradingDeploySuite.IncProxyAddr,
-		tradingDeploySuite.PrevVault,
 	)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
@@ -119,6 +117,13 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	err = wait(ethClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed vault")
+	fmt.Printf("addr: %s\n", vaultAddr.Hex())
+
+	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, ethClient, tradingDeploySuite.Admin, tradingDeploySuite.IncProxyAddr, vaultAddr, tradingDeploySuite.PrevVault)
+	// Wait until tx is confirmed
+	err = wait(ethClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed vault proxy")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
 	// Deploy kbntrade

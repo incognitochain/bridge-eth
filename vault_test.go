@@ -102,8 +102,9 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 
 func TestFixedIsWithdrawedFalse(t *testing.T) {
 	proof := getFixedBurnProofETH()
-
-	p, _, err := setupFixedCommittee()
+	fmt.Print(proof)
+	// fmt.Printf("%+v", proof.Instruction)
+	p, c, err := setupFixedCommittee()
 	assert.Nil(t, err)
 
 	_, _, err = deposit(p, big.NewInt(int64(5e18)))
@@ -119,13 +120,28 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Deploy new Vault
-	prevVault := p.vAddr
-	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
+	vDelegatorAddr, _, _, err :=  vault.DeployVault(auth, p.sim)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
+	_, err = p.v.Pause(auth)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	
+	// set new delegator
+	_, err = p.v.UpdateDelegator(auth, vDelegatorAddr)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	_, err = p.v.Unpause(auth)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	withdrawer = ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+
 	// Deposit to new vault
-	proof = getFixedBurnProofERC20()
+	proof = buildWithdrawTestcase(c, 241, 1, p.tokenAddr, big.NewInt(int64(150)))
+	fmt.Printf("%+v", proof.Instruction)
 
 	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
 	assert.Nil(t, err)
@@ -157,9 +173,21 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	bal := p.getBalance(withdrawer)
 	assert.Equal(t, bal, big.NewInt(150000000000))
 
-	// Deploy new Vault
-	prevVault := p.vAddr
-	p.vAddr, _, p.v, err = vault.DeployVault(auth, p.sim, auth.From, p.incAddr, prevVault)
+	// Deploy new delegator
+	vDelegatorAddr, _, _, err :=  vault.DeployVault(auth, p.sim)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	_, err = p.v.Pause(auth)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	
+	// set new delegator
+	_, err = p.v.UpdateDelegator(auth, vDelegatorAddr)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	_, err = p.v.Unpause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -172,6 +200,38 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(150000000000))
 }
+
+func TestFixedWithdrawERC20(t *testing.T) {
+	p, c, err := setupFixedCommittee()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Print("========")
+	fmt.Print(p.tokenAddr.String())
+	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("deposit erc20 to vault: %d -> %d\n", oldBalance, newBalance)
+
+	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
+	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
+
+	proof := buildWithdrawTestcase(c, 241, 1, p.tokenAddr, big.NewInt(int64(1000000000)))
+	tx, err := Withdraw(p.v, auth, proof)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.sim.Commit()
+	printReceipt(p.sim, tx)
+
+	bal := getBalanceERC20(p.token, withdrawer)
+	fmt.Printf("withdrawer new balance: %d\n", bal)
+	if bal.Int64() != int64(1000000000) {
+		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 1000000000, bal)
+	}
+}
+
 
 func TestFixedMoveERC20(t *testing.T) {
 	p, _, _ := setupFixedCommittee() // New SimulatedBackend each time => ERC20 address is fixed
@@ -888,37 +948,6 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 		})
 	}
 
-}
-
-func TestFixedWithdrawERC20(t *testing.T) {
-	proof := getFixedBurnProofERC20()
-
-	p, _, err := setupFixedCommittee()
-	if err != nil {
-		t.Error(err)
-	}
-
-	oldBalance, newBalance, err := lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("deposit erc20 to vault: %d -> %d\n", oldBalance, newBalance)
-
-	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
-	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
-
-	tx, err := Withdraw(p.v, auth, proof)
-	if err != nil {
-		fmt.Println("err:", err)
-	}
-	p.sim.Commit()
-	printReceipt(p.sim, tx)
-
-	bal := getBalanceERC20(p.token, withdrawer)
-	fmt.Printf("withdrawer new balance: %d\n", bal)
-	if bal.Int64() != int64(150) {
-		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 2000, bal)
-	}
 }
 
 func TestFixedWithdrawCustomERC20s(t *testing.T) {

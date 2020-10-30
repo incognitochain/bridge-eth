@@ -19,6 +19,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -88,9 +89,15 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
-	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
+	
+	vaultDelegator, _, _, err := vault.DeployVault(v2.auth, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
-	fmt.Printf("Vault address: %s\n", v2.VaultAddress.Hex())
+	fmt.Printf("Vault delegator address: %s\n", vaultDelegator.Hex())
+	v2.VaultAddress, _, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, v2.auth.From, vaultDelegator, v2.IncAddr, common.Address{})
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Vault proxy address: %s\n", v2.VaultAddress.Hex())
+	v2.v, err = vault.NewVault(v2.VaultAddress, v2.ETHClient)
+	require.Equal(v2.T(), nil, err)
 	v2.KyberProxy, _, _, err = kbntrade.DeployKBNTrade(v2.auth, v2.ETHClient, v2.KyberContractAddr)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Kyber proxy address: %s\n", v2.KyberProxy.Hex())

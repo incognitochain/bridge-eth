@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/erc20"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -44,9 +45,14 @@ func (s *VaultTestSuite) SetupTest() {
 
 	// deploy vault contract
 	incognitoProxyAddress := common.Address{}
-	vaultAddr, deployedTx, _, e := vault.DeployVault(s.auth, s.sim, incognitoProxyAddress)
-	fmt.Println("vault contract deployment gas: ", deployedTx.Gas())
-	s.vaultAddress = vaultAddr
+	preVaultAddress := common.Address{}
+	admin := common.Address{}
+	vaultAddr, deployedTx, _, e := vault.DeployVault(s.auth, s.sim)
+	fmt.Println("vault delegator contract deployment gas: ", deployedTx.Gas())
+	vaultProxyAddr, deployedTx, _, e := vaultproxy.DeployVaultproxy(s.auth, s.sim, admin, vaultAddr, incognitoProxyAddress, preVaultAddress)
+	fmt.Println("vault proxy contract deployment gas: ", deployedTx.Gas())
+	
+	s.vaultAddress = vaultProxyAddr
 	s.Nil(e)
 	s.sim.Commit()
 

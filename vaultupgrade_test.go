@@ -9,6 +9,7 @@ import (
 
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -160,11 +161,19 @@ func (tradingSuite *VaultUpgradeTestSuite) moveAssetsToNewVault() {
 	auth.GasLimit = 5000000
 	admin := common.HexToAddress(Admin)
 	prevVault := tradingSuite.VaultAddr
-	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingSuite.ETHClient, admin, tradingSuite.IncProxyAddress, prevVault)
-	tradingSuite.VaultAddr = vaultAddr
+	vaultDelegatorAddr, tx, _, err := vault.DeployVault(auth, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	fmt.Println("deployed new vault: ", tradingSuite.VaultAddr.Hex())
-	fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Println("deployed new vault delegator: ", vaultDelegatorAddr.Hex())
+	vaultAddr, _, _, err := vaultproxy.DeployVaultproxy(auth, tradingSuite.ETHClient, admin, vaultDelegatorAddr, tradingSuite.IncProxyAddress, prevVault)
+	require.Equal(tradingSuite.T(), nil, err)
+	if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Println("deployed new vault proxy: ", vaultDelegatorAddr.Hex())
+	tradingSuite.VaultAddr = vaultAddr
 
 	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingSuite.ETHClient, tradingSuite.KyberContractAddr)
 	require.Equal(tradingSuite.T(), nil, err)

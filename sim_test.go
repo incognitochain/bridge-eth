@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/erc20"
 	"github.com/incognitochain/bridge-eth/erc20/bnb"
 	"github.com/incognitochain/bridge-eth/erc20/dai"
@@ -275,12 +276,24 @@ func setupVault(
 	backend *backends.SimulatedBackend,
 	admin, incAddr, prevVault common.Address,
 ) (common.Address, *types.Transaction, *vault.Vault, error) {
-	addr, tx, v, err := vault.DeployVault(auth, backend, admin, incAddr, prevVault)
+	addr, _, _, err := vault.DeployVault(auth, backend)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault contract: %v", err)
 	}
 	backend.Commit()
-	return addr, tx, v, nil
+
+	proxyAddr, tx, _, err := vaultproxy.DeployVaultproxy(auth, backend, admin, addr, incAddr, prevVault)
+	if err != nil {
+		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault Proxy contract: %v", err)
+	}
+	backend.Commit()
+
+	v, err := vault.NewVault(proxyAddr, backend)
+	if err != nil {
+		return common.Address{}, nil, nil, fmt.Errorf("failed create Vault instance: %v", err)
+	}
+
+	return proxyAddr, tx, v, nil
 }
 
 func setupCustomTokens(p *Platform) error {
