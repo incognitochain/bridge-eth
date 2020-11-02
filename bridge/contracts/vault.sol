@@ -119,6 +119,7 @@ contract Vault is AdminPausable {
     event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
+    event UpdateDelegator(address newDelegator);
 
     /**
      * modifier for contract version
@@ -631,6 +632,20 @@ contract Vault is AdminPausable {
         require(newIncognitoProxy != address(0), errorToString(Errors.NULL_VALUE));
         incognito = Incognito(newIncognitoProxy);
         emit UpdateIncognitoProxy(newIncognitoProxy);
+    }
+
+    /**
+     * @dev Changes the Delegator to use
+     * @notice If the Delegator contract malfunctioned, Admin could config
+     * the Vault to use a new fixed Delegator contract
+     * @notice This only works when the contract is Paused
+     * @notice This can only be called by Admin
+     * @param newDelegator: address of the new contract
+     */
+    function updateDelegator(address newDelegator) external onlyAdmin isPaused {
+        require(newDelegator != address(0), errorToString(Errors.NULL_VALUE));
+        delegator = newDelegator;
+        emit UpdateDelegator(newDelegator);
     }
 
     /**
