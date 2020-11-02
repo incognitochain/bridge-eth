@@ -10,8 +10,6 @@ import (
 
 	"github.com/incognitochain/bridge-eth/bridge/dapp"
 
-	"github.com/incognitochain/bridge-eth/bridge/nextVault"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
@@ -165,20 +163,19 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
 	// request amount bigger than balance
 	timestamp := []byte(randomizeTimestamp())
-	tempData := append([]byte(IncPaymentAddr), tinfo.addr[:]...)
-	tempData1 := append(tempData, timestamp...)
-	tempData2 := append(tempData1, common.LeftPadBytes(deposit.Bytes(), 32)...)
-	data := rawsha3(tempData2)
+	tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, deposit)
+	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
 	_, err = v2.v.RequestWithdraw(auth, IncPaymentAddr, tinfo.addr, deposit, signBytes, timestamp)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
 	// able to request withdraw
-	tempData2 = append(tempData1, common.LeftPadBytes(big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))).Bytes(), 32)...)
-	data = rawsha3(tempData2)
+	tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
+	data = rawsha3(tempData[4:])
 	signBytes, _ = crypto.Sign(data, genesisAcc.PrivateKey)
 	_, err = v2.v.RequestWithdraw(auth, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
 	require.Equal(v2.T(), nil, err)
@@ -194,51 +191,49 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
 
-	// amount subtracted so can not request amount as amount at time withdraw from incognito
+	// amount decreased so can not request amount as amount at time withdraw from incognito
 	timestamp = []byte(randomizeTimestamp())
-	tempData1 = append(tempData, timestamp...)
-	tempData2 = append(tempData1, common.LeftPadBytes(big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))).Bytes(), 32)...)
-	data = rawsha3(tempData2)
+	tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
+	data = rawsha3(tempData[4:])
 	signBytes, _ = crypto.Sign(data, genesisAcc.PrivateKey)
 	_, err = v2.v.RequestWithdraw(auth, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))), signBytes, timestamp)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
-	// update newVault then user must be able to request withdraw
-	nextVaultAddr, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	// update delegator then user must be able to request withdraw
+	nextVaultAddr, _, _, err := setupNextDelegator(auth, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.Migrate(auth, nextVaultAddr)
+	_, err = v2.v.UpdateDelegator(auth, nextVaultAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.MoveAssets(auth, []common.Address{tinfo.addr})
+	_, err = v2.v.Unpause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
+	// totalDeposit, err := v2.v.TotalDepositedToSCAmount(nil, tinfo.addr)
+	// require.Equal(v2.T(), nil, err)
+	// require.Equal(v2.T(), 0, totalDeposit.Cmp(big.NewInt(0)))
 	totalDeposit, err := v2.v.TotalDepositedToSCAmount(nil, tinfo.addr)
-	require.Equal(v2.T(), nil, err)
-	require.Equal(v2.T(), 0, totalDeposit.Cmp(big.NewInt(0)))
-	totalDeposit, err = nextVault.TotalDepositedToSCAmount(nil, tinfo.addr)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), totalDeposit)
 
 	// check balance from nextVault
-	bal, err = nextVault.GetDepositedBalance(nil, tinfo.addr, address)
+	bal, err = v2.v.GetDepositedBalance(nil, tinfo.addr, address)
 
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
-
-	tempData2 = append(tempData1, common.LeftPadBytes(big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))).Bytes(), 32)...)
-	data = rawsha3(tempData2)
+	tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
+	data = rawsha3(tempData[4:])
 	signBytes, err = crypto.Sign(data, genesisAcc.PrivateKey)
 	require.Equal(v2.T(), nil, err)
-	_, err = nextVault.RequestWithdraw(auth, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
+	_, err = v2.v.RequestWithdraw(auth, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
 	// check balance from nextVault after RequestWithdraw
-	bal, err = nextVault.GetDepositedBalance(nil, tinfo.addr, address)
+	bal, err = v2.v.GetDepositedBalance(nil, tinfo.addr, address)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 }
@@ -504,30 +499,30 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
 
 	// update newVault then user must be able to request execute
-	nextVaultAddr, _, _, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	nextVaultAddr, _, _, err := setupNextDelegator(auth, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.Migrate(auth, nextVaultAddr)
+	_, err = v2.v.UpdateDelegator(auth, nextVaultAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.MoveAssets(auth, []common.Address{tinfo.addr})
+	_, err = v2.v.Unpause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
+	require.Equal(v2.T(), nil, err)
 
-	wrapNextVault, err := vault.NewVault(nextVaultAddr, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
-	// check balance on nextVault
-	bal, err = wrapNextVault.GetDepositedBalance(nil, tinfo.addr, address)
+	// check balance on vault with new delegator
+	bal, err = v2.v.GetDepositedBalance(nil, tinfo.addr, address)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
 
-	dAddr, _, _, err := dapp.DeployDapp(auth, v2.p.sim, nextVaultAddr)
+	dAddr, _, _, err := dapp.DeployDapp(auth, v2.p.sim, v2.p.vAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
-	beforeExecute := getBalanceERC20(tinfo.c, nextVaultAddr)
+	beforeExecute := getBalanceERC20(tinfo.c, v2.p.vAddr)
 	require.Equal(v2.T(), beforeExecute, deposit)
 
 	dappAbi, err := abi.JSON(strings.NewReader(dapp.DappABI))
@@ -538,13 +533,13 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 		executeAmount,
 		v2.EtherAddress,
 		v2.packInputData(dappAbi, "simpleCall", v2.EtherAddress),
-		wrapNextVault,
+		v2.v,
 		[]byte(randomizeTimestamp()),
 		genesisAcc.PrivateKey,
 	)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, nextVaultAddr))
+	require.NotEqual(v2.T(), beforeExecute, getBalanceERC20(tinfo.c, v2.p.vAddr))
 }
 
 func (v2 *VaulV2TestSuite) TestVaultV2ExecuteRentranceAttack() {
@@ -614,10 +609,9 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	var data32 [32]byte
 	tinfo := v2.p.customErc20s[desc]
 	timestamp := []byte(randomizeTimestamp())
-	tempData := append([]byte(IncPaymentAddr), tinfo.addr[:]...)
-	tempData1 := append(tempData, timestamp...)
-	tempData2 := append(tempData1, common.LeftPadBytes(testAmount.Bytes(), 32)...)
-	data := rawsha3(tempData2)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, testAmount)
+	data := rawsha3(tempData[4:])
 
 	copy(data32[:], data)
 	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
@@ -631,15 +625,26 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	require.Equal(v2.T(), true, isUsed)
 
 	// update vault to next version and check sig used
-	_, _, nextVault, err := setupNextVault(auth, v2.p.sim, auth.From, v2.p.incAddr, v2.p.vAddr)
+	nextDelegator, _, _, err := setupNextDelegator(auth, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
-	isUsed, err = nextVault.IsSigDataUsed(nil, data32)
+	_, err = v2.v.Pause(auth)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, err = v2.v.UpdateDelegator(auth, nextDelegator)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	_, err = v2.v.Unpause(auth)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+	require.Equal(v2.T(), nil, err)
+
+	isUsed, err = v2.v.IsSigDataUsed(nil, data32)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), true, isUsed)
 
 	// datahash unsed must return false on new vault
 	data32[0]++
-	isUsed, err = nextVault.IsSigDataUsed(nil, data32)
+	isUsed, err = v2.v.IsSigDataUsed(nil, data32)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), false, isUsed)
 }
@@ -680,12 +685,11 @@ func buildWithdrawDataV2(meta, shard int, tokenID ec.Address, amount *big.Int, w
 	return inst, mp, blkData, blkHash[:]
 }
 
-func setupNextVault(
+func setupNextDelegator(
 	auth *bind.TransactOpts,
 	backend *backends.SimulatedBackend,
-	admin, incAddr, prevVault common.Address,
-) (common.Address, *types.Transaction, *nextVault.NextVault, error) {
-	addr, tx, v, err := nextVault.DeployNextVault(auth, backend, admin, incAddr, prevVault)
+) (common.Address, *types.Transaction, *vault.Vault, error) {
+	addr, tx, v, err := vault.DeployVault(auth, backend)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault contract: %v", err)
 	}
@@ -700,19 +704,18 @@ func runExecuteVault(
 	srcQty *big.Int,
 	destoken common.Address,
 	input []byte,
-	vault *vault.Vault,
+	vaultInput *vault.Vault,
 	timestamp []byte,
 	signer *ecdsa.PrivateKey,
 ) (*types.Transaction, error) {
-	tempData := append(dapp[:], input...)
-	tempData1 := append(tempData, timestamp...)
-	tempData2 := append(tempData1, common.LeftPadBytes(srcQty.Bytes(), 32)...)
-	data := rawsha3(tempData2)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	tempData, _ := vaultAbi.Pack("executeBuildData", dapp, input, timestamp, srcQty)
+	data := rawsha3(tempData[4:])
 	signBytes, err := crypto.Sign(data, signer)
 	if err != nil {
 		return nil, err
 	}
-	tx, err := vault.Execute(
+	tx, err := vaultInput.Execute(
 		auth,
 		srcToken,
 		srcQty,
@@ -755,10 +758,9 @@ func buildDataReentranceAttackData(
 	if err != nil {
 		return nil, err
 	}
-	tempData := append(dAddr[:], input1...)
-	tempData1 := append(tempData, timestamp...)
-	tempData2 := append(tempData1, common.LeftPadBytes(executeAmount.Bytes(), 32)...)
-	data := rawsha3(tempData2)
+	tempData, _ := vaultAbi.Pack("executeBuildData", dAddr, input1, timestamp, executeAmount)
+
+	data := rawsha3(tempData[4:])
 	signBytes, err := crypto.Sign(data, genesisAcc.PrivateKey)
 	if err != nil {
 		return nil, err
@@ -780,10 +782,8 @@ func buildDataReentranceAttackData(
 	if err != nil {
 		return nil, err
 	}
-	tempData = append(dAddr[:], input3...)
-	tempData1 = append(tempData, timestamp...)
-	tempData2 = append(tempData1, common.LeftPadBytes(executeAmount.Bytes(), 32)...)
-	data = rawsha3(tempData2)
+	tempData, _ = vaultAbi.Pack("executeBuildData", dAddr, input3, timestamp, executeAmount)
+	data = rawsha3(tempData[4:])
 	signBytes, err = crypto.Sign(data, genesisAcc.PrivateKey)
 	if err != nil {
 		return nil, err
