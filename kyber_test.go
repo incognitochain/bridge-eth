@@ -93,7 +93,11 @@ func (v2 *KyberTestSuite) SetupTest() {
 	vaultDelegator, _, _, err := vault.DeployVault(v2.auth, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Vault delegator address: %s\n", vaultDelegator.Hex())
-	v2.VaultAddress, _, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, v2.auth.From, vaultDelegator, v2.IncAddr, common.Address{})
+
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", v2.IncAddr, common.Address{})	
+
+	v2.VaultAddress, _, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, vaultDelegator, v2.auth.From, input)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Vault proxy address: %s\n", v2.VaultAddress.Hex())
 	v2.v, err = vault.NewVault(v2.VaultAddress, v2.ETHClient)

@@ -8,8 +8,10 @@ import (
 	"os"
 	"testing"
 	"time"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -472,7 +474,10 @@ func TestDeployProxyAndVault(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, admin, vaultAddr, incAddr, prevVault)
+
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", incAddr, prevVault)	
+	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, vaultAddr, admin, input)
 	if err != nil {
 		t.Fatal(err)
 	}

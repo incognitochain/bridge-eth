@@ -71,20 +71,19 @@ interface Withdrawable {
  * Incognito Chain, releases the tokens back to user
  */
 contract Vault is AdminPausable {
-    address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
-    address public delegator;
-    Withdrawable public prevVault;
-    Incognito public incognito;
-    bool public notEntered = true;
-    
     using SafeMath for uint;
+    address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     mapping(bytes32 => bool) public withdrawed;
     mapping(bytes32 => bool) public sigDataUsed;
     // address => token => amount
     mapping(address => mapping(address => uint)) public withdrawRequests;
     mapping(address => mapping(address => bool)) public migration;
     mapping(address => uint) public totalDepositedToSCAmount;
+    Incognito public incognito;
+    Withdrawable public prevVault;
     address payable public newVault;
+    bool public notEntered = true;
+    bool public isInitialized = false;
 
     struct BurnInstData {
         uint8 meta; // type of the instruction
@@ -119,7 +118,6 @@ contract Vault is AdminPausable {
     event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
-    event UpdateDelegator(address newDelegator);
 
     /**
      * modifier for contract version
@@ -129,6 +127,43 @@ contract Vault is AdminPausable {
         _;
      }
 
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     * Calling a `nonReentrant` function from another `nonReentrant`
+     * function is not supported. It is possible to prevent this from happening
+     * by making the `nonReentrant` function external, and make it call a
+     * `private` function that does the actual work.
+     */
+    modifier nonReentrant() {
+        // On the first call to nonReentrant, notEntered will be true
+        require(notEntered, errorToString(Errors.NO_REENTRANCE));
+
+        // Any calls to nonReentrant after this point will fail
+        notEntered = false;
+
+        _;
+
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        notEntered = true;
+    }
+
+    /**
+     * @dev Creates new Vault to hold assets for Incognito Chain
+     * @param incognitoProxyAddress: contract containing Incognito's committees
+     * @param _prevVault: previous version of the Vault to refer back if necessary
+     * After migrating all assets to a new Vault, we still need to refer
+     * back to previous Vault to make sure old withdrawals aren't being reused
+     */
+    function initialize(address incognitoProxyAddress, address _prevVault) external {
+        require(!isInitialized);
+        incognito = Incognito(incognitoProxyAddress);
+        prevVault = Withdrawable(_prevVault);
+        newVault = address(0);
+        expire = now + 3 * 365 days;
+        isInitialized = true;
+        notEntered = true;
+    }
 
     /**
      * @dev Makes a ETH deposit to the vault to mint pETH over at Incognito Chain
@@ -136,7 +171,7 @@ contract Vault is AdminPausable {
      * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
      * @param incognitoAddress: Incognito Address to receive pETH
      */
-    function deposit(string calldata incognitoAddress) external payable isNotPaused {
+    function deposit(string calldata incognitoAddress) external payable isNotPaused nonReentrant {
         require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
@@ -151,7 +186,7 @@ contract Vault is AdminPausable {
      * @param amount: to deposit to the vault and mint on Incognito Chain
      * @param incognitoAddress: Incognito Address to receive pERC20
      */
-    function depositERC20(address token, uint amount, string calldata incognitoAddress) external payable isNotPaused {
+    function depositERC20(address token, uint amount, string calldata incognitoAddress) external payable isNotPaused nonReentrant {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -276,7 +311,7 @@ contract Vault is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) public isNotPaused {
+    ) public isNotPaused nonReentrant {
         require(inst.length >= 130);
         BurnInstData memory data = parseBurnInst(inst);
         require(data.meta == 241 && data.shard == 1); // Check instruction type
@@ -348,7 +383,7 @@ contract Vault is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) public isNotPaused {
+    ) public isNotPaused nonReentrant {
         require(inst.length >= 130);
         BurnInstData memory data = parseBurnInst(inst);
         require(data.meta == 243 && data.shard == 1); // Check instruction type
@@ -432,7 +467,7 @@ contract Vault is AdminPausable {
         uint amount,
         bytes calldata signData,
         bytes calldata timestamp
-    ) external isNotPaused {
+    ) external isNotPaused nonReentrant {
         // verify owner signs data
         address verifier = verifySignData(abi.encode(incognitoAddress, token, timestamp, amount), signData);
 
@@ -473,7 +508,7 @@ contract Vault is AdminPausable {
         bytes calldata callData,
         bytes calldata timestamp,
         bytes calldata signData
-    ) external payable isNotPaused {
+    ) external payable isNotPaused nonReentrant {
         //verify ower signs data from input
         address verifier = verifySignData(abi.encode(exchangeAddress, callData, timestamp, amount), signData);
 
@@ -632,20 +667,6 @@ contract Vault is AdminPausable {
         require(newIncognitoProxy != address(0), errorToString(Errors.NULL_VALUE));
         incognito = Incognito(newIncognitoProxy);
         emit UpdateIncognitoProxy(newIncognitoProxy);
-    }
-
-    /**
-     * @dev Changes the Delegator to use
-     * @notice If the Delegator contract malfunctioned, Admin could config
-     * the Vault to use a new fixed Delegator contract
-     * @notice This only works when the contract is Paused
-     * @notice This can only be called by Admin
-     * @param newDelegator: address of the new contract
-     */
-    function updateDelegator(address newDelegator) external onlyAdmin isPaused {
-        require(newDelegator != address(0), errorToString(Errors.NULL_VALUE));
-        delegator = newDelegator;
-        emit UpdateDelegator(newDelegator);
     }
 
     /**

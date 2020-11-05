@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -106,8 +108,11 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", incAddr, prevVault)	
+
 	// Deploy vault proxy
-	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, tradingDeploySuite.ETHClient, admin, vaultAddr, incAddr, prevVault)
+	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, input)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed vault proxy")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())

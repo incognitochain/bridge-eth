@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -119,7 +121,10 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	fmt.Println("deployed vault")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
-	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, ethClient, tradingDeploySuite.Admin, tradingDeploySuite.IncProxyAddr, vaultAddr, tradingDeploySuite.PrevVault)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", vaultAddr, tradingDeploySuite.PrevVault)	
+
+	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, ethClient, vaultAddr, tradingDeploySuite.Admin, input)
 	// Wait until tx is confirmed
 	err = wait(ethClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
@@ -282,7 +283,10 @@ func setupVault(
 	}
 	backend.Commit()
 
-	proxyAddr, tx, _, err := vaultproxy.DeployVaultproxy(auth, backend, admin, addr, incAddr, prevVault)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", incAddr, prevVault)	
+
+	proxyAddr, tx, _, err := vaultproxy.DeployVaultproxy(auth, backend, addr, admin, input)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault Proxy contract: %v", err)
 	}

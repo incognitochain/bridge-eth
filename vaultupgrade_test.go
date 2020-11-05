@@ -167,7 +167,9 @@ func (tradingSuite *VaultUpgradeTestSuite) moveAssetsToNewVault() {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Println("deployed new vault delegator: ", vaultDelegatorAddr.Hex())
-	vaultAddr, _, _, err := vaultproxy.DeployVaultproxy(auth, tradingSuite.ETHClient, admin, vaultDelegatorAddr, tradingSuite.IncProxyAddress, prevVault)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", tradingSuite.IncProxyAddress, prevVault)	
+	vaultAddr, _, _, err := vaultproxy.DeployVaultproxy(auth, tradingSuite.ETHClient, vaultDelegatorAddr, admin, input)
 	require.Equal(tradingSuite.T(), nil, err)
 	if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
