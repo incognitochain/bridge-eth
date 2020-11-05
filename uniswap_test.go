@@ -61,7 +61,7 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.DAIAddress = common.HexToAddress("0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa")
 	v2.MRKAddressStr = common.HexToAddress("0xef13c0c8abcaf5767160018d268f9697ae4f5375")
 	v2.EthPrivateKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
-	v2.VaultAddress = common.HexToAddress("0x092c3F3868e173D0F79b1678AD7A4E821f6d047D")
+	v2.VaultAddress = common.HexToAddress("0x865a0ddb2b0eD68D87a79555c57F80B12D0cfCe8")
 	v2.EthHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	v2.UniswapProxy = common.HexToAddress("0x0DBdaA169F10d8859c39831f8e85b17dAa58fAF8")
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
@@ -80,15 +80,16 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	// v2.IncAddr = incAddr
 	// fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
 
-	// v2.auth.From, v2.IncAddr, common.Address{}
-	// 0x66c09C3c0015E1f60dC77B44980A3f23B75cD430
 	// delegatorAddr, tx, _, err := vault.DeployVault(v2.auth, v2.ETHClient, )
 	// require.Equal(v2.T(), nil, err)
 	// err = wait(v2.ETHClient, tx.Hash())
 	// require.Equal(v2.T(), nil, err)
 	// fmt.Printf("delegatorAddr address: %s\n", delegatorAddr.Hex())
 
-	// v2.VaultAddress, tx, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, v2.auth.From, delegatorAddr, v2.IncAddr, common.Address{})
+	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	// input, _ := vaultAbi.Pack("initialize", v2.IncAddr, common.Address{})	
+
+	// v2.VaultAddress, tx, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, delegatorAddr, v2.auth.From, input)
 	// require.Equal(v2.T(), nil, err)
 	// err = wait(v2.ETHClient, tx.Hash())
 	// require.Equal(v2.T(), nil, err)

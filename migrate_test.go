@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"math/big"
 	"testing"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
@@ -15,7 +17,7 @@ import (
 )
 
 func TestRetireVaultAdmin(t *testing.T) {
-	privKey, c := getVault(t)
+	privKey, c := getVaultProxy(t)
 
 	successor := common.HexToAddress(Successor)
 	fmt.Println("Successor address:", successor.Hex())
@@ -28,7 +30,7 @@ func TestRetireVaultAdmin(t *testing.T) {
 }
 
 func TestClaimVaultAdmin(t *testing.T) {
-	privKey, c := getVault(t)
+	privKey, c := getVaultProxy(t)
 	auth := bind.NewKeyedTransactor(privKey)
 	_, err := c.Claim(auth)
 	if err != nil {
@@ -43,7 +45,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	}
 
 	// Get vault instance
-	c, err := vault.NewVault(common.HexToAddress(VaultAddress), client)
+	c, err := vaultproxy.NewVaultproxy(common.HexToAddress(VaultAddress), client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +57,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	}
 
 	// Get prev vault instance
-	c, err = vault.NewVault(common.HexToAddress(PrevVault), client)
+	c, err = vaultproxy.NewVaultproxy(common.HexToAddress(PrevVault), client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +89,11 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, admin, vaultDelegatorAddr, incAddr, prevVaultAddr)
+
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", incAddr, common.Address{})	
+
+	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, vaultDelegatorAddr, admin, input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,6 +298,21 @@ func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
 	// Get vault instance
 	vaultAddr := common.HexToAddress(VaultAddress)
 	c, err := vault.NewVault(vaultAddr, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return privKey, c
+}
+
+func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.Vaultproxy) {
+	privKey, client, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get vault instance
+	vaultAddr := common.HexToAddress(VaultAddress)
+	c, err := vaultproxy.NewVaultproxy(vaultAddr, client)
 	if err != nil {
 		t.Fatal(err)
 	}

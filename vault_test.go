@@ -16,6 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/incognitochain/bridge-eth/bridge/nextVault"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/common"
 	"github.com/incognitochain/bridge-eth/erc20"
 	"github.com/pkg/errors"
@@ -129,7 +130,8 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	p.sim.Commit()
 	
 	// set new delegator
-	_, err = p.v.UpdateDelegator(auth, vDelegatorAddr)
+	proxyVault, err := vaultproxy.NewVaultproxy(p.vAddr, p.sim)
+	_, err = proxyVault.UpgradeTo(auth, vDelegatorAddr)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -183,7 +185,8 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	p.sim.Commit()
 	
 	// set new delegator
-	_, err = p.v.UpdateDelegator(auth, vDelegatorAddr)
+	proxyVault, err := vaultproxy.NewVaultproxy(p.vAddr, p.sim)
+	_, err = proxyVault.UpgradeTo(auth, vDelegatorAddr)
 	assert.Nil(t, err)
 	p.sim.Commit()
 

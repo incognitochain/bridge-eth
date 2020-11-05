@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/incognitochain/bridge-eth/bridge/dapp"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -206,7 +207,8 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.UpdateDelegator(auth, nextVaultAddr)
+	proxyVault, err := vaultproxy.NewVaultproxy(v2.p.vAddr, v2.p.sim)
+	_, err = proxyVault.UpgradeTo(auth, nextVaultAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 	_, err = v2.v.Unpause(auth)
@@ -504,7 +506,8 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.UpdateDelegator(auth, nextVaultAddr)
+	proxyVault, err := vaultproxy.NewVaultproxy(v2.p.vAddr, v2.p.sim)
+	_, err = proxyVault.UpgradeTo(auth, nextVaultAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 	_, err = v2.v.Unpause(auth)
@@ -630,7 +633,8 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	_, err = v2.v.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	_, err = v2.v.UpdateDelegator(auth, nextDelegator)
+	proxyVault, err := vaultproxy.NewVaultproxy(v2.p.vAddr, v2.p.sim)
+	_, err = proxyVault.UpgradeTo(auth, nextDelegator)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 	_, err = v2.v.Unpause(auth)
