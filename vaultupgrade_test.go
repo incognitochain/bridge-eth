@@ -9,7 +9,7 @@ import (
 
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
-	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
+	// "github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -139,99 +139,99 @@ func (tradingSuite *VaultUpgradeTestSuite) executeWithKyber(
 }
 
 func (tradingSuite *VaultUpgradeTestSuite) unPause() {
-	privKey, _ := crypto.HexToECDSA(tradingSuite.EtherAdminPrvKey)
-	auth := bind.NewKeyedTransactor(privKey)
-	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 5000000
-	// pause vault contract
-	c, _ := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
-	tx, _ := c.Unpause(auth)
-	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
-		require.Equal(tradingSuite.T(), nil, err)
-	}
-	fmt.Printf("unPause , txHash: %x\n", txHash[:])
-	time.Sleep(15 * time.Second)
+	// privKey, _ := crypto.HexToECDSA(tradingSuite.EtherAdminPrvKey)
+	// auth := bind.NewKeyedTransactor(privKey)
+	// auth.GasPrice = big.NewInt(50000000000)
+	// auth.GasLimit = 5000000
+	// // pause vault contract
+	// c, _ := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	// tx, _ := c.Unpause(auth)
+	// txHash := tx.Hash()
+	// if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	// 	require.Equal(tradingSuite.T(), nil, err)
+	// }
+	// fmt.Printf("unPause , txHash: %x\n", txHash[:])
+	// time.Sleep(15 * time.Second)
 }
 
 func (tradingSuite *VaultUpgradeTestSuite) moveAssetsToNewVault() {
-	privKey, err := crypto.HexToECDSA(tradingSuite.EtherAdminPrvKey)
-	auth := bind.NewKeyedTransactor(privKey)
-	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 5000000
-	admin := common.HexToAddress(Admin)
-	prevVault := tradingSuite.VaultAddr
-	vaultDelegatorAddr, tx, _, err := vault.DeployVault(auth, tradingSuite.ETHClient)
-	require.Equal(tradingSuite.T(), nil, err)
-	if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
-		require.Equal(tradingSuite.T(), nil, err)
-	}
-	fmt.Println("deployed new vault delegator: ", vaultDelegatorAddr.Hex())
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", tradingSuite.IncProxyAddress, prevVault)	
-	vaultAddr, _, _, err := vaultproxy.DeployVaultproxy(auth, tradingSuite.ETHClient, vaultDelegatorAddr, admin, input)
-	require.Equal(tradingSuite.T(), nil, err)
-	if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
-		require.Equal(tradingSuite.T(), nil, err)
-	}
-	fmt.Println("deployed new vault proxy: ", vaultDelegatorAddr.Hex())
-	tradingSuite.VaultAddr = vaultAddr
+	// privKey, err := crypto.HexToECDSA(tradingSuite.EtherAdminPrvKey)
+	// auth := bind.NewKeyedTransactor(privKey)
+	// auth.GasPrice = big.NewInt(50000000000)
+	// auth.GasLimit = 5000000
+	// admin := common.HexToAddress(Admin)
+	// prevVault := tradingSuite.VaultAddr
+	// vaultDelegatorAddr, tx, _, err := vault.DeployVault(auth, tradingSuite.ETHClient)
+	// require.Equal(tradingSuite.T(), nil, err)
+	// if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
+	// 	require.Equal(tradingSuite.T(), nil, err)
+	// }
+	// fmt.Println("deployed new vault delegator: ", vaultDelegatorAddr.Hex())
+	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	// input, _ := vaultAbi.Pack("initialize", tradingSuite.IncProxyAddress, prevVault)	
+	// vaultAddr, _, _, err := vaultproxy.DeployVaultproxy(auth, tradingSuite.ETHClient, vaultDelegatorAddr, admin, input)
+	// require.Equal(tradingSuite.T(), nil, err)
+	// if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
+	// 	require.Equal(tradingSuite.T(), nil, err)
+	// }
+	// fmt.Println("deployed new vault proxy: ", vaultDelegatorAddr.Hex())
+	// tradingSuite.VaultAddr = vaultAddr
 
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingSuite.ETHClient, tradingSuite.KyberContractAddr)
-	require.Equal(tradingSuite.T(), nil, err)
-	fmt.Println("deployed kbntrade")
-	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
-	tradingSuite.KyberTradeDeployedAddr = kbnTradeAddr
-	c, err := vault.NewVault(prevVault, tradingSuite.ETHClient)
-	require.Equal(tradingSuite.T(), nil, err)
+	// kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingSuite.ETHClient, tradingSuite.KyberContractAddr)
+	// require.Equal(tradingSuite.T(), nil, err)
+	// fmt.Println("deployed kbntrade")
+	// fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
+	// tradingSuite.KyberTradeDeployedAddr = kbnTradeAddr
+	// c, err := vault.NewVault(prevVault, tradingSuite.ETHClient)
+	// require.Equal(tradingSuite.T(), nil, err)
 
-	// pause vault contract
-	tx, err = c.Pause(auth)
-	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
-		require.Equal(tradingSuite.T(), nil, err)
-	}
-	fmt.Printf("Pause , txHash: %x\n", txHash[:])
-	time.Sleep(15 * time.Second)
+	// // pause vault contract
+	// tx, err = c.Pause(auth)
+	// txHash := tx.Hash()
+	// if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	// 	require.Equal(tradingSuite.T(), nil, err)
+	// }
+	// fmt.Printf("Pause , txHash: %x\n", txHash[:])
+	// time.Sleep(15 * time.Second)
 
-	// update new vault to old vault
-	tx, err = c.Migrate(auth, vaultAddr)
-	txHash = tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
-		require.Equal(tradingSuite.T(), nil, err)
-	}
-	fmt.Printf("Set newVault , txHash: %x\n", txHash[:])
-	time.Sleep(15 * time.Second)
+	// // update new vault to old vault
+	// tx, err = c.Migrate(auth, vaultAddr)
+	// txHash = tx.Hash()
+	// if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	// 	require.Equal(tradingSuite.T(), nil, err)
+	// }
+	// fmt.Printf("Set newVault , txHash: %x\n", txHash[:])
+	// time.Sleep(15 * time.Second)
 
-	cNew, err := vault.NewVault(vaultAddr, tradingSuite.ETHClient)
-	fmt.Printf("Before Move assets ------")
-	deposited, err := cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.OMGAddressStr))
-	fmt.Println("OMG: ", deposited)
-	deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.POLYAddressStr))
-	fmt.Println("POLY: ", deposited)
-	deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.EtherAddressStr))
-	fmt.Println("ETH: ", deposited)
-	assetAddresses := make([]common.Address, 0)
-	assetAddresses = append(assetAddresses, common.HexToAddress(tradingSuite.OMGAddressStr))
-	assetAddresses = append(assetAddresses, common.HexToAddress(tradingSuite.POLYAddressStr))
-	assetAddresses = append(assetAddresses, common.HexToAddress(tradingSuite.EtherAddressStr))
+	// cNew, err := vault.NewVault(vaultAddr, tradingSuite.ETHClient)
+	// fmt.Printf("Before Move assets ------")
+	// deposited, err := cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.OMGAddressStr))
+	// fmt.Println("OMG: ", deposited)
+	// deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.POLYAddressStr))
+	// fmt.Println("POLY: ", deposited)
+	// deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.EtherAddressStr))
+	// fmt.Println("ETH: ", deposited)
+	// assetAddresses := make([]common.Address, 0)
+	// assetAddresses = append(assetAddresses, common.HexToAddress(tradingSuite.OMGAddressStr))
+	// assetAddresses = append(assetAddresses, common.HexToAddress(tradingSuite.POLYAddressStr))
+	// assetAddresses = append(assetAddresses, common.HexToAddress(tradingSuite.EtherAddressStr))
 
-	// move coin from old to new vault
-	tx, err = c.MoveAssets(auth, assetAddresses)
-	txHash = tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
-		require.Equal(tradingSuite.T(), nil, err)
-	}
-	fmt.Printf("Set move Assets, txHash: %x\n", txHash[:])
-	time.Sleep(20 * time.Second)
+	// // move coin from old to new vault
+	// tx, err = c.MoveAssets(auth, assetAddresses)
+	// txHash = tx.Hash()
+	// if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	// 	require.Equal(tradingSuite.T(), nil, err)
+	// }
+	// fmt.Printf("Set move Assets, txHash: %x\n", txHash[:])
+	// time.Sleep(20 * time.Second)
 
-	fmt.Printf("After Move assets ------")
-	deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.OMGAddressStr))
-	fmt.Println("OMG: ", deposited)
-	deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.POLYAddressStr))
-	fmt.Println("POLY: ", deposited)
-	deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.EtherAddressStr))
-	fmt.Println("ETH: ", deposited)
+	// fmt.Printf("After Move assets ------")
+	// deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.OMGAddressStr))
+	// fmt.Println("OMG: ", deposited)
+	// deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.POLYAddressStr))
+	// fmt.Println("POLY: ", deposited)
+	// deposited, err = cNew.TotalDepositedToSCAmount(nil, common.HexToAddress(tradingSuite.EtherAddressStr))
+	// fmt.Println("ETH: ", deposited)
 }
 
 func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {

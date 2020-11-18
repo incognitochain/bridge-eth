@@ -61,7 +61,7 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.DAIAddress = common.HexToAddress("0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa")
 	v2.MRKAddressStr = common.HexToAddress("0xef13c0c8abcaf5767160018d268f9697ae4f5375")
 	v2.EthPrivateKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
-	v2.VaultAddress = common.HexToAddress("0x865a0ddb2b0eD68D87a79555c57F80B12D0cfCe8")
+	v2.VaultAddress = common.HexToAddress("0x8DA2938e6B9F30f50e8e04d9AC2Fc81f3BAF728B")
 	v2.EthHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	v2.UniswapProxy = common.HexToAddress("0x0DBdaA169F10d8859c39831f8e85b17dAa58fAF8")
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
@@ -80,16 +80,16 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	// v2.IncAddr = incAddr
 	// fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
 
-	// delegatorAddr, tx, _, err := vault.DeployVault(v2.auth, v2.ETHClient, )
+	// delegatorAddr, tx, _, err := vault.DeployVault(v2.auth, v2.ETHClient)
 	// require.Equal(v2.T(), nil, err)
 	// err = wait(v2.ETHClient, tx.Hash())
 	// require.Equal(v2.T(), nil, err)
 	// fmt.Printf("delegatorAddr address: %s\n", delegatorAddr.Hex())
 
 	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	// input, _ := vaultAbi.Pack("initialize", v2.IncAddr, common.Address{})	
+	// input, _ := vaultAbi.Pack("initialize", common.Address{})	
 
-	// v2.VaultAddress, tx, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, delegatorAddr, v2.auth.From, input)
+	// v2.VaultAddress, tx, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, delegatorAddr, common.HexToAddress("0x0000000000000000000000000000000000000001"), v2.IncAddr, input)
 	// require.Equal(v2.T(), nil, err)
 	// err = wait(v2.ETHClient, tx.Hash())
 	// require.Equal(v2.T(), nil, err)
@@ -165,7 +165,7 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 	// trade with rate higher than market provided
 	v2.executeWithUniswap(bal, v2.EtherAddress, v2.DAIAddress, doubleExpectedRate, true)
 	// trade amount source token greater than available
-	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.EtherAddress, v2.DAIAddress, doubleExpectedRate, true)
+	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.EtherAddress, v2.DAIAddress, expectedRate, true)
 	// expect success on this case
 	v2.executeWithUniswap(bal, v2.EtherAddress, v2.DAIAddress, expectedRate, false)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.DAIAddress, address)
@@ -178,7 +178,7 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 	// trade with rate higher than market provided
 	v2.executeWithUniswap(bal, v2.DAIAddress, v2.MRKAddressStr, doubleExpectedRate, true)
 	// trade amount source token greater than available
-	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.DAIAddress, v2.MRKAddressStr, doubleExpectedRate, true)
+	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.DAIAddress, v2.MRKAddressStr, expectedRate, true)
 	// expect success on this case
 	v2.executeWithUniswap(bal, v2.DAIAddress, v2.MRKAddressStr, expectedRate, false)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.MRKAddressStr, address)
@@ -191,7 +191,7 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 	// trade with rate higher than market provided
 	v2.executeWithUniswap(bal, v2.MRKAddressStr, v2.EtherAddress, doubleExpectedRate, true)
 	// trade amount source token greater than available
-	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.MRKAddressStr, v2.EtherAddress, doubleExpectedRate, true)
+	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.MRKAddressStr, v2.EtherAddress, expectedRate, true)
 	// expect success on this case
 	v2.executeWithUniswap(bal, v2.MRKAddressStr, v2.EtherAddress, expectedRate, false)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)

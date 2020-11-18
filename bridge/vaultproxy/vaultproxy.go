@@ -27,19 +27,19 @@ var (
 )
 
 // VaultproxyABI is the input ABI used to generate the binding from.
-const VaultproxyABI = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_logic\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousAdmin\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"AdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"claimer\",\"type\":\"address\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousSuccessor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"SuccessorChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAdmin\",\"type\":\"address\"}],\"name\":\"changeAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"implementation\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"retire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"successor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"}],\"name\":\"upgradeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
+const VaultproxyABI = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_logic\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_incognito\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"claimer\",\"type\":\"address\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousIncognito\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newIncognito\",\"type\":\"address\"}],\"name\":\"IncognitoChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"admin\",\"type\":\"address\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousSuccessor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"SuccessorChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"admin\",\"type\":\"address\"}],\"name\":\"Unpaused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"implementation\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"incognito\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"retire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"successor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newIncognito\",\"type\":\"address\"}],\"name\":\"upgradeIncognito\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"}],\"name\":\"upgradeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
 
 // VaultproxyBin is the compiled bytecode used for deploying new contracts.
-var VaultproxyBin = "0x6080604052604051620010f6380380620010f6833981810160405260608110156200002957600080fd5b810190808051906020019092919080519060200190929190805160405193929190846401000000008211156200005e57600080fd5b838201915060208201858111156200007557600080fd5b82518660018202830111640100000000821117156200009357600080fd5b8083526020830192505050908051906020019080838360005b83811015620000c9578082015181840152602081019050620000ac565b50505050905090810190601f168015620000f75780820380516001836020036101000a031916815260200191505b506040525050508281600160405180807f656970313936372e70726f78792e696d706c656d656e746174696f6e00000000815250601c019050604051809103902060001c0360001b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b146200016b57fe5b6200017c826200034060201b60201c565b6000815111156200024e5760008273ffffffffffffffffffffffffffffffffffffffff16826040518082805190602001908083835b60208310620001d65780518252602082019150602081019050602083039250620001b1565b6001836020036101000a038019825116818451168082178552505050505050905001915050600060405180830381855af49150503d806000811462000238576040519150601f19603f3d011682016040523d82523d6000602084013e6200023d565b606091505b50509050806200024c57600080fd5b505b5050600160405180807f656970313936372e70726f78792e61646d696e000000000000000000000000008152506013019050604051809103902060001c0360001b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b14620002bb57fe5b600160405180807f656970313936372e70726f78792e737563636573736f720000000000000000008152506017019050604051809103902060001c0360001b7f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b146200032657fe5b6200033782620003d760201b60201c565b50505062000419565b62000351816200040660201b60201c565b620003a8576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180620010c06036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b600080823b905060008111915050919050565b610c9780620004296000396000f3fe60806040526004361061007f5760003560e01c80636ff968c31161004e5780636ff968c3146101f05780638f283970146102475780639e6371ba14610298578063f851a440146102e95761008e565b80633659cfe6146100985780634e71d92d146100e95780634f1ef286146101005780635c60da1b146101995761008e565b3661008e5761008c610340565b005b610096610340565b005b3480156100a457600080fd5b506100e7600480360360208110156100bb57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061035a565b005b3480156100f557600080fd5b506100fe6103af565b005b6101976004803603604081101561011657600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291908035906020019064010000000081111561015357600080fd5b82018360208201111561016557600080fd5b8035906020019184600183028401116401000000008311171561018757600080fd5b90919293919293905050506104b6565b005b3480156101a557600080fd5b506101ae61058c565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156101fc57600080fd5b506102056105e4565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561025357600080fd5b506102966004803603602081101561026a57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061063c565b005b3480156102a457600080fd5b506102e7600480360360208110156102bb57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506107b5565b005b3480156102f557600080fd5b506102fe61092e565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b610348610986565b610358610353610988565b6109b9565b565b6103626109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156103a35761039e81610a10565b6103ac565b6103ab610340565b5b50565b6103b7610a5f565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461043a576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526029815260200180610b8f6029913960400191505060405180910390fd5b7f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc610463610a5f565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a16104b46104af610a5f565b610a90565b565b6104be6109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561057e576104fa83610a10565b60008373ffffffffffffffffffffffffffffffffffffffff168383604051808383808284378083019250505092505050600060405180830381855af49150503d8060008114610565576040519150601f19603f3d011682016040523d82523d6000602084013e61056a565b606091505b505090508061057857600080fd5b50610587565b610586610340565b5b505050565b60006105966109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156105d8576105d1610988565b90506105e1565b6105e0610340565b5b90565b60006105ee6109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561063057610629610a5f565b9050610639565b610638610340565b5b90565b6106446109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156107a957600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156106fd576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180610bb8603a913960400191505060405180910390fd5b7f7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f6107266109df565b82604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a16107a481610a90565b6107b2565b6107b1610340565b5b50565b6107bd6109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561092257600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415610876576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180610bf2603a913960400191505060405180910390fd5b7ff966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c97461089f610a5f565b82604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a161091d81610abf565b61092b565b61092a610340565b5b50565b60006109386109df565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561097a576109736109df565b9050610983565b610982610340565b5b90565b565b6000807f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b9050805491505090565b3660008037600080366000845af43d6000803e80600081146109da573d6000f35b3d6000fd5b6000807fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b9050805491505090565b610a1981610aee565b8073ffffffffffffffffffffffffffffffffffffffff167fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b60405160405180910390a250565b6000807f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b9050805491505090565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b90508181555050565b610af781610b7b565b610b4c576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180610c2c6036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b600080823b90506000811191505091905056fe5472616e73706172656e745570677261646561626c6550726f78793a20756e617574686f72697a65645472616e73706172656e745570677261646561626c6550726f78793a206e65772061646d696e20697320746865207a65726f20616464726573735472616e73706172656e745570677261646561626c6550726f78793a20737563636573736f7220697320746865207a65726f20616464726573735570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e7472616374a2646970667358221220444f6485acc12dc715ce74bdbc644b5deefe257e3e5e057b4e2a5ade820457dc64736f6c634300060600335570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e7472616374"
+var VaultproxyBin = "0x60806040526040516200179b3803806200179b833981810160405260808110156200002957600080fd5b81019080805190602001909291908051906020019092919080519060200190929190805160405193929190846401000000008211156200006857600080fd5b838201915060208201858111156200007f57600080fd5b82518660018202830111640100000000821117156200009d57600080fd5b8083526020830192505050908051906020019080838360005b83811015620000d3578082015181840152602081019050620000b6565b50505050905090810190601f168015620001015780820380516001836020036101000a031916815260200191505b506040525050508381600160405180807f656970313936372e70726f78792e696d706c656d656e746174696f6e00000000815250601c019050604051809103902060001c0360001b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b146200017557fe5b62000186826200043260201b60201c565b600081511115620002585760008273ffffffffffffffffffffffffffffffffffffffff16826040518082805190602001908083835b60208310620001e05780518252602082019150602081019050602083039250620001bb565b6001836020036101000a038019825116818451168082178552505050505050905001915050600060405180830381855af49150503d806000811462000242576040519150601f19603f3d011682016040523d82523d6000602084013e62000247565b606091505b50509050806200025657600080fd5b505b5050600160405180807f656970313936372e70726f78792e61646d696e000000000000000000000000008152506013019050604051809103902060001c0360001b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b14620002c557fe5b600160405180807f656970313936372e70726f78792e737563636573736f720000000000000000008152506017019050604051809103902060001c0360001b7f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b146200033057fe5b600160405180807f656970313936372e70726f78792e7061757365640000000000000000000000008152506014019050604051809103902060001c0360001b7f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b146200039b57fe5b600160405180807f656970313936372e70726f78792e696e636f676e69746f2e00000000000000008152506018019050604051809103902060001c0360001b7f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b146200040657fe5b6200041783620004c960201b60201c565b6200042882620004f860201b60201c565b505050506200053a565b62000443816200052760201b60201c565b6200049a576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180620017656036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b90508181555050565b600080823b905060008111915050919050565b61121b806200054a6000396000f3fe6080604052600436106100ab5760003560e01c80635c975abb116100645780635c975abb146102845780636ff968c3146102b35780638456cb591461030a5780638a984538146103215780639e6371ba14610378578063f851a440146103c9576100ba565b80631c587771146100c45780633659cfe6146101155780633f4ba83a146101665780634e71d92d1461017d5780634f1ef286146101945780635c60da1b1461022d576100ba565b366100ba576100b8610420565b005b6100c2610420565b005b3480156100d057600080fd5b50610113600480360360208110156100e757600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061043a565b005b34801561012157600080fd5b506101646004803603602081101561013857600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506105b3565b005b34801561017257600080fd5b5061017b610608565b005b34801561018957600080fd5b506101926106ba565b005b61022b600480360360408110156101aa57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001906401000000008111156101e757600080fd5b8201836020820111156101f957600080fd5b8035906020019184600183028401116401000000008311171561021b57600080fd5b90919293919293905050506107c1565b005b34801561023957600080fd5b50610242610897565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561029057600080fd5b506102996108ef565b604051808215151515815260200191505060405180910390f35b3480156102bf57600080fd5b506102c8610947565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561031657600080fd5b5061031f61099f565b005b34801561032d57600080fd5b50610336610a52565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561038457600080fd5b506103c76004803603602081101561039b57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610aaa565b005b3480156103d557600080fd5b506103de610c23565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b610428610c7b565b610438610433610d6f565b610da0565b565b610442610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156105a757600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156104fb576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260408152602001806110d16040913960400191505060405180910390fd5b7f86d392a76e88298144124db3dd7265135d76810f52d747dc329a0f7722135e5c610524610df7565b82604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a16105a281610e28565b6105b0565b6105af610420565b5b50565b6105bb610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156105fc576105f781610e57565b610605565b610604610420565b5b50565b610610610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156106af5761064b610ea6565b6106a0576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260308152602001806111746030913960400191505060405180910390fd5b6106aa6000610ed7565b6106b8565b6106b7610420565b5b565b6106c2610f06565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610745576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260298152602001806110386029913960400191505060405180910390fd5b7f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc61076e610f06565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a16107bf6107ba610f06565b610f37565b565b6107c9610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156108895761080583610e57565b60008373ffffffffffffffffffffffffffffffffffffffff168383604051808383808284378083019250505092505050600060405180830381855af49150503d8060008114610870576040519150601f19603f3d011682016040523d82523d6000602084013e610875565b606091505b505090508061088357600080fd5b50610892565b610891610420565b5b505050565b60006108a1610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156108e3576108dc610d6f565b90506108ec565b6108eb610420565b5b90565b60006108f9610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561093b57610934610ea6565b9050610944565b610943610420565b5b90565b6000610951610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156109935761098c610f06565b905061099c565b61099b610420565b5b90565b6109a7610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610a47576109e2610ea6565b15610a38576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260348152602001806111116034913960400191505060405180910390fd5b610a426001610ed7565b610a50565b610a4f610420565b5b565b6000610a5c610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610a9e57610a97610df7565b9050610aa7565b610aa6610420565b5b90565b610ab2610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610c1757600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415610b6b576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180611061603a913960400191505060405180910390fd5b7ff966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c974610b94610f06565b82604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a1610c1281610f66565b610c20565b610c1f610420565b5b50565b6000610c2d610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610c6f57610c68610dc6565b9050610c78565b610c77610420565b5b90565b610c83610dc6565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610d07576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260428152602001806111a46042913960600191505060405180910390fd5b610d0f610ea6565b15610d65576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602f815260200180611145602f913960400191505060405180910390fd5b610d6d610f95565b565b6000807f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b9050805491505090565b3660008037600080366000845af43d6000803e8060008114610dc1573d6000f35b3d6000fd5b6000807fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b9050805491505090565b6000807f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b9050805491505090565b60007f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b90508181555050565b610e6081610f97565b8073ffffffffffffffffffffffffffffffffffffffff167fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b60405160405180910390a250565b6000807f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b9050805491505090565b60007f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b90508181555050565b6000807f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b9050805491505090565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b90508181555050565b565b610fa081611024565b610ff5576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603681526020018061109b6036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b600080823b90506000811191505091905056fe5472616e73706172656e745570677261646561626c6550726f78793a20756e617574686f72697a65645472616e73706172656e745570677261646561626c6550726f78793a20737563636573736f7220697320746865207a65726f20616464726573735570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e74726163745472616e73706172656e745570677261646561626c6550726f78793a20696e636f676e69746f2070726f787920697320746865207a65726f20616464726573735472616e73706172656e745570677261646561626c6550726f78793a20636f6e74726163742070617573656420616c72656164795472616e73706172656e745570677261646561626c6550726f78793a20636f6e7472616374206973207061757365645472616e73706172656e745570677261646561626c6550726f78793a20636f6e7472616374206e6f74207061757365645472616e73706172656e745570677261646561626c6550726f78793a2061646d696e2063616e6e6f742066616c6c6261636b20746f2070726f787920746172676574a26469706673582212209f6e3603c8d760b6ebec9c84a347caa27755a957e1c0bc26c34c32f61d7d9c3164736f6c634300060600335570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e7472616374"
 
 // DeployVaultproxy deploys a new Ethereum contract, binding an instance of Vaultproxy to it.
-func DeployVaultproxy(auth *bind.TransactOpts, backend bind.ContractBackend, _logic common.Address, _admin common.Address, _data []byte) (common.Address, *types.Transaction, *Vaultproxy, error) {
+func DeployVaultproxy(auth *bind.TransactOpts, backend bind.ContractBackend, _logic common.Address, _admin common.Address, _incognito common.Address, _data []byte) (common.Address, *types.Transaction, *Vaultproxy, error) {
 	parsed, err := abi.JSON(strings.NewReader(VaultproxyABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(VaultproxyBin), backend, _logic, _admin, _data)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(VaultproxyBin), backend, _logic, _admin, _incognito, _data)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -209,27 +209,6 @@ func (_Vaultproxy *VaultproxyTransactorSession) Admin() (*types.Transaction, err
 	return _Vaultproxy.Contract.Admin(&_Vaultproxy.TransactOpts)
 }
 
-// ChangeAdmin is a paid mutator transaction binding the contract method 0x8f283970.
-//
-// Solidity: function changeAdmin(address newAdmin) returns()
-func (_Vaultproxy *VaultproxyTransactor) ChangeAdmin(opts *bind.TransactOpts, newAdmin common.Address) (*types.Transaction, error) {
-	return _Vaultproxy.contract.Transact(opts, "changeAdmin", newAdmin)
-}
-
-// ChangeAdmin is a paid mutator transaction binding the contract method 0x8f283970.
-//
-// Solidity: function changeAdmin(address newAdmin) returns()
-func (_Vaultproxy *VaultproxySession) ChangeAdmin(newAdmin common.Address) (*types.Transaction, error) {
-	return _Vaultproxy.Contract.ChangeAdmin(&_Vaultproxy.TransactOpts, newAdmin)
-}
-
-// ChangeAdmin is a paid mutator transaction binding the contract method 0x8f283970.
-//
-// Solidity: function changeAdmin(address newAdmin) returns()
-func (_Vaultproxy *VaultproxyTransactorSession) ChangeAdmin(newAdmin common.Address) (*types.Transaction, error) {
-	return _Vaultproxy.Contract.ChangeAdmin(&_Vaultproxy.TransactOpts, newAdmin)
-}
-
 // Claim is a paid mutator transaction binding the contract method 0x4e71d92d.
 //
 // Solidity: function claim() returns()
@@ -270,6 +249,69 @@ func (_Vaultproxy *VaultproxySession) Implementation() (*types.Transaction, erro
 // Solidity: function implementation() returns(address)
 func (_Vaultproxy *VaultproxyTransactorSession) Implementation() (*types.Transaction, error) {
 	return _Vaultproxy.Contract.Implementation(&_Vaultproxy.TransactOpts)
+}
+
+// Incognito is a paid mutator transaction binding the contract method 0x8a984538.
+//
+// Solidity: function incognito() returns(address)
+func (_Vaultproxy *VaultproxyTransactor) Incognito(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Vaultproxy.contract.Transact(opts, "incognito")
+}
+
+// Incognito is a paid mutator transaction binding the contract method 0x8a984538.
+//
+// Solidity: function incognito() returns(address)
+func (_Vaultproxy *VaultproxySession) Incognito() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Incognito(&_Vaultproxy.TransactOpts)
+}
+
+// Incognito is a paid mutator transaction binding the contract method 0x8a984538.
+//
+// Solidity: function incognito() returns(address)
+func (_Vaultproxy *VaultproxyTransactorSession) Incognito() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Incognito(&_Vaultproxy.TransactOpts)
+}
+
+// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
+//
+// Solidity: function pause() returns()
+func (_Vaultproxy *VaultproxyTransactor) Pause(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Vaultproxy.contract.Transact(opts, "pause")
+}
+
+// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
+//
+// Solidity: function pause() returns()
+func (_Vaultproxy *VaultproxySession) Pause() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Pause(&_Vaultproxy.TransactOpts)
+}
+
+// Pause is a paid mutator transaction binding the contract method 0x8456cb59.
+//
+// Solidity: function pause() returns()
+func (_Vaultproxy *VaultproxyTransactorSession) Pause() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Pause(&_Vaultproxy.TransactOpts)
+}
+
+// Paused is a paid mutator transaction binding the contract method 0x5c975abb.
+//
+// Solidity: function paused() returns(bool)
+func (_Vaultproxy *VaultproxyTransactor) Paused(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Vaultproxy.contract.Transact(opts, "paused")
+}
+
+// Paused is a paid mutator transaction binding the contract method 0x5c975abb.
+//
+// Solidity: function paused() returns(bool)
+func (_Vaultproxy *VaultproxySession) Paused() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Paused(&_Vaultproxy.TransactOpts)
+}
+
+// Paused is a paid mutator transaction binding the contract method 0x5c975abb.
+//
+// Solidity: function paused() returns(bool)
+func (_Vaultproxy *VaultproxyTransactorSession) Paused() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Paused(&_Vaultproxy.TransactOpts)
 }
 
 // Retire is a paid mutator transaction binding the contract method 0x9e6371ba.
@@ -314,6 +356,48 @@ func (_Vaultproxy *VaultproxyTransactorSession) Successor() (*types.Transaction,
 	return _Vaultproxy.Contract.Successor(&_Vaultproxy.TransactOpts)
 }
 
+// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
+//
+// Solidity: function unpause() returns()
+func (_Vaultproxy *VaultproxyTransactor) Unpause(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Vaultproxy.contract.Transact(opts, "unpause")
+}
+
+// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
+//
+// Solidity: function unpause() returns()
+func (_Vaultproxy *VaultproxySession) Unpause() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Unpause(&_Vaultproxy.TransactOpts)
+}
+
+// Unpause is a paid mutator transaction binding the contract method 0x3f4ba83a.
+//
+// Solidity: function unpause() returns()
+func (_Vaultproxy *VaultproxyTransactorSession) Unpause() (*types.Transaction, error) {
+	return _Vaultproxy.Contract.Unpause(&_Vaultproxy.TransactOpts)
+}
+
+// UpgradeIncognito is a paid mutator transaction binding the contract method 0x1c587771.
+//
+// Solidity: function upgradeIncognito(address newIncognito) returns()
+func (_Vaultproxy *VaultproxyTransactor) UpgradeIncognito(opts *bind.TransactOpts, newIncognito common.Address) (*types.Transaction, error) {
+	return _Vaultproxy.contract.Transact(opts, "upgradeIncognito", newIncognito)
+}
+
+// UpgradeIncognito is a paid mutator transaction binding the contract method 0x1c587771.
+//
+// Solidity: function upgradeIncognito(address newIncognito) returns()
+func (_Vaultproxy *VaultproxySession) UpgradeIncognito(newIncognito common.Address) (*types.Transaction, error) {
+	return _Vaultproxy.Contract.UpgradeIncognito(&_Vaultproxy.TransactOpts, newIncognito)
+}
+
+// UpgradeIncognito is a paid mutator transaction binding the contract method 0x1c587771.
+//
+// Solidity: function upgradeIncognito(address newIncognito) returns()
+func (_Vaultproxy *VaultproxyTransactorSession) UpgradeIncognito(newIncognito common.Address) (*types.Transaction, error) {
+	return _Vaultproxy.Contract.UpgradeIncognito(&_Vaultproxy.TransactOpts, newIncognito)
+}
+
 // UpgradeTo is a paid mutator transaction binding the contract method 0x3659cfe6.
 //
 // Solidity: function upgradeTo(address newImplementation) returns()
@@ -354,140 +438,6 @@ func (_Vaultproxy *VaultproxySession) UpgradeToAndCall(newImplementation common.
 // Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
 func (_Vaultproxy *VaultproxyTransactorSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
 	return _Vaultproxy.Contract.UpgradeToAndCall(&_Vaultproxy.TransactOpts, newImplementation, data)
-}
-
-// VaultproxyAdminChangedIterator is returned from FilterAdminChanged and is used to iterate over the raw logs and unpacked data for AdminChanged events raised by the Vaultproxy contract.
-type VaultproxyAdminChangedIterator struct {
-	Event *VaultproxyAdminChanged // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *VaultproxyAdminChangedIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(VaultproxyAdminChanged)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(VaultproxyAdminChanged)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *VaultproxyAdminChangedIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *VaultproxyAdminChangedIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// VaultproxyAdminChanged represents a AdminChanged event raised by the Vaultproxy contract.
-type VaultproxyAdminChanged struct {
-	PreviousAdmin common.Address
-	NewAdmin      common.Address
-	Raw           types.Log // Blockchain specific contextual infos
-}
-
-// FilterAdminChanged is a free log retrieval operation binding the contract event 0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f.
-//
-// Solidity: event AdminChanged(address previousAdmin, address newAdmin)
-func (_Vaultproxy *VaultproxyFilterer) FilterAdminChanged(opts *bind.FilterOpts) (*VaultproxyAdminChangedIterator, error) {
-
-	logs, sub, err := _Vaultproxy.contract.FilterLogs(opts, "AdminChanged")
-	if err != nil {
-		return nil, err
-	}
-	return &VaultproxyAdminChangedIterator{contract: _Vaultproxy.contract, event: "AdminChanged", logs: logs, sub: sub}, nil
-}
-
-// WatchAdminChanged is a free log subscription operation binding the contract event 0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f.
-//
-// Solidity: event AdminChanged(address previousAdmin, address newAdmin)
-func (_Vaultproxy *VaultproxyFilterer) WatchAdminChanged(opts *bind.WatchOpts, sink chan<- *VaultproxyAdminChanged) (event.Subscription, error) {
-
-	logs, sub, err := _Vaultproxy.contract.WatchLogs(opts, "AdminChanged")
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(VaultproxyAdminChanged)
-				if err := _Vaultproxy.contract.UnpackLog(event, "AdminChanged", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseAdminChanged is a log parse operation binding the contract event 0x7e644d79422f17c01e4894b5f4f588d331ebfa28653d42ae832dc59e38c9798f.
-//
-// Solidity: event AdminChanged(address previousAdmin, address newAdmin)
-func (_Vaultproxy *VaultproxyFilterer) ParseAdminChanged(log types.Log) (*VaultproxyAdminChanged, error) {
-	event := new(VaultproxyAdminChanged)
-	if err := _Vaultproxy.contract.UnpackLog(event, "AdminChanged", log); err != nil {
-		return nil, err
-	}
-	return event, nil
 }
 
 // VaultproxyClaimIterator is returned from FilterClaim and is used to iterate over the raw logs and unpacked data for Claim events raised by the Vaultproxy contract.
@@ -623,6 +573,273 @@ func (_Vaultproxy *VaultproxyFilterer) ParseClaim(log types.Log) (*VaultproxyCla
 	return event, nil
 }
 
+// VaultproxyIncognitoChangedIterator is returned from FilterIncognitoChanged and is used to iterate over the raw logs and unpacked data for IncognitoChanged events raised by the Vaultproxy contract.
+type VaultproxyIncognitoChangedIterator struct {
+	Event *VaultproxyIncognitoChanged // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *VaultproxyIncognitoChangedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(VaultproxyIncognitoChanged)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(VaultproxyIncognitoChanged)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *VaultproxyIncognitoChangedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *VaultproxyIncognitoChangedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// VaultproxyIncognitoChanged represents a IncognitoChanged event raised by the Vaultproxy contract.
+type VaultproxyIncognitoChanged struct {
+	PreviousIncognito common.Address
+	NewIncognito      common.Address
+	Raw               types.Log // Blockchain specific contextual infos
+}
+
+// FilterIncognitoChanged is a free log retrieval operation binding the contract event 0x86d392a76e88298144124db3dd7265135d76810f52d747dc329a0f7722135e5c.
+//
+// Solidity: event IncognitoChanged(address previousIncognito, address newIncognito)
+func (_Vaultproxy *VaultproxyFilterer) FilterIncognitoChanged(opts *bind.FilterOpts) (*VaultproxyIncognitoChangedIterator, error) {
+
+	logs, sub, err := _Vaultproxy.contract.FilterLogs(opts, "IncognitoChanged")
+	if err != nil {
+		return nil, err
+	}
+	return &VaultproxyIncognitoChangedIterator{contract: _Vaultproxy.contract, event: "IncognitoChanged", logs: logs, sub: sub}, nil
+}
+
+// WatchIncognitoChanged is a free log subscription operation binding the contract event 0x86d392a76e88298144124db3dd7265135d76810f52d747dc329a0f7722135e5c.
+//
+// Solidity: event IncognitoChanged(address previousIncognito, address newIncognito)
+func (_Vaultproxy *VaultproxyFilterer) WatchIncognitoChanged(opts *bind.WatchOpts, sink chan<- *VaultproxyIncognitoChanged) (event.Subscription, error) {
+
+	logs, sub, err := _Vaultproxy.contract.WatchLogs(opts, "IncognitoChanged")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(VaultproxyIncognitoChanged)
+				if err := _Vaultproxy.contract.UnpackLog(event, "IncognitoChanged", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseIncognitoChanged is a log parse operation binding the contract event 0x86d392a76e88298144124db3dd7265135d76810f52d747dc329a0f7722135e5c.
+//
+// Solidity: event IncognitoChanged(address previousIncognito, address newIncognito)
+func (_Vaultproxy *VaultproxyFilterer) ParseIncognitoChanged(log types.Log) (*VaultproxyIncognitoChanged, error) {
+	event := new(VaultproxyIncognitoChanged)
+	if err := _Vaultproxy.contract.UnpackLog(event, "IncognitoChanged", log); err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+// VaultproxyPausedIterator is returned from FilterPaused and is used to iterate over the raw logs and unpacked data for Paused events raised by the Vaultproxy contract.
+type VaultproxyPausedIterator struct {
+	Event *VaultproxyPaused // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *VaultproxyPausedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(VaultproxyPaused)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(VaultproxyPaused)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *VaultproxyPausedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *VaultproxyPausedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// VaultproxyPaused represents a Paused event raised by the Vaultproxy contract.
+type VaultproxyPaused struct {
+	Admin common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// FilterPaused is a free log retrieval operation binding the contract event 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258.
+//
+// Solidity: event Paused(address admin)
+func (_Vaultproxy *VaultproxyFilterer) FilterPaused(opts *bind.FilterOpts) (*VaultproxyPausedIterator, error) {
+
+	logs, sub, err := _Vaultproxy.contract.FilterLogs(opts, "Paused")
+	if err != nil {
+		return nil, err
+	}
+	return &VaultproxyPausedIterator{contract: _Vaultproxy.contract, event: "Paused", logs: logs, sub: sub}, nil
+}
+
+// WatchPaused is a free log subscription operation binding the contract event 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258.
+//
+// Solidity: event Paused(address admin)
+func (_Vaultproxy *VaultproxyFilterer) WatchPaused(opts *bind.WatchOpts, sink chan<- *VaultproxyPaused) (event.Subscription, error) {
+
+	logs, sub, err := _Vaultproxy.contract.WatchLogs(opts, "Paused")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(VaultproxyPaused)
+				if err := _Vaultproxy.contract.UnpackLog(event, "Paused", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParsePaused is a log parse operation binding the contract event 0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258.
+//
+// Solidity: event Paused(address admin)
+func (_Vaultproxy *VaultproxyFilterer) ParsePaused(log types.Log) (*VaultproxyPaused, error) {
+	event := new(VaultproxyPaused)
+	if err := _Vaultproxy.contract.UnpackLog(event, "Paused", log); err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
 // VaultproxySuccessorChangedIterator is returned from FilterSuccessorChanged and is used to iterate over the raw logs and unpacked data for SuccessorChanged events raised by the Vaultproxy contract.
 type VaultproxySuccessorChangedIterator struct {
 	Event *VaultproxySuccessorChanged // Event containing the contract specifics and raw log
@@ -752,6 +969,139 @@ func (_Vaultproxy *VaultproxyFilterer) WatchSuccessorChanged(opts *bind.WatchOpt
 func (_Vaultproxy *VaultproxyFilterer) ParseSuccessorChanged(log types.Log) (*VaultproxySuccessorChanged, error) {
 	event := new(VaultproxySuccessorChanged)
 	if err := _Vaultproxy.contract.UnpackLog(event, "SuccessorChanged", log); err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
+// VaultproxyUnpausedIterator is returned from FilterUnpaused and is used to iterate over the raw logs and unpacked data for Unpaused events raised by the Vaultproxy contract.
+type VaultproxyUnpausedIterator struct {
+	Event *VaultproxyUnpaused // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *VaultproxyUnpausedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(VaultproxyUnpaused)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(VaultproxyUnpaused)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *VaultproxyUnpausedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *VaultproxyUnpausedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// VaultproxyUnpaused represents a Unpaused event raised by the Vaultproxy contract.
+type VaultproxyUnpaused struct {
+	Admin common.Address
+	Raw   types.Log // Blockchain specific contextual infos
+}
+
+// FilterUnpaused is a free log retrieval operation binding the contract event 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa.
+//
+// Solidity: event Unpaused(address admin)
+func (_Vaultproxy *VaultproxyFilterer) FilterUnpaused(opts *bind.FilterOpts) (*VaultproxyUnpausedIterator, error) {
+
+	logs, sub, err := _Vaultproxy.contract.FilterLogs(opts, "Unpaused")
+	if err != nil {
+		return nil, err
+	}
+	return &VaultproxyUnpausedIterator{contract: _Vaultproxy.contract, event: "Unpaused", logs: logs, sub: sub}, nil
+}
+
+// WatchUnpaused is a free log subscription operation binding the contract event 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa.
+//
+// Solidity: event Unpaused(address admin)
+func (_Vaultproxy *VaultproxyFilterer) WatchUnpaused(opts *bind.WatchOpts, sink chan<- *VaultproxyUnpaused) (event.Subscription, error) {
+
+	logs, sub, err := _Vaultproxy.contract.WatchLogs(opts, "Unpaused")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(VaultproxyUnpaused)
+				if err := _Vaultproxy.contract.UnpackLog(event, "Unpaused", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseUnpaused is a log parse operation binding the contract event 0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa.
+//
+// Solidity: event Unpaused(address admin)
+func (_Vaultproxy *VaultproxyFilterer) ParseUnpaused(log types.Log) (*VaultproxyUnpaused, error) {
+	event := new(VaultproxyUnpaused)
+	if err := _Vaultproxy.contract.UnpackLog(event, "Unpaused", log); err != nil {
 		return nil, err
 	}
 	return event, nil

@@ -476,8 +476,8 @@ func TestDeployProxyAndVault(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", incAddr, prevVault)	
-	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, vaultAddr, admin, input)
+	input, _ := vaultAbi.Pack("initialize", prevVault)	
+	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, vaultAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}

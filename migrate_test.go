@@ -91,9 +91,9 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", incAddr, common.Address{})	
+	input, _ := vaultAbi.Pack("initialize", common.Address{})	
 
-	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, vaultDelegatorAddr, admin, input)
+	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, vaultDelegatorAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,46 +129,46 @@ func TestDeployKBNTrade(t *testing.T) {
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
 }
 
-func TestPauseVault(t *testing.T) {
-	privKey, c := getVault(t)
+// func TestPauseVault(t *testing.T) {
+// 	privKey, c := getVault(t)
 
-	// Pause vault
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Pause(auth)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// 	// Pause vault
+// 	auth := bind.NewKeyedTransactor(privKey)
+// 	_, err := c.Pause(auth)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
-func TestUnpauseVault(t *testing.T) {
-	privKey, c := getVault(t)
+// func TestUnpauseVault(t *testing.T) {
+// 	privKey, c := getVault(t)
 
-	// Pause vault
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Unpause(auth)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// 	// Pause vault
+// 	auth := bind.NewKeyedTransactor(privKey)
+// 	_, err := c.Unpause(auth)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
-func TestMigrateVault(t *testing.T) {
-	privKey, c := getVault(t)
+// func TestMigrateVault(t *testing.T) {
+// 	privKey, c := getVault(t)
 
-	// Migrate vault
-	newAddr := NewVaultTmp
-	if len(newAddr) != 42 {
-		t.Fatal(errors.New("invalid new vault's address"))
-	}
-	newVault := common.HexToAddress(newAddr)
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Migrate(auth, newVault)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// 	// Migrate vault
+// 	newAddr := NewVaultTmp
+// 	if len(newAddr) != 42 {
+// 		t.Fatal(errors.New("invalid new vault's address"))
+// 	}
+// 	newVault := common.HexToAddress(newAddr)
+// 	auth := bind.NewKeyedTransactor(privKey)
+// 	_, err := c.Migrate(auth, newVault)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
 func TestMoveAssetsVault(t *testing.T) {
-	privKey, c := getVault(t)
+	// privKey, c := getVault(t)
 
 	// KNOWN FAILED
 	// common.HexToAddress("0xc12d1c73ee7dc3615ba4e37e4abfdbddfa38907e"), // KickToken
@@ -178,7 +178,7 @@ func TestMoveAssetsVault(t *testing.T) {
 	// common.HexToAddress("0x426CA1eA2406c07d75Db9585F22781c096e3d0E0"), // MINEREUM
 
 	// Migrate vault
-	assets := []common.Address{}
+	// assets := []common.Address{}
 
 	// DONE
 	// common.HexToAddress("0x2fB419E7023b32201e9aB3aba947f5c101a5C30e"), // Synth sEUR
@@ -282,11 +282,11 @@ func TestMoveAssetsVault(t *testing.T) {
 	// common.HexToAddress("0x716523231368d43BDfe1F06AfE1C62930731aB13"), // Wrapped 0xEt
 	// common.HexToAddress("0x767EE3150Ac31f982190Ef41728Cf9a969355286"), // Xamatek
 
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.MoveAssets(auth, assets)
-	if err != nil {
-		t.Fatal(err)
-	}
+	// auth := bind.NewKeyedTransactor(privKey)
+	// _, err := c.MoveAssets(auth, assets)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
 }
 
 func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {

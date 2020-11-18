@@ -53,8 +53,8 @@ func (s *VaultTestSuite) SetupTest() {
 	fmt.Println("vault delegator contract deployment gas: ", deployedTx.Gas())
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", incognitoProxyAddress, preVaultAddress)	
-	vaultProxyAddr, deployedTx, _, e := vaultproxy.DeployVaultproxy(s.auth, s.sim, vaultAddr,admin, input)
+	input, _ := vaultAbi.Pack("initialize", preVaultAddress)	
+	vaultProxyAddr, deployedTx, _, e := vaultproxy.DeployVaultproxy(s.auth, s.sim, vaultAddr, admin, incognitoProxyAddress, input)
 	fmt.Println("vault proxy contract deployment gas: ", deployedTx.Gas())
 	
 	s.vaultAddress = vaultProxyAddr

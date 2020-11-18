@@ -122,9 +122,9 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", vaultAddr, tradingDeploySuite.PrevVault)	
+	input, _ := vaultAbi.Pack("initialize", tradingDeploySuite.PrevVault)	
 
-	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, ethClient, vaultAddr, tradingDeploySuite.Admin, input)
+	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, ethClient, vaultAddr, tradingDeploySuite.Admin, tradingDeploySuite.IncProxyAddr, input)
 	// Wait until tx is confirmed
 	err = wait(ethClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)

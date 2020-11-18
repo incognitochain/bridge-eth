@@ -30,26 +30,39 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
      * @dev Initializes an upgradeable proxy managed by `_admin`, backed by the implementation at `_logic`, and
      * optionally initialized with `_data` as explained in {UpgradeableProxy-constructor}.
      */
-    constructor(address _logic, address _admin, bytes memory _data) public payable UpgradeableProxy(_logic, _data) {
+    constructor(address _logic, address _admin, address _incognito, bytes memory _data) public payable UpgradeableProxy(_logic, _data) {
         assert(_ADMIN_SLOT == bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1));
         assert(_SUCCESSOR_SLOT == bytes32(uint256(keccak256("eip1967.proxy.successor")) - 1));
+        assert(_PAUSED_SLOT == bytes32(uint256(keccak256("eip1967.proxy.paused")) - 1));
+        assert(_INCOGNITO_SLOT == bytes32(uint256(keccak256("eip1967.proxy.incognito.")) - 1));
         _setAdmin(_admin);
+        _setIncognito(_incognito);
     }
 
-    /**
-     * @dev Emitted when the admin account has changed.
-     */
-    event AdminChanged(address previousAdmin, address newAdmin);
-    
     /**
      * @dev Emitted when the successor account has changed.
      */
     event SuccessorChanged(address previousSuccessor, address newSuccessor);
     
     /**
+     * @dev Emitted when the incognito proxy has changed.
+     */
+    event IncognitoChanged(address previousIncognito, address newIncognito);
+
+    /**
      * @dev Emitted when the successor claimed thronze.
      **/
     event Claim(address claimer);
+    
+    /**
+     * @dev Emitted when the admin pause contract.
+     **/
+    event Paused(address admin);
+    
+    /**
+     * @dev Emitted when the admin unpaused contract.
+     **/
+    event Unpaused(address admin);
 
     /**
      * @dev Storage slot with the admin of the contract.
@@ -57,13 +70,27 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
      * validated in the constructor.
      */
     bytes32 private constant _ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
-    
+
     /**
      * @dev Storage slot with the admin of the contract.
      * This is the keccak-256 hash of "eip1967.proxy.successor" subtracted by 1, and is
      * validated in the constructor.
      */
     bytes32 private constant _SUCCESSOR_SLOT = 0x7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f8;
+
+    /**
+     * @dev Storage slot with status paused or not.
+     * This is the keccak-256 hash of "eip1967.proxy.paused" subtracted by 1, and is
+     * validated in the constructor.
+     */
+    bytes32 private constant _PAUSED_SLOT = 0x8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa0248711450;
+    
+    /**
+     * @dev Storage slot with the incognito proxy.
+     * This is the keccak-256 hash of "eip1967.proxy.incognito." subtracted by 1, and is
+     * validated in the constructor.
+     */
+    bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
 
     /**
      * @dev Modifier used internally that will delegate the call to the implementation unless the sender is the admin.
@@ -101,7 +128,7 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
     function implementation() external ifAdmin returns (address) {
         return _implementation();
     }
-    
+
     /**
      * @dev Returns the current successor.
      * 
@@ -116,16 +143,29 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
     }
 
     /**
-     * @dev Changes the admin of the proxy.
+     * @dev Returns the current paused value.
      * 
-     * Emits an {AdminChanged} event.
+     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.
      * 
-     * NOTE: Only the admin can call this function. See {ProxyAdmin-changeProxyAdmin}.
+     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the
+     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.
+     * `0x8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa0248711450`
      */
-    function changeAdmin(address newAdmin) external ifAdmin {
-        require(newAdmin != address(0), "TransparentUpgradeableProxy: new admin is the zero address");
-        emit AdminChanged(_admin(), newAdmin);
-        _setAdmin(newAdmin);
+    function paused() external ifAdmin returns (bool) {
+        return _paused();
+    }
+    
+    /**
+     * @dev Returns the current incognito proxy.
+     * 
+     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.
+     * 
+     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the
+     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.
+     * `0x6c1fc16c781d41e11abf5619c272a94b10ccafab380060da4bd63325467b854e`
+     */
+    function incognito() external ifAdmin returns (address) {
+        return _incognito();
     }
 
     /**
@@ -173,20 +213,20 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
             sstore(slot, newAdmin)
         }
     }
-    
+
     /**
-     * @dev Returns the current admin.
+     * @dev Returns the current successor.
      */
-    function _successor() internal view returns (address adm) {
+    function _successor() internal view returns (address sor) {
         bytes32 slot = _SUCCESSOR_SLOT;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            adm := sload(slot)
+            sor := sload(slot)
         }
     }
 
     /**
-     * @dev Stores a new address in the EIP1967 admin slot.
+     * @dev Stores a new address in the EIP1967 successor slot.
      */
     function _setSuccesor(address newSuccessor) private {
         bytes32 slot = _SUCCESSOR_SLOT;
@@ -196,9 +236,55 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
             sstore(slot, newSuccessor)
         }
     }
+
+    /**
+     * @dev Returns the current paused value.
+     */
+    function _paused() internal view returns (bool psd) {
+        bytes32 slot = _PAUSED_SLOT;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            psd := sload(slot)
+        }
+    }
+
+    /**
+     * @dev Stores a new paused value in the EIP1967 paused slot.
+     */
+    function _setPaused(bool psd) private {
+        bytes32 slot = _PAUSED_SLOT;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            sstore(slot, psd)
+        }
+    }
     
     /**
-     * @dev Admin retire to prepare transfer thronze for successor.
+     * @dev Returns the current incognito proxy.
+     */
+    function _incognito() internal view returns (address icg) {
+        bytes32 slot = _INCOGNITO_SLOT;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            icg := sload(slot)
+        }
+    }
+
+    /**
+     * @dev Stores a new address in the EIP1967 incognito proxy slot.
+     */
+    function _setIncognito(address newIncognito) private {
+        bytes32 slot = _INCOGNITO_SLOT;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            sstore(slot, newIncognito)
+        }
+    }
+
+    /**
+     * @dev Admin retire to prepare transfer thronze to successor.
      */
     function retire(address newSuccessor) external ifAdmin {
         require(newSuccessor != address(0), "TransparentUpgradeableProxy: successor is the zero address");
@@ -213,5 +299,39 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
         require(msg.sender == _successor(), "TransparentUpgradeableProxy: unauthorized");
         emit Claim(_successor());
         _setAdmin(_successor());
+    }
+    
+    /**
+     * @dev Admin pause contract.
+     */
+    function pause() external ifAdmin {
+        require(!_paused(), "TransparentUpgradeableProxy: contract paused already");
+        _setPaused(true);
+    }
+    
+    /**
+     * @dev Admin unpause contract.
+     */
+    function unpause() external ifAdmin {
+        require(_paused(), "TransparentUpgradeableProxy: contract not paused");
+        _setPaused(false);
+    }
+    
+     /**
+     * @dev Admin upgrade incognito proxy.
+     */
+    function upgradeIncognito(address newIncognito) external ifAdmin {
+        require(newIncognito != address(0), "TransparentUpgradeableProxy: incognito proxy is the zero address");
+        emit IncognitoChanged(_incognito(), newIncognito);
+        _setIncognito(newIncognito);
+    }
+    
+    /**
+     * @dev Makes sure the admin cannot access the fallback function. See {Proxy-_beforeFallback}.
+     */
+    function _beforeFallback() internal override virtual {
+        require(msg.sender != _admin(), "TransparentUpgradeableProxy: admin cannot fallback to proxy target");
+        require(!_paused(), "TransparentUpgradeableProxy: contract is paused");
+        super._beforeFallback();
     }
 }

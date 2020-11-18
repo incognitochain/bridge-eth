@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"context"
+	// "context"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -14,11 +14,13 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	ec "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/incognitochain/bridge-eth/bridge/nextVault"
+
+	// "github.com/incognitochain/bridge-eth/bridge/nextVault"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/common"
-	"github.com/incognitochain/bridge-eth/erc20"
+
+	// "github.com/incognitochain/bridge-eth/erc20"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,13 +32,13 @@ func TestFixedFallback(t *testing.T) {
 	assert.Nil(t, err)
 
 	vr := vault.VaultRaw{p.v}
-	auth.Value = big.NewInt(1000)
-	_, err = vr.Transfer(auth)
+	auth2.Value = big.NewInt(1000)
+	_, err = vr.Transfer(auth2)
 	if assert.Nil(t, err) {
 		p.sim.Commit()
 		assert.Equal(t, big.NewInt(1000), p.getBalance(p.vAddr))
 	}
-	auth.Value = nil
+	auth2.Value = nil
 }
 
 func TestFixedUpdateIncognitoProxy(t *testing.T) {
@@ -51,6 +53,7 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			desc:   "Success",
 			caller: genesisAcc,
 			paused: true,
+			err: false,
 		},
 		{
 			desc:   "Not admin",
@@ -58,12 +61,12 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			paused: true,
 			err:    true,
 		},
-		{
-			desc:   "Not paused",
-			caller: genesisAcc,
-			paused: false,
-			err:    true,
-		},
+		// {
+		// 	desc:   "Not paused",
+		// 	caller: genesisAcc,
+		// 	paused: false,
+		// 	err:    true,
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -71,31 +74,20 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			p, _, err := setupFixedCommittee(tc.caller.Address)
 			assert.Nil(t, err)
 
-			if tc.paused {
-				_, err = p.v.Pause(auth)
-				assert.Nil(t, err)
-				p.sim.Commit()
-			}
-
 			// Update
 			txOpt := bind.NewKeyedTransactor(tc.caller.PrivateKey)
-			txOpt.GasLimit = 1000000
-			tx, err := p.v.UpdateIncognitoProxy(txOpt, acc.Address)
+			_, err = p.vp.UpgradeIncognito(txOpt, acc.Address)
 			p.sim.Commit()
 
 			if tc.err {
-				// Check error message != nil
-				receipt, _ := bind.WaitMined(context.Background(), p.sim, tx)
-				reason, _ := errorReason(context.Background(), p.sim, tx, receipt.BlockNumber, tc.caller.Address)
-				assert.True(nil, len(reason) > 0)
-				// fmt.Println(reason, err)
+				assert.NotNil(t, err)
 			} else {
 				assert.Nil(t, err)
-
-				// Check new incognito proxy address
-				inc, err := p.v.Incognito(nil)
+				blockchainIns := p.sim.Blockchain()
+				inc, err := p.sim.StorageAt(auth.Context, p.vAddr, ec.HexToHash("0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2"), blockchainIns.CurrentBlock().Number())
+				incAddr := ec.BytesToAddress(inc)
 				assert.Nil(t, err)
-				assert.Equal(t, inc, acc.Address)
+				assert.Equal(t, incAddr, acc.Address)
 			}
 		})
 	}
@@ -103,7 +95,7 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 
 func TestFixedIsWithdrawedFalse(t *testing.T) {
 	proof := getFixedBurnProofETH()
-	fmt.Print(proof)
+
 	// fmt.Printf("%+v", proof.Instruction)
 	p, c, err := setupFixedCommittee()
 	assert.Nil(t, err)
@@ -114,7 +106,7 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
 	// First withdraw, must success
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bal := p.getBalance(withdrawer)
@@ -125,7 +117,7 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
-	_, err = p.v.Pause(auth)
+	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	
@@ -135,7 +127,7 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
-	_, err = p.v.Unpause(auth)
+	_, err = p.vp.Unpause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -150,7 +142,7 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(int64(1e9))), newBalance)
 
 	// New withdraw, must success
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -169,7 +161,7 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
 	// First withdraw, must success
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bal := p.getBalance(withdrawer)
@@ -180,7 +172,7 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
-	_, err = p.v.Pause(auth)
+	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	
@@ -190,7 +182,7 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	assert.Nil(t, err)
 	p.sim.Commit()
 
-	_, err = p.v.Unpause(auth)
+	_, err = p.vp.Unpause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -199,7 +191,7 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Withdraw with old proof, must fail
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(150000000000))
 }
@@ -221,7 +213,7 @@ func TestFixedWithdrawERC20(t *testing.T) {
 	fmt.Printf("withdrawer init balance: %d\n", getBalanceERC20(p.token, withdrawer))
 
 	proof := buildWithdrawTestcase(c, 241, 1, p.tokenAddr, big.NewInt(int64(1000000000)))
-	tx, err := Withdraw(p.v, auth, proof)
+	tx, err := Withdraw(p.v, auth2, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,228 +228,227 @@ func TestFixedWithdrawERC20(t *testing.T) {
 }
 
 
-func TestFixedMoveERC20(t *testing.T) {
-	p, _, _ := setupFixedCommittee() // New SimulatedBackend each time => ERC20 address is fixed
-	erc20Addr := p.tokenAddr
-	type initAsset struct {
-		addr  ec.Address
-		value int64
-	}
-	randAcc := newAccount()
+// func TestFixedMoveERC20(t *testing.T) {
+// 	p, _, _ := setupFixedCommittee() // New SimulatedBackend each time => ERC20 address is fixed
+// 	erc20Addr := p.tokenAddr
+// 	type initAsset struct {
+// 		addr  ec.Address
+// 		value int64
+// 	}
+// 	randAcc := newAccount()
 
-	testCases := []struct {
-		desc     string
-		newVault ec.Address
-		assets   []initAsset
-		err      bool
-	}{
-		{
-			desc:   "Success",
-			assets: []initAsset{initAsset{erc20Addr, 1000}},
-		},
-		{
-			desc:   "One asset failed",
-			assets: []initAsset{initAsset{erc20Addr, 1000}, initAsset{randAcc.Address, 0}}, // Dummy address as erc20
-			err:    true,
-		},
-	}
+// 	testCases := []struct {
+// 		desc     string
+// 		newVault ec.Address
+// 		assets   []initAsset
+// 		err      bool
+// 	}{
+// 		{
+// 			desc:   "Success",
+// 			assets: []initAsset{initAsset{erc20Addr, 1000}},
+// 		},
+// 		{
+// 			desc:   "One asset failed",
+// 			assets: []initAsset{initAsset{erc20Addr, 1000}, initAsset{randAcc.Address, 0}}, // Dummy address as erc20
+// 			err:    true,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			p, _, err := setupFixedCommittee()
-			assert.Nil(t, err)
+// 	for _, tc := range testCases {
+// 		t.Run(tc.desc, func(t *testing.T) {
+// 			p, _, err := setupFixedCommittee()
+// 			assert.Nil(t, err)
 
-			// Deploy new vault to have updateAssets method
-			newVault, _, _, err := nextVault.DeployNextVault(auth, p.sim, auth.From, p.incAddr, p.vAddr)
-			assert.Nil(t, err)
+// 			// Deploy new vault to have updateAssets method
+// 			newVault, _, _, err := nextVault.DeployNextVault(auth, p.sim, auth.From, p.incAddr, p.vAddr)
+// 			assert.Nil(t, err)
 
-			// Deposit to make sure there's ERC20 to move
-			assets := []ec.Address{}
-			for _, a := range tc.assets {
-				assets = append(assets, a.addr)
-				if a.value == 0 {
-					continue
-				}
-				token, _ := erc20.NewErc20(a.addr, p.sim)
-				oldBalance, newBalance, err := lockSimERC20WithBalance(p, token, a.addr, big.NewInt(a.value))
-				assert.Nil(t, err)
-				assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(a.value)), newBalance)
-			}
+// 			// Deposit to make sure there's ERC20 to move
+// 			assets := []ec.Address{}
+// 			for _, a := range tc.assets {
+// 				assets = append(assets, a.addr)
+// 				if a.value == 0 {
+// 					continue
+// 				}
+// 				token, _ := erc20.NewErc20(a.addr, p.sim)
+// 				oldBalance, newBalance, err := lockSimERC20WithBalance(p, token, a.addr, big.NewInt(a.value))
+// 				assert.Nil(t, err)
+// 				assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(a.value)), newBalance)
+// 			}
 
-			// Pause and migrate
-			_, err = p.v.Pause(auth)
-			assert.Nil(t, err)
-			p.sim.Commit()
-			_, err = p.v.Migrate(auth, newVault)
-			assert.Nil(t, err)
-			p.sim.Commit()
+// 			// Pause and migrate
+// 			_, err = p.vp.Pause(auth)
+// 			assert.Nil(t, err)
+// 			p.sim.Commit()
+// 			_, err = p.v.Migrate(auth, newVault)
+// 			assert.Nil(t, err)
+// 			p.sim.Commit()
 
-			// Move
-			_, err = p.v.MoveAssets(auth, assets)
-			p.sim.Commit()
+// 			// Move
+// 			_, err = p.v.MoveAssets(auth, assets)
+// 			p.sim.Commit()
 
-			if tc.err {
-				assert.NotNil(t, err)
-			} else {
-				assert.Nil(t, err)
-				for _, a := range tc.assets {
-					token, err := erc20.NewErc20(a.addr, p.sim)
-					assert.Nil(t, err)
-					assert.Equal(t, big.NewInt(a.value), getBalanceERC20(token, newVault))
-				}
-			}
-		})
-	}
-}
+// 			if tc.err {
+// 				assert.NotNil(t, err)
+// 			} else {
+// 				assert.Nil(t, err)
+// 				for _, a := range tc.assets {
+// 					token, err := erc20.NewErc20(a.addr, p.sim)
+// 					assert.Nil(t, err)
+// 					assert.Equal(t, big.NewInt(a.value), getBalanceERC20(token, newVault))
+// 				}
+// 			}
+// 		})
+// 	}
+// }
 
-func TestFixedMoveETH(t *testing.T) {
-	acc := newAccount()
-	testCases := []struct {
-		desc     string
-		mover    *account
-		paused   bool
-		newVault bool
-		err      bool
-	}{
-		{
-			desc:     "Success",
-			mover:    genesisAcc,
-			paused:   true,
-			newVault: true,
-		},
-		{
-			desc:     "Not admin",
-			mover:    acc,
-			paused:   true,
-			newVault: true,
-			err:      true,
-		},
-		{
-			desc:     "Not paused",
-			mover:    genesisAcc,
-			paused:   false,
-			newVault: true,
-			err:      true,
-		},
-		{
-			desc:     "Not migrated", // newVault = 0x0
-			mover:    genesisAcc,
-			paused:   true,
-			newVault: false,
-			err:      true,
-		},
-	}
+// func TestFixedMoveETH(t *testing.T) {
+// 	acc := newAccount()
+// 	testCases := []struct {
+// 		desc     string
+// 		mover    *account
+// 		paused   bool
+// 		newVault bool
+// 		err      bool
+// 	}{
+// 		{
+// 			desc:     "Success",
+// 			mover:    genesisAcc,
+// 			paused:   true,
+// 			newVault: true,
+// 		},
+// 		{
+// 			desc:     "Not admin",
+// 			mover:    acc,
+// 			paused:   true,
+// 			newVault: true,
+// 			err:      true,
+// 		},
+// 		{
+// 			desc:     "Not paused",
+// 			mover:    genesisAcc,
+// 			paused:   false,
+// 			newVault: true,
+// 			err:      true,
+// 		},
+// 		{
+// 			desc:     "Not migrated", // newVault = 0x0
+// 			mover:    genesisAcc,
+// 			paused:   true,
+// 			newVault: false,
+// 			err:      true,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			p, _, err := setupFixedCommittee(tc.mover.Address)
-			assert.Nil(t, err)
+// 	for _, tc := range testCases {
+// 		t.Run(tc.desc, func(t *testing.T) {
+// 			p, _, err := setupFixedCommittee(tc.mover.Address)
+// 			assert.Nil(t, err)
 
-			newVault := ec.Address{}
-			if tc.newVault {
-				// Deploy new vault to have updateAssets method
-				newVault, _, _, err = nextVault.DeployNextVault(auth, p.sim, auth.From, p.incAddr, p.vAddr)
-				assert.Nil(t, err)
-			}
+// 			newVault := ec.Address{}
+// 			if tc.newVault {
+// 				// Deploy new vault to have updateAssets method
+// 				newVault, _, _, err = nextVault.DeployNextVault(auth, p.sim, auth.From, p.incAddr, p.vAddr)
+// 				assert.Nil(t, err)
+// 			}
 
-			// Deposit to make sure there's ETH to move
-			oldBalance, newBalance, err := deposit(p, big.NewInt(int64(1000)))
-			assert.Nil(t, err)
-			assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(1000)), newBalance)
+// 			// Deposit to make sure there's ETH to move
+// 			oldBalance, newBalance, err := deposit(p, big.NewInt(int64(1000)))
+// 			assert.Nil(t, err)
+// 			assert.Equal(t, oldBalance.Add(oldBalance, big.NewInt(1000)), newBalance)
 
-			// Pause and migrate
-			_, err = p.v.Pause(auth)
-			assert.Nil(t, err)
-			p.sim.Commit()
-			if tc.newVault {
-				_, err = p.v.Migrate(auth, newVault)
-				assert.Nil(t, err)
-				p.sim.Commit()
-			}
+// 			// Pause and migrate
+// 			_, err = p.v.Pause(auth)
+// 			assert.Nil(t, err)
+// 			p.sim.Commit()
+// 			if tc.newVault {
+// 				_, err = p.v.Migrate(auth, newVault)
+// 				assert.Nil(t, err)
+// 				p.sim.Commit()
+// 			}
 
-			if !tc.paused {
-				_, err = p.v.Unpause(auth)
-				assert.Nil(t, err)
-				p.sim.Commit()
-			}
+// 			if !tc.paused {
+// 				_, err = p.v.Unpause(auth)
+// 				assert.Nil(t, err)
+// 				p.sim.Commit()
+// 			}
 
-			// Move
-			_, err = p.v.MoveAssets(
-				bind.NewKeyedTransactor(tc.mover.PrivateKey),
-				[]ec.Address{ec.Address{}},
-			)
-			p.sim.Commit()
+// 			// Move
+// 			_, err = p.v.MoveAssets(
+// 				bind.NewKeyedTransactor(tc.mover.PrivateKey),
+// 				[]ec.Address{ec.Address{}},
+// 			)
+// 			p.sim.Commit()
 
-			if tc.err {
-				assert.NotNil(t, err)
-			} else {
-				assert.Nil(t, err)
-				assert.Equal(t, newBalance, p.getBalance(newVault))
-			}
-		})
-	}
-}
+// 			if tc.err {
+// 				assert.NotNil(t, err)
+// 			} else {
+// 				assert.Nil(t, err)
+// 				assert.Equal(t, newBalance, p.getBalance(newVault))
+// 			}
+// 		})
+// 	}
+// }
 
-func TestFixedMigrate(t *testing.T) {
-	acc := newAccount()
-	testCases := []struct {
-		desc     string
-		newVault ec.Address
-		migrator *account
-		paused   bool
-		err      bool
-	}{
-		{
-			desc:     "Success",
-			newVault: genesisAcc.Address,
-			migrator: genesisAcc,
-			paused:   true,
-		},
-		{
-			desc:     "Not admin",
-			newVault: genesisAcc.Address,
-			migrator: acc,
-			paused:   true,
-			err:      true,
-		},
-		{
-			desc:     "Not paused",
-			newVault: genesisAcc.Address,
-			migrator: genesisAcc,
-			paused:   false,
-			err:      true,
-		},
-		{
-			desc:     "Migrate to zero",
-			migrator: genesisAcc,
-			paused:   true,
-			err:      true,
-		},
-	}
+// func TestFixedMigrate(t *testing.T) {
+// 	acc := newAccount()
+// 	testCases := []struct {
+// 		desc     string
+// 		newVault ec.Address
+// 		migrator *account
+// 		paused   bool
+// 		err      bool
+// 	}{
+// 		{
+// 			desc:     "Success",
+// 			newVault: genesisAcc.Address,
+// 			migrator: genesisAcc,
+// 			paused:   true,
+// 		},
+// 		{
+// 			desc:     "Not admin",
+// 			newVault: genesisAcc.Address,
+// 			migrator: acc,
+// 			paused:   true,
+// 			err:      true,
+// 		},
+// 		{
+// 			desc:     "Not paused",
+// 			newVault: genesisAcc.Address,
+// 			migrator: genesisAcc,
+// 			paused:   false,
+// 			err:      true,
+// 		},
+// 		{
+// 			desc:     "Migrate to zero",
+// 			migrator: genesisAcc,
+// 			paused:   true,
+// 			err:      true,
+// 		},
+// 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			p, _, err := setupFixedCommittee(tc.migrator.Address)
-			assert.Nil(t, err)
+// 	for _, tc := range testCases {
+// 		t.Run(tc.desc, func(t *testing.T) {
+// 			p, _, err := setupFixedCommittee(tc.migrator.Address)
+// 			assert.Nil(t, err)
 
-			if tc.paused {
-				_, err = p.v.Pause(auth)
-				assert.Nil(t, err)
-				p.sim.Commit()
-			}
+// 			if tc.paused {
+// 				_, err = p.vp.Pause(auth)
+// 				assert.Nil(t, err)
+// 				p.sim.Commit()
+// 			}
+// 			// // Migrate
+// 			// _, err = p.v.Migrate(bind.NewKeyedTransactor(tc.migrator.PrivateKey), tc.newVault)
+// 			// p.sim.Commit()
 
-			// Migrate
-			_, err = p.v.Migrate(bind.NewKeyedTransactor(tc.migrator.PrivateKey), tc.newVault)
-			p.sim.Commit()
-
-			if tc.err {
-				assert.NotNil(t, err)
-			} else {
-				assert.Nil(t, err)
-			}
-		})
-	}
-}
+// 			// if tc.err {
+// 			// 	assert.NotNil(t, err)
+// 			// } else {
+// 			// 	assert.Nil(t, err)
+// 			// }
+// 		})
+// 	}
+// }
 
 func TestFixedDepositETH(t *testing.T) {
 	p, _, err := setupFixedCommittee()
@@ -492,7 +483,7 @@ func TestFixedDepositETHPaused(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Pause first
-	_, err = p.v.Pause(auth)
+	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -631,7 +622,7 @@ func TestFixedDepositERC20Paused(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Pause first
-	_, err = p.v.Pause(auth)
+	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
@@ -711,7 +702,7 @@ func withdrawOnce(t *testing.T, p *Platform, burnProof *decodedProof) *big.Int {
 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
-	tx, err := Withdraw(p.v, auth, burnProof)
+	tx, err := Withdraw(p.v, auth2, burnProof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -803,14 +794,14 @@ func TestFixedWithdrawTwice(t *testing.T) {
 	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
 	// First withdraw, must success
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.Nil(t, err)
 	p.sim.Commit()
 	bal := p.getBalance(withdrawer)
 	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Second withdraw, must fail
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 }
 
@@ -824,16 +815,16 @@ func TestFixedWithdrawETH(t *testing.T) {
 
 	oldBalance, newBalance, err := deposit(p, big.NewInt(int64(5e18)))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
 
 	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
-	tx, err := Withdraw(p.v, auth, proof)
+	tx, err := Withdraw(p.v, auth2, proof)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	p.sim.Commit()
 	printReceipt(p.sim, tx)
@@ -860,11 +851,11 @@ func TestFixedWithdrawPaused(t *testing.T) {
 	fmt.Printf("deposit to vault: %d -> %d\n", oldBalance, newBalance)
 
 	// Pause first
-	_, err = p.v.Pause(auth)
+	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 
 	withdrawer := ec.HexToAddress("0xe722D8b71DCC0152D47D2438556a45D3357d631f")
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 
 	bal := p.getBalance(withdrawer)
@@ -940,7 +931,7 @@ func TestFixedWithdrawERC20Decimals(t *testing.T) {
 			shardID := 1
 			proof := buildWithdrawTestcase(c, meta, shardID, tinfo.addr, tc.withdraw)
 
-			_, err = Withdraw(p.v, auth, proof)
+			_, err = Withdraw(p.v, auth2, proof)
 			if assert.Nil(t, err) {
 				p.sim.Commit()
 
@@ -996,7 +987,7 @@ func TestFixedWithdrawCustomERC20s(t *testing.T) {
 			proof := buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, tc.withdraw)
 
 			auth.GasLimit = 0
-			_, err = Withdraw(p.v, auth, proof)
+			_, err = Withdraw(p.v, auth2, proof)
 			if assert.Nil(t, err) {
 				p.sim.Commit()
 
@@ -1025,7 +1016,7 @@ func TestFixedWithdrawModifiedProof(t *testing.T) {
 	proof := buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, withdraw)
 
 	auth.GasLimit = 0
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 	p.sim.Commit()
 
@@ -1035,7 +1026,7 @@ func TestFixedWithdrawModifiedProof(t *testing.T) {
 	proof = buildWithdrawTestcase(comm, meta, shardID, tinfo.addr, withdraw)
 
 	auth.GasLimit = 0
-	_, err = Withdraw(p.v, auth, proof)
+	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 	p.sim.Commit()
 }

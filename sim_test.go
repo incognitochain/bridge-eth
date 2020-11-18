@@ -31,8 +31,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// admin
 var auth *bind.TransactOpts
+// user
+var auth2 *bind.TransactOpts
 var genesisAcc *account
+var genesisAcc2 *account
 
 type Platform struct {
 	*contracts
@@ -43,6 +47,8 @@ func init() {
 	fmt.Println("Initializing genesis account...")
 	genesisAcc = loadAccount()
 	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	genesisAcc2 = loadAccount()
+	auth2 = bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
 }
 
 func TestSimulatedSwapBeacon(t *testing.T) {
@@ -104,7 +110,7 @@ func TestSimulatedBurnETH(t *testing.T) {
 	withdrawer := common.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 	fmt.Printf("withdrawer init balance: %d\n", p.getBalance(withdrawer))
 
-	tx, err := Withdraw(p.v, auth, proof)
+	tx, err := Withdraw(p.v, auth2, proof)
 	if err != nil {
 		fmt.Println("err:", err)
 	}
@@ -154,13 +160,13 @@ func lockSimERC20WithTxs(
 	tokenAddr common.Address,
 	amount *big.Int,
 ) (*types.Transaction, *types.Transaction, error) {
-	txApprove, err := approveERC20(genesisAcc.PrivateKey, p.vAddr, token, amount)
+	txApprove, err := approveERC20(genesisAcc2.PrivateKey, p.vAddr, token, amount)
 	if err != nil {
 		return nil, nil, err
 	}
 	p.sim.Commit()
 
-	txDeposit, err := depositERC20(genesisAcc.PrivateKey, p.v, tokenAddr, amount)
+	txDeposit, err := depositERC20(genesisAcc2.PrivateKey, p.v, tokenAddr, amount)
 	if err != nil {
 		return txApprove, nil, err
 	}
@@ -205,6 +211,7 @@ func setup(
 	alloc := make(core.GenesisAlloc)
 	balance, _ := big.NewInt(1).SetString("1000000000000000000000000000000", 10) // 1E30 wei
 	alloc[auth.From] = core.GenesisAccount{Balance: balance}
+	alloc[auth2.From] = core.GenesisAccount{Balance: balance}
 	for _, acc := range accs {
 		alloc[acc] = core.GenesisAccount{Balance: balance}
 	}
@@ -222,7 +229,7 @@ func setup(
 	_ = tx
 
 	// ERC20: always deploy first so its address is fixed
-	p.tokenAddr, tx, p.token, err = erc20.DeployErc20(auth, sim, "MyErc20", "ERC", big.NewInt(0), big.NewInt(int64(1e18)))
+	p.tokenAddr, tx, p.token, err = erc20.DeployErc20(auth2, sim, "MyErc20", "ERC", big.NewInt(0), big.NewInt(int64(1e18)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to deploy ERC20 contract: %v", err)
 	}
@@ -240,13 +247,13 @@ func setup(
 	ercBal = ercBal.Mul(ercBal, big.NewInt(int64(1e18)))
 	ercBal = ercBal.Mul(ercBal, big.NewInt(int64(1e18)))
 	for _, d := range decimals {
-		tokenAddr, _, token, err := erc20.DeployErc20(auth, sim, "MyErc20", "ERC", big.NewInt(int64(d)), ercBal)
+		tokenAddr, _, token, err := erc20.DeployErc20(auth2, sim, "MyErc20", "ERC", big.NewInt(int64(d)), ercBal)
 		if err != nil {
 			return nil, fmt.Errorf("failed to deploy ERC20 contract: %v", err)
 		}
+		sim.Commit()
 		p.tokens[d] = tokenInfo{c: token, addr: tokenAddr}
 	}
-	sim.Commit()
 
 	// IncognitoProxy
 	admin := auth.From
@@ -266,6 +273,8 @@ func setup(
 	}
 	p.vAddr = addr
 	p.v = v
+	vp, _ := vaultproxy.NewVaultproxy(addr, sim)
+	p.vp = vp
 	// fmt.Printf("deployed vault, addr: %x ", p.vAddr)
 	// printReceipt(sim, tx)
 
@@ -284,9 +293,9 @@ func setupVault(
 	backend.Commit()
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", incAddr, prevVault)	
+	input, _ := vaultAbi.Pack("initialize", prevVault)	
 
-	proxyAddr, tx, _, err := vaultproxy.DeployVaultproxy(auth, backend, addr, admin, input)
+	proxyAddr, tx, _, err := vaultproxy.DeployVaultproxy(auth, backend, addr, admin, incAddr, input)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault Proxy contract: %v", err)
 	}
@@ -303,7 +312,7 @@ func setupVault(
 func setupCustomTokens(p *Platform) error {
 	// Deploy BNB
 	bal, _ := big.NewInt(1).SetString("200000000000000000000000000", 10)
-	addr, _, bnb, err := bnb.DeployBnb(auth, p.sim, bal, "BNB", uint8(18), "BNB")
+	addr, _, bnb, err := bnb.DeployBnb(auth2, p.sim, bal, "BNB", uint8(18), "BNB")
 	if err != nil {
 		return errors.Errorf("failed to deploy BNB contract: %v", err)
 	}
@@ -312,7 +321,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy USDT
 	bal, _ = big.NewInt(1).SetString("100000000000", 10)
-	addr, _, usdt, err := usdt.DeployUsdt(auth, p.sim, bal, "Tether USD", "USDT", big.NewInt(6))
+	addr, _, usdt, err := usdt.DeployUsdt(auth2, p.sim, bal, "Tether USD", "USDT", big.NewInt(6))
 	if err != nil {
 		return errors.Errorf("failed to deploy USDT contract: %v", err)
 	}
@@ -321,7 +330,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy DAI
 	symbol := [32]byte{'D', 'A', 'I'}
-	addr, _, d, err := dai.DeployDai(auth, p.sim, symbol)
+	addr, _, d, err := dai.DeployDai(auth2, p.sim, symbol)
 	if err != nil {
 		return errors.Errorf("failed to deploy DAI contract: %v", err)
 	}
@@ -330,7 +339,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Mint DAI
 	bal, _ = big.NewInt(1).SetString("1000000000000000000000000000", 10)
-	_, err = d.Mint(auth, bal)
+	_, err = d.Mint(auth2, bal)
 	if err != nil {
 		return errors.Errorf("failed to mint DAI: %v", err)
 	}
@@ -357,7 +366,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy FAIL token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, fail, err := fail.DeployFAIL(auth, p.sim, bal, "FAIL", 6, "FAIL")
+	addr, _, fail, err := fail.DeployFAIL(auth2, p.sim, bal, "FAIL", 6, "FAIL")
 	if err != nil {
 		return errors.Errorf("failed to deploy FAIL contract: %v", err)
 	}
@@ -366,7 +375,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy DLESS token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, dless, err := dless.DeployDLESS(auth, p.sim, bal, "DLESS", "DLESS")
+	addr, _, dless, err := dless.DeployDLESS(auth2, p.sim, bal, "DLESS", "DLESS")
 	if err != nil {
 		return errors.Errorf("failed to deploy DLESS contract: %v", err)
 	}
@@ -546,7 +555,7 @@ func getBeaconSwapProof(block int) string {
 
 func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 	initBalance := p.getBalance(p.vAddr)
-	auth := bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	auth := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
 	auth.GasLimit = 0
 	auth.Value = amount
 	_, err := p.v.Deposit(auth, "")

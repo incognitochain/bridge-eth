@@ -109,10 +109,10 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", incAddr, prevVault)	
+	input, _ := vaultAbi.Pack("initialize", prevVault)	
 
 	// Deploy vault proxy
-	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, input)
+	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, incAddr, input)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed vault proxy")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())

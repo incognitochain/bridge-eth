@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/common/base58"
 	"github.com/incognitochain/bridge-eth/consensus/signatureschemes/bridgesig"
 	"github.com/incognitochain/bridge-eth/erc20"
@@ -25,6 +26,7 @@ import (
 
 type contracts struct {
 	v         *vault.Vault
+	vp		  *vaultproxy.Vaultproxy
 	vAddr     common.Address
 	inc       *incognito_proxy.IncognitoProxy
 	incAddr   common.Address
