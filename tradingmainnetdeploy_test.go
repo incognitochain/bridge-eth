@@ -132,7 +132,7 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
 	// Deploy kbntrade
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, ethClient, tradingDeploySuite.KyberContractAddr)
+	kbnTradeAddr, tx, _, err := kbntrade.DeployKbntrade(auth, ethClient, tradingDeploySuite.KyberContractAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// Wait until tx is confirmed

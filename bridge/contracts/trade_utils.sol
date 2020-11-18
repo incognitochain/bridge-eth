@@ -15,7 +15,8 @@ contract TradeUtils {
 	function transfer(IERC20 token, uint amount) internal {
 		if (token == ETH_CONTRACT_ADDRESS) {
 			require(address(this).balance >= amount);
-			msg.sender.transfer(amount);
+			(bool success, ) = msg.sender.call{value: amount}("");
+          	require(success);
 		} else {
 			token.transfer(msg.sender, amount);
 			require(checkSuccess());

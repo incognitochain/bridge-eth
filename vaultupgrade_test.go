@@ -103,7 +103,7 @@ func (tradingSuite *VaultUpgradeTestSuite) executeWithKyber(
 	srcTokenIDStr string,
 	destTokenIDStr string,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KBNTradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
