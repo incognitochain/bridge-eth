@@ -107,7 +107,10 @@ func TestFixedFindBeaconCommitteeFromHeight(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			p, c, _ := setupFixedCommittee()
+			p, c, err := setupFixedCommittee()
+			if err != nil {
+				t.Fatal(err)
+			}
 			for i := 0; i < tc.length; i++ {
 				in := repeatSwapBeacon(c, i+1, 70, 1)
 				_, err := p.inc.SwapBeaconCommittee(auth, in.Instruction, in.InstPaths[0], in.InstPathIsLefts[0], in.InstRoots[0], in.BlkData[0], in.SigIdxs[0], in.SigVs[0], in.SigRs[0], in.SigSs[0])

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"math/big"
 	"math/rand"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"golang.org/x/crypto/sha3"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -404,13 +406,11 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	token := common.HexToAddress(withdrawalETHTokenIDStr)
 	// amount := big.NewInt(0.1 * params.Ether)
 	timestamp := []byte(randomizeTimestamp())
-	tempData := append([]byte(tradingSuite.IncPaymentAddrStr), token[:]...)
-	tempData1 := append(tempData, timestamp...)
-	tempData2 := append(tempData1, common.LeftPadBytes(amount.Bytes(), 32)...)
-	data := rawsha3(tempData2)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, token, timestamp, amount)
+	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 2000000
 	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp)
 	require.Equal(tradingSuite.T(), nil, err)
 

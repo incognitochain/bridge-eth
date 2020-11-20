@@ -1,8 +1,7 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
-import "./pause.sol";
 
 /**
  * Math operations with safety checks
@@ -70,8 +69,13 @@ interface Withdrawable {
  * Incognito Chain. Also, when presented with a burn proof created over at
  * Incognito Chain, releases the tokens back to user
  */
-contract Vault is AdminPausable {
+contract Vault {
     using SafeMath for uint;
+    /**
+     * @dev Storage slot with the incognito proxy.
+     * This is the keccak-256 hash of "eip1967.proxy.incognito." subtracted by 1
+     */
+    bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
     mapping(bytes32 => bool) public withdrawed;
     mapping(bytes32 => bool) public sigDataUsed;
@@ -79,10 +83,9 @@ contract Vault is AdminPausable {
     mapping(address => mapping(address => uint)) public withdrawRequests;
     mapping(address => mapping(address => bool)) public migration;
     mapping(address => uint) public totalDepositedToSCAmount;
-    Incognito public incognito;
     Withdrawable public prevVault;
-    address payable public newVault;
     bool public notEntered = true;
+    bool public isInitialized = false;
 
     struct BurnInstData {
         uint8 meta; // type of the instruction
@@ -113,8 +116,6 @@ contract Vault is AdminPausable {
 
     event Deposit(address token, string incognitoAddress, uint amount);
     event Withdraw(address token, address to, uint amount);
-    event Migrate(address newVault);
-    event MoveAssets(address[] assets);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
 
@@ -149,16 +150,26 @@ contract Vault is AdminPausable {
 
     /**
      * @dev Creates new Vault to hold assets for Incognito Chain
-     * @param admin: authorized address to Pause and migrate contract
-     * @param incognitoProxyAddress: contract containing Incognito's committees
      * @param _prevVault: previous version of the Vault to refer back if necessary
      * After migrating all assets to a new Vault, we still need to refer
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
-    constructor(address admin, address incognitoProxyAddress, address _prevVault) public AdminPausable(admin) {
-        incognito = Incognito(incognitoProxyAddress);
+    function initialize(address _prevVault) external {
+        require(!isInitialized);
         prevVault = Withdrawable(_prevVault);
-        newVault = address(0);
+        isInitialized = true;
+        notEntered = true;
+    }
+
+    /**
+     * @dev Returns the current incognito proxy.
+     */
+    function _incognito() internal view returns (address icg) {
+        bytes32 slot = _INCOGNITO_SLOT;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            icg := sload(slot)
+        }
     }
 
     /**
@@ -167,7 +178,7 @@ contract Vault is AdminPausable {
      * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
      * @param incognitoAddress: Incognito Address to receive pETH
      */
-    function deposit(string memory incognitoAddress) public payable isNotPaused nonReentrant {
+    function deposit(string calldata incognitoAddress) external payable nonReentrant {
         require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
@@ -182,7 +193,7 @@ contract Vault is AdminPausable {
      * @param amount: to deposit to the vault and mint on Incognito Chain
      * @param incognitoAddress: Incognito Address to receive pERC20
      */
-    function depositERC20(address token, uint amount, string memory incognitoAddress) public payable isNotPaused nonReentrant {
+    function depositERC20(address token, uint amount, string calldata incognitoAddress) external payable nonReentrant {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -265,7 +276,7 @@ contract Vault is AdminPausable {
         bytes32 beaconInstHash = keccak256(abi.encodePacked(inst, heights));
 
         // Verify instruction on beacon
-        require(incognito.instructionApproved(
+        require(Incognito(_incognito()).instructionApproved(
             true, // Only check instruction on beacon
             beaconInstHash,
             heights,
@@ -307,7 +318,8 @@ contract Vault is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) public isNotPaused nonReentrant {
+    ) public nonReentrant {
+        require(inst.length >= 130);
         BurnInstData memory data = parseBurnInst(inst);
         require(data.meta == 241 && data.shard == 1); // Check instruction type
 
@@ -378,7 +390,8 @@ contract Vault is AdminPausable {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) public isNotPaused nonReentrant {
+    ) public nonReentrant {
+        require(inst.length >= 130);
         BurnInstData memory data = parseBurnInst(inst);
         require(data.meta == 243 && data.shard == 1); // Check instruction type
 
@@ -456,14 +469,14 @@ contract Vault is AdminPausable {
      * @param timestamp: unique data generated from client (timestamp for example)
      */
     function requestWithdraw(
-        string memory incognitoAddress,
+        string calldata incognitoAddress,
         address token,
         uint amount,
-        bytes memory signData,
-        bytes memory timestamp
-    ) public isNotPaused nonReentrant {
+        bytes calldata signData,
+        bytes calldata timestamp
+    ) external nonReentrant {
         // verify owner signs data
-        address verifier = verifySignData(abi.encodePacked(incognitoAddress, token, timestamp, amount), signData);
+        address verifier = verifySignData(abi.encode(incognitoAddress, token, timestamp, amount), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -499,12 +512,12 @@ contract Vault is AdminPausable {
         uint amount,
         address recipientToken,
         address exchangeAddress,
-        bytes memory callData,
-        bytes memory timestamp,
-        bytes memory signData
-    ) public payable isNotPaused nonReentrant {
+        bytes calldata callData,
+        bytes calldata timestamp,
+        bytes calldata signData
+    ) external payable nonReentrant {
         //verify ower signs data from input
-        address verifier = verifySignData(abi.encodePacked(exchangeAddress, callData, timestamp, amount), signData);
+        address verifier = verifySignData(abi.encode(exchangeAddress, callData, timestamp, amount), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -588,50 +601,6 @@ contract Vault is AdminPausable {
     }
 
     /**
-     * @dev Saves the address of the new Vault to migrate assets to
-     * @notice In case of emergency, Admin will Pause the contract, shutting down
-     * all incoming transactions. After a new contract with the fix is deployed,
-     * they will migrate assets to it and allow normal operations to resume
-     * @notice This only works when the contract is Paused
-     * @notice This can only be called by Admin
-     * @param _newVault: address to save
-     */
-    function migrate(address payable _newVault) public onlyAdmin isPaused {
-        require(_newVault != address(0), errorToString(Errors.NULL_VALUE));
-        newVault = _newVault;
-        emit Migrate(_newVault);
-    }
-
-    /**
-     * @dev Move some assets to newVault
-     * @notice This only works when the contract is Paused
-     * @notice This can only be called by Admin
-     * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
-     */
-    function moveAssets(address[] memory assets) public onlyAdmin isPaused {
-        require(newVault != address(0), errorToString(Errors.NULL_VALUE));
-        uint[] memory amounts = new uint[](assets.length);
-        for (uint i = 0; i < assets.length; i++) {
-            if (assets[i] == ETH_TOKEN) {
-                amounts[i] = totalDepositedToSCAmount[ETH_TOKEN];
-                (bool success, ) = newVault.call{value: address(this).balance}("");
-                require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-            } else {
-                uint bal = IERC20(assets[i]).balanceOf(address(this));
-                if (bal > 0) {
-                    IERC20(assets[i]).transfer(newVault, bal);
-                    require(checkSuccess());
-                }
-                amounts[i] = totalDepositedToSCAmount[assets[i]];
-            }
-            totalDepositedToSCAmount[assets[i]] = 0;
-        }
-        require(Withdrawable(newVault).updateAssets(assets, amounts), errorToString(Errors.INTERNAL_TX_ERROR));
-
-        emit MoveAssets(assets);
-    }
-
-    /**
      * @dev Move total number of assets to newVault
      * @notice This only works when the preVault is Paused
      * @notice This can only be called by preVault
@@ -647,20 +616,6 @@ contract Vault is AdminPausable {
         emit UpdateTokenTotal(assets, amounts);
 
         return true;
-    }
-
-    /**
-     * @dev Changes the IncognitoProxy to use
-     * @notice If the IncognitoProxy contract malfunctioned, Admin could config
-     * the Vault to use a new fixed IncognitoProxy contract
-     * @notice This only works when the contract is Paused
-     * @notice This can only be called by Admin
-     * @param newIncognitoProxy: address of the new contract
-     */
-    function updateIncognitoProxy(address newIncognitoProxy) public onlyAdmin isPaused {
-        require(newIncognitoProxy != address(0), errorToString(Errors.NULL_VALUE));
-        incognito = Incognito(newIncognitoProxy);
-        emit UpdateIncognitoProxy(newIncognitoProxy);
     }
 
     /**

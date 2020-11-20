@@ -112,7 +112,7 @@ func (tradingSuite *KyberTradingTestSuite) getExpectedRate(
 	if destToken == tradingSuite.EtherAddressStr {
 		destToken = tradingSuite.EtherAddressStrKyber
 	}
-	c, err := kbntrade.NewKBNTrade(tradingSuite.KyberTradeDeployedAddr, tradingSuite.ETHClient)
+	c, err := kbntrade.NewKbntrade(tradingSuite.KyberTradeDeployedAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	expectRate, slippageRate, err := c.GetConversionRates(nil, common.HexToAddress(srcToken), srcQty, common.HexToAddress(destToken))
 	require.Equal(tradingSuite.T(), nil, err)
@@ -126,7 +126,7 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	srcTokenIDStr string,
 	destTokenIDStr string,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KBNTradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
@@ -139,10 +139,9 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	expectRate := tradingSuite.getExpectedRate(srcTokenIDStr, destTokenIDStr, srcQty)
 	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectRate)
 	timestamp := []byte(randomizeTimestamp())
-	tempData := append(tradingSuite.KyberTradeDeployedAddr[:], input...)
-	tempData1 := append(tempData, timestamp...)
-	tempData2 := append(tempData1, common.LeftPadBytes(srcQty.Bytes(), 32)...)
-	data := rawsha3(tempData2)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	tempData, _ := vaultAbi.Pack("executeBuildData", tradingSuite.KyberTradeDeployedAddr, input, timestamp, srcQty)
+	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 
 	tx, err := c.Execute(

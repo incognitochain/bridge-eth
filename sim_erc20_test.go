@@ -33,7 +33,7 @@ func TestSimulatedErc20(t *testing.T) {
 	withdrawer := common.HexToAddress("0x0FFBd68F130809BcA7b32D9536c8339E9A844620")
 	fmt.Printf("withdrawer init balance: %d\n", getBalanceErc20(token, withdrawer))
 
-	tx, err := Withdraw(v, auth, proof)
+	tx, err := Withdraw(v, auth2, proof)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,9 +58,9 @@ func depositErc20(
 	initBalance := getBalanceErc20(token, vAddr)
 
 	// Approve
-	auth := bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	authTemp := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
 	value := big.NewInt(int64(1e9))
-	tx, err := token.Approve(auth, vAddr, value)
+	tx, err := token.Approve(authTemp, vAddr, value)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,7 +69,7 @@ func depositErc20(
 
 	// Deposit
 	incAddr := "1Uv46Pu4pqBvxCcPw7MXhHfiAD5Rmi2xgEE7XB6eQurFAt4vSYvfyGn3uMMB1xnXDq9nRTPeiAZv5gRFCBDroRNsXJF1sxPSjNQtivuHk"
-	tx, err = v.DepositERC20(auth, tokenAddr, value, incAddr)
+	tx, err = v.DepositERC20(authTemp, tokenAddr, value, incAddr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -86,8 +86,8 @@ func transferErc20(
 	amount int64,
 ) (*big.Int, *big.Int, error) {
 	initBalance := getBalanceErc20(token, to)
-	auth := bind.NewKeyedTransactor(genesisAcc.PrivateKey)
-	_, err := token.Transfer(auth, to, big.NewInt(amount))
+	authTemp := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	_, err := token.Transfer(authTemp, to, big.NewInt(amount))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -125,7 +125,7 @@ func deployErc20(sim *backends.SimulatedBackend) (*erc20.Erc20, common.Address, 
 	symbol := "="
 	decimals := big.NewInt(0)
 	supply := big.NewInt(1000000000000000000)
-	addr, _, c, err := erc20.DeployErc20(auth, sim, name, symbol, decimals, supply)
+	addr, _, c, err := erc20.DeployErc20(auth2, sim, name, symbol, decimals, supply)
 	if err != nil {
 		return nil, common.Address{}, fmt.Errorf("failed to deploy Erc20 contract: %v", err)
 	}

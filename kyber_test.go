@@ -19,6 +19,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -88,10 +89,20 @@ func (v2 *KyberTestSuite) SetupTest() {
 	v2.IncAddr, _, _, err = incognito_proxy.DeployIncognitoProxy(v2.auth, ETHClient, v2.auth.From, v2.c.beacons, v2.c.bridges)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Proxy address: %s\n", v2.IncAddr.Hex())
-	v2.VaultAddress, _, v2.v, err = vault.DeployVault(v2.auth, v2.ETHClient, v2.auth.From, v2.IncAddr, common.Address{})
+	
+	vaultDelegator, _, _, err := vault.DeployVault(v2.auth, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
-	fmt.Printf("Vault address: %s\n", v2.VaultAddress.Hex())
-	v2.KyberProxy, _, _, err = kbntrade.DeployKBNTrade(v2.auth, v2.ETHClient, v2.KyberContractAddr)
+	fmt.Printf("Vault delegator address: %s\n", vaultDelegator.Hex())
+
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", common.Address{})	
+
+	v2.VaultAddress, _, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, vaultDelegator, common.HexToAddress("0x0000000000000000000000000000000000000001"), v2.IncAddr, input)
+	require.Equal(v2.T(), nil, err)
+	fmt.Printf("Vault proxy address: %s\n", v2.VaultAddress.Hex())
+	v2.v, err = vault.NewVault(v2.VaultAddress, v2.ETHClient)
+	require.Equal(v2.T(), nil, err)
+	v2.KyberProxy, _, _, err = kbntrade.DeployKbntrade(v2.auth, v2.ETHClient, v2.KyberContractAddr)
 	require.Equal(v2.T(), nil, err)
 	fmt.Printf("Kyber proxy address: %s\n", v2.KyberProxy.Hex())
 	v2.KyberMultiProxy, _, _, err = dappMulti.DeployDappMulti(v2.auth, v2.ETHClient, v2.KyberContractAddr, v2.VaultAddress)
@@ -176,7 +187,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), 0, bal.Cmp(big.NewInt(0)))
 
-	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KBNTradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 	expectRate := v2.getExpectedRate(srcToken, destToken, deposit)
 	input, _ := tradeAbi.Pack("trade", srcToken, deposit, destToken, expectRate)
 	_, err = runExecuteVault(v2.auth, v2.KyberProxy, srcToken, tradeamount, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
@@ -198,7 +209,7 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	// anyone can call kyberproxy to trade directly
 	v2.auth.Value = deposit
 	expectRate = v2.getExpectedRate(srcToken, destToken, tradeamount)
-	kybertrade, err := kbntrade.NewKBNTrade(v2.KyberProxy, v2.ETHClient)
+	kybertrade, err := kbntrade.NewKbntrade(v2.KyberProxy, v2.ETHClient)
 	_, err = kybertrade.Trade(v2.auth, srcToken, deposit, destToken, expectRate)
 	require.Equal(v2.T(), nil, err)
 }
@@ -349,7 +360,7 @@ func (v2 *KyberTestSuite) getExpectedRate(
 	if destToken == v2.EtherAddress {
 		destToken = v2.ETHKyberAddress
 	}
-	c, err := kbntrade.NewKBNTrade(v2.KyberProxy, v2.ETHClient)
+	c, err := kbntrade.NewKbntrade(v2.KyberProxy, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	expectRate, _, err := c.GetConversionRates(nil, srcToken, srcQty, destToken)
 	require.Equal(v2.T(), nil, err)
@@ -361,7 +372,7 @@ func (v2 *KyberTestSuite) executeWithKyber(
 	srcToken common.Address,
 	destToken common.Address,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KBNTradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(kbntrade.KbntradeABI))
 	expectRate := v2.getExpectedRate(srcToken, destToken, srcQty)
 	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectRate)
 	tx, err := runExecuteVault(v2.auth, v2.KyberProxy, srcToken, srcQty, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)

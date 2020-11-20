@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"testing"
 
@@ -12,8 +13,10 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/uniswap"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -96,7 +99,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// Deploy vault
 	prevVault := common.Address{}
-	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingDeploySuite.ETHClient, admin, incAddr, prevVault)
+	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingDeploySuite.ETHClient)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed vault")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
@@ -105,8 +108,20 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", prevVault)	
+
+	// Deploy vault proxy
+	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, incAddr, input)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed vault proxy")
+	fmt.Printf("addr: %s\n", vaultAddr.Hex())
+
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
+
 	// Deploy kbntrade
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr)
+	kbnTradeAddr, tx, _, err := kbntrade.DeployKbntrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed kbntrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())

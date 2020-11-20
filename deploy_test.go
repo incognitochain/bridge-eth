@@ -8,8 +8,10 @@ import (
 	"os"
 	"testing"
 	"time"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -18,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/pkg/errors"
 )
 
@@ -467,12 +470,19 @@ func TestDeployProxyAndVault(t *testing.T) {
 
 	// Deploy vault
 	prevVault := common.Address{}
-	vaultAddr, _, _, err := vault.DeployVault(auth, client, admin, incAddr, prevVault)
+	vaultAddr, _, _, err := vault.DeployVault(auth, client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", prevVault)	
+	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, vaultAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println("deployed vault")
-	fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	fmt.Printf("addr: %s\n", vaultProxyAddr.Hex())
 }
 
 func wait(client *ethclient.Client, tx common.Hash) error {
