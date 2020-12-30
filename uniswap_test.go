@@ -62,7 +62,7 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.EthPrivateKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
 	v2.VaultAddress = common.HexToAddress("0xe200E404E4B9f700Eb8AF5D0bd59057a2097E61B")
 	v2.EthHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	v2.UniswapProxy = common.HexToAddress("0xB7D36fcB4F9Fd91Be73C49c9A4c050e3778321df")
+	v2.UniswapProxy = common.HexToAddress("0xd662641ae6276ED948d3aeB85dfB067281D7e26F")
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
 	v2.connectToETH()
 	v2.c = getFixedCommittee()
@@ -195,7 +195,8 @@ func (v2 *UniswapTestSuite) TestUniswapProxyBadcases() {
 	v2.auth.Value = deposit
 	expectedRate := v2.getExpectedRate([]common.Address{v2.EtherAddress, v2.DAIAddress}, deposit)
 	uniswap, err := uniswap.NewUniswap(v2.UniswapProxy, v2.ETHClient)
-	tx, err := uniswap.Trade(v2.auth, []common.Address{v2.WETH, v2.DAIAddress}, deposit, expectedRate, big.NewInt(600))
+	sec := time.Now().Unix()
+	tx, err := uniswap.Trade(v2.auth, []common.Address{v2.WETH, v2.DAIAddress}, deposit, expectedRate, big.NewInt(0).Add(big.NewInt(600), big.NewInt(sec)))
 	require.Equal(v2.T(), nil, err)
 	err = wait(v2.ETHClient, tx.Hash())
 	require.Equal(v2.T(), nil, err)
@@ -250,8 +251,8 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 	isErrorExpected bool,
 ) {
 	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapABI))
-
-	input, _ := tradeAbi.Pack("trade", paths, srcQty, expectRate, big.NewInt(600))
+	sec := time.Now().Unix()
+	input, _ := tradeAbi.Pack("trade", paths, srcQty, expectRate, big.NewInt(0).Add(big.NewInt(600), big.NewInt(sec)))
 	tx, err := runExecuteVault(v2.auth, v2.UniswapProxy, srcToken, srcQty, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
 	if !isErrorExpected {
 		require.Equal(v2.T(), nil, err)

@@ -65,15 +65,15 @@ contract UniswapV2Adapter is TradeUtils {
     }
 
     function ethToToken(address[] memory path, uint srcQty, uint amountOutMin, uint timeout) internal returns (uint[] memory) {
-        return uniswapV2.swapExactETHForTokens{value: srcQty}(amountOutMin, path, msg.sender, now + timeout);
+        return uniswapV2.swapExactETHForTokens{value: srcQty}(amountOutMin, path, msg.sender, timeout);
     }
 
     function tokenToEth(address[] memory path, uint srcQty, uint amountOutMin, uint timeout) internal returns (uint[] memory) {
-        return uniswapV2.swapExactTokensForETH(srcQty, amountOutMin, path, msg.sender, now + timeout);
+        return uniswapV2.swapExactTokensForETH(srcQty, amountOutMin, path, msg.sender, timeout);
     }
 
     function tokenToToken(address[] memory path, uint srcQty, uint amountOutMin, uint timeout) internal returns (uint[] memory) {
-        return uniswapV2.swapExactTokensForTokens(srcQty, amountOutMin, path, msg.sender, now + timeout);
+        return uniswapV2.swapExactTokensForTokens(srcQty, amountOutMin, path, msg.sender, timeout);
     }
 
     /**
