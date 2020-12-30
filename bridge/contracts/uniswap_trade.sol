@@ -1,4 +1,4 @@
-pragma solidity ^0.6.6;
+pragma solidity 0.6.6;
 
 import './trade_utils.sol';
 import './IERC20.sol';
@@ -24,7 +24,7 @@ interface UniswapV2 {
   function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
-contract UniswapV2Trade is TradeUtils {
+contract UniswapV2Adapter is TradeUtils {
     // Variables
     UniswapV2 public uniswapV2;
     address public wETH;
@@ -42,54 +42,46 @@ contract UniswapV2Trade is TradeUtils {
     // Reciever function which allows transfer eth.
     receive() external payable {}
 
-    function trade(IERC20 srcToken, uint srcQty, IERC20 destToken, uint amountOutMin) public payable returns (address, uint) {
-        require(balanceOf(srcToken) >= srcQty);
-        require(srcToken != destToken);
-        address[] memory path = new address[](2);
+    function trade(address[] calldata paths, uint srcQty , uint amountOutMin, uint timeout) external payable returns (address, uint) {
+        require(paths.length > 1);
+        address destToken = paths[paths.length - 1];
+        require(paths[0] != destToken);
         uint[] memory amounts;
-        if (srcToken != ETH_CONTRACT_ADDRESS) {
-            path[0] = address(srcToken);
+        if (paths[0] != wETH) {
             // approve
-            approve(srcToken, address(uniswapV2), srcQty);
-            if (destToken != ETH_CONTRACT_ADDRESS) { // token to token.
-                path[1] = address(destToken);
-                amounts = tokenToToken(path, srcQty, amountOutMin);
+            approve(IERC20(paths[0]), address(uniswapV2), srcQty);
+            if (destToken != wETH) { // token to token.
+                amounts = tokenToToken(paths, srcQty, amountOutMin, timeout);
             } else {
-                path[1] = address(wETH);
-                amounts = tokenToEth(path, srcQty, amountOutMin);
+                amounts = tokenToEth(paths, srcQty, amountOutMin, timeout);
+                destToken = address(ETH_CONTRACT_ADDRESS);
             }
         } else {
-            path[0] = address(wETH);
-            path[1] = address(destToken);
-            amounts = ethToToken(path, srcQty, amountOutMin);
+            amounts = ethToToken(paths, srcQty, amountOutMin, timeout);
         }
-        require(amounts.length >= 2);
+        require(amounts.length > 1);
         require(amounts[amounts.length - 1] >= amountOutMin && amounts[0] == srcQty);
-        return (address(destToken), amounts[amounts.length - 1]);
+        return (destToken, amounts[amounts.length - 1]);
     }
 
-    function ethToToken(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {
-        return uniswapV2.swapExactETHForTokens{value: srcQty}(amountOutMin, path, msg.sender, now + 600);
+    function ethToToken(address[] memory path, uint srcQty, uint amountOutMin, uint timeout) internal returns (uint[] memory) {
+        return uniswapV2.swapExactETHForTokens{value: srcQty}(amountOutMin, path, msg.sender, now + timeout);
     }
 
-    function tokenToEth(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {
-        return uniswapV2.swapExactTokensForETH(srcQty, amountOutMin, path, msg.sender, now + 600);
+    function tokenToEth(address[] memory path, uint srcQty, uint amountOutMin, uint timeout) internal returns (uint[] memory) {
+        return uniswapV2.swapExactTokensForETH(srcQty, amountOutMin, path, msg.sender, now + timeout);
     }
 
-    function tokenToToken(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {
-        return uniswapV2.swapExactTokensForTokens(srcQty, amountOutMin, path, msg.sender, now + 600);
+    function tokenToToken(address[] memory path, uint srcQty, uint amountOutMin, uint timeout) internal returns (uint[] memory) {
+        return uniswapV2.swapExactTokensForTokens(srcQty, amountOutMin, path, msg.sender, now + timeout);
     }
 
     /**
      * @dev Given an input asset amount and an array of token addresses, calculates all subsequent maximum output token.
-     * @param srcToken source token contract address
+     * @param paths the path from source toke to dest token
      * @param srcQty amount of source tokens
-     * @param destToken destination token contract address
      */
-    function getAmountsOut(address srcToken, uint srcQty, address destToken) external view returns(uint[] memory) {
-        address[] memory path = new address[](2);
-        path[0] = srcToken;
-        path[1] = destToken;
-        return uniswapV2.getAmountsOut(srcQty, path);
+    function getAmountsOut(address[] calldata paths, uint srcQty) external view returns(uint[] memory) {
+        return uniswapV2.getAmountsOut(srcQty, paths);
     }
 }

@@ -62,7 +62,7 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.EthPrivateKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
 	v2.VaultAddress = common.HexToAddress("0xe200E404E4B9f700Eb8AF5D0bd59057a2097E61B")
 	v2.EthHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	v2.UniswapProxy = common.HexToAddress("0x0DBdaA169F10d8859c39831f8e85b17dAa58fAF8")
+	v2.UniswapProxy = common.HexToAddress("0xB7D36fcB4F9Fd91Be73C49c9A4c050e3778321df")
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
 	v2.connectToETH()
 	v2.c = getFixedCommittee()
@@ -150,40 +150,40 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 	fmt.Printf("ETH depsited: %v", bal)
 
 	// Trade ETH - ERC20
-	expectedRate := v2.getExpectedRate(v2.WETH, v2.DAIAddress, bal)
+	expectedRate := v2.getExpectedRate([]common.Address{v2.WETH, v2.DAIAddress}, bal)
 	doubleExpectedRate := big.NewInt(0).Mul(big.NewInt(2), expectedRate)
 	// trade with rate higher than market provided
-	v2.executeWithUniswap(bal, v2.EtherAddress, v2.DAIAddress, doubleExpectedRate, true)
+	v2.executeWithUniswap(bal, v2.EtherAddress, v2.DAIAddress, []common.Address{v2.WETH, v2.DAIAddress}, doubleExpectedRate, true)
 	// trade amount source token greater than available
-	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.EtherAddress, v2.DAIAddress, doubleExpectedRate, true)
+	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.EtherAddress, v2.DAIAddress, []common.Address{v2.WETH, v2.DAIAddress},doubleExpectedRate, true)
 	// expect success on this case
-	v2.executeWithUniswap(bal, v2.EtherAddress, v2.DAIAddress, expectedRate, false)
+	v2.executeWithUniswap(bal, v2.EtherAddress, v2.DAIAddress, []common.Address{v2.WETH, v2.DAIAddress},expectedRate, false)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.DAIAddress, address)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal.Cmp(expectedRate) > -1, true)
 
 	// Trade ERC20 - ERC20
-	expectedRate = v2.getExpectedRate(v2.DAIAddress, v2.MRKAddressStr, bal)
+	expectedRate = v2.getExpectedRate([]common.Address{v2.DAIAddress, v2.MRKAddressStr}, bal)
 	doubleExpectedRate = big.NewInt(0).Mul(big.NewInt(2), expectedRate)
 	// trade with rate higher than market provided
-	v2.executeWithUniswap(bal, v2.DAIAddress, v2.MRKAddressStr, doubleExpectedRate, true)
+	v2.executeWithUniswap(bal, v2.DAIAddress, v2.MRKAddressStr, []common.Address{v2.WETH, v2.DAIAddress}, doubleExpectedRate, true)
 	// trade amount source token greater than available
-	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.DAIAddress, v2.MRKAddressStr, doubleExpectedRate, true)
+	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.DAIAddress, v2.MRKAddressStr, []common.Address{v2.DAIAddress, v2.MRKAddressStr}, doubleExpectedRate, true)
 	// expect success on this case
-	v2.executeWithUniswap(bal, v2.DAIAddress, v2.MRKAddressStr, expectedRate, false)
+	v2.executeWithUniswap(bal, v2.DAIAddress, v2.MRKAddressStr, []common.Address{v2.DAIAddress, v2.MRKAddressStr}, expectedRate, false)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.MRKAddressStr, address)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal.Cmp(expectedRate) > -1, true)
 
 	// Trade ERC20 - ETH
-	expectedRate = v2.getExpectedRate(v2.MRKAddressStr, v2.WETH, bal)
+	expectedRate = v2.getExpectedRate([]common.Address{v2.MRKAddressStr, v2.WETH}, bal)
 	doubleExpectedRate = big.NewInt(0).Mul(big.NewInt(2), expectedRate)
 	// trade with rate higher than market provided
-	v2.executeWithUniswap(bal, v2.MRKAddressStr, v2.EtherAddress, doubleExpectedRate, true)
+	v2.executeWithUniswap(bal, v2.MRKAddressStr, v2.EtherAddress, []common.Address{v2.WETH, v2.DAIAddress}, doubleExpectedRate, true)
 	// trade amount source token greater than available
-	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.MRKAddressStr, v2.EtherAddress, doubleExpectedRate, true)
+	v2.executeWithUniswap(big.NewInt(0).Add(bal, big.NewInt(1)), v2.MRKAddressStr, v2.EtherAddress, []common.Address{v2.MRKAddressStr, v2.WETH} ,doubleExpectedRate, true)
 	// expect success on this case
-	v2.executeWithUniswap(bal, v2.MRKAddressStr, v2.EtherAddress, expectedRate, false)
+	v2.executeWithUniswap(bal, v2.MRKAddressStr, v2.EtherAddress, []common.Address{v2.MRKAddressStr, v2.WETH} ,expectedRate, false)
 	bal, err = v2.v.GetDepositedBalance(nil, v2.EtherAddress, address)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal.Cmp(expectedRate) > -1, true)
@@ -193,9 +193,9 @@ func (v2 *UniswapTestSuite) TestUniswapProxyBadcases() {
 	// anyone can call kyberproxy to trade directly 
 	deposit := big.NewInt(int64(8e9))
 	v2.auth.Value = deposit
-	expectedRate := v2.getExpectedRate(v2.EtherAddress, v2.DAIAddress, deposit)
-	uniswap, err := uniswap.NewUniswapV2Trade(v2.UniswapProxy, v2.ETHClient)
-	tx, err := uniswap.Trade(v2.auth, v2.EtherAddress, deposit, v2.DAIAddress, expectedRate)
+	expectedRate := v2.getExpectedRate([]common.Address{v2.EtherAddress, v2.DAIAddress}, deposit)
+	uniswap, err := uniswap.NewUniswap(v2.UniswapProxy, v2.ETHClient)
+	tx, err := uniswap.Trade(v2.auth, []common.Address{v2.WETH, v2.DAIAddress}, deposit, expectedRate, big.NewInt(600))
 	require.Equal(v2.T(), nil, err)
 	err = wait(v2.ETHClient, tx.Hash())
 	require.Equal(v2.T(), nil, err)
@@ -220,19 +220,19 @@ func (v2 *UniswapTestSuite) TestUniswapProxyBadcases() {
 }
 
 func (v2 *UniswapTestSuite) getExpectedRate(
-	srcToken common.Address,
-	destToken common.Address,
+	paths []common.Address,
 	srcQty *big.Int,
 ) *big.Int {
-	if srcToken == v2.EtherAddress {
-		srcToken = v2.WETH
+	require.Equal(v2.T(), true, len(paths) > 1)
+	if paths[0] == v2.EtherAddress {
+		paths[0] = v2.WETH
 	}
-	if destToken == v2.EtherAddress {
-		destToken = v2.WETH
+	if paths[len(paths) - 1] == v2.EtherAddress {
+		paths[len(paths) - 1] = v2.WETH
 	}
-	c, err := uniswap.NewUniswapV2Trade(v2.UniswapProxy, v2.ETHClient)
+	c, err := uniswap.NewUniswap(v2.UniswapProxy, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
-	amounts, err := c.GetAmountsOut(nil, srcToken, srcQty, destToken)
+	amounts, err := c.GetAmountsOut(nil, paths, srcQty, )
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), 2, len(amounts))
 	fmt.Printf("intput value: %d\n", amounts[0])
@@ -245,11 +245,13 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 	srcQty *big.Int,
 	srcToken common.Address,
 	destToken common.Address,
+	paths []common.Address,
 	expectRate *big.Int,
 	isErrorExpected bool,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapV2TradeABI))
-	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectRate)
+	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapABI))
+
+	input, _ := tradeAbi.Pack("trade", paths, srcQty, expectRate, big.NewInt(600))
 	tx, err := runExecuteVault(v2.auth, v2.UniswapProxy, srcToken, srcQty, destToken, input, v2.v, []byte(randomizeTimestamp()), v2.ETHPrivKey)
 	if !isErrorExpected {
 		require.Equal(v2.T(), nil, err)

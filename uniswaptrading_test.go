@@ -86,23 +86,17 @@ func TestUniswapTradingTestSuite(t *testing.T) {
 }
 
 func (tradingSuite *UniswapTradingTestSuite) getExpectedAmount(
-	srcToken string,
-	destToken string,
+	paths []common.Address,
 	srcQty *big.Int,
 ) *big.Int {
-	if srcToken == tradingSuite.EtherAddressStr {
-		srcToken = tradingSuite.WETHAddr
-	}
-	if destToken == tradingSuite.EtherAddressStr {
-		destToken = tradingSuite.WETHAddr
-	}
-	c, err := uniswap.NewUniswapV2Trade(tradingSuite.UniswapTradeDeployedAddr, tradingSuite.ETHClient)
+	require.Equal(tradingSuite.T(), true, len(paths) > 1)
+	c, err := uniswap.NewUniswap(tradingSuite.UniswapTradeDeployedAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	amounts, err := c.GetAmountsOut(nil, common.HexToAddress(srcToken), srcQty, common.HexToAddress(destToken))
+	amounts, err := c.GetAmountsOut(nil, paths, srcQty)
 	require.Equal(tradingSuite.T(), nil, err)
 	require.Equal(tradingSuite.T(), 2, len(amounts))
 	fmt.Printf("intput value: %d\n", amounts[0])
-	fmt.Printf("output value: %d\n", amounts[1])
+	fmt.Printf("output value: %d\n", amounts[len(amounts) - 1])
 	return amounts[1]
 }
 
@@ -111,7 +105,7 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	srcTokenIDStr string,
 	destTokenIDStr string,
 ) {
-	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapV2TradeABI))
+	tradeAbi, _ := abi.JSON(strings.NewReader(uniswap.UniswapABI))
 
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
@@ -121,8 +115,15 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	// auth.GasLimit = 2000000
 	srcToken := common.HexToAddress(srcTokenIDStr)
 	destToken := common.HexToAddress(destTokenIDStr)
-	expectOutputAmount := tradingSuite.getExpectedAmount(srcTokenIDStr, destTokenIDStr, srcQty)
-	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectOutputAmount)
+	expectOutputAmount := tradingSuite.getExpectedAmount([]common.Address{srcToken, destToken}, srcQty)
+	tradeSrcToken := srcToken
+	tradeDestToken := destToken
+	if srcToken == common.HexToAddress(tradingSuite.EtherAddressStr) {
+		tradeSrcToken = common.HexToAddress(tradingSuite.WETHAddr)
+	} else if destToken == common.HexToAddress(tradingSuite.EtherAddressStr) {
+		tradeDestToken = common.HexToAddress(tradingSuite.WETHAddr)
+	}
+	input, _ := tradeAbi.Pack("trade", []common.Address{tradeSrcToken, tradeDestToken}, srcQty, expectOutputAmount, big.NewInt(600))
 	timestamp := []byte(randomizeTimestamp())
 	tempData := append(tradingSuite.UniswapTradeDeployedAddr[:], input...)
 	tempData1 := append(tempData, timestamp...)

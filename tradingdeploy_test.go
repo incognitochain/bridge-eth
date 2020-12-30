@@ -137,7 +137,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	fmt.Printf("addr: %s\n", zrxTradeAddr.Hex())
 
 	// Deploy uniswaptrade
-	uniswapAddr, tx, _, err := uniswap.DeployUniswapV2Trade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr)
+	uniswapAddr, tx, _, err := uniswap.DeployUniswap(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed uniswap adapter")
 	fmt.Printf("addr: %s\n", uniswapAddr.Hex())

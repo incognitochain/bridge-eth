@@ -26,758 +26,124 @@ var (
 	_ = event.NewSubscription
 )
 
-// IERC20ABI is the input ABI used to generate the binding from.
-const IERC20ABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-
-// IERC20FuncSigs maps the 4-byte function signature to its string representation.
-var IERC20FuncSigs = map[string]string{
-	"dd62ed3e": "allowance(address,address)",
-	"095ea7b3": "approve(address,uint256)",
-	"70a08231": "balanceOf(address)",
-	"313ce567": "decimals()",
-	"18160ddd": "totalSupply()",
-	"a9059cbb": "transfer(address,uint256)",
-	"23b872dd": "transferFrom(address,address,uint256)",
-}
-
-// IERC20 is an auto generated Go binding around an Ethereum contract.
-type IERC20 struct {
-	IERC20Caller     // Read-only binding to the contract
-	IERC20Transactor // Write-only binding to the contract
-	IERC20Filterer   // Log filterer for contract events
-}
-
-// IERC20Caller is an auto generated read-only Go binding around an Ethereum contract.
-type IERC20Caller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// IERC20Transactor is an auto generated write-only Go binding around an Ethereum contract.
-type IERC20Transactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// IERC20Filterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type IERC20Filterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// IERC20Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type IERC20Session struct {
-	Contract     *IERC20           // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC20CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type IERC20CallerSession struct {
-	Contract *IERC20Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// IERC20TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type IERC20TransactorSession struct {
-	Contract     *IERC20Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// IERC20Raw is an auto generated low-level Go binding around an Ethereum contract.
-type IERC20Raw struct {
-	Contract *IERC20 // Generic contract binding to access the raw methods on
-}
-
-// IERC20CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type IERC20CallerRaw struct {
-	Contract *IERC20Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// IERC20TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type IERC20TransactorRaw struct {
-	Contract *IERC20Transactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewIERC20 creates a new instance of IERC20, bound to a specific deployed contract.
-func NewIERC20(address common.Address, backend bind.ContractBackend) (*IERC20, error) {
-	contract, err := bindIERC20(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &IERC20{IERC20Caller: IERC20Caller{contract: contract}, IERC20Transactor: IERC20Transactor{contract: contract}, IERC20Filterer: IERC20Filterer{contract: contract}}, nil
-}
-
-// NewIERC20Caller creates a new read-only instance of IERC20, bound to a specific deployed contract.
-func NewIERC20Caller(address common.Address, caller bind.ContractCaller) (*IERC20Caller, error) {
-	contract, err := bindIERC20(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &IERC20Caller{contract: contract}, nil
-}
-
-// NewIERC20Transactor creates a new write-only instance of IERC20, bound to a specific deployed contract.
-func NewIERC20Transactor(address common.Address, transactor bind.ContractTransactor) (*IERC20Transactor, error) {
-	contract, err := bindIERC20(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &IERC20Transactor{contract: contract}, nil
-}
-
-// NewIERC20Filterer creates a new log filterer instance of IERC20, bound to a specific deployed contract.
-func NewIERC20Filterer(address common.Address, filterer bind.ContractFilterer) (*IERC20Filterer, error) {
-	contract, err := bindIERC20(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &IERC20Filterer{contract: contract}, nil
-}
-
-// bindIERC20 binds a generic wrapper to an already deployed contract.
-func bindIERC20(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(IERC20ABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _IERC20.Contract.IERC20Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC20 *IERC20Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC20.Contract.IERC20Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC20 *IERC20Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC20.Contract.IERC20Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _IERC20.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_IERC20 *IERC20TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _IERC20.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _IERC20.Contract.contract.Transact(opts, method, params...)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "allowance", owner, spender)
-	return *ret0, err
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
-}
-
-// Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
-//
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
-func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
-	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address account) view returns(uint256)
-func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "balanceOf", account)
-	return *ret0, err
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address account) view returns(uint256)
-func (_IERC20 *IERC20Session) BalanceOf(account common.Address) (*big.Int, error) {
-	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
-}
-
-// BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
-//
-// Solidity: function balanceOf(address account) view returns(uint256)
-func (_IERC20 *IERC20CallerSession) BalanceOf(account common.Address) (*big.Int, error) {
-	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint256)
-func (_IERC20 *IERC20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "decimals")
-	return *ret0, err
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint256)
-func (_IERC20 *IERC20Session) Decimals() (*big.Int, error) {
-	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
-}
-
-// Decimals is a free data retrieval call binding the contract method 0x313ce567.
-//
-// Solidity: function decimals() view returns(uint256)
-func (_IERC20 *IERC20CallerSession) Decimals() (*big.Int, error) {
-	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
-	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
-}
-
-// TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
-//
-// Solidity: function totalSupply() view returns(uint256)
-func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
-	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 amount) returns()
-func (_IERC20 *IERC20Transactor) Approve(opts *bind.TransactOpts, spender common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.contract.Transact(opts, "approve", spender, amount)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 amount) returns()
-func (_IERC20 *IERC20Session) Approve(spender common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Approve(&_IERC20.TransactOpts, spender, amount)
-}
-
-// Approve is a paid mutator transaction binding the contract method 0x095ea7b3.
-//
-// Solidity: function approve(address spender, uint256 amount) returns()
-func (_IERC20 *IERC20TransactorSession) Approve(spender common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Approve(&_IERC20.TransactOpts, spender, amount)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address recipient, uint256 amount) returns()
-func (_IERC20 *IERC20Transactor) Transfer(opts *bind.TransactOpts, recipient common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.contract.Transact(opts, "transfer", recipient, amount)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address recipient, uint256 amount) returns()
-func (_IERC20 *IERC20Session) Transfer(recipient common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Transfer(&_IERC20.TransactOpts, recipient, amount)
-}
-
-// Transfer is a paid mutator transaction binding the contract method 0xa9059cbb.
-//
-// Solidity: function transfer(address recipient, uint256 amount) returns()
-func (_IERC20 *IERC20TransactorSession) Transfer(recipient common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.Transfer(&_IERC20.TransactOpts, recipient, amount)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address sender, address recipient, uint256 amount) returns()
-func (_IERC20 *IERC20Transactor) TransferFrom(opts *bind.TransactOpts, sender common.Address, recipient common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.contract.Transact(opts, "transferFrom", sender, recipient, amount)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address sender, address recipient, uint256 amount) returns()
-func (_IERC20 *IERC20Session) TransferFrom(sender common.Address, recipient common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.TransferFrom(&_IERC20.TransactOpts, sender, recipient, amount)
-}
-
-// TransferFrom is a paid mutator transaction binding the contract method 0x23b872dd.
-//
-// Solidity: function transferFrom(address sender, address recipient, uint256 amount) returns()
-func (_IERC20 *IERC20TransactorSession) TransferFrom(sender common.Address, recipient common.Address, amount *big.Int) (*types.Transaction, error) {
-	return _IERC20.Contract.TransferFrom(&_IERC20.TransactOpts, sender, recipient, amount)
-}
-
-// IERC20ApprovalIterator is returned from FilterApproval and is used to iterate over the raw logs and unpacked data for Approval events raised by the IERC20 contract.
-type IERC20ApprovalIterator struct {
-	Event *IERC20Approval // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *IERC20ApprovalIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(IERC20Approval)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(IERC20Approval)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *IERC20ApprovalIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *IERC20ApprovalIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// IERC20Approval represents a Approval event raised by the IERC20 contract.
-type IERC20Approval struct {
-	Owner   common.Address
-	Spender common.Address
-	Value   *big.Int
-	Raw     types.Log // Blockchain specific contextual infos
-}
-
-// FilterApproval is a free log retrieval operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
-//
-// Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
-func (_IERC20 *IERC20Filterer) FilterApproval(opts *bind.FilterOpts, owner []common.Address, spender []common.Address) (*IERC20ApprovalIterator, error) {
-
-	var ownerRule []interface{}
-	for _, ownerItem := range owner {
-		ownerRule = append(ownerRule, ownerItem)
-	}
-	var spenderRule []interface{}
-	for _, spenderItem := range spender {
-		spenderRule = append(spenderRule, spenderItem)
-	}
-
-	logs, sub, err := _IERC20.contract.FilterLogs(opts, "Approval", ownerRule, spenderRule)
-	if err != nil {
-		return nil, err
-	}
-	return &IERC20ApprovalIterator{contract: _IERC20.contract, event: "Approval", logs: logs, sub: sub}, nil
-}
-
-// WatchApproval is a free log subscription operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
-//
-// Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
-func (_IERC20 *IERC20Filterer) WatchApproval(opts *bind.WatchOpts, sink chan<- *IERC20Approval, owner []common.Address, spender []common.Address) (event.Subscription, error) {
-
-	var ownerRule []interface{}
-	for _, ownerItem := range owner {
-		ownerRule = append(ownerRule, ownerItem)
-	}
-	var spenderRule []interface{}
-	for _, spenderItem := range spender {
-		spenderRule = append(spenderRule, spenderItem)
-	}
-
-	logs, sub, err := _IERC20.contract.WatchLogs(opts, "Approval", ownerRule, spenderRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(IERC20Approval)
-				if err := _IERC20.contract.UnpackLog(event, "Approval", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseApproval is a log parse operation binding the contract event 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925.
-//
-// Solidity: event Approval(address indexed owner, address indexed spender, uint256 value)
-func (_IERC20 *IERC20Filterer) ParseApproval(log types.Log) (*IERC20Approval, error) {
-	event := new(IERC20Approval)
-	if err := _IERC20.contract.UnpackLog(event, "Approval", log); err != nil {
-		return nil, err
-	}
-	return event, nil
-}
-
-// IERC20TransferIterator is returned from FilterTransfer and is used to iterate over the raw logs and unpacked data for Transfer events raised by the IERC20 contract.
-type IERC20TransferIterator struct {
-	Event *IERC20Transfer // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *IERC20TransferIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(IERC20Transfer)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(IERC20Transfer)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *IERC20TransferIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *IERC20TransferIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// IERC20Transfer represents a Transfer event raised by the IERC20 contract.
-type IERC20Transfer struct {
-	From  common.Address
-	To    common.Address
-	Value *big.Int
-	Raw   types.Log // Blockchain specific contextual infos
-}
-
-// FilterTransfer is a free log retrieval operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
-//
-// Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
-func (_IERC20 *IERC20Filterer) FilterTransfer(opts *bind.FilterOpts, from []common.Address, to []common.Address) (*IERC20TransferIterator, error) {
-
-	var fromRule []interface{}
-	for _, fromItem := range from {
-		fromRule = append(fromRule, fromItem)
-	}
-	var toRule []interface{}
-	for _, toItem := range to {
-		toRule = append(toRule, toItem)
-	}
-
-	logs, sub, err := _IERC20.contract.FilterLogs(opts, "Transfer", fromRule, toRule)
-	if err != nil {
-		return nil, err
-	}
-	return &IERC20TransferIterator{contract: _IERC20.contract, event: "Transfer", logs: logs, sub: sub}, nil
-}
-
-// WatchTransfer is a free log subscription operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
-//
-// Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
-func (_IERC20 *IERC20Filterer) WatchTransfer(opts *bind.WatchOpts, sink chan<- *IERC20Transfer, from []common.Address, to []common.Address) (event.Subscription, error) {
-
-	var fromRule []interface{}
-	for _, fromItem := range from {
-		fromRule = append(fromRule, fromItem)
-	}
-	var toRule []interface{}
-	for _, toItem := range to {
-		toRule = append(toRule, toItem)
-	}
-
-	logs, sub, err := _IERC20.contract.WatchLogs(opts, "Transfer", fromRule, toRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(IERC20Transfer)
-				if err := _IERC20.contract.UnpackLog(event, "Transfer", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseTransfer is a log parse operation binding the contract event 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef.
-//
-// Solidity: event Transfer(address indexed from, address indexed to, uint256 value)
-func (_IERC20 *IERC20Filterer) ParseTransfer(log types.Log) (*IERC20Transfer, error) {
-	event := new(IERC20Transfer)
-	if err := _IERC20.contract.UnpackLog(event, "Transfer", log); err != nil {
-		return nil, err
-	}
-	return event, nil
-}
-
-// TradeUtilsABI is the input ABI used to generate the binding from.
-const TradeUtilsABI = "[{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
-
-// TradeUtilsFuncSigs maps the 4-byte function signature to its string representation.
-var TradeUtilsFuncSigs = map[string]string{
-	"72e94bf6": "ETH_CONTRACT_ADDRESS()",
-}
-
-// TradeUtilsBin is the compiled bytecode used for deploying new contracts.
-var TradeUtilsBin = "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220a6aec8323642108e5c978232467d26c828e8333ce7c86a3f7108114d7c01cd4664736f6c63430006060033"
-
-// DeployTradeUtils deploys a new Ethereum contract, binding an instance of TradeUtils to it.
-func DeployTradeUtils(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *TradeUtils, error) {
-	parsed, err := abi.JSON(strings.NewReader(TradeUtilsABI))
+// UniswapABI is the input ABI used to generate the binding from.
+const UniswapABI = "[{\"inputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"_uniswapV2\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"paths\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"paths\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"timeout\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapV2\",\"outputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
+
+// UniswapBin is the compiled bytecode used for deploying new contracts.
+var UniswapBin = "0x608060405234801561001057600080fd5b5060405161116e38038061116e8339818101604052602081101561003357600080fd5b8101908080519060200190929190505050806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663ad5c46486040518163ffffffff1660e01b815260040160206040518083038186803b1580156100eb57600080fd5b505afa1580156100ff573d6000803e3d6000fd5b505050506040513d602081101561011557600080fd5b8101908080519060200190929190505050600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050610ff8806101766000396000f3fe60806040526004361061004e5760003560e01c806311897c9a1461005a5780635187c0911461013f57806372e94bf614610196578063e5d8a39d146101ed578063f2428621146102cb57610055565b3661005557005b600080fd5b34801561006657600080fd5b506100e86004803603604081101561007d57600080fd5b810190808035906020019064010000000081111561009a57600080fd5b8201836020820111156100ac57600080fd5b803590602001918460208302840111640100000000831117156100ce57600080fd5b909192939192939080359060200190929190505050610322565b6040518080602001828103825283818151815260200191508051906020019060200280838360005b8381101561012b578082015181840152602081019050610110565b505050509050019250505060405180910390f35b34801561014b57600080fd5b506101546104ab565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156101a257600080fd5b506101ab6104d0565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6102826004803603608081101561020357600080fd5b810190808035906020019064010000000081111561022057600080fd5b82018360208201111561023257600080fd5b8035906020019184602083028401116401000000008311171561025457600080fd5b90919293919293908035906020019092919080359060200190929190803590602001909291905050506104d5565b604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019250505060405180910390f35b3480156102d757600080fd5b506102e061081e565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b60606000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663d06ca61f8386866040518463ffffffff1660e01b815260040180848152602001806020018281038252848482818152602001925060200280828437600081840152601f19601f82011690508083019250505094505050505060006040518083038186803b1580156103cd57600080fd5b505afa1580156103e1573d6000803e3d6000fd5b505050506040513d6000823e3d601f19601f82011682018060405250602081101561040b57600080fd5b810190808051604051939291908464010000000082111561042b57600080fd5b8382019150602082018581111561044157600080fd5b825186602082028301116401000000008211171561045e57600080fd5b8083526020830192505050908051906020019060200280838360005b8381101561049557808201518184015260208101905061047a565b5050505090500160405250505090509392505050565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600081565b600080600187879050116104e857600080fd5b6000878760018a8a9050038181106104fc57fe5b9050602002013573ffffffffffffffffffffffffffffffffffffffff1690508073ffffffffffffffffffffffffffffffffffffffff168888600081811061053f57fe5b9050602002013573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141561057d57600080fd5b6060600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16898960008181106105c557fe5b9050602002013573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1614610754576106528989600081811061060d57fe5b9050602002013573ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1689610844565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff16146106fb576106f4898980806020026020016040519081016040528093929190818152602001838360200280828437600081840152601f19601f820116905080830192505050505050508888886109df565b905061074f565b610748898980806020026020016040519081016040528093929190818152602001838360200280828437600081840152601f19601f82011690508083019250505050505050888888610bc3565b9050600091505b6107a4565b6107a1898980806020026020016040519081016040528093929190818152602001838360200280828437600081840152601f19601f82011690508083019250505050505050888888610da7565b90505b60018151116107b257600080fd5b85816001835103815181106107c357fe5b6020026020010151101580156107ec575086816000815181106107e257fe5b6020026020010151145b6107f557600080fd5b818160018351038151811061080657fe5b60200260200101519350935050509550959350505050565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff16146109da578273ffffffffffffffffffffffffffffffffffffffff1663095ea7b38360006040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b15801561090057600080fd5b505af1158015610914573d6000803e3d6000fd5b50505050610920610f84565b61092957600080fd5b8273ffffffffffffffffffffffffffffffffffffffff1663095ea7b383836040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b1580156109b057600080fd5b505af11580156109c4573d6000803e3d6000fd5b505050506109d0610f84565b6109d957600080fd5b5b505050565b60606000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166338ed1739858588338742016040518663ffffffff1660e01b815260040180868152602001858152602001806020018473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610abb578082015181840152602081019050610aa0565b505050509050019650505050505050600060405180830381600087803b158015610ae457600080fd5b505af1158015610af8573d6000803e3d6000fd5b505050506040513d6000823e3d601f19601f820116820180604052506020811015610b2257600080fd5b8101908080516040519392919084640100000000821115610b4257600080fd5b83820191506020820185811115610b5857600080fd5b8251866020820283011164010000000082111715610b7557600080fd5b8083526020830192505050908051906020019060200280838360005b83811015610bac578082015181840152602081019050610b91565b505050509050016040525050509050949350505050565b60606000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166318cbafe5858588338742016040518663ffffffff1660e01b815260040180868152602001858152602001806020018473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610c9f578082015181840152602081019050610c84565b505050509050019650505050505050600060405180830381600087803b158015610cc857600080fd5b505af1158015610cdc573d6000803e3d6000fd5b505050506040513d6000823e3d601f19601f820116820180604052506020811015610d0657600080fd5b8101908080516040519392919084640100000000821115610d2657600080fd5b83820191506020820185811115610d3c57600080fd5b8251866020820283011164010000000082111715610d5957600080fd5b8083526020830192505050908051906020019060200280838360005b83811015610d90578082015181840152602081019050610d75565b505050509050016040525050509050949350505050565b60606000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16637ff36ab5858588338742016040518663ffffffff1660e01b815260040180858152602001806020018473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610e7d578082015181840152602081019050610e62565b50505050905001955050505050506000604051808303818588803b158015610ea457600080fd5b505af1158015610eb8573d6000803e3d6000fd5b50505050506040513d6000823e3d601f19601f820116820180604052506020811015610ee357600080fd5b8101908080516040519392919084640100000000821115610f0357600080fd5b83820191506020820185811115610f1957600080fd5b8251866020820283011164010000000082111715610f3657600080fd5b8083526020830192505050908051906020019060200280838360005b83811015610f6d578082015181840152602081019050610f52565b505050509050016040525050509050949350505050565b600080600090503d60008114610fa15760208114610faa57610fb6565b60019150610fb6565b60206000803e60005191505b5060008114159150509056fea2646970667358221220384347c97312ac935f47e60dacc5caa1e0cf0fa3e135b55b72b6538062d7a4d864736f6c63430006060033"
+
+// DeployUniswap deploys a new Ethereum contract, binding an instance of Uniswap to it.
+func DeployUniswap(auth *bind.TransactOpts, backend bind.ContractBackend, _uniswapV2 common.Address) (common.Address, *types.Transaction, *Uniswap, error) {
+	parsed, err := abi.JSON(strings.NewReader(UniswapABI))
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(TradeUtilsBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(UniswapBin), backend, _uniswapV2)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	return address, tx, &TradeUtils{TradeUtilsCaller: TradeUtilsCaller{contract: contract}, TradeUtilsTransactor: TradeUtilsTransactor{contract: contract}, TradeUtilsFilterer: TradeUtilsFilterer{contract: contract}}, nil
+	return address, tx, &Uniswap{UniswapCaller: UniswapCaller{contract: contract}, UniswapTransactor: UniswapTransactor{contract: contract}, UniswapFilterer: UniswapFilterer{contract: contract}}, nil
 }
 
-// TradeUtils is an auto generated Go binding around an Ethereum contract.
-type TradeUtils struct {
-	TradeUtilsCaller     // Read-only binding to the contract
-	TradeUtilsTransactor // Write-only binding to the contract
-	TradeUtilsFilterer   // Log filterer for contract events
+// Uniswap is an auto generated Go binding around an Ethereum contract.
+type Uniswap struct {
+	UniswapCaller     // Read-only binding to the contract
+	UniswapTransactor // Write-only binding to the contract
+	UniswapFilterer   // Log filterer for contract events
 }
 
-// TradeUtilsCaller is an auto generated read-only Go binding around an Ethereum contract.
-type TradeUtilsCaller struct {
+// UniswapCaller is an auto generated read-only Go binding around an Ethereum contract.
+type UniswapCaller struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// TradeUtilsTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type TradeUtilsTransactor struct {
+// UniswapTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type UniswapTransactor struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// TradeUtilsFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type TradeUtilsFilterer struct {
+// UniswapFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type UniswapFilterer struct {
 	contract *bind.BoundContract // Generic contract wrapper for the low level calls
 }
 
-// TradeUtilsSession is an auto generated Go binding around an Ethereum contract,
+// UniswapSession is an auto generated Go binding around an Ethereum contract,
 // with pre-set call and transact options.
-type TradeUtilsSession struct {
-	Contract     *TradeUtils       // Generic contract binding to set the session for
+type UniswapSession struct {
+	Contract     *Uniswap          // Generic contract binding to set the session for
 	CallOpts     bind.CallOpts     // Call options to use throughout this session
 	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
 }
 
-// TradeUtilsCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// UniswapCallerSession is an auto generated read-only Go binding around an Ethereum contract,
 // with pre-set call options.
-type TradeUtilsCallerSession struct {
-	Contract *TradeUtilsCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts     // Call options to use throughout this session
+type UniswapCallerSession struct {
+	Contract *UniswapCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts  // Call options to use throughout this session
 }
 
-// TradeUtilsTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// UniswapTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
 // with pre-set transact options.
-type TradeUtilsTransactorSession struct {
-	Contract     *TradeUtilsTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts     // Transaction auth options to use throughout this session
+type UniswapTransactorSession struct {
+	Contract     *UniswapTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
 }
 
-// TradeUtilsRaw is an auto generated low-level Go binding around an Ethereum contract.
-type TradeUtilsRaw struct {
-	Contract *TradeUtils // Generic contract binding to access the raw methods on
+// UniswapRaw is an auto generated low-level Go binding around an Ethereum contract.
+type UniswapRaw struct {
+	Contract *Uniswap // Generic contract binding to access the raw methods on
 }
 
-// TradeUtilsCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type TradeUtilsCallerRaw struct {
-	Contract *TradeUtilsCaller // Generic read-only contract binding to access the raw methods on
+// UniswapCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type UniswapCallerRaw struct {
+	Contract *UniswapCaller // Generic read-only contract binding to access the raw methods on
 }
 
-// TradeUtilsTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type TradeUtilsTransactorRaw struct {
-	Contract *TradeUtilsTransactor // Generic write-only contract binding to access the raw methods on
+// UniswapTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type UniswapTransactorRaw struct {
+	Contract *UniswapTransactor // Generic write-only contract binding to access the raw methods on
 }
 
-// NewTradeUtils creates a new instance of TradeUtils, bound to a specific deployed contract.
-func NewTradeUtils(address common.Address, backend bind.ContractBackend) (*TradeUtils, error) {
-	contract, err := bindTradeUtils(address, backend, backend, backend)
+// NewUniswap creates a new instance of Uniswap, bound to a specific deployed contract.
+func NewUniswap(address common.Address, backend bind.ContractBackend) (*Uniswap, error) {
+	contract, err := bindUniswap(address, backend, backend, backend)
 	if err != nil {
 		return nil, err
 	}
-	return &TradeUtils{TradeUtilsCaller: TradeUtilsCaller{contract: contract}, TradeUtilsTransactor: TradeUtilsTransactor{contract: contract}, TradeUtilsFilterer: TradeUtilsFilterer{contract: contract}}, nil
+	return &Uniswap{UniswapCaller: UniswapCaller{contract: contract}, UniswapTransactor: UniswapTransactor{contract: contract}, UniswapFilterer: UniswapFilterer{contract: contract}}, nil
 }
 
-// NewTradeUtilsCaller creates a new read-only instance of TradeUtils, bound to a specific deployed contract.
-func NewTradeUtilsCaller(address common.Address, caller bind.ContractCaller) (*TradeUtilsCaller, error) {
-	contract, err := bindTradeUtils(address, caller, nil, nil)
+// NewUniswapCaller creates a new read-only instance of Uniswap, bound to a specific deployed contract.
+func NewUniswapCaller(address common.Address, caller bind.ContractCaller) (*UniswapCaller, error) {
+	contract, err := bindUniswap(address, caller, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &TradeUtilsCaller{contract: contract}, nil
+	return &UniswapCaller{contract: contract}, nil
 }
 
-// NewTradeUtilsTransactor creates a new write-only instance of TradeUtils, bound to a specific deployed contract.
-func NewTradeUtilsTransactor(address common.Address, transactor bind.ContractTransactor) (*TradeUtilsTransactor, error) {
-	contract, err := bindTradeUtils(address, nil, transactor, nil)
+// NewUniswapTransactor creates a new write-only instance of Uniswap, bound to a specific deployed contract.
+func NewUniswapTransactor(address common.Address, transactor bind.ContractTransactor) (*UniswapTransactor, error) {
+	contract, err := bindUniswap(address, nil, transactor, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &TradeUtilsTransactor{contract: contract}, nil
+	return &UniswapTransactor{contract: contract}, nil
 }
 
-// NewTradeUtilsFilterer creates a new log filterer instance of TradeUtils, bound to a specific deployed contract.
-func NewTradeUtilsFilterer(address common.Address, filterer bind.ContractFilterer) (*TradeUtilsFilterer, error) {
-	contract, err := bindTradeUtils(address, nil, nil, filterer)
+// NewUniswapFilterer creates a new log filterer instance of Uniswap, bound to a specific deployed contract.
+func NewUniswapFilterer(address common.Address, filterer bind.ContractFilterer) (*UniswapFilterer, error) {
+	contract, err := bindUniswap(address, nil, nil, filterer)
 	if err != nil {
 		return nil, err
 	}
-	return &TradeUtilsFilterer{contract: contract}, nil
+	return &UniswapFilterer{contract: contract}, nil
 }
 
-// bindTradeUtils binds a generic wrapper to an already deployed contract.
-func bindTradeUtils(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(TradeUtilsABI))
+// bindUniswap binds a generic wrapper to an already deployed contract.
+func bindUniswap(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := abi.JSON(strings.NewReader(UniswapABI))
 	if err != nil {
 		return nil, err
 	}
@@ -788,654 +154,161 @@ func bindTradeUtils(address common.Address, caller bind.ContractCaller, transact
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_TradeUtils *TradeUtilsRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _TradeUtils.Contract.TradeUtilsCaller.contract.Call(opts, result, method, params...)
+func (_Uniswap *UniswapRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _Uniswap.Contract.UniswapCaller.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_TradeUtils *TradeUtilsRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TradeUtils.Contract.TradeUtilsTransactor.contract.Transfer(opts)
+func (_Uniswap *UniswapRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Uniswap.Contract.UniswapTransactor.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_TradeUtils *TradeUtilsRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TradeUtils.Contract.TradeUtilsTransactor.contract.Transact(opts, method, params...)
+func (_Uniswap *UniswapRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Uniswap.Contract.UniswapTransactor.contract.Transact(opts, method, params...)
 }
 
 // Call invokes the (constant) contract method with params as input values and
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_TradeUtils *TradeUtilsCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _TradeUtils.Contract.contract.Call(opts, result, method, params...)
+func (_Uniswap *UniswapCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+	return _Uniswap.Contract.contract.Call(opts, result, method, params...)
 }
 
 // Transfer initiates a plain transaction to move funds to the contract, calling
 // its default method if one is available.
-func (_TradeUtils *TradeUtilsTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TradeUtils.Contract.contract.Transfer(opts)
+func (_Uniswap *UniswapTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Uniswap.Contract.contract.Transfer(opts)
 }
 
 // Transact invokes the (paid) contract method with params as input values.
-func (_TradeUtils *TradeUtilsTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TradeUtils.Contract.contract.Transact(opts, method, params...)
+func (_Uniswap *UniswapTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Uniswap.Contract.contract.Transact(opts, method, params...)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
 // Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
-func (_TradeUtils *TradeUtilsCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
+func (_Uniswap *UniswapCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
 	)
 	out := ret0
-	err := _TradeUtils.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
+	err := _Uniswap.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
 	return *ret0, err
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
 // Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
-func (_TradeUtils *TradeUtilsSession) ETHCONTRACTADDRESS() (common.Address, error) {
-	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
+func (_Uniswap *UniswapSession) ETHCONTRACTADDRESS() (common.Address, error) {
+	return _Uniswap.Contract.ETHCONTRACTADDRESS(&_Uniswap.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
 // Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
-func (_TradeUtils *TradeUtilsCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
-	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
+func (_Uniswap *UniswapCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
+	return _Uniswap.Contract.ETHCONTRACTADDRESS(&_Uniswap.CallOpts)
 }
 
-// UniswapV2ABI is the input ABI used to generate the binding from.
-const UniswapV2ABI = "[{\"inputs\":[],\"name\":\"WETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"factory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactETHForTokens\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactTokensForETH\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactTokensForTokens\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-
-// UniswapV2FuncSigs maps the 4-byte function signature to its string representation.
-var UniswapV2FuncSigs = map[string]string{
-	"ad5c4648": "WETH()",
-	"c45a0155": "factory()",
-	"d06ca61f": "getAmountsOut(uint256,address[])",
-	"7ff36ab5": "swapExactETHForTokens(uint256,address[],address,uint256)",
-	"18cbafe5": "swapExactTokensForETH(uint256,uint256,address[],address,uint256)",
-	"38ed1739": "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
-}
-
-// UniswapV2 is an auto generated Go binding around an Ethereum contract.
-type UniswapV2 struct {
-	UniswapV2Caller     // Read-only binding to the contract
-	UniswapV2Transactor // Write-only binding to the contract
-	UniswapV2Filterer   // Log filterer for contract events
-}
-
-// UniswapV2Caller is an auto generated read-only Go binding around an Ethereum contract.
-type UniswapV2Caller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UniswapV2Transactor is an auto generated write-only Go binding around an Ethereum contract.
-type UniswapV2Transactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UniswapV2Filterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type UniswapV2Filterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UniswapV2Session is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type UniswapV2Session struct {
-	Contract     *UniswapV2        // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// UniswapV2CallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type UniswapV2CallerSession struct {
-	Contract *UniswapV2Caller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts    // Call options to use throughout this session
-}
-
-// UniswapV2TransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type UniswapV2TransactorSession struct {
-	Contract     *UniswapV2Transactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts    // Transaction auth options to use throughout this session
-}
-
-// UniswapV2Raw is an auto generated low-level Go binding around an Ethereum contract.
-type UniswapV2Raw struct {
-	Contract *UniswapV2 // Generic contract binding to access the raw methods on
-}
-
-// UniswapV2CallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type UniswapV2CallerRaw struct {
-	Contract *UniswapV2Caller // Generic read-only contract binding to access the raw methods on
-}
-
-// UniswapV2TransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type UniswapV2TransactorRaw struct {
-	Contract *UniswapV2Transactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewUniswapV2 creates a new instance of UniswapV2, bound to a specific deployed contract.
-func NewUniswapV2(address common.Address, backend bind.ContractBackend) (*UniswapV2, error) {
-	contract, err := bindUniswapV2(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2{UniswapV2Caller: UniswapV2Caller{contract: contract}, UniswapV2Transactor: UniswapV2Transactor{contract: contract}, UniswapV2Filterer: UniswapV2Filterer{contract: contract}}, nil
-}
-
-// NewUniswapV2Caller creates a new read-only instance of UniswapV2, bound to a specific deployed contract.
-func NewUniswapV2Caller(address common.Address, caller bind.ContractCaller) (*UniswapV2Caller, error) {
-	contract, err := bindUniswapV2(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2Caller{contract: contract}, nil
-}
-
-// NewUniswapV2Transactor creates a new write-only instance of UniswapV2, bound to a specific deployed contract.
-func NewUniswapV2Transactor(address common.Address, transactor bind.ContractTransactor) (*UniswapV2Transactor, error) {
-	contract, err := bindUniswapV2(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2Transactor{contract: contract}, nil
-}
-
-// NewUniswapV2Filterer creates a new log filterer instance of UniswapV2, bound to a specific deployed contract.
-func NewUniswapV2Filterer(address common.Address, filterer bind.ContractFilterer) (*UniswapV2Filterer, error) {
-	contract, err := bindUniswapV2(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2Filterer{contract: contract}, nil
-}
-
-// bindUniswapV2 binds a generic wrapper to an already deployed contract.
-func bindUniswapV2(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(UniswapV2ABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_UniswapV2 *UniswapV2Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _UniswapV2.Contract.UniswapV2Caller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_UniswapV2 *UniswapV2Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _UniswapV2.Contract.UniswapV2Transactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_UniswapV2 *UniswapV2Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _UniswapV2.Contract.UniswapV2Transactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_UniswapV2 *UniswapV2CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _UniswapV2.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_UniswapV2 *UniswapV2TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _UniswapV2.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_UniswapV2 *UniswapV2TransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _UniswapV2.Contract.contract.Transact(opts, method, params...)
-}
-
-// WETH is a free data retrieval call binding the contract method 0xad5c4648.
+// GetAmountsOut is a free data retrieval call binding the contract method 0x11897c9a.
 //
-// Solidity: function WETH() pure returns(address)
-func (_UniswapV2 *UniswapV2Caller) WETH(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2.contract.Call(opts, out, "WETH")
-	return *ret0, err
-}
-
-// WETH is a free data retrieval call binding the contract method 0xad5c4648.
-//
-// Solidity: function WETH() pure returns(address)
-func (_UniswapV2 *UniswapV2Session) WETH() (common.Address, error) {
-	return _UniswapV2.Contract.WETH(&_UniswapV2.CallOpts)
-}
-
-// WETH is a free data retrieval call binding the contract method 0xad5c4648.
-//
-// Solidity: function WETH() pure returns(address)
-func (_UniswapV2 *UniswapV2CallerSession) WETH() (common.Address, error) {
-	return _UniswapV2.Contract.WETH(&_UniswapV2.CallOpts)
-}
-
-// Factory is a free data retrieval call binding the contract method 0xc45a0155.
-//
-// Solidity: function factory() pure returns(address)
-func (_UniswapV2 *UniswapV2Caller) Factory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2.contract.Call(opts, out, "factory")
-	return *ret0, err
-}
-
-// Factory is a free data retrieval call binding the contract method 0xc45a0155.
-//
-// Solidity: function factory() pure returns(address)
-func (_UniswapV2 *UniswapV2Session) Factory() (common.Address, error) {
-	return _UniswapV2.Contract.Factory(&_UniswapV2.CallOpts)
-}
-
-// Factory is a free data retrieval call binding the contract method 0xc45a0155.
-//
-// Solidity: function factory() pure returns(address)
-func (_UniswapV2 *UniswapV2CallerSession) Factory() (common.Address, error) {
-	return _UniswapV2.Contract.Factory(&_UniswapV2.CallOpts)
-}
-
-// GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
-//
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Caller) GetAmountsOut(opts *bind.CallOpts, amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
+// Solidity: function getAmountsOut(address[] paths, uint256 srcQty) view returns(uint256[])
+func (_Uniswap *UniswapCaller) GetAmountsOut(opts *bind.CallOpts, paths []common.Address, srcQty *big.Int) ([]*big.Int, error) {
 	var (
 		ret0 = new([]*big.Int)
 	)
 	out := ret0
-	err := _UniswapV2.contract.Call(opts, out, "getAmountsOut", amountIn, path)
+	err := _Uniswap.contract.Call(opts, out, "getAmountsOut", paths, srcQty)
 	return *ret0, err
 }
 
-// GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
+// GetAmountsOut is a free data retrieval call binding the contract method 0x11897c9a.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Session) GetAmountsOut(amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
-	return _UniswapV2.Contract.GetAmountsOut(&_UniswapV2.CallOpts, amountIn, path)
+// Solidity: function getAmountsOut(address[] paths, uint256 srcQty) view returns(uint256[])
+func (_Uniswap *UniswapSession) GetAmountsOut(paths []common.Address, srcQty *big.Int) ([]*big.Int, error) {
+	return _Uniswap.Contract.GetAmountsOut(&_Uniswap.CallOpts, paths, srcQty)
 }
 
-// GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
+// GetAmountsOut is a free data retrieval call binding the contract method 0x11897c9a.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2CallerSession) GetAmountsOut(amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
-	return _UniswapV2.Contract.GetAmountsOut(&_UniswapV2.CallOpts, amountIn, path)
-}
-
-// SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
-//
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Transactor) SwapExactETHForTokens(opts *bind.TransactOpts, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.contract.Transact(opts, "swapExactETHForTokens", amountOutMin, path, to, deadline)
-}
-
-// SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
-//
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Session) SwapExactETHForTokens(amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.Contract.SwapExactETHForTokens(&_UniswapV2.TransactOpts, amountOutMin, path, to, deadline)
-}
-
-// SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
-//
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2TransactorSession) SwapExactETHForTokens(amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.Contract.SwapExactETHForTokens(&_UniswapV2.TransactOpts, amountOutMin, path, to, deadline)
-}
-
-// SwapExactTokensForETH is a paid mutator transaction binding the contract method 0x18cbafe5.
-//
-// Solidity: function swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Transactor) SwapExactTokensForETH(opts *bind.TransactOpts, amountIn *big.Int, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.contract.Transact(opts, "swapExactTokensForETH", amountIn, amountOutMin, path, to, deadline)
-}
-
-// SwapExactTokensForETH is a paid mutator transaction binding the contract method 0x18cbafe5.
-//
-// Solidity: function swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Session) SwapExactTokensForETH(amountIn *big.Int, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.Contract.SwapExactTokensForETH(&_UniswapV2.TransactOpts, amountIn, amountOutMin, path, to, deadline)
-}
-
-// SwapExactTokensForETH is a paid mutator transaction binding the contract method 0x18cbafe5.
-//
-// Solidity: function swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2TransactorSession) SwapExactTokensForETH(amountIn *big.Int, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.Contract.SwapExactTokensForETH(&_UniswapV2.TransactOpts, amountIn, amountOutMin, path, to, deadline)
-}
-
-// SwapExactTokensForTokens is a paid mutator transaction binding the contract method 0x38ed1739.
-//
-// Solidity: function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Transactor) SwapExactTokensForTokens(opts *bind.TransactOpts, amountIn *big.Int, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.contract.Transact(opts, "swapExactTokensForTokens", amountIn, amountOutMin, path, to, deadline)
-}
-
-// SwapExactTokensForTokens is a paid mutator transaction binding the contract method 0x38ed1739.
-//
-// Solidity: function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2Session) SwapExactTokensForTokens(amountIn *big.Int, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.Contract.SwapExactTokensForTokens(&_UniswapV2.TransactOpts, amountIn, amountOutMin, path, to, deadline)
-}
-
-// SwapExactTokensForTokens is a paid mutator transaction binding the contract method 0x38ed1739.
-//
-// Solidity: function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
-func (_UniswapV2 *UniswapV2TransactorSession) SwapExactTokensForTokens(amountIn *big.Int, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
-	return _UniswapV2.Contract.SwapExactTokensForTokens(&_UniswapV2.TransactOpts, amountIn, amountOutMin, path, to, deadline)
-}
-
-// UniswapV2TradeABI is the input ABI used to generate the binding from.
-const UniswapV2TradeABI = "[{\"inputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"_uniswapV2\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"destToken\",\"type\":\"address\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapV2\",\"outputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
-
-// UniswapV2TradeFuncSigs maps the 4-byte function signature to its string representation.
-var UniswapV2TradeFuncSigs = map[string]string{
-	"72e94bf6": "ETH_CONTRACT_ADDRESS()",
-	"cba7064f": "getAmountsOut(address,uint256,address)",
-	"bb39a960": "trade(address,uint256,address,uint256)",
-	"5187c091": "uniswapV2()",
-	"f2428621": "wETH()",
-}
-
-// UniswapV2TradeBin is the compiled bytecode used for deploying new contracts.
-var UniswapV2TradeBin = "0x608060405234801561001057600080fd5b50604051610c13380380610c138339818101604052602081101561003357600080fd5b5051600080546001600160a01b0319166001600160a01b038084169190911791829055604080516315ab88c960e31b81529051929091169163ad5c464891600480820192602092909190829003018186803b15801561009157600080fd5b505afa1580156100a5573d6000803e3d6000fd5b505050506040513d60208110156100bb57600080fd5b5051600180546001600160a01b0319166001600160a01b0390921691909117905550610b27806100ec6000396000f3fe60806040526004361061004e5760003560e01c80635187c0911461005a57806372e94bf61461008b578063bb39a960146100a0578063cba7064f146100fd578063f24286211461019057610055565b3661005557005b600080fd5b34801561006657600080fd5b5061006f6101a5565b604080516001600160a01b039092168252519081900360200190f35b34801561009757600080fd5b5061006f6101b4565b6100da600480360360808110156100b657600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101b9565b604080516001600160a01b03909316835260208301919091528051918290030190f35b34801561010957600080fd5b506101406004803603606081101561012057600080fd5b506001600160a01b038135811691602081013591604090910135166103e5565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561017c578181015183820152602001610164565b505050509050019250505060405180910390f35b34801561019c57600080fd5b5061006f6105ba565b6000546001600160a01b031681565b600081565b600080846101c6876105c9565b10156101d157600080fd5b836001600160a01b0316866001600160a01b031614156101f057600080fd5b604080516002808252606080830184529260208301908036833701905050905060606001600160a01b038816156102f357878260008151811061022f57fe5b6001600160a01b039283166020918202929092010152600054610255918a91168961065a565b6001600160a01b038616156102a457858260018151811061027257fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061029d82888761076f565b90506102ee565b6001805483516001600160a01b0390911691849181106102c057fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506102eb828887610911565b90505b61036b565b60015482516001600160a01b0390911690839060009061030f57fe5b60200260200101906001600160a01b031690816001600160a01b031681525050858260018151811061033d57fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506103688288876109b7565b90505b60028151101561037a57600080fd5b848160018351038151811061038b57fe5b6020026020010151101580156103b4575086816000815181106103aa57fe5b6020026020010151145b6103bd57600080fd5b85816001835103815181106103ce57fe5b602002602001015193509350505094509492505050565b604080516002808252606080830184529283929190602083019080368337019050509050848160008151811061041757fe5b60200260200101906001600160a01b031690816001600160a01b031681525050828160018151811061044557fe5b6001600160a01b03928316602091820292909201810191909152600080546040805163d06ca61f60e01b8152600481018a815260248201928352875160448301528751939096169563d06ca61f958b958995929493606401928683019202908190849084905b838110156104c35781810151838201526020016104ab565b50505050905001935050505060006040518083038186803b1580156104e757600080fd5b505afa1580156104fb573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561052457600080fd5b810190808051604051939291908464010000000082111561054457600080fd5b90830190602082018581111561055957600080fd5b825186602082028301116401000000008211171561057657600080fd5b82525081516020918201928201910280838360005b838110156105a357818101518382015260200161058b565b505050509050016040525050509150509392505050565b6001546001600160a01b031681565b60006001600160a01b0382166105e0575047610655565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561062657600080fd5b505afa15801561063a573d6000803e3d6000fd5b505050506040513d602081101561065057600080fd5b505190505b919050565b6001600160a01b0383161561076a576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156106b857600080fd5b505af11580156106cc573d6000803e3d6000fd5b505050506106d8610abd565b6106e157600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b03166001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561074157600080fd5b505af1158015610755573d6000803e3d6000fd5b50505050610761610abd565b61076a57600080fd5b505050565b60606000809054906101000a90046001600160a01b03166001600160a01b03166338ed17398484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03166001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b838110156108165781810151838201526020016107fe565b505050509050019650505050505050600060405180830381600087803b15801561083f57600080fd5b505af1158015610853573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561087c57600080fd5b810190808051604051939291908464010000000082111561089c57600080fd5b9083019060208201858111156108b157600080fd5b82518660208202830111640100000000821117156108ce57600080fd5b82525081516020918201928201910280838360005b838110156108fb5781810151838201526020016108e3565b5050505090500160405250505090509392505050565b60606000809054906101000a90046001600160a01b03166001600160a01b03166318cbafe58484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03166001600160a01b0316815260200183815260200182810382528581815181526020019150805190602001906020028083836000838110156108165781810151838201526020016107fe565b60606000809054906101000a90046001600160a01b03166001600160a01b0316637ff36ab58484873342610258016040518663ffffffff1660e01b81526004018085815260200180602001846001600160a01b03166001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610a58578181015183820152602001610a40565b50505050905001955050505050506000604051808303818588803b158015610a7f57600080fd5b505af1158015610a93573d6000803e3d6000fd5b50505050506040513d6000823e601f3d908101601f19168201604052602081101561087c57600080fd5b6000803d8015610ad45760208114610add57610ae9565b60019150610ae9565b60206000803e60005191505b50151590509056fea264697066735822122055822bc2b271e8514b87f590bbe3afa94dbdbd158435d734cf48b34964888f8564736f6c63430006060033"
-
-// DeployUniswapV2Trade deploys a new Ethereum contract, binding an instance of UniswapV2Trade to it.
-func DeployUniswapV2Trade(auth *bind.TransactOpts, backend bind.ContractBackend, _uniswapV2 common.Address) (common.Address, *types.Transaction, *UniswapV2Trade, error) {
-	parsed, err := abi.JSON(strings.NewReader(UniswapV2TradeABI))
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(UniswapV2TradeBin), backend, _uniswapV2)
-	if err != nil {
-		return common.Address{}, nil, nil, err
-	}
-	return address, tx, &UniswapV2Trade{UniswapV2TradeCaller: UniswapV2TradeCaller{contract: contract}, UniswapV2TradeTransactor: UniswapV2TradeTransactor{contract: contract}, UniswapV2TradeFilterer: UniswapV2TradeFilterer{contract: contract}}, nil
-}
-
-// UniswapV2Trade is an auto generated Go binding around an Ethereum contract.
-type UniswapV2Trade struct {
-	UniswapV2TradeCaller     // Read-only binding to the contract
-	UniswapV2TradeTransactor // Write-only binding to the contract
-	UniswapV2TradeFilterer   // Log filterer for contract events
-}
-
-// UniswapV2TradeCaller is an auto generated read-only Go binding around an Ethereum contract.
-type UniswapV2TradeCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UniswapV2TradeTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type UniswapV2TradeTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UniswapV2TradeFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type UniswapV2TradeFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// UniswapV2TradeSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type UniswapV2TradeSession struct {
-	Contract     *UniswapV2Trade   // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// UniswapV2TradeCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type UniswapV2TradeCallerSession struct {
-	Contract *UniswapV2TradeCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts         // Call options to use throughout this session
-}
-
-// UniswapV2TradeTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type UniswapV2TradeTransactorSession struct {
-	Contract     *UniswapV2TradeTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts         // Transaction auth options to use throughout this session
-}
-
-// UniswapV2TradeRaw is an auto generated low-level Go binding around an Ethereum contract.
-type UniswapV2TradeRaw struct {
-	Contract *UniswapV2Trade // Generic contract binding to access the raw methods on
-}
-
-// UniswapV2TradeCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type UniswapV2TradeCallerRaw struct {
-	Contract *UniswapV2TradeCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// UniswapV2TradeTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type UniswapV2TradeTransactorRaw struct {
-	Contract *UniswapV2TradeTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewUniswapV2Trade creates a new instance of UniswapV2Trade, bound to a specific deployed contract.
-func NewUniswapV2Trade(address common.Address, backend bind.ContractBackend) (*UniswapV2Trade, error) {
-	contract, err := bindUniswapV2Trade(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2Trade{UniswapV2TradeCaller: UniswapV2TradeCaller{contract: contract}, UniswapV2TradeTransactor: UniswapV2TradeTransactor{contract: contract}, UniswapV2TradeFilterer: UniswapV2TradeFilterer{contract: contract}}, nil
-}
-
-// NewUniswapV2TradeCaller creates a new read-only instance of UniswapV2Trade, bound to a specific deployed contract.
-func NewUniswapV2TradeCaller(address common.Address, caller bind.ContractCaller) (*UniswapV2TradeCaller, error) {
-	contract, err := bindUniswapV2Trade(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2TradeCaller{contract: contract}, nil
-}
-
-// NewUniswapV2TradeTransactor creates a new write-only instance of UniswapV2Trade, bound to a specific deployed contract.
-func NewUniswapV2TradeTransactor(address common.Address, transactor bind.ContractTransactor) (*UniswapV2TradeTransactor, error) {
-	contract, err := bindUniswapV2Trade(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2TradeTransactor{contract: contract}, nil
-}
-
-// NewUniswapV2TradeFilterer creates a new log filterer instance of UniswapV2Trade, bound to a specific deployed contract.
-func NewUniswapV2TradeFilterer(address common.Address, filterer bind.ContractFilterer) (*UniswapV2TradeFilterer, error) {
-	contract, err := bindUniswapV2Trade(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &UniswapV2TradeFilterer{contract: contract}, nil
-}
-
-// bindUniswapV2Trade binds a generic wrapper to an already deployed contract.
-func bindUniswapV2Trade(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(UniswapV2TradeABI))
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_UniswapV2Trade *UniswapV2TradeRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _UniswapV2Trade.Contract.UniswapV2TradeCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_UniswapV2Trade *UniswapV2TradeRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _UniswapV2Trade.Contract.UniswapV2TradeTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_UniswapV2Trade *UniswapV2TradeRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _UniswapV2Trade.Contract.UniswapV2TradeTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_UniswapV2Trade *UniswapV2TradeCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
-	return _UniswapV2Trade.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_UniswapV2Trade *UniswapV2TradeTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _UniswapV2Trade.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_UniswapV2Trade *UniswapV2TradeTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _UniswapV2Trade.Contract.contract.Transact(opts, method, params...)
-}
-
-// ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
-//
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
-	return *ret0, err
-}
-
-// ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
-//
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeSession) ETHCONTRACTADDRESS() (common.Address, error) {
-	return _UniswapV2Trade.Contract.ETHCONTRACTADDRESS(&_UniswapV2Trade.CallOpts)
-}
-
-// ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
-//
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
-	return _UniswapV2Trade.Contract.ETHCONTRACTADDRESS(&_UniswapV2Trade.CallOpts)
-}
-
-// GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
-//
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
-func (_UniswapV2Trade *UniswapV2TradeCaller) GetAmountsOut(opts *bind.CallOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
-	var (
-		ret0 = new([]*big.Int)
-	)
-	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "getAmountsOut", srcToken, srcQty, destToken)
-	return *ret0, err
-}
-
-// GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
-//
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
-func (_UniswapV2Trade *UniswapV2TradeSession) GetAmountsOut(srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
-	return _UniswapV2Trade.Contract.GetAmountsOut(&_UniswapV2Trade.CallOpts, srcToken, srcQty, destToken)
-}
-
-// GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
-//
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
-func (_UniswapV2Trade *UniswapV2TradeCallerSession) GetAmountsOut(srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
-	return _UniswapV2Trade.Contract.GetAmountsOut(&_UniswapV2Trade.CallOpts, srcToken, srcQty, destToken)
+// Solidity: function getAmountsOut(address[] paths, uint256 srcQty) view returns(uint256[])
+func (_Uniswap *UniswapCallerSession) GetAmountsOut(paths []common.Address, srcQty *big.Int) ([]*big.Int, error) {
+	return _Uniswap.Contract.GetAmountsOut(&_Uniswap.CallOpts, paths, srcQty)
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
 // Solidity: function uniswapV2() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeCaller) UniswapV2(opts *bind.CallOpts) (common.Address, error) {
+func (_Uniswap *UniswapCaller) UniswapV2(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
 	)
 	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "uniswapV2")
+	err := _Uniswap.contract.Call(opts, out, "uniswapV2")
 	return *ret0, err
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
 // Solidity: function uniswapV2() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeSession) UniswapV2() (common.Address, error) {
-	return _UniswapV2Trade.Contract.UniswapV2(&_UniswapV2Trade.CallOpts)
+func (_Uniswap *UniswapSession) UniswapV2() (common.Address, error) {
+	return _Uniswap.Contract.UniswapV2(&_Uniswap.CallOpts)
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
 // Solidity: function uniswapV2() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeCallerSession) UniswapV2() (common.Address, error) {
-	return _UniswapV2Trade.Contract.UniswapV2(&_UniswapV2Trade.CallOpts)
+func (_Uniswap *UniswapCallerSession) UniswapV2() (common.Address, error) {
+	return _Uniswap.Contract.UniswapV2(&_Uniswap.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
 // Solidity: function wETH() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeCaller) WETH(opts *bind.CallOpts) (common.Address, error) {
+func (_Uniswap *UniswapCaller) WETH(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
 	)
 	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "wETH")
+	err := _Uniswap.contract.Call(opts, out, "wETH")
 	return *ret0, err
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
 // Solidity: function wETH() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeSession) WETH() (common.Address, error) {
-	return _UniswapV2Trade.Contract.WETH(&_UniswapV2Trade.CallOpts)
+func (_Uniswap *UniswapSession) WETH() (common.Address, error) {
+	return _Uniswap.Contract.WETH(&_Uniswap.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
 // Solidity: function wETH() view returns(address)
-func (_UniswapV2Trade *UniswapV2TradeCallerSession) WETH() (common.Address, error) {
-	return _UniswapV2Trade.Contract.WETH(&_UniswapV2Trade.CallOpts)
+func (_Uniswap *UniswapCallerSession) WETH() (common.Address, error) {
+	return _Uniswap.Contract.WETH(&_Uniswap.CallOpts)
 }
 
-// Trade is a paid mutator transaction binding the contract method 0xbb39a960.
+// Trade is a paid mutator transaction binding the contract method 0xe5d8a39d.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
-func (_UniswapV2Trade *UniswapV2TradeTransactor) Trade(opts *bind.TransactOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
-	return _UniswapV2Trade.contract.Transact(opts, "trade", srcToken, srcQty, destToken, amountOutMin)
+// Solidity: function trade(address[] paths, uint256 srcQty, uint256 amountOutMin, uint256 timeout) payable returns(address, uint256)
+func (_Uniswap *UniswapTransactor) Trade(opts *bind.TransactOpts, paths []common.Address, srcQty *big.Int, amountOutMin *big.Int, timeout *big.Int) (*types.Transaction, error) {
+	return _Uniswap.contract.Transact(opts, "trade", paths, srcQty, amountOutMin, timeout)
 }
 
-// Trade is a paid mutator transaction binding the contract method 0xbb39a960.
+// Trade is a paid mutator transaction binding the contract method 0xe5d8a39d.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
-func (_UniswapV2Trade *UniswapV2TradeSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
-	return _UniswapV2Trade.Contract.Trade(&_UniswapV2Trade.TransactOpts, srcToken, srcQty, destToken, amountOutMin)
+// Solidity: function trade(address[] paths, uint256 srcQty, uint256 amountOutMin, uint256 timeout) payable returns(address, uint256)
+func (_Uniswap *UniswapSession) Trade(paths []common.Address, srcQty *big.Int, amountOutMin *big.Int, timeout *big.Int) (*types.Transaction, error) {
+	return _Uniswap.Contract.Trade(&_Uniswap.TransactOpts, paths, srcQty, amountOutMin, timeout)
 }
 
-// Trade is a paid mutator transaction binding the contract method 0xbb39a960.
+// Trade is a paid mutator transaction binding the contract method 0xe5d8a39d.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
-func (_UniswapV2Trade *UniswapV2TradeTransactorSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
-	return _UniswapV2Trade.Contract.Trade(&_UniswapV2Trade.TransactOpts, srcToken, srcQty, destToken, amountOutMin)
+// Solidity: function trade(address[] paths, uint256 srcQty, uint256 amountOutMin, uint256 timeout) payable returns(address, uint256)
+func (_Uniswap *UniswapTransactorSession) Trade(paths []common.Address, srcQty *big.Int, amountOutMin *big.Int, timeout *big.Int) (*types.Transaction, error) {
+	return _Uniswap.Contract.Trade(&_Uniswap.TransactOpts, paths, srcQty, amountOutMin, timeout)
 }
