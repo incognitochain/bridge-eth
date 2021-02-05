@@ -1,7 +1,9 @@
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./IERC20.sol";
+import "../external/IERC20.sol";
+import "../external/ChiToken.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  * Math operations with safety checks
@@ -31,7 +33,6 @@ library SafeMath {
     return c;
   }
 }
-
 
 /**
  * @dev Interface of the contract capable of checking if an instruction is
@@ -71,12 +72,19 @@ interface Withdrawable {
  */
 contract Vault {
     using SafeMath for uint;
+    using Address for address;
     /**
      * @dev Storage slot with the incognito proxy.
      * This is the keccak-256 hash of "eip1967.proxy.incognito." subtracted by 1
      */
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
+
+    /**
+     * @dev Storage variables for Vault
+     * This section is APPEND-ONLY, in order to preserve upgradeability
+     * since we use Proxy Pattern
+     */
     mapping(bytes32 => bool) public withdrawed;
     mapping(bytes32 => bool) public sigDataUsed;
     // address => token => amount
@@ -86,6 +94,15 @@ contract Vault {
     Withdrawable public prevVault;
     bool public notEntered = true;
     bool public isInitialized = false;
+
+    /**
+    * @dev added for Vault v0.6
+    */
+    ChiToken public chi;
+    /**
+    * @dev END Storage variables
+    */
+
 
     struct BurnInstData {
         uint8 meta; // type of the instruction
@@ -154,9 +171,10 @@ contract Vault {
      * After migrating all assets to a new Vault, we still need to refer
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
-    function initialize(address _prevVault) external {
+    function initialize(address _prevVault, address _chi) external {
         require(!isInitialized);
         prevVault = Withdrawable(_prevVault);
+        chi = ChiToken(_chi);
         isInitialized = true;
         notEntered = true;
     }
@@ -318,7 +336,7 @@ contract Vault {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) public nonReentrant {
+    ) public nonReentrant discountCHI{
         require(inst.length >= 130);
         BurnInstData memory data = parseBurnInst(inst);
         require(data.meta == 241 && data.shard == 1); // Check instruction type
@@ -583,8 +601,8 @@ contract Vault {
     function migrateBalance(address owner, address token) internal {
         if (address(prevVault) != address(0x0) && !migration[owner][token]) {
             withdrawRequests[owner][token] = withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
-  	        migration[owner][token] = true;
-  	   }
+            migration[owner][token] = true;
+       }
     }
 
     /**
@@ -595,8 +613,8 @@ contract Vault {
         address owner
     ) public view returns (uint) {
         if (address(prevVault) != address(0x0) && !migration[owner][token]) {
- 	        return withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
- 	    }
+            return withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
+        }
         return withdrawRequests[owner][token];
     }
 
@@ -629,30 +647,30 @@ contract Vault {
      * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
      */
     function checkSuccess() private pure returns (bool) {
-		uint256 returnValue = 0;
-		assembly {
-			// check number of bytes returned from last function call
-			switch returndatasize()
+        uint256 returnValue = 0;
+        assembly {
+            // check number of bytes returned from last function call
+            switch returndatasize()
 
-			// no bytes returned: assume success
-			case 0x0 {
-				returnValue := 1
-			}
+            // no bytes returned: assume success
+            case 0x0 {
+                returnValue := 1
+            }
 
-			// 32 bytes returned: check if non-zero
-			case 0x20 {
-				// copy 32 bytes into scratch space
-				returndatacopy(0x0, 0x0, 0x20)
+            // 32 bytes returned: check if non-zero
+            case 0x20 {
+                // copy 32 bytes into scratch space
+                returndatacopy(0x0, 0x0, 0x20)
 
-				// load those bytes into returnValue
-				returnValue := mload(0x0)
-			}
+                // load those bytes into returnValue
+                returnValue := mload(0x0)
+            }
 
-			// not sure what was returned: don't mark as success
-			default { }
-		}
-		return returnValue != 0;
-	}
+            // not sure what was returned: don't mark as success
+            default { }
+        }
+        return returnValue != 0;
+    }
 
     /**
      * @dev convert enum to string value
@@ -692,5 +710,25 @@ contract Vault {
             return address(this).balance;
         }
         return IERC20(token).balanceOf(address(this));
+    }
+
+    /**
+     * @dev Use the CHI gas token in allowance to pay part of the gas fee
+     * caller can mint CHI or buy it, then approve it to this contract
+     */
+    modifier discountCHI {
+        uint256 gasStart = gasleft();
+        _;
+        uint256 gasSpent = 21000 + gasStart - gasleft() + 16 * msg.data.length;
+        if (!address(chi).isContract()){
+        } else {
+            try chi.freeFromUpTo(msg.sender, (gasSpent + 14154) / 41947) returns (uint256 chiFreed){
+            }
+            catch{
+                /**
+                 * @dev if the freeing fails due to any reason, proceed normally
+                 */
+            }
+        }
     }
 }
