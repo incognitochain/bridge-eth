@@ -1,7 +1,7 @@
-pragma solidity ^0.5.12;
+pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./pause.sol";
+import "../proxy/pause.sol";
 
 /**
  * @dev Stores beacon and bridge committee members of Incognito Chain. Other

@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 
-import './trade_utils.sol';
-import './IERC20.sol';
+import '../external/trade_utils.sol';
+import '../external/IERC20.sol';
 
 interface KyberNetwork {
     function trade(IERC20 src, uint srcAmount, IERC20 dest, address destAddress, uint maxDestAmount, uint minConversionRate, address walletId) external payable returns(uint);

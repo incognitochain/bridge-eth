@@ -4,3 +4,9 @@ export.sh
 genesisKey.hex
 */build/contracts/*
 */node_modules/
+data/
+testdb/
+
+#Hardhat files
+cache
+artifacts

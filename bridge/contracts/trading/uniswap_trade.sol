@@ -1,7 +1,7 @@
 pragma solidity ^0.6.6;
 
-import './trade_utils.sol';
-import './IERC20.sol';
+import '../external/trade_utils.sol';
+import '../external/IERC20.sol';
 
 interface UniswapV2 {
   function factory() external pure returns (address);
