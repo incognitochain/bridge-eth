@@ -1,26 +1,23 @@
 {
-  "name": "sol",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "openzeppelin-solidity": "2.3.0",
-    "truffle-hdwallet-provider": "^1.0.17",
-    "@0x/contract-addresses": "^4.3.0",
-    "@0x/contracts-asset-proxy": "^3.1.1",
-    "@0x/contracts-erc20": "^3.0.4",
-    "@0x/contracts-exchange": "^3.0.3",
-    "@0x/contracts-exchange-forwarder": "^4.0.3",
-    "@0x/contracts-exchange-libs": "^4.0.3",
-    "@0x/dev-utils": "^3.1.0",
-    "@0x/subproviders": "^6.0.3",
-    "@0x/utils": "^5.1.2",
-    "@0x/web3-wrapper": "^7.0.3"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "mocha"
-  },
-  "author": "",
-  "license": "ISC"
+    "name": "hardhat-project",
+    "devDependencies": {
+        "@nomiclabs/hardhat-ethers": "^2.0.1",
+        "@nomiclabs/hardhat-waffle": "^2.0.1",
+        "@nomiclabs/hardhat-web3": "^2.0.0",
+        "chai": "^4.2.0",
+        "esm": "^3.2.25",
+        "ethereum-waffle": "^3.2.2",
+        "ethers": "^5.0.26",
+        "hardhat": "^2.0.8",
+        "hardhat-deploy": "^0.7.0-beta.44",
+        "hardhat-deploy-ethers": "^0.3.0-beta.7",
+        "merkle-patricia-tree": "^4.1.0",
+        "util": "^0.12.3"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^3.3.0",
+        "ganache-time-traveler": "^1.0.15",
+        "level": "^6.0.1",
+        "web3": "^1.2.6"
+    },
 }
