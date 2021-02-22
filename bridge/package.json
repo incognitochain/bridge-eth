@@ -19,5 +19,5 @@
         "ganache-time-traveler": "^1.0.15",
         "level": "^6.0.1",
         "web3": "^1.2.6"
-    },
+    }
 }

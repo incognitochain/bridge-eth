@@ -9,7 +9,7 @@ module.exports = async({
     const { deploy, log, execute } = deployments;
     const { deployer, tokenUser } = await getNamedAccounts();
     const chainId = await getChainId();
-    const cfg = require('../hardhat.config');
+    // const cfg = require('../hardhat.config');
     if (chainId!=31337 && chainId!=4) {
         // only applicable for dev & test networks
         return;

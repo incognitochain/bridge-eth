@@ -3,10 +3,12 @@
 export.sh
 genesisKey.hex
 */build/contracts/*
-*/node_modules/
-data/
+node_modules
+data*/
 testdb/
 
+.DS_Store
 #Hardhat files
 cache
 artifacts
+deployments

@@ -13,6 +13,48 @@ task("accounts", "Prints the list of accounts", async() => {
     }
 });
 
+
+/* test using the command:
+* PRIVKEY=0x... hh mint-watch --chi 280 --gas 100 --network localhost
+* (signer #6 in 'localhost' Hardhat provider)
+* ('localhost' provider uses gasPrice=8gwei, so try --gas 7 for example)
+*/
+task("mint-watch", "Keep minting CHI token to sustain a minimum")
+    .addOptionalParam("chi", "The minimum CHI to maintain", 280, types.int)
+    .addOptionalParam("gas", "The gas price (gwei) above which we do NOT mint", 100, types.int)
+    .setAction(async taskArgs => {
+        // const accounts = await ethers.getSigners();
+        // const chiFunder = accounts[6];
+        // mne = "test test test test test test test test test test test junk";
+        // const chiFunder = ethers.Wallet.fromMnemonic(mne, "m/44'/60'/0'/0/6");
+        const privateKey = process.env.PRIVKEY;
+        
+        
+        const chiFunder = new ethers.Wallet(privateKey, ethers.provider);
+        console.log('Mint CHI to address', chiFunder.address);
+        const { getChi, mintChi, chiAddress } = require('./scripts/chi');
+        console.log('Parameters', taskArgs, chiAddress)
+        const chi = await getChi();
+        let sleep = (ms) => {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        // can only be stopped by an interrupt
+        while (true){
+            try {
+                const gasPrice = await ethers.provider.getGasPrice();
+                const mintBelowPrice = ethers.utils.parseUnits(String(taskArgs.gas), 'gwei');
+                const balance = await chi.balanceOf(chiFunder.address);
+                // console.log('gas price at', gasPrice.toNumber(), 'vs', mintBelowPrice.toNumber());
+
+                if (gasPrice.gt(mintBelowPrice)) throw 'Gas is too expensive';
+                if (balance.gte(taskArgs.chi)) throw 'Balance is not low enough';
+                await mintChi(chiFunder, taskArgs.chi - balance, chi);
+            } catch(e){ console.error(e) } // ignore errors
+            // try every 3 mins (dev: 3s)
+            await sleep(3000);
+        }
+    });
+
 let getNetwork = (obj, id) => {
     let names = Object.keys(obj);
     let theKey = names.filter(name => obj[name].chainId==id)[0];
