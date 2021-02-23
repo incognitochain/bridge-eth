@@ -4,8 +4,8 @@ const { deployments, ethers } = hre;
 
 // const cfg = require('../hardhat.config');
 const {tokenAddresses} = require('../scripts/constants');
-const {BN, getPartOf, confirm, db, fromIncDecimals, toIncDecimals, Inc} = require('../scripts/external');
-const {proveEth, formatBurnProof} = require('../scripts/prove');
+const {BN, getPartOf, confirm, fromIncDecimals, toIncDecimals, Inc} = require('../scripts/external');
+const {proveEth, formatBurnProof, db} = require('../scripts/prove');
 const {getChi, chiify, mintChi} = require('../scripts/chi');
 const path = require('path');
 
@@ -65,7 +65,7 @@ describe("Vault (Proxy) - Unshield with CHI", () => {
         console.log(`Start balances are ${startBalance.toString()}, ${t1StartBalance.toString()}, ${t2StartBalance.toString()}`);
     });
 
-    describe('Incognito RPC query', () => {
+    describe('Incognito & ETH RPC query', () => {
         it('should have TX methods', () => {
             expect(transactor).to.be.an('object', 'missing transacting functions')
                 .with.property('doPRVTransactionV2');
@@ -80,6 +80,13 @@ describe("Vault (Proxy) - Unshield with CHI", () => {
                     expect(resp).to.be.a('string', 'burning address must be a string');
                     expect(resp).to.have.lengthOf.above(10, 'burning address must be longer than this');
                 });
+        });
+        it.skip('should send ETH and wait for 15 blocks', () => {
+            const blocksToWait = 15;
+            return confirm(signers[0].sendTransaction({to: accounts[1], value: ethers.utils.parseUnits("0.0006969", 'ether')}), blocksToWait, inc.sleep, 15)
+            .then(console.log)
+            .then(_ => ethers.provider.getBlockNumber())
+            .then(console.log)
         });
     });
 
@@ -143,8 +150,9 @@ describe("Vault (Proxy) - Unshield with CHI", () => {
     describe('(UN)SHIELD ETHER', () => {
         shield(startEth);
         testMintChi(140);
-        unshield(getPartOf(startEth, 50), 0);
-        unshield(getPartOf(startEth, 50), 50);
+        const amount = getPartOf(startEth, 50);
+        unshield(amount, 0);
+        unshield(amount, 50);
     })
 
     // our test tokens both have decimal 18 (in any case it's not relevant enough to change from 18)
@@ -205,23 +213,16 @@ describe("Vault (Proxy) - Unshield with CHI", () => {
         shieldToken(startToken, 1);
         testMintChi(140);
         // withdraw less than half of the deposited "Token 2" without any CHI, then do it again after approving 140 CHI
-        unshieldToken(getPartOf(startToken, 50), 1, 0);
-        unshieldToken(getPartOf(startToken, 50), 1, 140);
+        const amount = getPartOf(startToken, 50);
+        unshieldToken(amount, 1, 0);
+        unshieldToken(amount, 1, 140);
     })
 
-    it(`should trade some something for something`);
+    // it(`should trade`);
     describe('Test Pausing and Upgrade Feature', () => {
-        it('should upgrade to bad implementation');
+        it('should upgrade to new implementation');
         it(`should preserve balances after proxy upgrade`);
         it('should pause');
         it('should prevent deposit');
     });
-
-    it.skip('should send ETH and wait for 15 blocks', () => {
-        const blocksToWait = 15;
-        return confirm(signers[0].sendTransaction({to: accounts[1], value: ethers.utils.parseUnits("0.0006969", 'ether')}), blocksToWait, inc.sleep)
-        .then(console.log)
-        .then(_ => ethers.provider.getBlockNumber())
-        .then(console.log)
-    })
 })

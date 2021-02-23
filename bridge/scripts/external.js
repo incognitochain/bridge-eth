@@ -1,6 +1,5 @@
 const level = require('level');
 // if space is relevant, consider using os.tmpdir() to create leveldb object (since this trie does not need to persist)
-const db = level('./testdb');
 const rlp = require('rlp');
 const timeMachine = require('ganache-time-traveler');
 const { tokenAddresses } = require('./constants');
@@ -82,7 +81,6 @@ module.exports = {
     // eth,
     rlp,
     level,
-    db,
     BN,
     getPartOf,
     chooseOneFrom,

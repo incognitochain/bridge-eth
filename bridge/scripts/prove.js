@@ -1,4 +1,6 @@
-const {rlp, db, BN} = require('./external');
+const {rlp, BN, level} = require('./external');
+const os = require('os');
+const db = level(os.tmpdir());
 // TODO: add catch clauses
 
 let flattenLog = (l) => {
@@ -90,6 +92,7 @@ let formatBurnProof = (obj) => {
 }
 
 module.exports = {
+    db,
     proveEth: prove,
     toPrefixed: deepAddPrefix,
     formatBurnProof

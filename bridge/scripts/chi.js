@@ -1,10 +1,11 @@
-const cfg = require('../hardhat.config.js');
-const { deployments, ethers } = require('hardhat');
+// const cfg = require('../hardhat.config.js');
+// const { deployments, ethers } = require('hardhat');
 const { confirm, BN } = require('./external');
 const { MaxChiEachMint } = require('./constants');
 
-let getChi = async () => {
-    let chi = await ethers.getContractAt('ChiToken', cfg.chiAddress);
+let chiAddress = '0x0000000000004946c0e9F43F4Dee607b0eF1fA1c';
+let getChi = async (_chiAddress = chiAddress) => {
+    let chi = await ethers.getContractAt('ChiToken', _chiAddress);
     try {
         await chi.balanceOf('0x0000000000000000000000000000000000000000');
     } catch(e) {
@@ -87,6 +88,7 @@ let chiify = async (_funder, _chiApproved, _contract, _method, _args) => {
 //     )
 
 module.exports = {
+    chiAddress,
     getChi,
     mintChi,
     chiify
