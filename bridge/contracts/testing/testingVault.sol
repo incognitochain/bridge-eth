@@ -121,6 +121,10 @@ contract TestingVault {
         notEntered = true;
     }
 
+    function callAfterUpgrade(bool _isAttacked) external {
+        isAttacked = _isAttacked;
+    }
+
     /**
      * @dev Returns the current incognito proxy.
      */

@@ -24,7 +24,7 @@ let mintChi = async (chiFunder, chiToMint, chiInstance = null) => {
     while (total.lt(chiToMint)) {
         const tx = await chiInstance.connect(chiFunder).mint(BN.from(MaxChiEachMint));
         const receipt = await tx.wait();
-        console.log(`Minted ${MaxChiEachMint} CHI using ${ethers.utils.formatUnits(receipt.gasUsed, 'wei')} gas`);
+        console.log(`Minted ${MaxChiEachMint} CHI using ${ethers.utils.formatUnits(receipt.gasUsed, 'wei')} gas - TX ${tx.hash}`);
         total = total.add(MaxChiEachMint);
     }
 }

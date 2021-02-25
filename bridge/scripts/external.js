@@ -58,6 +58,18 @@ let fromIncDecimals = (_amount, _addr) => getDecimals(_addr)
         return result.mul(ten.pow(_d.sub(9)));
     })
 
+let getInstance = async (abiname, deployedName = null) => {
+    let fac = await ethers.getContractFactory(abiname);
+    let c = await deployments.get(deployedName ? deployedName : abiname);
+    return await fac.attach(c.address);
+}
+
+let getImplementation = async (contractAddress) => {
+    const slot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'; //'eip1967.proxy.implementation';
+    const result = await ethers.provider.getStorageAt(contractAddress, BN.from(slot));
+    return BN.from(result);
+}
+
 // import some functions from web-js for unit tests. Tasks should not need this
 let Inc;
 try {
@@ -77,16 +89,15 @@ try {
 }
 
 module.exports = {
-    // web3,
-    // eth,
     rlp,
     level,
     BN,
     getPartOf,
     chooseOneFrom,
     confirm,
-    // timeMachine,
     toIncDecimals,
     fromIncDecimals,
+    getInstance,
+    getImplementation,
     Inc
 }
