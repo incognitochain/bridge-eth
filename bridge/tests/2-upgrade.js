@@ -25,6 +25,7 @@ describe('Vault - Upgrade & Pausing', () => {
         // this proxy was initialized upon creation, so state changes that need to be done after upgrade must be via another function
         // console.log("will upgrade to", upgradedImpl.address);
         await this.proxy.connect(this.vaultAdmin).upgradeTo(this.upgradedImpl.address);
+        await confirm(this.upgradedVault.callAfterUpgrade(false));
         currentImpl = await getImplementation(this.proxy.address);
         await expect(currentImpl).to.equal(this.upgradedImpl.address);
 

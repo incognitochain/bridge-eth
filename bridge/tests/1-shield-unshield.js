@@ -188,7 +188,7 @@ describe("Vault - Shield & Unshield with CHI", () => {
         });
     });
 
-    describe.skip('(UN)SHIELD ETHER', async function() {
+    describe('(UN)SHIELD ETHER', async function() {
         it(`should receive ${ethers.utils.formatUnits(startEth, 'gwei')} (gwei) ETH deposit`, shield(startEth));
         it('should mint CHI', testMintChi(140));
         const amount = getPartOf(startEth, 50);
