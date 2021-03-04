@@ -1,4 +1,6 @@
-pragma solidity 0.6.6;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
@@ -7,27 +9,28 @@ import "./IERC20.sol";
  * Math operations with safety checks
  */
 library SafeMath {
+  string private constant ERROR_MESSAGE = "SafeMath exception";
   function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
     uint256 c = a * b;
-    require(a == 0 || c / a == b);
+    require(a == 0 || c / a == b, ERROR_MESSAGE);
     return c;
   }
 
   function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b > 0);
+    require(b > 0, ERROR_MESSAGE);
     uint256 c = a / b;
-    require(a == b * c + a % b);
+    require(a == b * c + a % b, ERROR_MESSAGE);
     return c;
   }
 
   function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b <= a);
+    require(b <= a, ERROR_MESSAGE);
     return a - b;
   }
 
   function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
     uint256 c = a + b;
-    require(c>=a && c>=b);
+    require(c>=a && c>=b, ERROR_MESSAGE);
     return c;
   }
 }
@@ -77,6 +80,12 @@ contract Vault {
      */
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
+
+    /**
+     * @dev Storage variables for Vault
+     * This section is APPEND-ONLY, in order to preserve upgradeability
+     * since we use Proxy Pattern
+     */
     mapping(bytes32 => bool) public withdrawed;
     mapping(bytes32 => bool) public sigDataUsed;
     // address => token => amount
@@ -87,6 +96,10 @@ contract Vault {
     bool public notEntered = true;
     bool public isInitialized = false;
 
+    /**
+    * @dev END Storage variables
+    */
+
     struct BurnInstData {
         uint8 meta; // type of the instruction
         uint8 shard; // ID of the Incognito shard containing the instruction, must be 1
@@ -94,6 +107,11 @@ contract Vault {
         address payable to; // ETH address of the receiver of the token
         uint amount; // burned amount (on Incognito)
         bytes32 itx; // Incognito's burning tx
+    }
+
+    enum Prefix {
+        EXECUTE_SIGNATURE,
+        REQUEST_WITHDRAW_SIGNATURE
     }
 
     // error code
@@ -111,7 +129,10 @@ contract Vault {
         NOT_EQUAL,
         NULL_VALUE,
         ONLY_PREVAULT,
-        PREVAULT_NOT_PAUSED
+        PREVAULT_NOT_PAUSED,
+        SAFEMATH_EXCEPTION,
+        ALREADY_INITIALIZED,
+        INVALID_SIGNATURE
     }
 
     event Deposit(address token, string incognitoAddress, uint amount);
@@ -155,7 +176,7 @@ contract Vault {
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
     function initialize(address _prevVault) external {
-        require(!isInitialized);
+        require(!isInitialized, errorToString(Errors.ALREADY_INITIALIZED));
         prevVault = Withdrawable(_prevVault);
         isInitialized = true;
         notEntered = true;
@@ -193,7 +214,7 @@ contract Vault {
      * @param amount: to deposit to the vault and mint on Incognito Chain
      * @param incognitoAddress: Incognito Address to receive pERC20
      */
-    function depositERC20(address token, uint amount, string calldata incognitoAddress) external payable nonReentrant {
+    function depositERC20(address token, uint amount, string calldata incognitoAddress) external nonReentrant {
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -319,9 +340,9 @@ contract Vault {
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
     ) public nonReentrant {
-        require(inst.length >= 130);
+        require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
         BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 241 && data.shard == 1); // Check instruction type
+        require(data.meta == 241 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
 
         // Not withdrawed
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
@@ -333,7 +354,7 @@ contract Vault {
         } else {
             uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
-                data.amount = data.amount * (10 ** (uint(decimals) - 9));
+                data.amount = data.amount.safeMul(10 ** (uint(decimals) - 9));
             }
             require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
@@ -391,9 +412,9 @@ contract Vault {
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
     ) public nonReentrant {
-        require(inst.length >= 130);
+        require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
         BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 243 && data.shard == 1); // Check instruction type
+        require(data.meta == 243 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
 
         // Not withdrawed
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
@@ -405,7 +426,7 @@ contract Vault {
         } else {
             uint8 decimals = getDecimals(data.token);
             if (decimals > 9) {
-                data.amount = data.amount * (10 ** (uint(decimals) - 9));
+                data.amount = data.amount.safeMul(10 ** (uint(decimals) - 9));
             }
             require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
         }
@@ -459,6 +480,18 @@ contract Vault {
         return prevVault.isSigDataUsed(hash);
     }
 
+    struct PreSignData {
+        Prefix prefix;
+        address token;
+        bytes timestamp;
+        uint amount;
+    }
+
+    function newPreSignData(Prefix prefix, address token, bytes calldata timestamp, uint amount) pure internal returns (PreSignData memory) {
+        PreSignData memory psd = PreSignData(prefix, token, timestamp, amount);
+        return psd;
+    }
+
     /**
      * @dev User requests withdraw token contains in withdrawRequests.
      * Deposit event will be emitted to let incognito recognize and mint new p-tokens for the user.
@@ -476,7 +509,7 @@ contract Vault {
         bytes calldata timestamp
     ) external nonReentrant {
         // verify owner signs data
-        address verifier = verifySignData(abi.encode(incognitoAddress, token, timestamp, amount), signData);
+        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -517,7 +550,7 @@ contract Vault {
         bytes calldata signData
     ) external payable nonReentrant {
         //verify ower signs data from input
-        address verifier = verifySignData(abi.encode(exchangeAddress, callData, timestamp, amount), signData);
+        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.EXECUTE_SIGNATURE, token, timestamp, amount), recipientToken, exchangeAddress, callData), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -555,7 +588,7 @@ contract Vault {
         }
         require(address(this).balance >= ethAmount, errorToString(Errors.TOKEN_NOT_ENOUGH));
         (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
-        require(success);
+        require(success, errorToString(Errors.INTERNAL_TX_ERROR));
 
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
         require(returnedTokenAddress == recipientToken && balanceOf(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
@@ -570,7 +603,9 @@ contract Vault {
         bytes32 hash = keccak256(data);
         require(!isSigDataUsed(hash), errorToString(Errors.ALREADY_USED));
         address verifier = sigToAddress(signData, hash);
-       // mark data hash of sig as used
+        // reject when verifier equals zero
+        require(verifier != address(0x0), errorToString(Errors.INVALID_SIGNATURE));
+        // mark data hash of sig as used
         sigDataUsed[hash] = true;
 
         return verifier;

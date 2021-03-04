@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.6;
+pragma solidity ^0.6.12;
 
 import "./upgradableProxy.sol";
 
@@ -188,7 +188,7 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
         _upgradeTo(newImplementation);
         // solhint-disable-next-line avoid-low-level-calls
         (bool success,) = newImplementation.delegatecall(data);
-        require(success);
+        require(success, "DELEGATECALL failed");
     }
 
     /**
@@ -296,9 +296,12 @@ contract TransparentUpgradeableProxy is UpgradeableProxy {
      * @dev Successor claims thronze.
      */
     function claim() external {
-        require(msg.sender == _successor(), "TransparentUpgradeableProxy: unauthorized");
-        emit Claim(_successor());
-        _setAdmin(_successor());
+        if (msg.sender == _successor()) {
+            emit Claim(_successor());
+            _setAdmin(_successor());
+        } else{
+            _fallback();
+        }
     }
     
     /**

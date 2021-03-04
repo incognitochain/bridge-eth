@@ -1,4 +1,6 @@
-pragma solidity ^0.5.12;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./pause.sol";
@@ -19,6 +21,17 @@ contract IncognitoProxy is AdminPausable {
 
     event BeaconCommitteeSwapped(uint id, uint startHeight);
     event BridgeCommitteeSwapped(uint id, uint startHeight);
+
+    // error code
+    enum Errors {
+        SIGNATURE_DIMENSION_MISMATCH,
+        INSTRUCTION_NOT_APPROVED,
+        INSTRUCTION_INVALID,
+        COMMITTEE_HEIGHT_MISMATCH,
+        SIGNATURE_INVALID,
+        MERKLE_PROOF_INVALID,
+        UNEXPECTED_ERROR
+    }
 
     /**
      * @dev Sets the genesis committees and the address of admin
@@ -109,7 +122,7 @@ contract IncognitoProxy is AdminPausable {
             sigVs[0],
             sigRs[0],
             sigSs[0]
-        ));
+        ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));
 
         // Verify instruction on bridge
         require(instructionApproved(
@@ -124,14 +137,14 @@ contract IncognitoProxy is AdminPausable {
             sigVs[1],
             sigRs[1],
             sigSs[1]
-        ));
+        ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));
 
         // Parse instruction and check metadata
         (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
-        require(meta == 71 && shard == 1);
+        require(meta == 71 && shard == 1, errorToString(Errors.INSTRUCTION_INVALID));
 
         // Make sure 1 instruction can't be used twice (using startHeight)
-        require(startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, "cannot change old committee");
+        require(startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));
 
         // Swap committee
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
@@ -176,14 +189,14 @@ contract IncognitoProxy is AdminPausable {
             sigV,
             sigR,
             sigS
-        ));
+        ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));
 
         // Parse instruction and check metadata and shardID
         (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
-        require(meta == 70 && shard == 1);
+        require(meta == 70 && shard == 1 && numVals > 0, errorToString(Errors.INSTRUCTION_INVALID));
 
         // Make sure 1 instruction can't be used twice (using startHeight)
-        require(startHeight > beaconCommittees[beaconCommittees.length-1].startBlock, "cannot change old committee");
+        require(startHeight > beaconCommittees[beaconCommittees.length-1].startBlock, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));
 
         // Swap committee
         address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
@@ -235,9 +248,9 @@ contract IncognitoProxy is AdminPausable {
         }
 
         // Extract signers that signed this block (require sigIdx to be strictly increasing)
-        require(sigV.length == sigIdx.length);
-        require(sigV.length == sigR.length);
-        require(sigV.length == sigS.length);
+        require(sigV.length == sigIdx.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));
+        require(sigV.length == sigR.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));
+        require(sigV.length == sigS.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));
         for (uint i = 0; i < sigIdx.length; i++) {
             if ((i > 0 && sigIdx[i] <= sigIdx[i-1]) || sigIdx[i] >= signers.length) {
                 return false;
@@ -254,7 +267,7 @@ contract IncognitoProxy is AdminPausable {
         }
 
         // Check that signature is correct
-        require(verifySig(signers, blk, sigV, sigR, sigS));
+        require(verifySig(signers, blk, sigV, sigR, sigS), errorToString(Errors.SIGNATURE_INVALID));
 
         // Check that inst is in block
         require(instructionInMerkleTree(
@@ -262,7 +275,7 @@ contract IncognitoProxy is AdminPausable {
             instRoot,
             instPath,
             instPathIsLeft
-        ));
+        ), errorToString(Errors.MERKLE_PROOF_INVALID));
 
         return true;
     }
@@ -277,7 +290,7 @@ contract IncognitoProxy is AdminPausable {
     function findBeaconCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {
         uint l = 0;
         uint r = beaconCommittees.length;
-        require(r > 0);
+        require(r > 0, errorToString(Errors.UNEXPECTED_ERROR));
         r = r - 1;
         while (l != r) {
             uint m = (l + r + 1) / 2;
@@ -297,7 +310,7 @@ contract IncognitoProxy is AdminPausable {
     function findBridgeCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {
         uint l = 0;
         uint r = bridgeCommittees.length;
-        require(r > 0);
+        require(r > 0, errorToString(Errors.UNEXPECTED_ERROR));
         r = r - 1;
         while (l != r) {
             uint m = (l + r + 1) / 2;
@@ -324,7 +337,7 @@ contract IncognitoProxy is AdminPausable {
         bytes32[] memory path,
         bool[] memory left
     ) public pure returns (bool) {
-        require(left.length == path.length);
+        require(left.length == path.length, errorToString(Errors.MERKLE_PROOF_INVALID));
         bytes32 hash = leaf;
         for (uint i = 0; i < path.length; i++) {
             if (left[i]) {
@@ -347,7 +360,7 @@ contract IncognitoProxy is AdminPausable {
      * @return numVals: number of validators in the new committee
      */
     function extractMetaFromInstruction(bytes memory inst) public pure returns(uint8, uint8, uint, uint) {
-        require(inst.length >= 0x42); // 0x02 bytes for meta and shard, 0x20 each for height and numVals
+        require(inst.length >= 0x42, errorToString(Errors.INSTRUCTION_INVALID)); // 0x02 bytes for meta and shard, 0x20 each for height and numVals
         uint8 meta = uint8(inst[0]);
         uint8 shard = uint8(inst[1]);
         uint height;
@@ -367,7 +380,7 @@ contract IncognitoProxy is AdminPausable {
      * @return committee: address of the committee members
      */
     function extractCommitteeFromInstruction(bytes memory inst, uint numVals) public pure returns (address[] memory) {
-        require(inst.length == 0x42 + numVals * 0x20);
+        require(inst.length == 0x42 + numVals * 0x20, errorToString(Errors.INSTRUCTION_INVALID));
         address[] memory addr = new address[](numVals);
         address tmp;
         for (uint i = 0; i < numVals; i++) {
@@ -396,13 +409,34 @@ contract IncognitoProxy is AdminPausable {
         bytes32[] memory r,
         bytes32[] memory s
     ) public pure returns (bool) {
-        require(v.length == r.length);
-        require(v.length == s.length);
+        require(v.length == r.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));
+        require(v.length == s.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));
         for (uint i = 0; i < v.length; i++){
-            if (ecrecover(msgHash, v[i], r[i], s[i]) != committee[i]) {
+            address recoveredAddress = ecrecover(msgHash, v[i], r[i], s[i]);
+            if (recoveredAddress == address(0x0) || recoveredAddress != committee[i]) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * @dev convert enum to string value
+     */
+     function errorToString(Errors error) internal pure returns(string memory) {
+        uint8 erroNum = uint8(error);
+        uint maxlength = 10;
+        bytes memory reversed = new bytes(maxlength);
+        uint i = 0;
+        while (erroNum != 0) {
+            uint8 remainder = erroNum % 10;
+            erroNum = erroNum / 10;
+            reversed[i++] = byte(48 + remainder);
+        }
+        bytes memory s = new bytes(i + 1);
+        for (uint j = 0; j <= i; j++) {
+            s[j] = reversed[i - j];
+        }
+        return string(s);
     }
 }
