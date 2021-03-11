@@ -28,6 +28,7 @@ contract IncognitoProxy is AdminPausable {
         INSTRUCTION_NOT_APPROVED,
         INSTRUCTION_INVALID,
         COMMITTEE_HEIGHT_MISMATCH,
+        PREV_COMMITTEE_HEIGHT_MISMATCH,
         SIGNATURE_INVALID,
         MERKLE_PROOF_INVALID,
         UNEXPECTED_ERROR
@@ -140,14 +141,16 @@ contract IncognitoProxy is AdminPausable {
         ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));
 
         // Parse instruction and check metadata
-        (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
-        require(meta == 71 && shard == 1, errorToString(Errors.INSTRUCTION_INVALID));
+        (uint prevCommitteeStartHeight, uint startHeight) = extractMetaFromInstruction(inst, 71, 1);
+        // require(meta == 71 && shard == 1, errorToString(Errors.INSTRUCTION_INVALID));
 
+        uint myLatestCommitteeHeight = bridgeCommittees[bridgeCommittees.length-1].startBlock;
         // Make sure 1 instruction can't be used twice (using startHeight)
-        require(startHeight > bridgeCommittees[bridgeCommittees.length-1].startBlock, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));
+        require(prevCommitteeStartHeight == myLatestCommitteeHeight, errorToString(Errors.PREV_COMMITTEE_HEIGHT_MISMATCH));
+        require(startHeight > myLatestCommitteeHeight, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));
 
         // Swap committee
-        address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
+        address[] memory pubkeys = extractCommitteeFromInstruction(inst);
         bridgeCommittees.push(Committee({
             pubkeys: pubkeys,
             startBlock: startHeight
@@ -192,14 +195,16 @@ contract IncognitoProxy is AdminPausable {
         ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));
 
         // Parse instruction and check metadata and shardID
-        (uint8 meta, uint8 shard, uint startHeight, uint numVals) = extractMetaFromInstruction(inst);
-        require(meta == 70 && shard == 1 && numVals > 0, errorToString(Errors.INSTRUCTION_INVALID));
+        (uint prevCommitteeStartHeight, uint startHeight) = extractMetaFromInstruction(inst, 70, 1);
+        // require(meta == 70 && shard == 1 && numVals > 0, errorToString(Errors.INSTRUCTION_INVALID));
 
+        uint myLatestCommitteeHeight = beaconCommittees[beaconCommittees.length-1].startBlock;
         // Make sure 1 instruction can't be used twice (using startHeight)
-        require(startHeight > beaconCommittees[beaconCommittees.length-1].startBlock, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));
+        require(prevCommitteeStartHeight == myLatestCommitteeHeight, errorToString(Errors.PREV_COMMITTEE_HEIGHT_MISMATCH));
+        require(startHeight > myLatestCommitteeHeight, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));
 
         // Swap committee
-        address[] memory pubkeys = extractCommitteeFromInstruction(inst, numVals);
+        address[] memory pubkeys = extractCommitteeFromInstruction(inst);
         beaconCommittees.push(Committee({
             pubkeys: pubkeys,
             startBlock: startHeight
@@ -354,40 +359,45 @@ contract IncognitoProxy is AdminPausable {
     /**
      * @dev Extracts the metadata of a swap instruction
      * @param inst: the full instruction, containing both metadata and body
-     * @return meta: type of the instruction, 70 for swapping beacon and 71 for bridge
-     * @return shard: ID of the Incognito shard containing the instruction, must be 1
+     * @param expectedMeta: required type of the instruction, 70 for swapping beacon and 71 for bridge
+     * @param expectedShard: required ID of the Incognito shard containing the instruction, must be 1
      * @return height: the starting block that the committee is responsible for
-     * @return numVals: number of validators in the new committee
+     * @return prevHeight: the starting block of the signing committee for this instruction
      */
-    function extractMetaFromInstruction(bytes memory inst) public pure returns(uint8, uint8, uint, uint) {
-        require(inst.length >= 0x42, errorToString(Errors.INSTRUCTION_INVALID)); // 0x02 bytes for meta and shard, 0x20 each for height and numVals
+    function extractMetaFromInstruction(bytes memory inst, uint8 expectedMeta, uint8 expectedShard) public pure returns (uint, uint) {
+        require(inst.length >= 0x62, errorToString(Errors.INSTRUCTION_INVALID)); // 0x02 bytes for meta and shard, 0x20 each for height and numVals
         uint8 meta = uint8(inst[0]);
         uint8 shard = uint8(inst[1]);
         uint height;
-        uint numVals;
+        uint prevHeight;
         assembly {
             // skip first 0x20 bytes (stored length of inst)
             height := mload(add(inst, 0x22)) // [2:34]
-            numVals := mload(add(inst, 0x42)) // [34:66]
+            prevHeight := mload(add(inst, 0x42)) // [34:66]
         }
-        return (meta, shard, height, numVals);
+        require(meta == expectedMeta && shard == expectedShard, errorToString(Errors.INSTRUCTION_INVALID));
+        return (prevHeight, height);
     }
 
     /**
      * @dev Extracts the committee (body) from a swap instruction
      * @param inst: the full instruction, containing both metadata and body
-     * @param numVals: number of validators in the new committee
      * @return committee: address of the committee members
      */
-    function extractCommitteeFromInstruction(bytes memory inst, uint numVals) public pure returns (address[] memory) {
-        require(inst.length == 0x42 + numVals * 0x20, errorToString(Errors.INSTRUCTION_INVALID));
+    function extractCommitteeFromInstruction(bytes memory inst) public pure returns (address[] memory) {
+        uint numVals;
+        assembly {
+            numVals := mload(add(inst, 0x62))
+        }
+
+        require(inst.length == 0x62 + numVals * 0x20, errorToString(Errors.INSTRUCTION_INVALID));
         address[] memory addr = new address[](numVals);
         address tmp;
         for (uint i = 0; i < numVals; i++) {
             assembly {
                 // skip first 0x20 bytes (stored length of inst)
-                // also, skip the next 0x42 bytes (stored metadata)
-                tmp := mload(add(add(inst, 0x62), mul(i, 0x20))) // 67+i*32
+                // also, skip the next 0x62 bytes (stored metadata)
+                tmp := mload(add(add(inst, 0x82), mul(i, 0x20))) // 67+i*32
             }
             addr[i] = tmp;
         }
