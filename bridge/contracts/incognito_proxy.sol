@@ -372,8 +372,8 @@ contract IncognitoProxy is AdminPausable {
         uint prevHeight;
         assembly {
             // skip first 0x20 bytes (stored length of inst)
-            height := mload(add(inst, 0x22)) // [2:34]
-            prevHeight := mload(add(inst, 0x42)) // [34:66]
+            prevHeight := mload(add(inst, 0x22)) // [2:34]
+            height := mload(add(inst, 0x42)) // [34:66]
         }
         require(meta == expectedMeta && shard == expectedShard, errorToString(Errors.INSTRUCTION_INVALID));
         return (prevHeight, height);

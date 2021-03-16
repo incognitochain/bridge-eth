@@ -14,6 +14,7 @@ erc20: build
 
 build: bridge/incognito_proxy/incognito_proxy.go \
 	bridge/vault/vault.go \
+	bridge/vault/vaultHelper.go \
 	bridge/pause/pause.go \
 	erc20/fail/fail.go \
 	erc20/dless/dless.go \
@@ -31,6 +32,9 @@ bridge/incognito_proxy/incognito_proxy.go: bridge/contracts/incognito_proxy.sol
 bridge/vault/vault.go: bridge/contracts/vault.sol
 	./gengo.sh bridge/contracts/vault.sol bridge/vault
 
+bridge/vault/vaultHelper.go: bridge/contracts/vaultHelper.sol
+	./gengo.sh bridge/contracts/vaultHelper.sol bridge/vault
+
 bridge/kbntrade/kbn_trade.go: bridge/contracts/kbn_trade.sol
 	./gengo.sh bridge/contracts/kbn_trade.sol bridge/kbntrade
 
@@ -46,3 +50,6 @@ erc20/fail/fail.go: erc20/fail/fail.sol
 erc20/dless/dless.go: erc20/dless/dless.sol
 	./gengo.sh erc20/dless/dless.sol erc20/dless
 
+clean: 
+	rm bridge/incognito_proxy/incognito_proxy.go bridge/vault/vault.go bridge/pause/pause.go erc20/fail/fail.go erc20/dless/dless.go bridge/kbntrade/kbn_trade.go bridge/uniswap/uniswap_trade.go
+	
