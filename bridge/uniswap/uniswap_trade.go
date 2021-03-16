@@ -20,6 +20,7 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
+	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -184,7 +185,7 @@ func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
+// Solidity: function allowance(address owner, address spender) constant returns(uint256)
 func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -196,21 +197,21 @@ func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
+// Solidity: function allowance(address owner, address spender) constant returns(uint256)
 func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) view returns(uint256)
+// Solidity: function allowance(address owner, address spender) constant returns(uint256)
 func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) view returns(uint256)
+// Solidity: function balanceOf(address account) constant returns(uint256)
 func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -222,21 +223,21 @@ func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, account common.Addre
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) view returns(uint256)
+// Solidity: function balanceOf(address account) constant returns(uint256)
 func (_IERC20 *IERC20Session) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) view returns(uint256)
+// Solidity: function balanceOf(address account) constant returns(uint256)
 func (_IERC20 *IERC20CallerSession) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() view returns(uint256)
+// Solidity: function decimals() constant returns(uint256)
 func (_IERC20 *IERC20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -248,21 +249,21 @@ func (_IERC20 *IERC20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() view returns(uint256)
+// Solidity: function decimals() constant returns(uint256)
 func (_IERC20 *IERC20Session) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() view returns(uint256)
+// Solidity: function decimals() constant returns(uint256)
 func (_IERC20 *IERC20CallerSession) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() view returns(uint256)
+// Solidity: function totalSupply() constant returns(uint256)
 func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
 	var (
 		ret0 = new(*big.Int)
@@ -274,14 +275,14 @@ func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) 
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() view returns(uint256)
+// Solidity: function totalSupply() constant returns(uint256)
 func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() view returns(uint256)
+// Solidity: function totalSupply() constant returns(uint256)
 func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
@@ -664,7 +665,7 @@ var TradeUtilsFuncSigs = map[string]string{
 }
 
 // TradeUtilsBin is the compiled bytecode used for deploying new contracts.
-var TradeUtilsBin = "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220a6aec8323642108e5c978232467d26c828e8333ce7c86a3f7108114d7c01cd4664736f6c63430006060033"
+var TradeUtilsBin = "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220b7777546a30e2b201149c5afb6d1db6bd399fcccbc04741c03e2ec6057762ba564736f6c634300060c0033"
 
 // DeployTradeUtils deploys a new Ethereum contract, binding an instance of TradeUtils to it.
 func DeployTradeUtils(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *TradeUtils, error) {
@@ -824,7 +825,7 @@ func (_TradeUtils *TradeUtilsTransactorRaw) Transact(opts *bind.TransactOpts, me
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
 func (_TradeUtils *TradeUtilsCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -836,14 +837,14 @@ func (_TradeUtils *TradeUtilsCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (co
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
 func (_TradeUtils *TradeUtilsSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
 func (_TradeUtils *TradeUtilsCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
 }
@@ -1005,7 +1006,7 @@ func (_UniswapV2 *UniswapV2TransactorRaw) Transact(opts *bind.TransactOpts, meth
 
 // WETH is a free data retrieval call binding the contract method 0xad5c4648.
 //
-// Solidity: function WETH() pure returns(address)
+// Solidity: function WETH() constant returns(address)
 func (_UniswapV2 *UniswapV2Caller) WETH(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -1017,21 +1018,21 @@ func (_UniswapV2 *UniswapV2Caller) WETH(opts *bind.CallOpts) (common.Address, er
 
 // WETH is a free data retrieval call binding the contract method 0xad5c4648.
 //
-// Solidity: function WETH() pure returns(address)
+// Solidity: function WETH() constant returns(address)
 func (_UniswapV2 *UniswapV2Session) WETH() (common.Address, error) {
 	return _UniswapV2.Contract.WETH(&_UniswapV2.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xad5c4648.
 //
-// Solidity: function WETH() pure returns(address)
+// Solidity: function WETH() constant returns(address)
 func (_UniswapV2 *UniswapV2CallerSession) WETH() (common.Address, error) {
 	return _UniswapV2.Contract.WETH(&_UniswapV2.CallOpts)
 }
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
-// Solidity: function factory() pure returns(address)
+// Solidity: function factory() constant returns(address)
 func (_UniswapV2 *UniswapV2Caller) Factory(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -1043,21 +1044,21 @@ func (_UniswapV2 *UniswapV2Caller) Factory(opts *bind.CallOpts) (common.Address,
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
-// Solidity: function factory() pure returns(address)
+// Solidity: function factory() constant returns(address)
 func (_UniswapV2 *UniswapV2Session) Factory() (common.Address, error) {
 	return _UniswapV2.Contract.Factory(&_UniswapV2.CallOpts)
 }
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
-// Solidity: function factory() pure returns(address)
+// Solidity: function factory() constant returns(address)
 func (_UniswapV2 *UniswapV2CallerSession) Factory() (common.Address, error) {
 	return _UniswapV2.Contract.Factory(&_UniswapV2.CallOpts)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
+// Solidity: function getAmountsOut(uint256 amountIn, address[] path) constant returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Caller) GetAmountsOut(opts *bind.CallOpts, amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
 	var (
 		ret0 = new([]*big.Int)
@@ -1069,35 +1070,35 @@ func (_UniswapV2 *UniswapV2Caller) GetAmountsOut(opts *bind.CallOpts, amountIn *
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
+// Solidity: function getAmountsOut(uint256 amountIn, address[] path) constant returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Session) GetAmountsOut(amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
 	return _UniswapV2.Contract.GetAmountsOut(&_UniswapV2.CallOpts, amountIn, path)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
+// Solidity: function getAmountsOut(uint256 amountIn, address[] path) constant returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2CallerSession) GetAmountsOut(amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
 	return _UniswapV2.Contract.GetAmountsOut(&_UniswapV2.CallOpts, amountIn, path)
 }
 
 // SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
 //
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
+// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Transactor) SwapExactETHForTokens(opts *bind.TransactOpts, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
 	return _UniswapV2.contract.Transact(opts, "swapExactETHForTokens", amountOutMin, path, to, deadline)
 }
 
 // SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
 //
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
+// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Session) SwapExactETHForTokens(amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
 	return _UniswapV2.Contract.SwapExactETHForTokens(&_UniswapV2.TransactOpts, amountOutMin, path, to, deadline)
 }
 
 // SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
 //
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
+// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2TransactorSession) SwapExactETHForTokens(amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
 	return _UniswapV2.Contract.SwapExactETHForTokens(&_UniswapV2.TransactOpts, amountOutMin, path, to, deadline)
 }
@@ -1157,7 +1158,7 @@ var UniswapV2TradeFuncSigs = map[string]string{
 }
 
 // UniswapV2TradeBin is the compiled bytecode used for deploying new contracts.
-var UniswapV2TradeBin = "0x608060405234801561001057600080fd5b50604051610c13380380610c138339818101604052602081101561003357600080fd5b5051600080546001600160a01b0319166001600160a01b038084169190911791829055604080516315ab88c960e31b81529051929091169163ad5c464891600480820192602092909190829003018186803b15801561009157600080fd5b505afa1580156100a5573d6000803e3d6000fd5b505050506040513d60208110156100bb57600080fd5b5051600180546001600160a01b0319166001600160a01b0390921691909117905550610b27806100ec6000396000f3fe60806040526004361061004e5760003560e01c80635187c0911461005a57806372e94bf61461008b578063bb39a960146100a0578063cba7064f146100fd578063f24286211461019057610055565b3661005557005b600080fd5b34801561006657600080fd5b5061006f6101a5565b604080516001600160a01b039092168252519081900360200190f35b34801561009757600080fd5b5061006f6101b4565b6100da600480360360808110156100b657600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101b9565b604080516001600160a01b03909316835260208301919091528051918290030190f35b34801561010957600080fd5b506101406004803603606081101561012057600080fd5b506001600160a01b038135811691602081013591604090910135166103e5565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561017c578181015183820152602001610164565b505050509050019250505060405180910390f35b34801561019c57600080fd5b5061006f6105ba565b6000546001600160a01b031681565b600081565b600080846101c6876105c9565b10156101d157600080fd5b836001600160a01b0316866001600160a01b031614156101f057600080fd5b604080516002808252606080830184529260208301908036833701905050905060606001600160a01b038816156102f357878260008151811061022f57fe5b6001600160a01b039283166020918202929092010152600054610255918a91168961065a565b6001600160a01b038616156102a457858260018151811061027257fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061029d82888761076f565b90506102ee565b6001805483516001600160a01b0390911691849181106102c057fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506102eb828887610911565b90505b61036b565b60015482516001600160a01b0390911690839060009061030f57fe5b60200260200101906001600160a01b031690816001600160a01b031681525050858260018151811061033d57fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506103688288876109b7565b90505b60028151101561037a57600080fd5b848160018351038151811061038b57fe5b6020026020010151101580156103b4575086816000815181106103aa57fe5b6020026020010151145b6103bd57600080fd5b85816001835103815181106103ce57fe5b602002602001015193509350505094509492505050565b604080516002808252606080830184529283929190602083019080368337019050509050848160008151811061041757fe5b60200260200101906001600160a01b031690816001600160a01b031681525050828160018151811061044557fe5b6001600160a01b03928316602091820292909201810191909152600080546040805163d06ca61f60e01b8152600481018a815260248201928352875160448301528751939096169563d06ca61f958b958995929493606401928683019202908190849084905b838110156104c35781810151838201526020016104ab565b50505050905001935050505060006040518083038186803b1580156104e757600080fd5b505afa1580156104fb573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561052457600080fd5b810190808051604051939291908464010000000082111561054457600080fd5b90830190602082018581111561055957600080fd5b825186602082028301116401000000008211171561057657600080fd5b82525081516020918201928201910280838360005b838110156105a357818101518382015260200161058b565b505050509050016040525050509150509392505050565b6001546001600160a01b031681565b60006001600160a01b0382166105e0575047610655565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561062657600080fd5b505afa15801561063a573d6000803e3d6000fd5b505050506040513d602081101561065057600080fd5b505190505b919050565b6001600160a01b0383161561076a576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156106b857600080fd5b505af11580156106cc573d6000803e3d6000fd5b505050506106d8610abd565b6106e157600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b03166001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561074157600080fd5b505af1158015610755573d6000803e3d6000fd5b50505050610761610abd565b61076a57600080fd5b505050565b60606000809054906101000a90046001600160a01b03166001600160a01b03166338ed17398484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03166001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b838110156108165781810151838201526020016107fe565b505050509050019650505050505050600060405180830381600087803b15801561083f57600080fd5b505af1158015610853573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561087c57600080fd5b810190808051604051939291908464010000000082111561089c57600080fd5b9083019060208201858111156108b157600080fd5b82518660208202830111640100000000821117156108ce57600080fd5b82525081516020918201928201910280838360005b838110156108fb5781810151838201526020016108e3565b5050505090500160405250505090509392505050565b60606000809054906101000a90046001600160a01b03166001600160a01b03166318cbafe58484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03166001600160a01b0316815260200183815260200182810382528581815181526020019150805190602001906020028083836000838110156108165781810151838201526020016107fe565b60606000809054906101000a90046001600160a01b03166001600160a01b0316637ff36ab58484873342610258016040518663ffffffff1660e01b81526004018085815260200180602001846001600160a01b03166001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610a58578181015183820152602001610a40565b50505050905001955050505050506000604051808303818588803b158015610a7f57600080fd5b505af1158015610a93573d6000803e3d6000fd5b50505050506040513d6000823e601f3d908101601f19168201604052602081101561087c57600080fd5b6000803d8015610ad45760208114610add57610ae9565b60019150610ae9565b60206000803e60005191505b50151590509056fea264697066735822122055822bc2b271e8514b87f590bbe3afa94dbdbd158435d734cf48b34964888f8564736f6c63430006060033"
+var UniswapV2TradeBin = "0x608060405234801561001057600080fd5b50604051610bec380380610bec8339818101604052602081101561003357600080fd5b5051600080546001600160a01b0319166001600160a01b038084169190911791829055604080516315ab88c960e31b81529051929091169163ad5c464891600480820192602092909190829003018186803b15801561009157600080fd5b505afa1580156100a5573d6000803e3d6000fd5b505050506040513d60208110156100bb57600080fd5b5051600180546001600160a01b0319166001600160a01b0390921691909117905550610b00806100ec6000396000f3fe60806040526004361061004e5760003560e01c80635187c0911461005a57806372e94bf61461008b578063bb39a960146100a0578063cba7064f146100fd578063f24286211461019057610055565b3661005557005b600080fd5b34801561006657600080fd5b5061006f6101a5565b604080516001600160a01b039092168252519081900360200190f35b34801561009757600080fd5b5061006f6101b4565b6100da600480360360808110156100b657600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101b9565b604080516001600160a01b03909316835260208301919091528051918290030190f35b34801561010957600080fd5b506101406004803603606081101561012057600080fd5b506001600160a01b038135811691602081013591604090910135166103e5565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561017c578181015183820152602001610164565b505050509050019250505060405180910390f35b34801561019c57600080fd5b5061006f6105ba565b6000546001600160a01b031681565b600081565b600080846101c6876105c9565b10156101d157600080fd5b836001600160a01b0316866001600160a01b031614156101f057600080fd5b604080516002808252606080830184529260208301908036833701905050905060606001600160a01b038816156102f357878260008151811061022f57fe5b6001600160a01b039283166020918202929092010152600054610255918a91168961065a565b6001600160a01b038616156102a457858260018151811061027257fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061029d828887610766565b90506102ee565b6001805483516001600160a01b0390911691849181106102c057fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506102eb8288876108fe565b90505b61036b565b60015482516001600160a01b0390911690839060009061030f57fe5b60200260200101906001600160a01b031690816001600160a01b031681525050858260018151811061033d57fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061036882888761099a565b90505b60028151101561037a57600080fd5b848160018351038151811061038b57fe5b6020026020010151101580156103b4575086816000815181106103aa57fe5b6020026020010151145b6103bd57600080fd5b85816001835103815181106103ce57fe5b602002602001015193509350505094509492505050565b604080516002808252606080830184529283929190602083019080368337019050509050848160008151811061041757fe5b60200260200101906001600160a01b031690816001600160a01b031681525050828160018151811061044557fe5b6001600160a01b03928316602091820292909201810191909152600080546040805163d06ca61f60e01b8152600481018a815260248201928352875160448301528751939096169563d06ca61f958b958995929493606401928683019202908190849084905b838110156104c35781810151838201526020016104ab565b50505050905001935050505060006040518083038186803b1580156104e757600080fd5b505afa1580156104fb573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561052457600080fd5b810190808051604051939291908464010000000082111561054457600080fd5b90830190602082018581111561055957600080fd5b825186602082028301116401000000008211171561057657600080fd5b82525081516020918201928201910280838360005b838110156105a357818101518382015260200161058b565b505050509050016040525050509150509392505050565b6001546001600160a01b031681565b60006001600160a01b0382166105e0575047610655565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561062657600080fd5b505afa15801561063a573d6000803e3d6000fd5b505050506040513d602081101561065057600080fd5b505190505b919050565b6001600160a01b03831615610761576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156106b857600080fd5b505af11580156106cc573d6000803e3d6000fd5b505050506106d8610a96565b6106e157600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561073857600080fd5b505af115801561074c573d6000803e3d6000fd5b50505050610758610a96565b61076157600080fd5b505050565b606060008054906101000a90046001600160a01b03166001600160a01b03166338ed17398484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b838110156108035781810151838201526020016107eb565b505050509050019650505050505050600060405180830381600087803b15801561082c57600080fd5b505af1158015610840573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561086957600080fd5b810190808051604051939291908464010000000082111561088957600080fd5b90830190602082018581111561089e57600080fd5b82518660208202830111640100000000821117156108bb57600080fd5b82525081516020918201928201910280838360005b838110156108e85781810151838201526020016108d0565b5050505090500160405250505090509392505050565b606060008054906101000a90046001600160a01b03166001600160a01b03166318cbafe58484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b0316815260200183815260200182810382528581815181526020019150805190602001906020028083836000838110156108035781810151838201526020016107eb565b606060008054906101000a90046001600160a01b03166001600160a01b0316637ff36ab58484873342610258016040518663ffffffff1660e01b81526004018085815260200180602001846001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610a31578181015183820152602001610a19565b50505050905001955050505050506000604051808303818588803b158015610a5857600080fd5b505af1158015610a6c573d6000803e3d6000fd5b50505050506040513d6000823e601f3d908101601f19168201604052602081101561086957600080fd5b6000803d8015610aad5760208114610ab657610ac2565b60019150610ac2565b60206000803e60005191505b50151590509056fea2646970667358221220312842f05194bfba0d1722229c971e9265fc021924dff05da73c73479596f36c64736f6c634300060c0033"
 
 // DeployUniswapV2Trade deploys a new Ethereum contract, binding an instance of UniswapV2Trade to it.
 func DeployUniswapV2Trade(auth *bind.TransactOpts, backend bind.ContractBackend, _uniswapV2 common.Address) (common.Address, *types.Transaction, *UniswapV2Trade, error) {
@@ -1317,7 +1318,7 @@ func (_UniswapV2Trade *UniswapV2TradeTransactorRaw) Transact(opts *bind.Transact
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -1329,21 +1330,21 @@ func (_UniswapV2Trade *UniswapV2TradeCaller) ETHCONTRACTADDRESS(opts *bind.CallO
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _UniswapV2Trade.Contract.ETHCONTRACTADDRESS(&_UniswapV2Trade.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _UniswapV2Trade.Contract.ETHCONTRACTADDRESS(&_UniswapV2Trade.CallOpts)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
 //
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
+// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) constant returns(uint256[])
 func (_UniswapV2Trade *UniswapV2TradeCaller) GetAmountsOut(opts *bind.CallOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
 	var (
 		ret0 = new([]*big.Int)
@@ -1355,21 +1356,21 @@ func (_UniswapV2Trade *UniswapV2TradeCaller) GetAmountsOut(opts *bind.CallOpts, 
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
 //
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
+// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) constant returns(uint256[])
 func (_UniswapV2Trade *UniswapV2TradeSession) GetAmountsOut(srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
 	return _UniswapV2Trade.Contract.GetAmountsOut(&_UniswapV2Trade.CallOpts, srcToken, srcQty, destToken)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
 //
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
+// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) constant returns(uint256[])
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) GetAmountsOut(srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
 	return _UniswapV2Trade.Contract.GetAmountsOut(&_UniswapV2Trade.CallOpts, srcToken, srcQty, destToken)
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
-// Solidity: function uniswapV2() view returns(address)
+// Solidity: function uniswapV2() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCaller) UniswapV2(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -1381,21 +1382,21 @@ func (_UniswapV2Trade *UniswapV2TradeCaller) UniswapV2(opts *bind.CallOpts) (com
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
-// Solidity: function uniswapV2() view returns(address)
+// Solidity: function uniswapV2() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeSession) UniswapV2() (common.Address, error) {
 	return _UniswapV2Trade.Contract.UniswapV2(&_UniswapV2Trade.CallOpts)
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
-// Solidity: function uniswapV2() view returns(address)
+// Solidity: function uniswapV2() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) UniswapV2() (common.Address, error) {
 	return _UniswapV2Trade.Contract.UniswapV2(&_UniswapV2Trade.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
-// Solidity: function wETH() view returns(address)
+// Solidity: function wETH() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCaller) WETH(opts *bind.CallOpts) (common.Address, error) {
 	var (
 		ret0 = new(common.Address)
@@ -1407,35 +1408,35 @@ func (_UniswapV2Trade *UniswapV2TradeCaller) WETH(opts *bind.CallOpts) (common.A
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
-// Solidity: function wETH() view returns(address)
+// Solidity: function wETH() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeSession) WETH() (common.Address, error) {
 	return _UniswapV2Trade.Contract.WETH(&_UniswapV2Trade.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
-// Solidity: function wETH() view returns(address)
+// Solidity: function wETH() constant returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) WETH() (common.Address, error) {
 	return _UniswapV2Trade.Contract.WETH(&_UniswapV2Trade.CallOpts)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) returns(address, uint256)
 func (_UniswapV2Trade *UniswapV2TradeTransactor) Trade(opts *bind.TransactOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
 	return _UniswapV2Trade.contract.Transact(opts, "trade", srcToken, srcQty, destToken, amountOutMin)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) returns(address, uint256)
 func (_UniswapV2Trade *UniswapV2TradeSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
 	return _UniswapV2Trade.Contract.Trade(&_UniswapV2Trade.TransactOpts, srcToken, srcQty, destToken, amountOutMin)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) returns(address, uint256)
 func (_UniswapV2Trade *UniswapV2TradeTransactorSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
 	return _UniswapV2Trade.Contract.Trade(&_UniswapV2Trade.TransactOpts, srcToken, srcQty, destToken, amountOutMin)
 }
