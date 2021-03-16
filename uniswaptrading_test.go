@@ -124,8 +124,14 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	expectOutputAmount := tradingSuite.getExpectedAmount(srcTokenIDStr, destTokenIDStr, srcQty)
 	input, _ := tradeAbi.Pack("trade", srcToken, srcQty, destToken, expectOutputAmount)
 	timestamp := []byte(randomizeTimestamp())
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	tempData, _ := vaultAbi.Pack("executeBuildData", tradingSuite.UniswapTradeDeployedAddr, input, timestamp, srcQty)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix: EXECUTE_PREFIX,
+		Token: srcToken,
+		Timestamp: timestamp,
+		Amount: srcQty,
+	}
+	tempData, _ := vaultAbi.Pack("_buildSignExecute", psData, destToken, tradingSuite.UniswapTradeDeployedAddr, input)
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 
@@ -165,7 +171,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
+	time.Sleep(230 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncEtherTokenIDStr,
 		ethDepositProof,
@@ -198,7 +204,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 
 	fmt.Println("------------ step 3: execute trade ETH for DAI through Uniswap aggregator --------------")
 	tradingSuite.executeWithUniswap(
-		tradeAmount,
+		deposited,
 		tradingSuite.EtherAddressStr,
 		tradingSuite.DAIAddressStr,
 	)

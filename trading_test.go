@@ -30,6 +30,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	EXECUTE_PREFIX = 0
+	REQ_WITHDRAW_PREFIX = 1
+)
+
 type IssuingETHRes struct {
 	rpccaller.RPCBaseRes
 	Result interface{} `json:"Result"`
@@ -406,8 +411,14 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	token := common.HexToAddress(withdrawalETHTokenIDStr)
 	// amount := big.NewInt(0.1 * params.Ether)
 	timestamp := []byte(randomizeTimestamp())
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, token, timestamp, amount)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix: REQ_WITHDRAW_PREFIX,
+		Token: token,
+		Timestamp: timestamp,
+		Amount: amount,
+	}
+	tempData, _ := vaultAbi.Pack("_buildSignRequestWithdraw", psData, tradingSuite.IncPaymentAddrStr)
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 	auth.GasPrice = big.NewInt(50000000000)
