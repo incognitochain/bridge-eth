@@ -390,6 +390,7 @@ contract IncognitoProxy is AdminPausable {
             numVals := mload(add(inst, 0x62))
         }
 
+        require(numVals > 0, errorToString(Errors.INSTRUCTION_INVALID));
         require(inst.length == 0x62 + numVals * 0x20, errorToString(Errors.INSTRUCTION_INVALID));
         address[] memory addr = new address[](numVals);
         address tmp;
