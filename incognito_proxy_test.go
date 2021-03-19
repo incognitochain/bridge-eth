@@ -312,7 +312,7 @@ func TestFixedSwapBridgeCommittee(t *testing.T) {
 			in:   buildSwapBridgeTestcase(c, 0, 789, 71, 1),
 			out:  789,
 		},
-		
+
 	}
 
 	for _, tc := range testCases {
@@ -415,7 +415,7 @@ func TestFixedSwapBeaconCommittee(t *testing.T) {
 			in:   buildSwapBeaconTestcase(c, 0, 789, 70, 1),
 			out:  789,
 		},
-		
+
 	}
 
 	for _, tc := range testCases {
@@ -924,18 +924,19 @@ func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
 		out     []string
 		err     bool
 	}{
-		{
-			desc:    "numVals too high",
-			inst:    buildDecodedSwapConfirmInst(70, 1, 0, 789, addrs),
-			numVals: 8,
-			err:     true,
-		},
-		{
-			desc:    "numVals too low",
-			inst:    buildDecodedSwapConfirmInst(70, 1, 0, 789, addrs),
-			numVals: 2,
-			err:     true,
-		},
+		// this function now reads numVals from instruction instead of from parameter
+		// {
+		// 	desc:    "numVals too high",
+		// 	inst:    buildDecodedSwapConfirmInst(70, 1, 0, 789, addrs),
+		// 	numVals: 8,
+		// 	err:     true,
+		// },
+		// {
+		// 	desc:    "numVals too low",
+		// 	inst:    buildDecodedSwapConfirmInst(70, 1, 0, 789, addrs),
+		// 	numVals: 2,
+		// 	err:     true,
+		// },
 		{
 			desc:    "Extract beacon committee",
 			inst:    buildDecodedSwapConfirmInst(70, 1, 0, 789, addrs),
@@ -956,12 +957,12 @@ func TestFixedExtractCommitteeFromInstruction(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			comm, err := p.inc.ExtractCommitteeFromInstruction(nil, tc.inst, )
+			comm, err := p.inc.ExtractCommitteeFromInstruction(nil, tc.inst)
 			isErr := err != nil
 			if isErr != tc.err {
-				t.Error(errors.Errorf("expect error = %t, got %v", tc.err, err))
+				t.Error(errors.Errorf("expect error = %t, got %v in testcase %d", tc.err, err, i))
 			}
 			if tc.err {
 				return
