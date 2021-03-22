@@ -134,7 +134,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2SubmitBurnProof() {
 	auth.GasLimit = 0
 	_, err = SubmitBurnProof(v2.p.v, auth2, proof)
 	require.NotEqual(v2.T(), nil, err)
-	v2.p.sim.Commit() 
+	v2.p.sim.Commit()
 
 	// pause and submitBurnProof
 	_, err = v2.p.vp.Pause(auth)
@@ -163,10 +163,18 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
 	// request amount bigger than balance
 	timestamp := []byte(randomizeTimestamp())
-	tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, deposit)
+	vaultHelperAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix: REQ_WITHDRAW_PREFIX,
+		Token: tinfo.addr,
+		Timestamp: timestamp,
+		Amount: deposit,
+	}
+	tempData, _ := vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
+	// tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, deposit)
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
 	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, deposit, signBytes, timestamp)
@@ -174,7 +182,14 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	v2.p.sim.Commit()
 
 	// able to request withdraw
-	tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
+	psData = vault.VaultHelperPreSignData{
+		Prefix: REQ_WITHDRAW_PREFIX,
+		Token: tinfo.addr,
+		Timestamp: timestamp,
+		Amount: big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))),
+	}
+	tempData, _ = vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
+	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
 	data = rawsha3(tempData[4:])
 	signBytes, _ = crypto.Sign(data, genesisAcc.PrivateKey)
 	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
@@ -193,7 +208,14 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 
 	// amount decreased so can not request amount as amount at time withdraw from incognito
 	timestamp = []byte(randomizeTimestamp())
-	tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
+	psData = vault.VaultHelperPreSignData{
+		Prefix: REQ_WITHDRAW_PREFIX,
+		Token: tinfo.addr,
+		Timestamp: timestamp,
+		Amount: big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))),
+	}
+	tempData, _ = vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
+	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
 	data = rawsha3(tempData[4:])
 	signBytes, _ = crypto.Sign(data, genesisAcc.PrivateKey)
 	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))), signBytes, timestamp)
@@ -225,7 +247,14 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
-	tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
+	psData = vault.VaultHelperPreSignData{
+		Prefix: REQ_WITHDRAW_PREFIX,
+		Token: tinfo.addr,
+		Timestamp: timestamp,
+		Amount: big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))),
+	}
+	tempData, _ = vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
+	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
 	data = rawsha3(tempData[4:])
 	signBytes, err = crypto.Sign(data, genesisAcc.PrivateKey)
 	require.Equal(v2.T(), nil, err)
@@ -608,8 +637,16 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	var data32 [32]byte
 	tinfo := v2.p.customErc20s[desc]
 	timestamp := []byte(randomizeTimestamp())
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, testAmount)
+	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	vaultHelperAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix: REQ_WITHDRAW_PREFIX,
+		Token: tinfo.addr,
+		Timestamp: timestamp,
+		Amount: testAmount,
+	}
+	tempData, _ := vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
+	// tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, testAmount)
 	data := rawsha3(tempData[4:])
 
 	copy(data32[:], data)
@@ -708,8 +745,15 @@ func runExecuteVault(
 	timestamp []byte,
 	signer *ecdsa.PrivateKey,
 ) (*types.Transaction, error) {
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	tempData, _ := vaultAbi.Pack("executeBuildData", dapp, input, timestamp, srcQty)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix: EXECUTE_PREFIX,
+		Token: srcToken,
+		Timestamp: timestamp,
+		Amount: srcQty,
+	}
+	tempData, err := vaultAbi.Pack("_buildSignExecute", psData, destoken, dapp, input)
+	// tempData, _ := vaultAbi.Pack("executeBuildData", dapp, input, timestamp, srcQty)
 	data := rawsha3(tempData[4:])
 	signBytes, err := crypto.Sign(data, signer)
 	if err != nil {
@@ -758,7 +802,15 @@ func buildDataReentranceAttackData(
 	if err != nil {
 		return nil, err
 	}
-	tempData, _ := vaultAbi.Pack("executeBuildData", dAddr, input1, timestamp, executeAmount)
+	vaultHelperAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix: EXECUTE_PREFIX,
+		Token: srcToken,
+		Timestamp: timestamp,
+		Amount: executeAmount,
+	}
+	tempData, err := vaultHelperAbi.Pack("_buildSignExecute", psData, destToken, dAddr, input1)
+	// tempData, _ := vaultAbi.Pack("executeBuildData", dAddr, input1, timestamp, executeAmount)
 
 	data := rawsha3(tempData[4:])
 	signBytes, err := crypto.Sign(data, genesisAcc.PrivateKey)
@@ -782,7 +834,14 @@ func buildDataReentranceAttackData(
 	if err != nil {
 		return nil, err
 	}
-	tempData, _ = vaultAbi.Pack("executeBuildData", dAddr, input3, timestamp, executeAmount)
+	psData = vault.VaultHelperPreSignData{
+		Prefix: EXECUTE_PREFIX,
+		Token: srcToken,
+		Timestamp: timestamp,
+		Amount: executeAmount,
+	}
+	tempData, err = vaultHelperAbi.Pack("_buildSignExecute", psData, destToken, dAddr, input3)
+	// tempData, _ = vaultAbi.Pack("executeBuildData", dAddr, input3, timestamp, executeAmount)
 	data = rawsha3(tempData[4:])
 	signBytes, err = crypto.Sign(data, genesisAcc.PrivateKey)
 	if err != nil {

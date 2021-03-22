@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.6;
+pragma solidity ^0.6.12;
 
 import "./proxy.sol";
 
@@ -26,7 +26,7 @@ contract UpgradeableProxy is Proxy {
         if(_data.length > 0) {
             // solhint-disable-next-line avoid-low-level-calls
             (bool success,) = _logic.delegatecall(_data);
-            require(success);
+            require(success, "DELEGATECALL failed");
         }
     }
 
