@@ -61,9 +61,9 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.DAIAddress = common.HexToAddress("0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa")
 	v2.MRKAddressStr = common.HexToAddress("0xef13c0c8abcaf5767160018d268f9697ae4f5375")
 	v2.EthPrivateKey = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
-	v2.VaultAddress = common.HexToAddress("0x8DA2938e6B9F30f50e8e04d9AC2Fc81f3BAF728B")
+	v2.VaultAddress = common.HexToAddress("0xF92c6bb5206BEFD3c8305ddd64d554322cC22aFc")
 	v2.EthHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	v2.UniswapProxy = common.HexToAddress("0x0DBdaA169F10d8859c39831f8e85b17dAa58fAF8")
+	v2.UniswapProxy = common.HexToAddress("0xc7724A86ced6D95573d36fc4B98f9C0414B907a1")
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
 	v2.connectToETH()
 	v2.c = getFixedCommittee()
