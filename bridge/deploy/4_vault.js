@@ -12,14 +12,21 @@ module.exports = async({
     getUnnamedAccounts,
 }) => {
     const { deploy, log } = deployments;
-    let { deployer, vaultAdmin } = await getNamedAccounts();
+    let { deployer, vaultAdmin , previousVaultAdmin: prevVaultAdmin } = await getNamedAccounts();
     // vaultAdmin is a named account in Hardhat config
-    let prevVaultAdmin = vaultAdmin;
+    let prevVaultAdminSigner;
     // prevVaultAdmin is specified in the "deployed" contracts object in config. It can fallback to vaultAdmin if not found, in case we choose the same EOA as admin
     if (hre.networkCfg().deployed.previousVaultAdmin) {
+        // fork network config
         prevVaultAdmin = hre.networkCfg().deployed.previousVaultAdmin;
+        prevVaultAdminSigner = await ethers.provider.getSigner(prevVaultAdmin);
+    } else if (prevVaultAdmin) {
+        // separate admins between Vault versions
+        prevVaultAdminSigner = await ethers.getSigner(prevVaultAdmin);
+    } else {
+        prevVaultAdmin = vaultAdmin;
+        prevVaultAdminSigner = await ethers.getSigner(prevVaultAdmin);
     }
-    let prevVaultAdminSigner = await ethers.provider.getSigner(prevVaultAdmin);
 
     const ip = await deployments.get('IncognitoProxy');
     let vaultResult = await deploy('Vault', {

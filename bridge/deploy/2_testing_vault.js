@@ -32,4 +32,4 @@ module.exports = async({
 
 module.exports.tags = ['1', 'testing', 'local'];
 // always skip for public networks
-module.exports.skip = env => Promise.resolve(env.network.name != 'localhost');
+module.exports.skip = env => Promise.resolve(env.network.name != 'localhost' || process.env.FORK==true);

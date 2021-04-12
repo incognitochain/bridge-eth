@@ -8,7 +8,7 @@ module.exports = async({
 }) => {
     let addresses = hre.networkCfg().deployed || {};
     // transform dict into flat array of addresses
-    addresses = [addresses.tokenFunder, addresses.previousVaultAdmin]//Object.values(addresses);
+    addresses = Object.values(addresses);
     addresses = addresses.flat(3);
     console.log(`Impersonating addresses...`);
     console.log(addresses);

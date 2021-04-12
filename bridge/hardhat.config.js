@@ -123,12 +123,13 @@ let vaultAdminPrivateKey = readKey('.vaultAdminPrivateKey', '0x00');
 
 const mainnetForkNetwork = {
     chainId: 31337,
+    // can use mainnet keys when present (if so, remove previousVaultAdmin)
+    // accounts: [deployerPrivateKey, vaultAdminPrivateKey],
     // reference parameters to use when starting Incognito nodes
     geth_name_conf: '127.0.0.1',
     geth_port_conf: '8545',
     geth_protocol_conf: 'HTTP',
     deployed: {
-        previousVaultAdmin: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
         kyber: '0x9AAb3f75489902f3a48495025729a0AF77d4b11e', // previously '0x818E6FECD516Ecc3849DAf6845e3EC868087B755',
         kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
         uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
@@ -136,7 +137,9 @@ const mainnetForkNetwork = {
         testingTokens: ['0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2', '0x514910771af9ca656af840dff83e8264ecf986ca', '0x6b175474e89094c44da98b954eedeac495271d0f'],
         // configs for forked network
         // MKR holder to impersonate in fork
-        tokenFunder: '0x05E793cE0C6027323Ac150F6d45C2344d28B6019'
+        tokenFunder: '0x05E793cE0C6027323Ac150F6d45C2344d28B6019',
+        // mainnet vault admin address to impersonate in fork
+        previousVaultAdmin: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040'
     },
     committees: mainnetCommittees,
     providers: devProviders
@@ -192,7 +195,8 @@ const networks = {
         geth_port_conf: '',
         geth_protocol_conf: 'HTTPS',
         deployed: {
-            previousVaultAdmin: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
+            // make sure this matches vaultAdminPrivateKey
+            // previousVaultAdmin: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
             kyber: '0x9AAb3f75489902f3a48495025729a0AF77d4b11e', // previously '0x818E6FECD516Ecc3849DAf6845e3EC868087B755',
             kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
             uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
@@ -231,6 +235,9 @@ module.exports = {
         },
         tokenUser: {
             default: 3
+        },
+        previousVaultAdmin: {
+            default: 4
         },
         unshieldSender: {
             default: 5
