@@ -1,0 +1,186 @@
+{
+  "address": "0x1ec63144756FC4905341ef5907fB7873cCDdb798",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract KyberNetwork",
+          "name": "_kyberNetworkProxyContract",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "ETH_CONTRACT_ADDRESS",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "srcToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "srcQty",
+          "type": "uint256"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "destToken",
+          "type": "address"
+        }
+      ],
+      "name": "getConversionRates",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "kyberNetworkProxyContract",
+      "outputs": [
+        {
+          "internalType": "contract KyberNetwork",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "srcToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "srcQty",
+          "type": "uint256"
+        },
+        {
+          "internalType": "contract IERC20",
+          "name": "destToken",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minConversionRate",
+          "type": "uint256"
+        }
+      ],
+      "name": "trade",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "transactionHash": "0x78d1480d02ae694987b3de95bae0915738d3cca29224a055dad7ca391d21d910",
+  "receipt": {
+    "to": null,
+    "from": "0xb5A581c6EA895fBfD0d7529ac04e24Bf12804c2d",
+    "contractAddress": "0x1ec63144756FC4905341ef5907fB7873cCDdb798",
+    "transactionIndex": 2,
+    "gasUsed": "711431",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x7a3f18a1038112622a78d59d9133d255f620ecd6e21709312678ed55ea6e8863",
+    "transactionHash": "0x78d1480d02ae694987b3de95bae0915738d3cca29224a055dad7ca391d21d910",
+    "logs": [],
+    "blockNumber": 24237543,
+    "cumulativeGasUsed": "823627",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D"
+  ],
+  "solcInputHash": "41ab1ad11db6b86fa47959e6916f2304",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.12+commit.27d51765\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract KyberNetwork\",\"name\":\"_kyberNetworkProxyContract\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contract IERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contract IERC20\",\"name\":\"destToken\",\"type\":\"address\"}],\"name\":\"getConversionRates\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"kyberNetworkProxyContract\",\"outputs\":[{\"internalType\":\"contract KyberNetwork\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contract IERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contract IERC20\",\"name\":\"destToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"constructor\":{\"details\":\"Contract constructor\",\"params\":{\"_kyberNetworkProxyContract\":\"KyberNetworkProxy contract address\"}},\"getConversionRates(address,uint256,address)\":{\"details\":\"Gets the conversion rate for the destToken given the srcQty.\",\"params\":{\"destToken\":\"destination token contract address\",\"srcQty\":\"amount of source tokens\",\"srcToken\":\"source token contract address\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/kbn_trade.sol\":\"KBNTrade\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/IERC20.sol\":{\"content\":\"pragma solidity ^0.6.12;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP. Does not include\\n * the optional functions; to access them see `ERC20Detailed`.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `recipient`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a `Transfer` event.\\n     */\\n    function transfer(address recipient, uint amount) external;\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through `transferFrom`. This is\\n     * zero by default.\\n     *\\n     * This value changes when `approve` or `transferFrom` are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * > Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an `Approval` event.\\n     */\\n    function approve(address spender, uint amount) external;\\n\\n    /**\\n     * @dev Moves `amount` tokens from `sender` to `recipient` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a `Transfer` event.\\n     */\\n    function transferFrom(address sender, address recipient, uint amount) external;\\n\\n    /**\\n     * @dev Returns the number of decimals used to get its user representation.\\n     * For example, if `decimals` equals `2`, a balance of `505` tokens should\\n     * be displayed to a user as `5,05` (`505 / 10 ** 2`).\\n     *\\n     * Tokens usually opt for a value of 18, imitating the relationship between\\n     * Ether and Wei.\\n     *\\n     * NOTE: This information is only used for _display_ purposes: it in\\n     * no way affects any of the arithmetic of the contract, including\\n     * {IERC20-balanceOf} and {IERC20-transfer}.\\n     */\\n    function decimals() external view returns (uint);\\n\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to `approve`. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint value);\\n}\\n\",\"keccak256\":\"0x4d24fe470f199b409b655c17f6b9389110d69db6c511b1a7e1701461db3dba47\"},\"contracts/kbn_trade.sol\":{\"content\":\"pragma solidity ^0.6.12;\\n\\nimport './trade_utils.sol';\\nimport './IERC20.sol';\\n\\ninterface KyberNetwork {\\n    function trade(IERC20 src, uint srcAmount, IERC20 dest, address destAddress, uint maxDestAmount, uint minConversionRate, address walletId) external payable returns(uint);\\n    function swapTokenToToken(IERC20 src, uint srcAmount, IERC20 dest, uint minConversionRate) external returns(uint);\\n    function swapEtherToToken(IERC20 token, uint minConversionRate) external payable returns(uint);\\n    function swapTokenToEther(IERC20 token, uint srcAmount, uint minConversionRate) external returns(uint);\\n    function getExpectedRate(IERC20 src, IERC20 dest, uint srcQty) external view returns(uint expectedRate, uint slippageRate);\\n}\\n\\ncontract KBNTrade is TradeUtils {\\n    // Variables\\n    KyberNetwork public kyberNetworkProxyContract;\\n    IERC20 constant KYBER_ETH_TOKEN_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);\\n\\n    // Functions\\n    /**\\n     * @dev Contract constructor\\n     * @param _kyberNetworkProxyContract KyberNetworkProxy contract address\\n     */\\n    constructor(KyberNetwork _kyberNetworkProxyContract) public {\\n        kyberNetworkProxyContract = _kyberNetworkProxyContract;\\n    }\\n\\n    // Reciever function which allows transfer eth.\\n    receive() external payable {}\\n\\n    /**\\n     * @dev Gets the conversion rate for the destToken given the srcQty.\\n     * @param srcToken source token contract address\\n     * @param srcQty amount of source tokens\\n     * @param destToken destination token contract address\\n     */\\n    function getConversionRates(IERC20 srcToken, uint srcQty, IERC20 destToken) public view returns (uint, uint) {\\n        return kyberNetworkProxyContract.getExpectedRate(srcToken, destToken, srcQty);\\n    }\\n\\n    function trade(IERC20 srcToken, uint srcQty, IERC20 destToken, uint minConversionRate) public payable returns (address, uint) {\\n        require(balanceOf(srcToken) >= srcQty);\\n        require(srcToken != destToken);\\n        uint amount = 0;\\n        if (srcToken != ETH_CONTRACT_ADDRESS) {\\n            // approve\\n            approve(srcToken, address(kyberNetworkProxyContract), srcQty);\\n            if (destToken != ETH_CONTRACT_ADDRESS) { // token to token.\\n                require(tokenToToken(srcToken, srcQty, destToken, minConversionRate) > 0);\\n            } else {\\n                require(tokenToEth(srcToken, srcQty, minConversionRate) > 0);\\n            }\\n        } else {\\n            require(ethToToken(destToken, srcQty, minConversionRate) > 0);\\n        }\\n        // transfer back to incognito smart contract\\n        amount = balanceOf(destToken);\\n        transfer(destToken, amount);\\n        return (address(destToken), amount);\\n    }\\n\\n    function ethToToken(IERC20 token, uint srcQty, uint minConversionRate) internal returns (uint) {\\n        // Get the minimum conversion rate\\n        require(address(this).balance >= srcQty);\\n        return kyberNetworkProxyContract.swapEtherToToken{value: srcQty}(token, minConversionRate);\\n    }\\n\\n    function tokenToEth(IERC20 token, uint amount, uint minConversionRate) internal returns (uint) {\\n        return kyberNetworkProxyContract.swapTokenToEther(token, amount, minConversionRate);\\n    }\\n\\n    function tokenToToken(IERC20 srcToken, uint srcQty, IERC20 destToken, uint minConversionRate) internal returns (uint) {\\n        return kyberNetworkProxyContract.swapTokenToToken(srcToken, srcQty, destToken, minConversionRate);\\n    }\\n}\\n\",\"keccak256\":\"0x95eb002cf89e5e2f2432d4c6407be025e11ad5f29d8cfa7c7540100210d3d492\"},\"contracts/trade_utils.sol\":{\"content\":\"pragma solidity ^0.6.12;\\n\\nimport './IERC20.sol';\\n\\ncontract TradeUtils {\\n\\tIERC20 constant public ETH_CONTRACT_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);\\n\\n\\tfunction balanceOf(IERC20 token) internal view returns (uint256) {\\n\\t\\tif (token == ETH_CONTRACT_ADDRESS) {\\n\\t\\t\\treturn address(this).balance;\\n\\t\\t}\\n        return token.balanceOf(address(this));\\n    }\\n\\n\\tfunction transfer(IERC20 token, uint amount) internal {\\n\\t\\tif (token == ETH_CONTRACT_ADDRESS) {\\n\\t\\t\\trequire(address(this).balance >= amount);\\n\\t\\t\\t(bool success, ) = msg.sender.call{value: amount}(\\\"\\\");\\n          \\trequire(success);\\n\\t\\t} else {\\n\\t\\t\\ttoken.transfer(msg.sender, amount);\\n\\t\\t\\trequire(checkSuccess());\\n\\t\\t}\\n\\t}\\n\\n\\tfunction approve(IERC20 token, address proxy, uint amount) internal {\\n\\t\\tif (token != ETH_CONTRACT_ADDRESS) {\\n\\t\\t\\ttoken.approve(proxy, 0);\\n\\t\\t\\trequire(checkSuccess());\\n\\t\\t\\ttoken.approve(proxy, amount);\\n\\t\\t\\trequire(checkSuccess());\\n\\t\\t}\\n\\t}\\n\\n\\t/**\\n     * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not\\n     * This check is needed to fix https://github.com/ethereum/solidity/issues/4116\\n     * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol\\n     */\\n    function checkSuccess() internal pure returns (bool) {\\n\\t\\tuint256 returnValue = 0;\\n\\n\\t\\tassembly {\\n\\t\\t\\t// check number of bytes returned from last function call\\n\\t\\t\\tswitch returndatasize()\\n\\n\\t\\t\\t// no bytes returned: assume success\\n\\t\\t\\tcase 0x0 {\\n\\t\\t\\t\\treturnValue := 1\\n\\t\\t\\t}\\n\\n\\t\\t\\t// 32 bytes returned: check if non-zero\\n\\t\\t\\tcase 0x20 {\\n\\t\\t\\t\\t// copy 32 bytes into scratch space\\n\\t\\t\\t\\treturndatacopy(0x0, 0x0, 0x20)\\n\\n\\t\\t\\t\\t// load those bytes into returnValue\\n\\t\\t\\t\\treturnValue := mload(0x0)\\n\\t\\t\\t}\\n\\n\\t\\t\\t// not sure what was returned: don't mark as success\\n\\t\\t\\tdefault { }\\n\\t\\t}\\n\\t\\treturn returnValue != 0;\\n\\t}\\n}\\n\",\"keccak256\":\"0xa6e4a83518732d3fedbefbba13171d0dee61771c87496e54ab887b246e3f6d25\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50604051610c12380380610c128339818101604052602081101561003357600080fd5b8101908080519060200190929190505050806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050610b7e806100946000396000f3fe6080604052600436106100435760003560e01c80630aea81881461004f57806372e94bf6146100e5578063785250da14610126578063bb39a960146101675761004a565b3661004a57005b600080fd5b34801561005b57600080fd5b506100c86004803603606081101561007257600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610210565b604051808381526020018281526020019250505060405180910390f35b3480156100f157600080fd5b506100fa610310565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561013257600080fd5b5061013b610315565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6101dd6004803603608081101561017d57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610339565b604051808373ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019250505060405180910390f35b60008060008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663809a9e558685876040518463ffffffff1660e01b8152600401808473ffffffffffffffffffffffffffffffffffffffff1681526020018373ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019350505050604080518083038186803b1580156102bf57600080fd5b505afa1580156102d3573d6000803e3d6000fd5b505050506040513d60408110156102e957600080fd5b81019080805190602001909291908051906020019092919050505091509150935093915050565b600081565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6000808461034687610495565b101561035157600080fd5b8373ffffffffffffffffffffffffffffffffffffffff168673ffffffffffffffffffffffffffffffffffffffff16141561038a57600080fd5b60008073ffffffffffffffffffffffffffffffffffffffff168773ffffffffffffffffffffffffffffffffffffffff1614610458576103ea8760008054906101000a900473ffffffffffffffffffffffffffffffffffffffff168861057d565b600073ffffffffffffffffffffffffffffffffffffffff168573ffffffffffffffffffffffffffffffffffffffff161461043b57600061042c888888886106ec565b1161043657600080fd5b610453565b60006104488888876107eb565b1161045257600080fd5b5b610470565b60006104658688876108cb565b1161046f57600080fd5b5b61047985610495565b905061048585826109b0565b8481925092505094509492505050565b60008073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff1614156104d357479050610578565b8173ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b8152600401808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060206040518083038186803b15801561053a57600080fd5b505afa15801561054e573d6000803e3d6000fd5b505050506040513d602081101561056457600080fd5b810190808051906020019092919050505090505b919050565b600073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff16146106e7578273ffffffffffffffffffffffffffffffffffffffff1663095ea7b38360006040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b15801561062357600080fd5b505af1158015610637573d6000803e3d6000fd5b50505050610643610b0a565b61064c57600080fd5b8273ffffffffffffffffffffffffffffffffffffffff1663095ea7b383836040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b1580156106bd57600080fd5b505af11580156106d1573d6000803e3d6000fd5b505050506106dd610b0a565b6106e657600080fd5b5b505050565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16637409e2eb868686866040518563ffffffff1660e01b8152600401808573ffffffffffffffffffffffffffffffffffffffff1681526020018481526020018373ffffffffffffffffffffffffffffffffffffffff168152602001828152602001945050505050602060405180830381600087803b1580156107a657600080fd5b505af11580156107ba573d6000803e3d6000fd5b505050506040513d60208110156107d057600080fd5b81019080805190602001909291905050509050949350505050565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16633bba21dc8585856040518463ffffffff1660e01b8152600401808473ffffffffffffffffffffffffffffffffffffffff1681526020018381526020018281526020019350505050602060405180830381600087803b15801561088757600080fd5b505af115801561089b573d6000803e3d6000fd5b505050506040513d60208110156108b157600080fd5b810190808051906020019092919050505090509392505050565b6000824710156108da57600080fd5b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16637a2a04568486856040518463ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff168152602001828152602001925050506020604051808303818588803b15801561096b57600080fd5b505af115801561097f573d6000803e3d6000fd5b50505050506040513d602081101561099657600080fd5b810190808051906020019092919050505090509392505050565b600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff161415610a6b57804710156109f257600080fd5b60003373ffffffffffffffffffffffffffffffffffffffff168260405180600001905060006040518083038185875af1925050503d8060008114610a52576040519150601f19603f3d011682016040523d82523d6000602084013e610a57565b606091505b5050905080610a6557600080fd5b50610b06565b8173ffffffffffffffffffffffffffffffffffffffff1663a9059cbb33836040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b158015610adc57600080fd5b505af1158015610af0573d6000803e3d6000fd5b50505050610afc610b0a565b610b0557600080fd5b5b5050565b600080600090503d60008114610b275760208114610b3057610b3c565b60019150610b3c565b60206000803e60005191505b5060008114159150509056fea26469706673582212203a610e295849636d9cd5e3c6546f1ca9683c0aba1660f6fc4712927b16cc248664736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052600436106100435760003560e01c80630aea81881461004f57806372e94bf6146100e5578063785250da14610126578063bb39a960146101675761004a565b3661004a57005b600080fd5b34801561005b57600080fd5b506100c86004803603606081101561007257600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610210565b604051808381526020018281526020019250505060405180910390f35b3480156100f157600080fd5b506100fa610310565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561013257600080fd5b5061013b610315565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6101dd6004803603608081101561017d57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610339565b604051808373ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019250505060405180910390f35b60008060008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663809a9e558685876040518463ffffffff1660e01b8152600401808473ffffffffffffffffffffffffffffffffffffffff1681526020018373ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019350505050604080518083038186803b1580156102bf57600080fd5b505afa1580156102d3573d6000803e3d6000fd5b505050506040513d60408110156102e957600080fd5b81019080805190602001909291908051906020019092919050505091509150935093915050565b600081565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b6000808461034687610495565b101561035157600080fd5b8373ffffffffffffffffffffffffffffffffffffffff168673ffffffffffffffffffffffffffffffffffffffff16141561038a57600080fd5b60008073ffffffffffffffffffffffffffffffffffffffff168773ffffffffffffffffffffffffffffffffffffffff1614610458576103ea8760008054906101000a900473ffffffffffffffffffffffffffffffffffffffff168861057d565b600073ffffffffffffffffffffffffffffffffffffffff168573ffffffffffffffffffffffffffffffffffffffff161461043b57600061042c888888886106ec565b1161043657600080fd5b610453565b60006104488888876107eb565b1161045257600080fd5b5b610470565b60006104658688876108cb565b1161046f57600080fd5b5b61047985610495565b905061048585826109b0565b8481925092505094509492505050565b60008073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff1614156104d357479050610578565b8173ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b8152600401808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060206040518083038186803b15801561053a57600080fd5b505afa15801561054e573d6000803e3d6000fd5b505050506040513d602081101561056457600080fd5b810190808051906020019092919050505090505b919050565b600073ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff16146106e7578273ffffffffffffffffffffffffffffffffffffffff1663095ea7b38360006040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b15801561062357600080fd5b505af1158015610637573d6000803e3d6000fd5b50505050610643610b0a565b61064c57600080fd5b8273ffffffffffffffffffffffffffffffffffffffff1663095ea7b383836040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b1580156106bd57600080fd5b505af11580156106d1573d6000803e3d6000fd5b505050506106dd610b0a565b6106e657600080fd5b5b505050565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16637409e2eb868686866040518563ffffffff1660e01b8152600401808573ffffffffffffffffffffffffffffffffffffffff1681526020018481526020018373ffffffffffffffffffffffffffffffffffffffff168152602001828152602001945050505050602060405180830381600087803b1580156107a657600080fd5b505af11580156107ba573d6000803e3d6000fd5b505050506040513d60208110156107d057600080fd5b81019080805190602001909291905050509050949350505050565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16633bba21dc8585856040518463ffffffff1660e01b8152600401808473ffffffffffffffffffffffffffffffffffffffff1681526020018381526020018281526020019350505050602060405180830381600087803b15801561088757600080fd5b505af115801561089b573d6000803e3d6000fd5b505050506040513d60208110156108b157600080fd5b810190808051906020019092919050505090509392505050565b6000824710156108da57600080fd5b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16637a2a04568486856040518463ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff168152602001828152602001925050506020604051808303818588803b15801561096b57600080fd5b505af115801561097f573d6000803e3d6000fd5b50505050506040513d602081101561099657600080fd5b810190808051906020019092919050505090509392505050565b600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff161415610a6b57804710156109f257600080fd5b60003373ffffffffffffffffffffffffffffffffffffffff168260405180600001905060006040518083038185875af1925050503d8060008114610a52576040519150601f19603f3d011682016040523d82523d6000602084013e610a57565b606091505b5050905080610a6557600080fd5b50610b06565b8173ffffffffffffffffffffffffffffffffffffffff1663a9059cbb33836040518363ffffffff1660e01b8152600401808373ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050600060405180830381600087803b158015610adc57600080fd5b505af1158015610af0573d6000803e3d6000fd5b50505050610afc610b0a565b610b0557600080fd5b5b5050565b600080600090503d60008114610b275760208114610b3057610b3c565b60019150610b3c565b60206000803e60005191505b5060008114159150509056fea26469706673582212203a610e295849636d9cd5e3c6546f1ca9683c0aba1660f6fc4712927b16cc248664736f6c634300060c0033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "details": "Contract constructor",
+        "params": {
+          "_kyberNetworkProxyContract": "KyberNetworkProxy contract address"
+        }
+      },
+      "getConversionRates(address,uint256,address)": {
+        "details": "Gets the conversion rate for the destToken given the srcQty.",
+        "params": {
+          "destToken": "destination token contract address",
+          "srcQty": "amount of source tokens",
+          "srcToken": "source token contract address"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 1370,
+        "contract": "contracts/kbn_trade.sol:KBNTrade",
+        "label": "kyberNetworkProxyContract",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(KyberNetwork)1366"
+      }
+    ],
+    "types": {
+      "t_contract(KyberNetwork)1366": {
+        "encoding": "inplace",
+        "label": "contract KyberNetwork",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}
