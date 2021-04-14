@@ -35,6 +35,25 @@ task("list-contracts", "Exports & prints the list of deployed contracts")
         console.log(`UniswapV2Trade is using UniswapRouter ${ethers.utils.hexlify(addr)}`);
     });
 
+task("unshield-status", "Asks if the contract has processed an unshield")
+    .addParam("id", "The unshield id")
+    .setAction(async taskArgs => {
+        const incTxHash = taskArgs.id;
+        const vault = await ethers.getContract('Vault');
+        const res = await vault.isWithdrawed(incTxHash);
+        console.log(res);
+    });
+
+task("show-committees", "Asks the IncProxy contract for its committee at height")
+    .addParam("height", "The height")
+    .addParam("address", "The address for IncProxy")
+    .setAction(async taskArgs => {
+        const { getInstance } = require('./scripts/utils');
+        const ip = await getInstance('IncognitoProxy', null, taskArgs.address);
+        const res = await ip.findBeaconCommitteeFromHeight(taskArgs.height);
+        console.log(res);
+    });
+
 const devCommittees = {
     beacons : [
         "0x3cD69B1A595B7A9589391538d29ee7663326e4d3"
@@ -56,49 +75,25 @@ const devCommitteesBig = {
     ]
 }
 const mainnetCommittees = {
-    beacons: ["0x77b9F481f979e16Cf4234866C0803c2e65106862",
-        "0x8F4aEd5Adb0347eF2Db3bDce9f0DF2747D0107E8",
-        "0xcf836142D459B1257ed52aef34E62F6F4e7eF894",
-        "0x4C265F5eb8Eb68A1eA99626cD838558836438f80",
-        "0xc7CC1EE53eF28CC551e97476F0dB01596D945fE0",
-        "0xFd119B9DBEb478154E3650F14f55db3787E1bd38",
-        "0x780329f064F0BE00FdbDeA4bA8A5b04C7AB2866c"
+    beacons: [
+        '0xe1fe6bdb4FB5f80801D242480c5467c1de94719c',
+        '0xD57Dc32f9753a20Af166F9Dc48dE22355A9F7c83',
+        '0x44b39171D742C2CdFdA0EBb6226f8584CAfc57FC',
+        '0x4c8b59d24f07192B9095DA1EAE9af5c890413A71',
+        '0x6d678311c5DAf5F8c8c48223C7Aea2A49D8d8B12',
+        '0x93114859F53F98dC2a1FA6be9340Ce3B1D74722B',
+        '0x0c7d24b75bEc5E94924e8e5d6c793609e48e7FF6',
     ],
-    bridges: ["0xaced3cf99897a55057B7513b8505c22DaF9378D9",
-        "0x8CbDC490c4188b721e210622027a54E14f27CA7F",
-        "0x74d0C0A0A5f89527b4e2850EA09d4F6cE9BBb3bB",
-        "0x6964D5c5A7C1503E2228852d1EC115c0e7a20593",
-        "0x803c90C23a8a34a676B57CaF0372026C988B416d",
-        "0x17E21A7a018046ab3cAE7Aab4215087a2497a7D7",
-        "0x5bA8281b5BE1F864E52B3ef8FcEF80560e41005C",
-        "0x9Ee3002A85701ae62B16e92e0d8F2044D79a35B6",
-        "0xb7eF123cc555cA977aE2fbB5A3690ce57628C664",
-        "0x211880118421A814Da0151A4bd06be703DB3654e",
-        "0x6A25Ed4Ef6Fa034c895D5721D73dBEC5163Ad4f9",
-        "0x1A7232f56F4D71e794D8Bbfc5fa5991d544e1C9f",
-        "0xcFcFc3A2CC9DFdF98aC075441E45818C7A70a29e",
-        "0x99118446796dFa58d8327834347806711f67Cb79",
-        "0x8986acdde31E4519acFcabb139Fd2A2B1da274b2",
-        "0xE59C59D87f52D39B1BB8136966e0E1817D7a845A",
-        "0x604589220D909878ebDC906d0b33b433Fc3cc0a3",
-        "0xf069494c92A85DD31FE6850D8EfE6F2398Ea072c",
-        "0x93E1b517726d05c235AE3AF53fa84C34d400Cae9",
-        "0x6284C7FD0F623E705d0e0a2D4621299B98eA3895",
-        "0xf57Ac7832b1C8F7f5C3E228eF7811D58647A70BF",
-        "0x8fa98CBa06b199922E9Acc5749F25FF549e5eEbd"
-    ]
+    bridges: []
 };
 const testnetCommittees = {
-    beacons: ["0x3cD69B1A595B7A9589391538d29ee7663326e4d3",
-        "0xc687470342f4E80ECEf6bBd25e276266d40b8429",
-        "0x2A40c96b41AdEc5641F28eF923e270B73e29bb53",
-        "0x131B772A9ADe1793F000024eAb23b77bEd3BFe64"
+    beacons: [
+        '0x7ef17C60cAa1c5C43d2Af62726c8f7c14000AB02',
+        '0xFe30C03E5Db66236a82b0Dd204E811444Ba7761E',
+        '0xa357789d21e217FE3a30c7320A867B8B47C793A4',
+        '0xcc817963abe49569Ac58f1BC047B38cDA95832a1',
     ],
-    bridges: ["0x28655822DAf6c4B32303B06e875F92dC6e242cE4",
-        "0xD2902ab2F5dF2b17C5A5aa380f511F04a2542E10",
-        "0xB67376ad63EAdC22f05efE428e93f09D4f13B4fD",
-        "0x40bAA64EAFbD355f5427d127979f377cfA48cc10"
-    ]
+    bridges: []
 };
 
 const devProviders = ['http://localhost:9334', 'http://localhost:9338'];
