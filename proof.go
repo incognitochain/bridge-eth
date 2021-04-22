@@ -26,7 +26,7 @@ import (
 
 type contracts struct {
 	v         *vault.Vault
-	vp		  *vaultproxy.Vaultproxy
+	vp        *vaultproxy.TransparentUpgradeableProxy
 	vAddr     common.Address
 	inc       *incognito_proxy.IncognitoProxy
 	incAddr   common.Address

@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -159,7 +158,7 @@ func bindIERC20(address common.Address, caller bind.ContractCaller, transactor b
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IERC20.Contract.IERC20Caller.contract.Call(opts, result, method, params...)
 }
 
@@ -178,7 +177,7 @@ func (_IERC20 *IERC20Raw) Transact(opts *bind.TransactOpts, method string, param
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IERC20.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -195,104 +194,124 @@ func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "allowance", owner, spender)
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "allowance", owner, spender)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "balanceOf", account)
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "balanceOf", account)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20Session) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20Session) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
@@ -510,6 +529,7 @@ func (_IERC20 *IERC20Filterer) ParseApproval(log types.Log) (*IERC20Approval, er
 	if err := _IERC20.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -663,6 +683,7 @@ func (_IERC20 *IERC20Filterer) ParseTransfer(log types.Log) (*IERC20Transfer, er
 	if err := _IERC20.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -782,7 +803,7 @@ func bindIncognito(address common.Address, caller bind.ContractCaller, transacto
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Incognito *IncognitoRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Incognito *IncognitoRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Incognito.Contract.IncognitoCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -801,7 +822,7 @@ func (_Incognito *IncognitoRaw) Transact(opts *bind.TransactOpts, method string,
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Incognito *IncognitoCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Incognito *IncognitoCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Incognito.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -818,26 +839,31 @@ func (_Incognito *IncognitoTransactorRaw) Transact(opts *bind.TransactOpts, meth
 
 // InstructionApproved is a free data retrieval call binding the contract method 0xf65d2116.
 //
-// Solidity: function instructionApproved(bool , bytes32 , uint256 , bytes32[] , bool[] , bytes32 , bytes32 , uint256[] , uint8[] , bytes32[] , bytes32[] ) constant returns(bool)
+// Solidity: function instructionApproved(bool , bytes32 , uint256 , bytes32[] , bool[] , bytes32 , bytes32 , uint256[] , uint8[] , bytes32[] , bytes32[] ) view returns(bool)
 func (_Incognito *IncognitoCaller) InstructionApproved(opts *bind.CallOpts, arg0 bool, arg1 [32]byte, arg2 *big.Int, arg3 [][32]byte, arg4 []bool, arg5 [32]byte, arg6 [32]byte, arg7 []*big.Int, arg8 []uint8, arg9 [][32]byte, arg10 [][32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Incognito.contract.Call(opts, out, "instructionApproved", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-	return *ret0, err
+	var out []interface{}
+	err := _Incognito.contract.Call(opts, &out, "instructionApproved", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // InstructionApproved is a free data retrieval call binding the contract method 0xf65d2116.
 //
-// Solidity: function instructionApproved(bool , bytes32 , uint256 , bytes32[] , bool[] , bytes32 , bytes32 , uint256[] , uint8[] , bytes32[] , bytes32[] ) constant returns(bool)
+// Solidity: function instructionApproved(bool , bytes32 , uint256 , bytes32[] , bool[] , bytes32 , bytes32 , uint256[] , uint8[] , bytes32[] , bytes32[] ) view returns(bool)
 func (_Incognito *IncognitoSession) InstructionApproved(arg0 bool, arg1 [32]byte, arg2 *big.Int, arg3 [][32]byte, arg4 []bool, arg5 [32]byte, arg6 [32]byte, arg7 []*big.Int, arg8 []uint8, arg9 [][32]byte, arg10 [][32]byte) (bool, error) {
 	return _Incognito.Contract.InstructionApproved(&_Incognito.CallOpts, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 }
 
 // InstructionApproved is a free data retrieval call binding the contract method 0xf65d2116.
 //
-// Solidity: function instructionApproved(bool , bytes32 , uint256 , bytes32[] , bool[] , bytes32 , bytes32 , uint256[] , uint8[] , bytes32[] , bytes32[] ) constant returns(bool)
+// Solidity: function instructionApproved(bool , bytes32 , uint256 , bytes32[] , bool[] , bytes32 , bytes32 , uint256[] , uint8[] , bytes32[] , bytes32[] ) view returns(bool)
 func (_Incognito *IncognitoCallerSession) InstructionApproved(arg0 bool, arg1 [32]byte, arg2 *big.Int, arg3 [][32]byte, arg4 []bool, arg5 [32]byte, arg6 [32]byte, arg7 []*big.Int, arg8 []uint8, arg9 [][32]byte, arg10 [][32]byte) (bool, error) {
 	return _Incognito.Contract.InstructionApproved(&_Incognito.CallOpts, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
 }
@@ -970,7 +996,7 @@ func bindSafeMath(address common.Address, caller bind.ContractCaller, transactor
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_SafeMath *SafeMathRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_SafeMath *SafeMathRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _SafeMath.Contract.SafeMathCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -989,7 +1015,7 @@ func (_SafeMath *SafeMathRaw) Transact(opts *bind.TransactOpts, method string, p
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_SafeMath *SafeMathCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_SafeMath *SafeMathCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _SafeMath.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1160,7 +1186,7 @@ func bindVault(address common.Address, caller bind.ContractCaller, transactor bi
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Vault *VaultRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Vault *VaultRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Vault.Contract.VaultCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -1179,7 +1205,7 @@ func (_Vault *VaultRaw) Transact(opts *bind.TransactOpts, method string, params 
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Vault *VaultCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Vault *VaultCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Vault.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1196,437 +1222,517 @@ func (_Vault *VaultTransactorRaw) Transact(opts *bind.TransactOpts, method strin
 
 // ETHTOKEN is a free data retrieval call binding the contract method 0x58bc8337.
 //
-// Solidity: function ETH_TOKEN() constant returns(address)
+// Solidity: function ETH_TOKEN() view returns(address)
 func (_Vault *VaultCaller) ETHTOKEN(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "ETH_TOKEN")
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "ETH_TOKEN")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ETHTOKEN is a free data retrieval call binding the contract method 0x58bc8337.
 //
-// Solidity: function ETH_TOKEN() constant returns(address)
+// Solidity: function ETH_TOKEN() view returns(address)
 func (_Vault *VaultSession) ETHTOKEN() (common.Address, error) {
 	return _Vault.Contract.ETHTOKEN(&_Vault.CallOpts)
 }
 
 // ETHTOKEN is a free data retrieval call binding the contract method 0x58bc8337.
 //
-// Solidity: function ETH_TOKEN() constant returns(address)
+// Solidity: function ETH_TOKEN() view returns(address)
 func (_Vault *VaultCallerSession) ETHTOKEN() (common.Address, error) {
 	return _Vault.Contract.ETHTOKEN(&_Vault.CallOpts)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address token) constant returns(uint256)
+// Solidity: function balanceOf(address token) view returns(uint256)
 func (_Vault *VaultCaller) BalanceOf(opts *bind.CallOpts, token common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "balanceOf", token)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "balanceOf", token)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address token) constant returns(uint256)
+// Solidity: function balanceOf(address token) view returns(uint256)
 func (_Vault *VaultSession) BalanceOf(token common.Address) (*big.Int, error) {
 	return _Vault.Contract.BalanceOf(&_Vault.CallOpts, token)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address token) constant returns(uint256)
+// Solidity: function balanceOf(address token) view returns(uint256)
 func (_Vault *VaultCallerSession) BalanceOf(token common.Address) (*big.Int, error) {
 	return _Vault.Contract.BalanceOf(&_Vault.CallOpts, token)
 }
 
 // GetDecimals is a free data retrieval call binding the contract method 0xcf54aaa0.
 //
-// Solidity: function getDecimals(address token) constant returns(uint8)
+// Solidity: function getDecimals(address token) view returns(uint8)
 func (_Vault *VaultCaller) GetDecimals(opts *bind.CallOpts, token common.Address) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "getDecimals", token)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "getDecimals", token)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // GetDecimals is a free data retrieval call binding the contract method 0xcf54aaa0.
 //
-// Solidity: function getDecimals(address token) constant returns(uint8)
+// Solidity: function getDecimals(address token) view returns(uint8)
 func (_Vault *VaultSession) GetDecimals(token common.Address) (uint8, error) {
 	return _Vault.Contract.GetDecimals(&_Vault.CallOpts, token)
 }
 
 // GetDecimals is a free data retrieval call binding the contract method 0xcf54aaa0.
 //
-// Solidity: function getDecimals(address token) constant returns(uint8)
+// Solidity: function getDecimals(address token) view returns(uint8)
 func (_Vault *VaultCallerSession) GetDecimals(token common.Address) (uint8, error) {
 	return _Vault.Contract.GetDecimals(&_Vault.CallOpts, token)
 }
 
 // GetDepositedBalance is a free data retrieval call binding the contract method 0xf75b98ce.
 //
-// Solidity: function getDepositedBalance(address token, address owner) constant returns(uint256)
+// Solidity: function getDepositedBalance(address token, address owner) view returns(uint256)
 func (_Vault *VaultCaller) GetDepositedBalance(opts *bind.CallOpts, token common.Address, owner common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "getDepositedBalance", token, owner)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "getDepositedBalance", token, owner)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetDepositedBalance is a free data retrieval call binding the contract method 0xf75b98ce.
 //
-// Solidity: function getDepositedBalance(address token, address owner) constant returns(uint256)
+// Solidity: function getDepositedBalance(address token, address owner) view returns(uint256)
 func (_Vault *VaultSession) GetDepositedBalance(token common.Address, owner common.Address) (*big.Int, error) {
 	return _Vault.Contract.GetDepositedBalance(&_Vault.CallOpts, token, owner)
 }
 
 // GetDepositedBalance is a free data retrieval call binding the contract method 0xf75b98ce.
 //
-// Solidity: function getDepositedBalance(address token, address owner) constant returns(uint256)
+// Solidity: function getDepositedBalance(address token, address owner) view returns(uint256)
 func (_Vault *VaultCallerSession) GetDepositedBalance(token common.Address, owner common.Address) (*big.Int, error) {
 	return _Vault.Contract.GetDepositedBalance(&_Vault.CallOpts, token, owner)
 }
 
 // IsInitialized is a free data retrieval call binding the contract method 0x392e53cd.
 //
-// Solidity: function isInitialized() constant returns(bool)
+// Solidity: function isInitialized() view returns(bool)
 func (_Vault *VaultCaller) IsInitialized(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "isInitialized")
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "isInitialized")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsInitialized is a free data retrieval call binding the contract method 0x392e53cd.
 //
-// Solidity: function isInitialized() constant returns(bool)
+// Solidity: function isInitialized() view returns(bool)
 func (_Vault *VaultSession) IsInitialized() (bool, error) {
 	return _Vault.Contract.IsInitialized(&_Vault.CallOpts)
 }
 
 // IsInitialized is a free data retrieval call binding the contract method 0x392e53cd.
 //
-// Solidity: function isInitialized() constant returns(bool)
+// Solidity: function isInitialized() view returns(bool)
 func (_Vault *VaultCallerSession) IsInitialized() (bool, error) {
 	return _Vault.Contract.IsInitialized(&_Vault.CallOpts)
 }
 
 // IsSigDataUsed is a free data retrieval call binding the contract method 0xe4bd7074.
 //
-// Solidity: function isSigDataUsed(bytes32 hash) constant returns(bool)
+// Solidity: function isSigDataUsed(bytes32 hash) view returns(bool)
 func (_Vault *VaultCaller) IsSigDataUsed(opts *bind.CallOpts, hash [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "isSigDataUsed", hash)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "isSigDataUsed", hash)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsSigDataUsed is a free data retrieval call binding the contract method 0xe4bd7074.
 //
-// Solidity: function isSigDataUsed(bytes32 hash) constant returns(bool)
+// Solidity: function isSigDataUsed(bytes32 hash) view returns(bool)
 func (_Vault *VaultSession) IsSigDataUsed(hash [32]byte) (bool, error) {
 	return _Vault.Contract.IsSigDataUsed(&_Vault.CallOpts, hash)
 }
 
 // IsSigDataUsed is a free data retrieval call binding the contract method 0xe4bd7074.
 //
-// Solidity: function isSigDataUsed(bytes32 hash) constant returns(bool)
+// Solidity: function isSigDataUsed(bytes32 hash) view returns(bool)
 func (_Vault *VaultCallerSession) IsSigDataUsed(hash [32]byte) (bool, error) {
 	return _Vault.Contract.IsSigDataUsed(&_Vault.CallOpts, hash)
 }
 
 // IsWithdrawed is a free data retrieval call binding the contract method 0x749c5f86.
 //
-// Solidity: function isWithdrawed(bytes32 hash) constant returns(bool)
+// Solidity: function isWithdrawed(bytes32 hash) view returns(bool)
 func (_Vault *VaultCaller) IsWithdrawed(opts *bind.CallOpts, hash [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "isWithdrawed", hash)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "isWithdrawed", hash)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsWithdrawed is a free data retrieval call binding the contract method 0x749c5f86.
 //
-// Solidity: function isWithdrawed(bytes32 hash) constant returns(bool)
+// Solidity: function isWithdrawed(bytes32 hash) view returns(bool)
 func (_Vault *VaultSession) IsWithdrawed(hash [32]byte) (bool, error) {
 	return _Vault.Contract.IsWithdrawed(&_Vault.CallOpts, hash)
 }
 
 // IsWithdrawed is a free data retrieval call binding the contract method 0x749c5f86.
 //
-// Solidity: function isWithdrawed(bytes32 hash) constant returns(bool)
+// Solidity: function isWithdrawed(bytes32 hash) view returns(bool)
 func (_Vault *VaultCallerSession) IsWithdrawed(hash [32]byte) (bool, error) {
 	return _Vault.Contract.IsWithdrawed(&_Vault.CallOpts, hash)
 }
 
 // Migration is a free data retrieval call binding the contract method 0x995fac11.
 //
-// Solidity: function migration(address , address ) constant returns(bool)
+// Solidity: function migration(address , address ) view returns(bool)
 func (_Vault *VaultCaller) Migration(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "migration", arg0, arg1)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "migration", arg0, arg1)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Migration is a free data retrieval call binding the contract method 0x995fac11.
 //
-// Solidity: function migration(address , address ) constant returns(bool)
+// Solidity: function migration(address , address ) view returns(bool)
 func (_Vault *VaultSession) Migration(arg0 common.Address, arg1 common.Address) (bool, error) {
 	return _Vault.Contract.Migration(&_Vault.CallOpts, arg0, arg1)
 }
 
 // Migration is a free data retrieval call binding the contract method 0x995fac11.
 //
-// Solidity: function migration(address , address ) constant returns(bool)
+// Solidity: function migration(address , address ) view returns(bool)
 func (_Vault *VaultCallerSession) Migration(arg0 common.Address, arg1 common.Address) (bool, error) {
 	return _Vault.Contract.Migration(&_Vault.CallOpts, arg0, arg1)
 }
 
 // NotEntered is a free data retrieval call binding the contract method 0xa3f5d8cc.
 //
-// Solidity: function notEntered() constant returns(bool)
+// Solidity: function notEntered() view returns(bool)
 func (_Vault *VaultCaller) NotEntered(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "notEntered")
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "notEntered")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // NotEntered is a free data retrieval call binding the contract method 0xa3f5d8cc.
 //
-// Solidity: function notEntered() constant returns(bool)
+// Solidity: function notEntered() view returns(bool)
 func (_Vault *VaultSession) NotEntered() (bool, error) {
 	return _Vault.Contract.NotEntered(&_Vault.CallOpts)
 }
 
 // NotEntered is a free data retrieval call binding the contract method 0xa3f5d8cc.
 //
-// Solidity: function notEntered() constant returns(bool)
+// Solidity: function notEntered() view returns(bool)
 func (_Vault *VaultCallerSession) NotEntered() (bool, error) {
 	return _Vault.Contract.NotEntered(&_Vault.CallOpts)
 }
 
 // ParseBurnInst is a free data retrieval call binding the contract method 0x7e16e6e1.
 //
-// Solidity: function parseBurnInst(bytes inst) constant returns(VaultBurnInstData)
+// Solidity: function parseBurnInst(bytes inst) pure returns((uint8,uint8,address,address,uint256,bytes32))
 func (_Vault *VaultCaller) ParseBurnInst(opts *bind.CallOpts, inst []byte) (VaultBurnInstData, error) {
-	var (
-		ret0 = new(VaultBurnInstData)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "parseBurnInst", inst)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "parseBurnInst", inst)
+
+	if err != nil {
+		return *new(VaultBurnInstData), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(VaultBurnInstData)).(*VaultBurnInstData)
+
+	return out0, err
+
 }
 
 // ParseBurnInst is a free data retrieval call binding the contract method 0x7e16e6e1.
 //
-// Solidity: function parseBurnInst(bytes inst) constant returns(VaultBurnInstData)
+// Solidity: function parseBurnInst(bytes inst) pure returns((uint8,uint8,address,address,uint256,bytes32))
 func (_Vault *VaultSession) ParseBurnInst(inst []byte) (VaultBurnInstData, error) {
 	return _Vault.Contract.ParseBurnInst(&_Vault.CallOpts, inst)
 }
 
 // ParseBurnInst is a free data retrieval call binding the contract method 0x7e16e6e1.
 //
-// Solidity: function parseBurnInst(bytes inst) constant returns(VaultBurnInstData)
+// Solidity: function parseBurnInst(bytes inst) pure returns((uint8,uint8,address,address,uint256,bytes32))
 func (_Vault *VaultCallerSession) ParseBurnInst(inst []byte) (VaultBurnInstData, error) {
 	return _Vault.Contract.ParseBurnInst(&_Vault.CallOpts, inst)
 }
 
 // PrevVault is a free data retrieval call binding the contract method 0xfa84702e.
 //
-// Solidity: function prevVault() constant returns(address)
+// Solidity: function prevVault() view returns(address)
 func (_Vault *VaultCaller) PrevVault(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "prevVault")
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "prevVault")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // PrevVault is a free data retrieval call binding the contract method 0xfa84702e.
 //
-// Solidity: function prevVault() constant returns(address)
+// Solidity: function prevVault() view returns(address)
 func (_Vault *VaultSession) PrevVault() (common.Address, error) {
 	return _Vault.Contract.PrevVault(&_Vault.CallOpts)
 }
 
 // PrevVault is a free data retrieval call binding the contract method 0xfa84702e.
 //
-// Solidity: function prevVault() constant returns(address)
+// Solidity: function prevVault() view returns(address)
 func (_Vault *VaultCallerSession) PrevVault() (common.Address, error) {
 	return _Vault.Contract.PrevVault(&_Vault.CallOpts)
 }
 
 // SigDataUsed is a free data retrieval call binding the contract method 0x1ea1940e.
 //
-// Solidity: function sigDataUsed(bytes32 ) constant returns(bool)
+// Solidity: function sigDataUsed(bytes32 ) view returns(bool)
 func (_Vault *VaultCaller) SigDataUsed(opts *bind.CallOpts, arg0 [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "sigDataUsed", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "sigDataUsed", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // SigDataUsed is a free data retrieval call binding the contract method 0x1ea1940e.
 //
-// Solidity: function sigDataUsed(bytes32 ) constant returns(bool)
+// Solidity: function sigDataUsed(bytes32 ) view returns(bool)
 func (_Vault *VaultSession) SigDataUsed(arg0 [32]byte) (bool, error) {
 	return _Vault.Contract.SigDataUsed(&_Vault.CallOpts, arg0)
 }
 
 // SigDataUsed is a free data retrieval call binding the contract method 0x1ea1940e.
 //
-// Solidity: function sigDataUsed(bytes32 ) constant returns(bool)
+// Solidity: function sigDataUsed(bytes32 ) view returns(bool)
 func (_Vault *VaultCallerSession) SigDataUsed(arg0 [32]byte) (bool, error) {
 	return _Vault.Contract.SigDataUsed(&_Vault.CallOpts, arg0)
 }
 
 // SigToAddress is a free data retrieval call binding the contract method 0x3fec6b40.
 //
-// Solidity: function sigToAddress(bytes signData, bytes32 hash) constant returns(address)
+// Solidity: function sigToAddress(bytes signData, bytes32 hash) pure returns(address)
 func (_Vault *VaultCaller) SigToAddress(opts *bind.CallOpts, signData []byte, hash [32]byte) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "sigToAddress", signData, hash)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "sigToAddress", signData, hash)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // SigToAddress is a free data retrieval call binding the contract method 0x3fec6b40.
 //
-// Solidity: function sigToAddress(bytes signData, bytes32 hash) constant returns(address)
+// Solidity: function sigToAddress(bytes signData, bytes32 hash) pure returns(address)
 func (_Vault *VaultSession) SigToAddress(signData []byte, hash [32]byte) (common.Address, error) {
 	return _Vault.Contract.SigToAddress(&_Vault.CallOpts, signData, hash)
 }
 
 // SigToAddress is a free data retrieval call binding the contract method 0x3fec6b40.
 //
-// Solidity: function sigToAddress(bytes signData, bytes32 hash) constant returns(address)
+// Solidity: function sigToAddress(bytes signData, bytes32 hash) pure returns(address)
 func (_Vault *VaultCallerSession) SigToAddress(signData []byte, hash [32]byte) (common.Address, error) {
 	return _Vault.Contract.SigToAddress(&_Vault.CallOpts, signData, hash)
 }
 
 // TotalDepositedToSCAmount is a free data retrieval call binding the contract method 0x6304541c.
 //
-// Solidity: function totalDepositedToSCAmount(address ) constant returns(uint256)
+// Solidity: function totalDepositedToSCAmount(address ) view returns(uint256)
 func (_Vault *VaultCaller) TotalDepositedToSCAmount(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "totalDepositedToSCAmount", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "totalDepositedToSCAmount", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalDepositedToSCAmount is a free data retrieval call binding the contract method 0x6304541c.
 //
-// Solidity: function totalDepositedToSCAmount(address ) constant returns(uint256)
+// Solidity: function totalDepositedToSCAmount(address ) view returns(uint256)
 func (_Vault *VaultSession) TotalDepositedToSCAmount(arg0 common.Address) (*big.Int, error) {
 	return _Vault.Contract.TotalDepositedToSCAmount(&_Vault.CallOpts, arg0)
 }
 
 // TotalDepositedToSCAmount is a free data retrieval call binding the contract method 0x6304541c.
 //
-// Solidity: function totalDepositedToSCAmount(address ) constant returns(uint256)
+// Solidity: function totalDepositedToSCAmount(address ) view returns(uint256)
 func (_Vault *VaultCallerSession) TotalDepositedToSCAmount(arg0 common.Address) (*big.Int, error) {
 	return _Vault.Contract.TotalDepositedToSCAmount(&_Vault.CallOpts, arg0)
 }
 
 // WithdrawRequests is a free data retrieval call binding the contract method 0x65b5a00f.
 //
-// Solidity: function withdrawRequests(address , address ) constant returns(uint256)
+// Solidity: function withdrawRequests(address , address ) view returns(uint256)
 func (_Vault *VaultCaller) WithdrawRequests(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "withdrawRequests", arg0, arg1)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "withdrawRequests", arg0, arg1)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // WithdrawRequests is a free data retrieval call binding the contract method 0x65b5a00f.
 //
-// Solidity: function withdrawRequests(address , address ) constant returns(uint256)
+// Solidity: function withdrawRequests(address , address ) view returns(uint256)
 func (_Vault *VaultSession) WithdrawRequests(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Vault.Contract.WithdrawRequests(&_Vault.CallOpts, arg0, arg1)
 }
 
 // WithdrawRequests is a free data retrieval call binding the contract method 0x65b5a00f.
 //
-// Solidity: function withdrawRequests(address , address ) constant returns(uint256)
+// Solidity: function withdrawRequests(address , address ) view returns(uint256)
 func (_Vault *VaultCallerSession) WithdrawRequests(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Vault.Contract.WithdrawRequests(&_Vault.CallOpts, arg0, arg1)
 }
 
 // Withdrawed is a free data retrieval call binding the contract method 0xdca40d9e.
 //
-// Solidity: function withdrawed(bytes32 ) constant returns(bool)
+// Solidity: function withdrawed(bytes32 ) view returns(bool)
 func (_Vault *VaultCaller) Withdrawed(opts *bind.CallOpts, arg0 [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Vault.contract.Call(opts, out, "withdrawed", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Vault.contract.Call(opts, &out, "withdrawed", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Withdrawed is a free data retrieval call binding the contract method 0xdca40d9e.
 //
-// Solidity: function withdrawed(bytes32 ) constant returns(bool)
+// Solidity: function withdrawed(bytes32 ) view returns(bool)
 func (_Vault *VaultSession) Withdrawed(arg0 [32]byte) (bool, error) {
 	return _Vault.Contract.Withdrawed(&_Vault.CallOpts, arg0)
 }
 
 // Withdrawed is a free data retrieval call binding the contract method 0xdca40d9e.
 //
-// Solidity: function withdrawed(bytes32 ) constant returns(bool)
+// Solidity: function withdrawed(bytes32 ) view returns(bool)
 func (_Vault *VaultCallerSession) Withdrawed(arg0 [32]byte) (bool, error) {
 	return _Vault.Contract.Withdrawed(&_Vault.CallOpts, arg0)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xa26e1186.
 //
-// Solidity: function deposit(string incognitoAddress) returns()
+// Solidity: function deposit(string incognitoAddress) payable returns()
 func (_Vault *VaultTransactor) Deposit(opts *bind.TransactOpts, incognitoAddress string) (*types.Transaction, error) {
 	return _Vault.contract.Transact(opts, "deposit", incognitoAddress)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xa26e1186.
 //
-// Solidity: function deposit(string incognitoAddress) returns()
+// Solidity: function deposit(string incognitoAddress) payable returns()
 func (_Vault *VaultSession) Deposit(incognitoAddress string) (*types.Transaction, error) {
 	return _Vault.Contract.Deposit(&_Vault.TransactOpts, incognitoAddress)
 }
 
 // Deposit is a paid mutator transaction binding the contract method 0xa26e1186.
 //
-// Solidity: function deposit(string incognitoAddress) returns()
+// Solidity: function deposit(string incognitoAddress) payable returns()
 func (_Vault *VaultTransactorSession) Deposit(incognitoAddress string) (*types.Transaction, error) {
 	return _Vault.Contract.Deposit(&_Vault.TransactOpts, incognitoAddress)
 }
@@ -1654,21 +1760,21 @@ func (_Vault *VaultTransactorSession) DepositERC20(token common.Address, amount 
 
 // Execute is a paid mutator transaction binding the contract method 0x8588ccd6.
 //
-// Solidity: function execute(address token, uint256 amount, address recipientToken, address exchangeAddress, bytes callData, bytes timestamp, bytes signData) returns()
+// Solidity: function execute(address token, uint256 amount, address recipientToken, address exchangeAddress, bytes callData, bytes timestamp, bytes signData) payable returns()
 func (_Vault *VaultTransactor) Execute(opts *bind.TransactOpts, token common.Address, amount *big.Int, recipientToken common.Address, exchangeAddress common.Address, callData []byte, timestamp []byte, signData []byte) (*types.Transaction, error) {
 	return _Vault.contract.Transact(opts, "execute", token, amount, recipientToken, exchangeAddress, callData, timestamp, signData)
 }
 
 // Execute is a paid mutator transaction binding the contract method 0x8588ccd6.
 //
-// Solidity: function execute(address token, uint256 amount, address recipientToken, address exchangeAddress, bytes callData, bytes timestamp, bytes signData) returns()
+// Solidity: function execute(address token, uint256 amount, address recipientToken, address exchangeAddress, bytes callData, bytes timestamp, bytes signData) payable returns()
 func (_Vault *VaultSession) Execute(token common.Address, amount *big.Int, recipientToken common.Address, exchangeAddress common.Address, callData []byte, timestamp []byte, signData []byte) (*types.Transaction, error) {
 	return _Vault.Contract.Execute(&_Vault.TransactOpts, token, amount, recipientToken, exchangeAddress, callData, timestamp, signData)
 }
 
 // Execute is a paid mutator transaction binding the contract method 0x8588ccd6.
 //
-// Solidity: function execute(address token, uint256 amount, address recipientToken, address exchangeAddress, bytes callData, bytes timestamp, bytes signData) returns()
+// Solidity: function execute(address token, uint256 amount, address recipientToken, address exchangeAddress, bytes callData, bytes timestamp, bytes signData) payable returns()
 func (_Vault *VaultTransactorSession) Execute(token common.Address, amount *big.Int, recipientToken common.Address, exchangeAddress common.Address, callData []byte, timestamp []byte, signData []byte) (*types.Transaction, error) {
 	return _Vault.Contract.Execute(&_Vault.TransactOpts, token, amount, recipientToken, exchangeAddress, callData, timestamp, signData)
 }
@@ -1776,6 +1882,27 @@ func (_Vault *VaultSession) Withdraw(inst []byte, heights *big.Int, instPaths []
 // Solidity: function withdraw(bytes inst, uint256 heights, bytes32[] instPaths, bool[] instPathIsLefts, bytes32 instRoots, bytes32 blkData, uint256[] sigIdxs, uint8[] sigVs, bytes32[] sigRs, bytes32[] sigSs) returns()
 func (_Vault *VaultTransactorSession) Withdraw(inst []byte, heights *big.Int, instPaths [][32]byte, instPathIsLefts []bool, instRoots [32]byte, blkData [32]byte, sigIdxs []*big.Int, sigVs []uint8, sigRs [][32]byte, sigSs [][32]byte) (*types.Transaction, error) {
 	return _Vault.Contract.Withdraw(&_Vault.TransactOpts, inst, heights, instPaths, instPathIsLefts, instRoots, blkData, sigIdxs, sigVs, sigRs, sigSs)
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_Vault *VaultTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Vault.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_Vault *VaultSession) Receive() (*types.Transaction, error) {
+	return _Vault.Contract.Receive(&_Vault.TransactOpts)
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_Vault *VaultTransactorSession) Receive() (*types.Transaction, error) {
+	return _Vault.Contract.Receive(&_Vault.TransactOpts)
 }
 
 // VaultDepositIterator is returned from FilterDeposit and is used to iterate over the raw logs and unpacked data for Deposit events raised by the Vault contract.
@@ -1910,6 +2037,7 @@ func (_Vault *VaultFilterer) ParseDeposit(log types.Log) (*VaultDeposit, error) 
 	if err := _Vault.contract.UnpackLog(event, "Deposit", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2043,6 +2171,7 @@ func (_Vault *VaultFilterer) ParseUpdateIncognitoProxy(log types.Log) (*VaultUpd
 	if err := _Vault.contract.UnpackLog(event, "UpdateIncognitoProxy", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2177,6 +2306,7 @@ func (_Vault *VaultFilterer) ParseUpdateTokenTotal(log types.Log) (*VaultUpdateT
 	if err := _Vault.contract.UnpackLog(event, "UpdateTokenTotal", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2312,6 +2442,7 @@ func (_Vault *VaultFilterer) ParseWithdraw(log types.Log) (*VaultWithdraw, error
 	if err := _Vault.contract.UnpackLog(event, "Withdraw", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2435,7 +2566,7 @@ func bindWithdrawable(address common.Address, caller bind.ContractCaller, transa
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Withdrawable *WithdrawableRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Withdrawable *WithdrawableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Withdrawable.Contract.WithdrawableCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -2454,7 +2585,7 @@ func (_Withdrawable *WithdrawableRaw) Transact(opts *bind.TransactOpts, method s
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Withdrawable *WithdrawableCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Withdrawable *WithdrawableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Withdrawable.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -2471,104 +2602,124 @@ func (_Withdrawable *WithdrawableTransactorRaw) Transact(opts *bind.TransactOpts
 
 // GetDepositedBalance is a free data retrieval call binding the contract method 0xf75b98ce.
 //
-// Solidity: function getDepositedBalance(address , address ) constant returns(uint256)
+// Solidity: function getDepositedBalance(address , address ) view returns(uint256)
 func (_Withdrawable *WithdrawableCaller) GetDepositedBalance(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Withdrawable.contract.Call(opts, out, "getDepositedBalance", arg0, arg1)
-	return *ret0, err
+	var out []interface{}
+	err := _Withdrawable.contract.Call(opts, &out, "getDepositedBalance", arg0, arg1)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // GetDepositedBalance is a free data retrieval call binding the contract method 0xf75b98ce.
 //
-// Solidity: function getDepositedBalance(address , address ) constant returns(uint256)
+// Solidity: function getDepositedBalance(address , address ) view returns(uint256)
 func (_Withdrawable *WithdrawableSession) GetDepositedBalance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Withdrawable.Contract.GetDepositedBalance(&_Withdrawable.CallOpts, arg0, arg1)
 }
 
 // GetDepositedBalance is a free data retrieval call binding the contract method 0xf75b98ce.
 //
-// Solidity: function getDepositedBalance(address , address ) constant returns(uint256)
+// Solidity: function getDepositedBalance(address , address ) view returns(uint256)
 func (_Withdrawable *WithdrawableCallerSession) GetDepositedBalance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Withdrawable.Contract.GetDepositedBalance(&_Withdrawable.CallOpts, arg0, arg1)
 }
 
 // IsSigDataUsed is a free data retrieval call binding the contract method 0xe4bd7074.
 //
-// Solidity: function isSigDataUsed(bytes32 ) constant returns(bool)
+// Solidity: function isSigDataUsed(bytes32 ) view returns(bool)
 func (_Withdrawable *WithdrawableCaller) IsSigDataUsed(opts *bind.CallOpts, arg0 [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Withdrawable.contract.Call(opts, out, "isSigDataUsed", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Withdrawable.contract.Call(opts, &out, "isSigDataUsed", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsSigDataUsed is a free data retrieval call binding the contract method 0xe4bd7074.
 //
-// Solidity: function isSigDataUsed(bytes32 ) constant returns(bool)
+// Solidity: function isSigDataUsed(bytes32 ) view returns(bool)
 func (_Withdrawable *WithdrawableSession) IsSigDataUsed(arg0 [32]byte) (bool, error) {
 	return _Withdrawable.Contract.IsSigDataUsed(&_Withdrawable.CallOpts, arg0)
 }
 
 // IsSigDataUsed is a free data retrieval call binding the contract method 0xe4bd7074.
 //
-// Solidity: function isSigDataUsed(bytes32 ) constant returns(bool)
+// Solidity: function isSigDataUsed(bytes32 ) view returns(bool)
 func (_Withdrawable *WithdrawableCallerSession) IsSigDataUsed(arg0 [32]byte) (bool, error) {
 	return _Withdrawable.Contract.IsSigDataUsed(&_Withdrawable.CallOpts, arg0)
 }
 
 // IsWithdrawed is a free data retrieval call binding the contract method 0x749c5f86.
 //
-// Solidity: function isWithdrawed(bytes32 ) constant returns(bool)
+// Solidity: function isWithdrawed(bytes32 ) view returns(bool)
 func (_Withdrawable *WithdrawableCaller) IsWithdrawed(opts *bind.CallOpts, arg0 [32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Withdrawable.contract.Call(opts, out, "isWithdrawed", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Withdrawable.contract.Call(opts, &out, "isWithdrawed", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsWithdrawed is a free data retrieval call binding the contract method 0x749c5f86.
 //
-// Solidity: function isWithdrawed(bytes32 ) constant returns(bool)
+// Solidity: function isWithdrawed(bytes32 ) view returns(bool)
 func (_Withdrawable *WithdrawableSession) IsWithdrawed(arg0 [32]byte) (bool, error) {
 	return _Withdrawable.Contract.IsWithdrawed(&_Withdrawable.CallOpts, arg0)
 }
 
 // IsWithdrawed is a free data retrieval call binding the contract method 0x749c5f86.
 //
-// Solidity: function isWithdrawed(bytes32 ) constant returns(bool)
+// Solidity: function isWithdrawed(bytes32 ) view returns(bool)
 func (_Withdrawable *WithdrawableCallerSession) IsWithdrawed(arg0 [32]byte) (bool, error) {
 	return _Withdrawable.Contract.IsWithdrawed(&_Withdrawable.CallOpts, arg0)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Withdrawable *WithdrawableCaller) Paused(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Withdrawable.contract.Call(opts, out, "paused")
-	return *ret0, err
+	var out []interface{}
+	err := _Withdrawable.contract.Call(opts, &out, "paused")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Withdrawable *WithdrawableSession) Paused() (bool, error) {
 	return _Withdrawable.Contract.Paused(&_Withdrawable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Withdrawable *WithdrawableCallerSession) Paused() (bool, error) {
 	return _Withdrawable.Contract.Paused(&_Withdrawable.CallOpts)
 }

@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
-	kbnmultiTrade "github.com/incognitochain/bridge-eth/bridge/kbnmultitrade"
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/uniswap"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
-	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -109,10 +107,10 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", prevVault)	
+	input, _ := vaultAbi.Pack("initialize", prevVault)
 
 	// Deploy vault proxy
-	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, incAddr, input)
+	vaultAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, incAddr, input)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed vault proxy")
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
@@ -129,27 +127,6 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	// Wait until tx is confirmed
 	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
-
-	// Deploy kbnMultitrade
-	kbnMultiTradeAddr, tx, _, err := kbnmultiTrade.DeployKbnmultiTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr, vaultAddr)
-	require.Equal(tradingDeploySuite.T(), nil, err)
-	fmt.Println("deployed kbnMultitrade")
-	fmt.Printf("addr: %s\n", kbnMultiTradeAddr.Hex())
-
-	// Wait until tx is confirmed
-	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	require.Equal(tradingDeploySuite.T(), nil, err)
-
-	// Deploy 0xTrade
-	zrxTradeAddr, tx, _, err := zrxtrade.DeployZrxtrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.WETHAddr, tradingDeploySuite.ZRXContractAddr, vaultAddr)
-	require.Equal(tradingDeploySuite.T(), nil, err)
-
-	// Wait until tx is confirmed
-	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	require.Equal(tradingDeploySuite.T(), nil, err)
-
-	fmt.Println("deployed zrxTrade")
-	fmt.Printf("addr: %s\n", zrxTradeAddr.Hex())
 
 	// Deploy uniswaptrade
 	uniswapAddr, tx, _, err := uniswap.DeployUniswapV2Trade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr)

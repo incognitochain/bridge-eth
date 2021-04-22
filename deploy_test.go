@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 	"testing"
 	"time"
-	"strings"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -476,8 +476,8 @@ func TestDeployProxyAndVault(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", prevVault)	
-	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, vaultAddr, admin, incAddr, input)
+	input, _ := vaultAbi.Pack("initialize", prevVault)
+	vaultProxyAddr, _, _, err := vaultproxy.DeployTransparentUpgradeableProxy(auth, client, vaultAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}

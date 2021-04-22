@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -168,7 +167,7 @@ func bindAdminPausable(address common.Address, caller bind.ContractCaller, trans
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_AdminPausable *AdminPausableRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_AdminPausable *AdminPausableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _AdminPausable.Contract.AdminPausableCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -187,7 +186,7 @@ func (_AdminPausable *AdminPausableRaw) Transact(opts *bind.TransactOpts, method
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_AdminPausable *AdminPausableCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_AdminPausable *AdminPausableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _AdminPausable.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -204,104 +203,124 @@ func (_AdminPausable *AdminPausableTransactorRaw) Transact(opts *bind.TransactOp
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_AdminPausable *AdminPausableCaller) Admin(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "admin")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "admin")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_AdminPausable *AdminPausableSession) Admin() (common.Address, error) {
 	return _AdminPausable.Contract.Admin(&_AdminPausable.CallOpts)
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_AdminPausable *AdminPausableCallerSession) Admin() (common.Address, error) {
 	return _AdminPausable.Contract.Admin(&_AdminPausable.CallOpts)
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_AdminPausable *AdminPausableCaller) Expire(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "expire")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "expire")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_AdminPausable *AdminPausableSession) Expire() (*big.Int, error) {
 	return _AdminPausable.Contract.Expire(&_AdminPausable.CallOpts)
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_AdminPausable *AdminPausableCallerSession) Expire() (*big.Int, error) {
 	return _AdminPausable.Contract.Expire(&_AdminPausable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_AdminPausable *AdminPausableCaller) Paused(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "paused")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "paused")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_AdminPausable *AdminPausableSession) Paused() (bool, error) {
 	return _AdminPausable.Contract.Paused(&_AdminPausable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_AdminPausable *AdminPausableCallerSession) Paused() (bool, error) {
 	return _AdminPausable.Contract.Paused(&_AdminPausable.CallOpts)
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_AdminPausable *AdminPausableCaller) Successor(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "successor")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "successor")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_AdminPausable *AdminPausableSession) Successor() (common.Address, error) {
 	return _AdminPausable.Contract.Successor(&_AdminPausable.CallOpts)
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_AdminPausable *AdminPausableCallerSession) Successor() (common.Address, error) {
 	return _AdminPausable.Contract.Successor(&_AdminPausable.CallOpts)
 }
@@ -541,6 +560,7 @@ func (_AdminPausable *AdminPausableFilterer) ParseClaim(log types.Log) (*AdminPa
 	if err := _AdminPausable.contract.UnpackLog(event, "Claim", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -674,6 +694,7 @@ func (_AdminPausable *AdminPausableFilterer) ParseExtend(log types.Log) (*AdminP
 	if err := _AdminPausable.contract.UnpackLog(event, "Extend", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -807,6 +828,7 @@ func (_AdminPausable *AdminPausableFilterer) ParsePaused(log types.Log) (*AdminP
 	if err := _AdminPausable.contract.UnpackLog(event, "Paused", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -940,5 +962,6 @@ func (_AdminPausable *AdminPausableFilterer) ParseUnpaused(log types.Log) (*Admi
 	if err := _AdminPausable.contract.UnpackLog(event, "Unpaused", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

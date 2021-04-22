@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -174,7 +173,7 @@ func bindAdminPausable(address common.Address, caller bind.ContractCaller, trans
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_AdminPausable *AdminPausableRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_AdminPausable *AdminPausableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _AdminPausable.Contract.AdminPausableCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -193,7 +192,7 @@ func (_AdminPausable *AdminPausableRaw) Transact(opts *bind.TransactOpts, method
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_AdminPausable *AdminPausableCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_AdminPausable *AdminPausableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _AdminPausable.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -210,104 +209,124 @@ func (_AdminPausable *AdminPausableTransactorRaw) Transact(opts *bind.TransactOp
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_AdminPausable *AdminPausableCaller) Admin(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "admin")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "admin")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_AdminPausable *AdminPausableSession) Admin() (common.Address, error) {
 	return _AdminPausable.Contract.Admin(&_AdminPausable.CallOpts)
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_AdminPausable *AdminPausableCallerSession) Admin() (common.Address, error) {
 	return _AdminPausable.Contract.Admin(&_AdminPausable.CallOpts)
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_AdminPausable *AdminPausableCaller) Expire(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "expire")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "expire")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_AdminPausable *AdminPausableSession) Expire() (*big.Int, error) {
 	return _AdminPausable.Contract.Expire(&_AdminPausable.CallOpts)
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_AdminPausable *AdminPausableCallerSession) Expire() (*big.Int, error) {
 	return _AdminPausable.Contract.Expire(&_AdminPausable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_AdminPausable *AdminPausableCaller) Paused(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "paused")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "paused")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_AdminPausable *AdminPausableSession) Paused() (bool, error) {
 	return _AdminPausable.Contract.Paused(&_AdminPausable.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_AdminPausable *AdminPausableCallerSession) Paused() (bool, error) {
 	return _AdminPausable.Contract.Paused(&_AdminPausable.CallOpts)
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_AdminPausable *AdminPausableCaller) Successor(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _AdminPausable.contract.Call(opts, out, "successor")
-	return *ret0, err
+	var out []interface{}
+	err := _AdminPausable.contract.Call(opts, &out, "successor")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_AdminPausable *AdminPausableSession) Successor() (common.Address, error) {
 	return _AdminPausable.Contract.Successor(&_AdminPausable.CallOpts)
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_AdminPausable *AdminPausableCallerSession) Successor() (common.Address, error) {
 	return _AdminPausable.Contract.Successor(&_AdminPausable.CallOpts)
 }
@@ -547,6 +566,7 @@ func (_AdminPausable *AdminPausableFilterer) ParseClaim(log types.Log) (*AdminPa
 	if err := _AdminPausable.contract.UnpackLog(event, "Claim", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -680,6 +700,7 @@ func (_AdminPausable *AdminPausableFilterer) ParseExtend(log types.Log) (*AdminP
 	if err := _AdminPausable.contract.UnpackLog(event, "Extend", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -813,6 +834,7 @@ func (_AdminPausable *AdminPausableFilterer) ParsePaused(log types.Log) (*AdminP
 	if err := _AdminPausable.contract.UnpackLog(event, "Paused", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -946,6 +968,7 @@ func (_AdminPausable *AdminPausableFilterer) ParseUnpaused(log types.Log) (*Admi
 	if err := _AdminPausable.contract.UnpackLog(event, "Unpaused", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1103,7 +1126,7 @@ func bindIncognitoProxy(address common.Address, caller bind.ContractCaller, tran
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IncognitoProxy *IncognitoProxyRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IncognitoProxy *IncognitoProxyRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IncognitoProxy.Contract.IncognitoProxyCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -1122,7 +1145,7 @@ func (_IncognitoProxy *IncognitoProxyRaw) Transact(opts *bind.TransactOpts, meth
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IncognitoProxy *IncognitoProxyCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IncognitoProxy *IncognitoProxyCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IncognitoProxy.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1139,402 +1162,468 @@ func (_IncognitoProxy *IncognitoProxyTransactorRaw) Transact(opts *bind.Transact
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_IncognitoProxy *IncognitoProxyCaller) Admin(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "admin")
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "admin")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_IncognitoProxy *IncognitoProxySession) Admin() (common.Address, error) {
 	return _IncognitoProxy.Contract.Admin(&_IncognitoProxy.CallOpts)
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_IncognitoProxy *IncognitoProxyCallerSession) Admin() (common.Address, error) {
 	return _IncognitoProxy.Contract.Admin(&_IncognitoProxy.CallOpts)
 }
 
 // BeaconCommittees is a free data retrieval call binding the contract method 0xf203a5ed.
 //
-// Solidity: function beaconCommittees(uint256 ) constant returns(uint256 startBlock)
+// Solidity: function beaconCommittees(uint256 ) view returns(uint256 startBlock)
 func (_IncognitoProxy *IncognitoProxyCaller) BeaconCommittees(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "beaconCommittees", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "beaconCommittees", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BeaconCommittees is a free data retrieval call binding the contract method 0xf203a5ed.
 //
-// Solidity: function beaconCommittees(uint256 ) constant returns(uint256 startBlock)
+// Solidity: function beaconCommittees(uint256 ) view returns(uint256 startBlock)
 func (_IncognitoProxy *IncognitoProxySession) BeaconCommittees(arg0 *big.Int) (*big.Int, error) {
 	return _IncognitoProxy.Contract.BeaconCommittees(&_IncognitoProxy.CallOpts, arg0)
 }
 
 // BeaconCommittees is a free data retrieval call binding the contract method 0xf203a5ed.
 //
-// Solidity: function beaconCommittees(uint256 ) constant returns(uint256 startBlock)
+// Solidity: function beaconCommittees(uint256 ) view returns(uint256 startBlock)
 func (_IncognitoProxy *IncognitoProxyCallerSession) BeaconCommittees(arg0 *big.Int) (*big.Int, error) {
 	return _IncognitoProxy.Contract.BeaconCommittees(&_IncognitoProxy.CallOpts, arg0)
 }
 
 // BridgeCommittees is a free data retrieval call binding the contract method 0x9b30b637.
 //
-// Solidity: function bridgeCommittees(uint256 ) constant returns(uint256 startBlock)
+// Solidity: function bridgeCommittees(uint256 ) view returns(uint256 startBlock)
 func (_IncognitoProxy *IncognitoProxyCaller) BridgeCommittees(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "bridgeCommittees", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "bridgeCommittees", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BridgeCommittees is a free data retrieval call binding the contract method 0x9b30b637.
 //
-// Solidity: function bridgeCommittees(uint256 ) constant returns(uint256 startBlock)
+// Solidity: function bridgeCommittees(uint256 ) view returns(uint256 startBlock)
 func (_IncognitoProxy *IncognitoProxySession) BridgeCommittees(arg0 *big.Int) (*big.Int, error) {
 	return _IncognitoProxy.Contract.BridgeCommittees(&_IncognitoProxy.CallOpts, arg0)
 }
 
 // BridgeCommittees is a free data retrieval call binding the contract method 0x9b30b637.
 //
-// Solidity: function bridgeCommittees(uint256 ) constant returns(uint256 startBlock)
+// Solidity: function bridgeCommittees(uint256 ) view returns(uint256 startBlock)
 func (_IncognitoProxy *IncognitoProxyCallerSession) BridgeCommittees(arg0 *big.Int) (*big.Int, error) {
 	return _IncognitoProxy.Contract.BridgeCommittees(&_IncognitoProxy.CallOpts, arg0)
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_IncognitoProxy *IncognitoProxyCaller) Expire(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "expire")
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "expire")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_IncognitoProxy *IncognitoProxySession) Expire() (*big.Int, error) {
 	return _IncognitoProxy.Contract.Expire(&_IncognitoProxy.CallOpts)
 }
 
 // Expire is a free data retrieval call binding the contract method 0x79599f96.
 //
-// Solidity: function expire() constant returns(uint256)
+// Solidity: function expire() view returns(uint256)
 func (_IncognitoProxy *IncognitoProxyCallerSession) Expire() (*big.Int, error) {
 	return _IncognitoProxy.Contract.Expire(&_IncognitoProxy.CallOpts)
 }
 
 // ExtractCommitteeFromInstruction is a free data retrieval call binding the contract method 0x23b50e91.
 //
-// Solidity: function extractCommitteeFromInstruction(bytes inst) constant returns(address[])
+// Solidity: function extractCommitteeFromInstruction(bytes inst) pure returns(address[])
 func (_IncognitoProxy *IncognitoProxyCaller) ExtractCommitteeFromInstruction(opts *bind.CallOpts, inst []byte) ([]common.Address, error) {
-	var (
-		ret0 = new([]common.Address)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "extractCommitteeFromInstruction", inst)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "extractCommitteeFromInstruction", inst)
+
+	if err != nil {
+		return *new([]common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+
+	return out0, err
+
 }
 
 // ExtractCommitteeFromInstruction is a free data retrieval call binding the contract method 0x23b50e91.
 //
-// Solidity: function extractCommitteeFromInstruction(bytes inst) constant returns(address[])
+// Solidity: function extractCommitteeFromInstruction(bytes inst) pure returns(address[])
 func (_IncognitoProxy *IncognitoProxySession) ExtractCommitteeFromInstruction(inst []byte) ([]common.Address, error) {
 	return _IncognitoProxy.Contract.ExtractCommitteeFromInstruction(&_IncognitoProxy.CallOpts, inst)
 }
 
 // ExtractCommitteeFromInstruction is a free data retrieval call binding the contract method 0x23b50e91.
 //
-// Solidity: function extractCommitteeFromInstruction(bytes inst) constant returns(address[])
+// Solidity: function extractCommitteeFromInstruction(bytes inst) pure returns(address[])
 func (_IncognitoProxy *IncognitoProxyCallerSession) ExtractCommitteeFromInstruction(inst []byte) ([]common.Address, error) {
 	return _IncognitoProxy.Contract.ExtractCommitteeFromInstruction(&_IncognitoProxy.CallOpts, inst)
 }
 
 // ExtractMetaFromInstruction is a free data retrieval call binding the contract method 0xa05c1001.
 //
-// Solidity: function extractMetaFromInstruction(bytes inst, uint8 expectedMeta, uint8 expectedShard) constant returns(uint256, uint256)
+// Solidity: function extractMetaFromInstruction(bytes inst, uint8 expectedMeta, uint8 expectedShard) pure returns(uint256, uint256)
 func (_IncognitoProxy *IncognitoProxyCaller) ExtractMetaFromInstruction(opts *bind.CallOpts, inst []byte, expectedMeta uint8, expectedShard uint8) (*big.Int, *big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-		ret1 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "extractMetaFromInstruction", inst, expectedMeta, expectedShard)
+
+	if err != nil {
+		return *new(*big.Int), *new(*big.Int), err
 	}
-	err := _IncognitoProxy.contract.Call(opts, out, "extractMetaFromInstruction", inst, expectedMeta, expectedShard)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return out0, out1, err
+
 }
 
 // ExtractMetaFromInstruction is a free data retrieval call binding the contract method 0xa05c1001.
 //
-// Solidity: function extractMetaFromInstruction(bytes inst, uint8 expectedMeta, uint8 expectedShard) constant returns(uint256, uint256)
+// Solidity: function extractMetaFromInstruction(bytes inst, uint8 expectedMeta, uint8 expectedShard) pure returns(uint256, uint256)
 func (_IncognitoProxy *IncognitoProxySession) ExtractMetaFromInstruction(inst []byte, expectedMeta uint8, expectedShard uint8) (*big.Int, *big.Int, error) {
 	return _IncognitoProxy.Contract.ExtractMetaFromInstruction(&_IncognitoProxy.CallOpts, inst, expectedMeta, expectedShard)
 }
 
 // ExtractMetaFromInstruction is a free data retrieval call binding the contract method 0xa05c1001.
 //
-// Solidity: function extractMetaFromInstruction(bytes inst, uint8 expectedMeta, uint8 expectedShard) constant returns(uint256, uint256)
+// Solidity: function extractMetaFromInstruction(bytes inst, uint8 expectedMeta, uint8 expectedShard) pure returns(uint256, uint256)
 func (_IncognitoProxy *IncognitoProxyCallerSession) ExtractMetaFromInstruction(inst []byte, expectedMeta uint8, expectedShard uint8) (*big.Int, *big.Int, error) {
 	return _IncognitoProxy.Contract.ExtractMetaFromInstruction(&_IncognitoProxy.CallOpts, inst, expectedMeta, expectedShard)
 }
 
 // FindBeaconCommitteeFromHeight is a free data retrieval call binding the contract method 0xb600ffdb.
 //
-// Solidity: function findBeaconCommitteeFromHeight(uint256 blkHeight) constant returns(address[], uint256)
+// Solidity: function findBeaconCommitteeFromHeight(uint256 blkHeight) view returns(address[], uint256)
 func (_IncognitoProxy *IncognitoProxyCaller) FindBeaconCommitteeFromHeight(opts *bind.CallOpts, blkHeight *big.Int) ([]common.Address, *big.Int, error) {
-	var (
-		ret0 = new([]common.Address)
-		ret1 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "findBeaconCommitteeFromHeight", blkHeight)
+
+	if err != nil {
+		return *new([]common.Address), *new(*big.Int), err
 	}
-	err := _IncognitoProxy.contract.Call(opts, out, "findBeaconCommitteeFromHeight", blkHeight)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return out0, out1, err
+
 }
 
 // FindBeaconCommitteeFromHeight is a free data retrieval call binding the contract method 0xb600ffdb.
 //
-// Solidity: function findBeaconCommitteeFromHeight(uint256 blkHeight) constant returns(address[], uint256)
+// Solidity: function findBeaconCommitteeFromHeight(uint256 blkHeight) view returns(address[], uint256)
 func (_IncognitoProxy *IncognitoProxySession) FindBeaconCommitteeFromHeight(blkHeight *big.Int) ([]common.Address, *big.Int, error) {
 	return _IncognitoProxy.Contract.FindBeaconCommitteeFromHeight(&_IncognitoProxy.CallOpts, blkHeight)
 }
 
 // FindBeaconCommitteeFromHeight is a free data retrieval call binding the contract method 0xb600ffdb.
 //
-// Solidity: function findBeaconCommitteeFromHeight(uint256 blkHeight) constant returns(address[], uint256)
+// Solidity: function findBeaconCommitteeFromHeight(uint256 blkHeight) view returns(address[], uint256)
 func (_IncognitoProxy *IncognitoProxyCallerSession) FindBeaconCommitteeFromHeight(blkHeight *big.Int) ([]common.Address, *big.Int, error) {
 	return _IncognitoProxy.Contract.FindBeaconCommitteeFromHeight(&_IncognitoProxy.CallOpts, blkHeight)
 }
 
 // FindBridgeCommitteeFromHeight is a free data retrieval call binding the contract method 0xf5205fde.
 //
-// Solidity: function findBridgeCommitteeFromHeight(uint256 blkHeight) constant returns(address[], uint256)
+// Solidity: function findBridgeCommitteeFromHeight(uint256 blkHeight) view returns(address[], uint256)
 func (_IncognitoProxy *IncognitoProxyCaller) FindBridgeCommitteeFromHeight(opts *bind.CallOpts, blkHeight *big.Int) ([]common.Address, *big.Int, error) {
-	var (
-		ret0 = new([]common.Address)
-		ret1 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "findBridgeCommitteeFromHeight", blkHeight)
+
+	if err != nil {
+		return *new([]common.Address), *new(*big.Int), err
 	}
-	err := _IncognitoProxy.contract.Call(opts, out, "findBridgeCommitteeFromHeight", blkHeight)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return out0, out1, err
+
 }
 
 // FindBridgeCommitteeFromHeight is a free data retrieval call binding the contract method 0xf5205fde.
 //
-// Solidity: function findBridgeCommitteeFromHeight(uint256 blkHeight) constant returns(address[], uint256)
+// Solidity: function findBridgeCommitteeFromHeight(uint256 blkHeight) view returns(address[], uint256)
 func (_IncognitoProxy *IncognitoProxySession) FindBridgeCommitteeFromHeight(blkHeight *big.Int) ([]common.Address, *big.Int, error) {
 	return _IncognitoProxy.Contract.FindBridgeCommitteeFromHeight(&_IncognitoProxy.CallOpts, blkHeight)
 }
 
 // FindBridgeCommitteeFromHeight is a free data retrieval call binding the contract method 0xf5205fde.
 //
-// Solidity: function findBridgeCommitteeFromHeight(uint256 blkHeight) constant returns(address[], uint256)
+// Solidity: function findBridgeCommitteeFromHeight(uint256 blkHeight) view returns(address[], uint256)
 func (_IncognitoProxy *IncognitoProxyCallerSession) FindBridgeCommitteeFromHeight(blkHeight *big.Int) ([]common.Address, *big.Int, error) {
 	return _IncognitoProxy.Contract.FindBridgeCommitteeFromHeight(&_IncognitoProxy.CallOpts, blkHeight)
 }
 
 // GetBeaconCommittee is a free data retrieval call binding the contract method 0xfaea3167.
 //
-// Solidity: function getBeaconCommittee(uint256 i) constant returns(IncognitoProxyCommittee)
+// Solidity: function getBeaconCommittee(uint256 i) view returns((address[],uint256))
 func (_IncognitoProxy *IncognitoProxyCaller) GetBeaconCommittee(opts *bind.CallOpts, i *big.Int) (IncognitoProxyCommittee, error) {
-	var (
-		ret0 = new(IncognitoProxyCommittee)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "getBeaconCommittee", i)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "getBeaconCommittee", i)
+
+	if err != nil {
+		return *new(IncognitoProxyCommittee), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(IncognitoProxyCommittee)).(*IncognitoProxyCommittee)
+
+	return out0, err
+
 }
 
 // GetBeaconCommittee is a free data retrieval call binding the contract method 0xfaea3167.
 //
-// Solidity: function getBeaconCommittee(uint256 i) constant returns(IncognitoProxyCommittee)
+// Solidity: function getBeaconCommittee(uint256 i) view returns((address[],uint256))
 func (_IncognitoProxy *IncognitoProxySession) GetBeaconCommittee(i *big.Int) (IncognitoProxyCommittee, error) {
 	return _IncognitoProxy.Contract.GetBeaconCommittee(&_IncognitoProxy.CallOpts, i)
 }
 
 // GetBeaconCommittee is a free data retrieval call binding the contract method 0xfaea3167.
 //
-// Solidity: function getBeaconCommittee(uint256 i) constant returns(IncognitoProxyCommittee)
+// Solidity: function getBeaconCommittee(uint256 i) view returns((address[],uint256))
 func (_IncognitoProxy *IncognitoProxyCallerSession) GetBeaconCommittee(i *big.Int) (IncognitoProxyCommittee, error) {
 	return _IncognitoProxy.Contract.GetBeaconCommittee(&_IncognitoProxy.CallOpts, i)
 }
 
 // GetBridgeCommittee is a free data retrieval call binding the contract method 0x8ceb69c3.
 //
-// Solidity: function getBridgeCommittee(uint256 i) constant returns(IncognitoProxyCommittee)
+// Solidity: function getBridgeCommittee(uint256 i) view returns((address[],uint256))
 func (_IncognitoProxy *IncognitoProxyCaller) GetBridgeCommittee(opts *bind.CallOpts, i *big.Int) (IncognitoProxyCommittee, error) {
-	var (
-		ret0 = new(IncognitoProxyCommittee)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "getBridgeCommittee", i)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "getBridgeCommittee", i)
+
+	if err != nil {
+		return *new(IncognitoProxyCommittee), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(IncognitoProxyCommittee)).(*IncognitoProxyCommittee)
+
+	return out0, err
+
 }
 
 // GetBridgeCommittee is a free data retrieval call binding the contract method 0x8ceb69c3.
 //
-// Solidity: function getBridgeCommittee(uint256 i) constant returns(IncognitoProxyCommittee)
+// Solidity: function getBridgeCommittee(uint256 i) view returns((address[],uint256))
 func (_IncognitoProxy *IncognitoProxySession) GetBridgeCommittee(i *big.Int) (IncognitoProxyCommittee, error) {
 	return _IncognitoProxy.Contract.GetBridgeCommittee(&_IncognitoProxy.CallOpts, i)
 }
 
 // GetBridgeCommittee is a free data retrieval call binding the contract method 0x8ceb69c3.
 //
-// Solidity: function getBridgeCommittee(uint256 i) constant returns(IncognitoProxyCommittee)
+// Solidity: function getBridgeCommittee(uint256 i) view returns((address[],uint256))
 func (_IncognitoProxy *IncognitoProxyCallerSession) GetBridgeCommittee(i *big.Int) (IncognitoProxyCommittee, error) {
 	return _IncognitoProxy.Contract.GetBridgeCommittee(&_IncognitoProxy.CallOpts, i)
 }
 
 // InstructionApproved is a free data retrieval call binding the contract method 0xf65d2116.
 //
-// Solidity: function instructionApproved(bool isBeacon, bytes32 instHash, uint256 blkHeight, bytes32[] instPath, bool[] instPathIsLeft, bytes32 instRoot, bytes32 blkData, uint256[] sigIdx, uint8[] sigV, bytes32[] sigR, bytes32[] sigS) constant returns(bool)
+// Solidity: function instructionApproved(bool isBeacon, bytes32 instHash, uint256 blkHeight, bytes32[] instPath, bool[] instPathIsLeft, bytes32 instRoot, bytes32 blkData, uint256[] sigIdx, uint8[] sigV, bytes32[] sigR, bytes32[] sigS) view returns(bool)
 func (_IncognitoProxy *IncognitoProxyCaller) InstructionApproved(opts *bind.CallOpts, isBeacon bool, instHash [32]byte, blkHeight *big.Int, instPath [][32]byte, instPathIsLeft []bool, instRoot [32]byte, blkData [32]byte, sigIdx []*big.Int, sigV []uint8, sigR [][32]byte, sigS [][32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "instructionApproved", isBeacon, instHash, blkHeight, instPath, instPathIsLeft, instRoot, blkData, sigIdx, sigV, sigR, sigS)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "instructionApproved", isBeacon, instHash, blkHeight, instPath, instPathIsLeft, instRoot, blkData, sigIdx, sigV, sigR, sigS)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // InstructionApproved is a free data retrieval call binding the contract method 0xf65d2116.
 //
-// Solidity: function instructionApproved(bool isBeacon, bytes32 instHash, uint256 blkHeight, bytes32[] instPath, bool[] instPathIsLeft, bytes32 instRoot, bytes32 blkData, uint256[] sigIdx, uint8[] sigV, bytes32[] sigR, bytes32[] sigS) constant returns(bool)
+// Solidity: function instructionApproved(bool isBeacon, bytes32 instHash, uint256 blkHeight, bytes32[] instPath, bool[] instPathIsLeft, bytes32 instRoot, bytes32 blkData, uint256[] sigIdx, uint8[] sigV, bytes32[] sigR, bytes32[] sigS) view returns(bool)
 func (_IncognitoProxy *IncognitoProxySession) InstructionApproved(isBeacon bool, instHash [32]byte, blkHeight *big.Int, instPath [][32]byte, instPathIsLeft []bool, instRoot [32]byte, blkData [32]byte, sigIdx []*big.Int, sigV []uint8, sigR [][32]byte, sigS [][32]byte) (bool, error) {
 	return _IncognitoProxy.Contract.InstructionApproved(&_IncognitoProxy.CallOpts, isBeacon, instHash, blkHeight, instPath, instPathIsLeft, instRoot, blkData, sigIdx, sigV, sigR, sigS)
 }
 
 // InstructionApproved is a free data retrieval call binding the contract method 0xf65d2116.
 //
-// Solidity: function instructionApproved(bool isBeacon, bytes32 instHash, uint256 blkHeight, bytes32[] instPath, bool[] instPathIsLeft, bytes32 instRoot, bytes32 blkData, uint256[] sigIdx, uint8[] sigV, bytes32[] sigR, bytes32[] sigS) constant returns(bool)
+// Solidity: function instructionApproved(bool isBeacon, bytes32 instHash, uint256 blkHeight, bytes32[] instPath, bool[] instPathIsLeft, bytes32 instRoot, bytes32 blkData, uint256[] sigIdx, uint8[] sigV, bytes32[] sigR, bytes32[] sigS) view returns(bool)
 func (_IncognitoProxy *IncognitoProxyCallerSession) InstructionApproved(isBeacon bool, instHash [32]byte, blkHeight *big.Int, instPath [][32]byte, instPathIsLeft []bool, instRoot [32]byte, blkData [32]byte, sigIdx []*big.Int, sigV []uint8, sigR [][32]byte, sigS [][32]byte) (bool, error) {
 	return _IncognitoProxy.Contract.InstructionApproved(&_IncognitoProxy.CallOpts, isBeacon, instHash, blkHeight, instPath, instPathIsLeft, instRoot, blkData, sigIdx, sigV, sigR, sigS)
 }
 
 // InstructionInMerkleTree is a free data retrieval call binding the contract method 0x47c4b328.
 //
-// Solidity: function instructionInMerkleTree(bytes32 leaf, bytes32 root, bytes32[] path, bool[] left) constant returns(bool)
+// Solidity: function instructionInMerkleTree(bytes32 leaf, bytes32 root, bytes32[] path, bool[] left) pure returns(bool)
 func (_IncognitoProxy *IncognitoProxyCaller) InstructionInMerkleTree(opts *bind.CallOpts, leaf [32]byte, root [32]byte, path [][32]byte, left []bool) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "instructionInMerkleTree", leaf, root, path, left)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "instructionInMerkleTree", leaf, root, path, left)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // InstructionInMerkleTree is a free data retrieval call binding the contract method 0x47c4b328.
 //
-// Solidity: function instructionInMerkleTree(bytes32 leaf, bytes32 root, bytes32[] path, bool[] left) constant returns(bool)
+// Solidity: function instructionInMerkleTree(bytes32 leaf, bytes32 root, bytes32[] path, bool[] left) pure returns(bool)
 func (_IncognitoProxy *IncognitoProxySession) InstructionInMerkleTree(leaf [32]byte, root [32]byte, path [][32]byte, left []bool) (bool, error) {
 	return _IncognitoProxy.Contract.InstructionInMerkleTree(&_IncognitoProxy.CallOpts, leaf, root, path, left)
 }
 
 // InstructionInMerkleTree is a free data retrieval call binding the contract method 0x47c4b328.
 //
-// Solidity: function instructionInMerkleTree(bytes32 leaf, bytes32 root, bytes32[] path, bool[] left) constant returns(bool)
+// Solidity: function instructionInMerkleTree(bytes32 leaf, bytes32 root, bytes32[] path, bool[] left) pure returns(bool)
 func (_IncognitoProxy *IncognitoProxyCallerSession) InstructionInMerkleTree(leaf [32]byte, root [32]byte, path [][32]byte, left []bool) (bool, error) {
 	return _IncognitoProxy.Contract.InstructionInMerkleTree(&_IncognitoProxy.CallOpts, leaf, root, path, left)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_IncognitoProxy *IncognitoProxyCaller) Paused(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "paused")
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "paused")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_IncognitoProxy *IncognitoProxySession) Paused() (bool, error) {
 	return _IncognitoProxy.Contract.Paused(&_IncognitoProxy.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_IncognitoProxy *IncognitoProxyCallerSession) Paused() (bool, error) {
 	return _IncognitoProxy.Contract.Paused(&_IncognitoProxy.CallOpts)
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_IncognitoProxy *IncognitoProxyCaller) Successor(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "successor")
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "successor")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_IncognitoProxy *IncognitoProxySession) Successor() (common.Address, error) {
 	return _IncognitoProxy.Contract.Successor(&_IncognitoProxy.CallOpts)
 }
 
 // Successor is a free data retrieval call binding the contract method 0x6ff968c3.
 //
-// Solidity: function successor() constant returns(address)
+// Solidity: function successor() view returns(address)
 func (_IncognitoProxy *IncognitoProxyCallerSession) Successor() (common.Address, error) {
 	return _IncognitoProxy.Contract.Successor(&_IncognitoProxy.CallOpts)
 }
 
 // VerifySig is a free data retrieval call binding the contract method 0x3aacfdad.
 //
-// Solidity: function verifySig(address[] committee, bytes32 msgHash, uint8[] v, bytes32[] r, bytes32[] s) constant returns(bool)
+// Solidity: function verifySig(address[] committee, bytes32 msgHash, uint8[] v, bytes32[] r, bytes32[] s) pure returns(bool)
 func (_IncognitoProxy *IncognitoProxyCaller) VerifySig(opts *bind.CallOpts, committee []common.Address, msgHash [32]byte, v []uint8, r [][32]byte, s [][32]byte) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _IncognitoProxy.contract.Call(opts, out, "verifySig", committee, msgHash, v, r, s)
-	return *ret0, err
+	var out []interface{}
+	err := _IncognitoProxy.contract.Call(opts, &out, "verifySig", committee, msgHash, v, r, s)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // VerifySig is a free data retrieval call binding the contract method 0x3aacfdad.
 //
-// Solidity: function verifySig(address[] committee, bytes32 msgHash, uint8[] v, bytes32[] r, bytes32[] s) constant returns(bool)
+// Solidity: function verifySig(address[] committee, bytes32 msgHash, uint8[] v, bytes32[] r, bytes32[] s) pure returns(bool)
 func (_IncognitoProxy *IncognitoProxySession) VerifySig(committee []common.Address, msgHash [32]byte, v []uint8, r [][32]byte, s [][32]byte) (bool, error) {
 	return _IncognitoProxy.Contract.VerifySig(&_IncognitoProxy.CallOpts, committee, msgHash, v, r, s)
 }
 
 // VerifySig is a free data retrieval call binding the contract method 0x3aacfdad.
 //
-// Solidity: function verifySig(address[] committee, bytes32 msgHash, uint8[] v, bytes32[] r, bytes32[] s) constant returns(bool)
+// Solidity: function verifySig(address[] committee, bytes32 msgHash, uint8[] v, bytes32[] r, bytes32[] s) pure returns(bool)
 func (_IncognitoProxy *IncognitoProxyCallerSession) VerifySig(committee []common.Address, msgHash [32]byte, v []uint8, r [][32]byte, s [][32]byte) (bool, error) {
 	return _IncognitoProxy.Contract.VerifySig(&_IncognitoProxy.CallOpts, committee, msgHash, v, r, s)
 }
@@ -1817,6 +1906,7 @@ func (_IncognitoProxy *IncognitoProxyFilterer) ParseBeaconCommitteeSwapped(log t
 	if err := _IncognitoProxy.contract.UnpackLog(event, "BeaconCommitteeSwapped", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1951,6 +2041,7 @@ func (_IncognitoProxy *IncognitoProxyFilterer) ParseBridgeCommitteeSwapped(log t
 	if err := _IncognitoProxy.contract.UnpackLog(event, "BridgeCommitteeSwapped", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2084,6 +2175,7 @@ func (_IncognitoProxy *IncognitoProxyFilterer) ParseClaim(log types.Log) (*Incog
 	if err := _IncognitoProxy.contract.UnpackLog(event, "Claim", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2217,6 +2309,7 @@ func (_IncognitoProxy *IncognitoProxyFilterer) ParseExtend(log types.Log) (*Inco
 	if err := _IncognitoProxy.contract.UnpackLog(event, "Extend", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2350,6 +2443,7 @@ func (_IncognitoProxy *IncognitoProxyFilterer) ParsePaused(log types.Log) (*Inco
 	if err := _IncognitoProxy.contract.UnpackLog(event, "Paused", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2483,5 +2577,6 @@ func (_IncognitoProxy *IncognitoProxyFilterer) ParseUnpaused(log types.Log) (*In
 	if err := _IncognitoProxy.contract.UnpackLog(event, "Unpaused", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

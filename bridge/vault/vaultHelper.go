@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -170,7 +169,7 @@ func bindVaultHelper(address common.Address, caller bind.ContractCaller, transac
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_VaultHelper *VaultHelperRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_VaultHelper *VaultHelperRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _VaultHelper.Contract.VaultHelperCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -189,7 +188,7 @@ func (_VaultHelper *VaultHelperRaw) Transact(opts *bind.TransactOpts, method str
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_VaultHelper *VaultHelperCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_VaultHelper *VaultHelperCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _VaultHelper.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -206,76 +205,91 @@ func (_VaultHelper *VaultHelperTransactorRaw) Transact(opts *bind.TransactOpts, 
 
 // BuildPreSignData is a free data retrieval call binding the contract method 0x741d7a50.
 //
-// Solidity: function _buildPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) constant returns()
+// Solidity: function _buildPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) pure returns()
 func (_VaultHelper *VaultHelperCaller) BuildPreSignData(opts *bind.CallOpts, prefix uint8, token common.Address, timestamp []byte, amount *big.Int) error {
-	var ()
-	out := &[]interface{}{}
-	err := _VaultHelper.contract.Call(opts, out, "_buildPreSignData", prefix, token, timestamp, amount)
+	var out []interface{}
+	err := _VaultHelper.contract.Call(opts, &out, "_buildPreSignData", prefix, token, timestamp, amount)
+
+	if err != nil {
+		return err
+	}
+
 	return err
+
 }
 
 // BuildPreSignData is a free data retrieval call binding the contract method 0x741d7a50.
 //
-// Solidity: function _buildPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) constant returns()
+// Solidity: function _buildPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) pure returns()
 func (_VaultHelper *VaultHelperSession) BuildPreSignData(prefix uint8, token common.Address, timestamp []byte, amount *big.Int) error {
 	return _VaultHelper.Contract.BuildPreSignData(&_VaultHelper.CallOpts, prefix, token, timestamp, amount)
 }
 
 // BuildPreSignData is a free data retrieval call binding the contract method 0x741d7a50.
 //
-// Solidity: function _buildPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) constant returns()
+// Solidity: function _buildPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) pure returns()
 func (_VaultHelper *VaultHelperCallerSession) BuildPreSignData(prefix uint8, token common.Address, timestamp []byte, amount *big.Int) error {
 	return _VaultHelper.Contract.BuildPreSignData(&_VaultHelper.CallOpts, prefix, token, timestamp, amount)
 }
 
 // BuildSignExecute is a free data retrieval call binding the contract method 0x41f59b6f.
 //
-// Solidity: function _buildSignExecute(VaultHelperPreSignData psd, address recipientToken, address exchangeAddress, bytes callData) constant returns(bytes)
+// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes)
 func (_VaultHelper *VaultHelperCaller) BuildSignExecute(opts *bind.CallOpts, psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _VaultHelper.contract.Call(opts, out, "_buildSignExecute", psd, recipientToken, exchangeAddress, callData)
-	return *ret0, err
+	var out []interface{}
+	err := _VaultHelper.contract.Call(opts, &out, "_buildSignExecute", psd, recipientToken, exchangeAddress, callData)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // BuildSignExecute is a free data retrieval call binding the contract method 0x41f59b6f.
 //
-// Solidity: function _buildSignExecute(VaultHelperPreSignData psd, address recipientToken, address exchangeAddress, bytes callData) constant returns(bytes)
+// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes)
 func (_VaultHelper *VaultHelperSession) BuildSignExecute(psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignExecute(&_VaultHelper.CallOpts, psd, recipientToken, exchangeAddress, callData)
 }
 
 // BuildSignExecute is a free data retrieval call binding the contract method 0x41f59b6f.
 //
-// Solidity: function _buildSignExecute(VaultHelperPreSignData psd, address recipientToken, address exchangeAddress, bytes callData) constant returns(bytes)
+// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes)
 func (_VaultHelper *VaultHelperCallerSession) BuildSignExecute(psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignExecute(&_VaultHelper.CallOpts, psd, recipientToken, exchangeAddress, callData)
 }
 
 // BuildSignRequestWithdraw is a free data retrieval call binding the contract method 0x3cf6e1ca.
 //
-// Solidity: function _buildSignRequestWithdraw(VaultHelperPreSignData psd, string incognitoAddress) constant returns(bytes)
+// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes)
 func (_VaultHelper *VaultHelperCaller) BuildSignRequestWithdraw(opts *bind.CallOpts, psd VaultHelperPreSignData, incognitoAddress string) ([]byte, error) {
-	var (
-		ret0 = new([]byte)
-	)
-	out := ret0
-	err := _VaultHelper.contract.Call(opts, out, "_buildSignRequestWithdraw", psd, incognitoAddress)
-	return *ret0, err
+	var out []interface{}
+	err := _VaultHelper.contract.Call(opts, &out, "_buildSignRequestWithdraw", psd, incognitoAddress)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
 }
 
 // BuildSignRequestWithdraw is a free data retrieval call binding the contract method 0x3cf6e1ca.
 //
-// Solidity: function _buildSignRequestWithdraw(VaultHelperPreSignData psd, string incognitoAddress) constant returns(bytes)
+// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes)
 func (_VaultHelper *VaultHelperSession) BuildSignRequestWithdraw(psd VaultHelperPreSignData, incognitoAddress string) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignRequestWithdraw(&_VaultHelper.CallOpts, psd, incognitoAddress)
 }
 
 // BuildSignRequestWithdraw is a free data retrieval call binding the contract method 0x3cf6e1ca.
 //
-// Solidity: function _buildSignRequestWithdraw(VaultHelperPreSignData psd, string incognitoAddress) constant returns(bytes)
+// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes)
 func (_VaultHelper *VaultHelperCallerSession) BuildSignRequestWithdraw(psd VaultHelperPreSignData, incognitoAddress string) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignRequestWithdraw(&_VaultHelper.CallOpts, psd, incognitoAddress)
 }
