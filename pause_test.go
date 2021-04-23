@@ -196,12 +196,14 @@ func TestFixedExtendOnce(t *testing.T) {
 
 func TestFixedUnpauseExpired(t *testing.T) {
 	p, _ := setupPauseContract(genesisAcc.Address)
+	var err error
 
 	// Pause first
-	_, err := p.c.Pause(auth)
+	_, err = p.c.Pause(auth)
 	if err != nil {
 		t.Fatal(err)
 	}
+	p.sim.Commit()
 
 	// Advance time till expired
 	err = p.sim.AdjustTime(3 * 366 * 24 * time.Hour)

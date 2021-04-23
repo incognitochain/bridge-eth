@@ -4,8 +4,8 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -45,7 +45,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	}
 
 	// Get vault instance
-	c, err := vaultproxy.NewVaultproxy(common.HexToAddress(VaultAddress), client)
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(VaultAddress), client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	}
 
 	// Get prev vault instance
-	c, err = vaultproxy.NewVaultproxy(common.HexToAddress(PrevVault), client)
+	c, err = vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(PrevVault), client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,9 +91,9 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", common.Address{})	
+	input, _ := vaultAbi.Pack("initialize", common.Address{})
 
-	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, vaultDelegatorAddr, admin, incAddr, input)
+	vaultProxy, _, _, err := vaultproxy.DeployTransparentUpgradeableProxy(auth, client, vaultDelegatorAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,7 +304,7 @@ func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
 	return privKey, c
 }
 
-func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.Vaultproxy) {
+func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.TransparentUpgradeableProxy) {
 	privKey, client, err := connect()
 	if err != nil {
 		t.Fatal(err)
@@ -312,7 +312,7 @@ func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.Vaultproxy) {
 
 	// Get vault instance
 	vaultAddr := common.HexToAddress(VaultAddress)
-	c, err := vaultproxy.NewVaultproxy(vaultAddr, client)
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(vaultAddr, client)
 	if err != nil {
 		t.Fatal(err)
 	}

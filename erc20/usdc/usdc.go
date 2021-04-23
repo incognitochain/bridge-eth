@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -155,7 +154,7 @@ func bindUsdc(address common.Address, caller bind.ContractCaller, transactor bin
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Usdc *UsdcRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Usdc *UsdcRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Usdc.Contract.UsdcCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -174,7 +173,7 @@ func (_Usdc *UsdcRaw) Transact(opts *bind.TransactOpts, method string, params ..
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Usdc *UsdcCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Usdc *UsdcCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Usdc.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -191,390 +190,465 @@ func (_Usdc *UsdcTransactorRaw) Transact(opts *bind.TransactOpts, method string,
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_Usdc *UsdcCaller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "allowance", owner, spender)
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "allowance", owner, spender)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_Usdc *UsdcSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _Usdc.Contract.Allowance(&_Usdc.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_Usdc *UsdcCallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _Usdc.Contract.Allowance(&_Usdc.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_Usdc *UsdcCaller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "balanceOf", account)
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "balanceOf", account)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_Usdc *UsdcSession) BalanceOf(account common.Address) (*big.Int, error) {
 	return _Usdc.Contract.BalanceOf(&_Usdc.CallOpts, account)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_Usdc *UsdcCallerSession) BalanceOf(account common.Address) (*big.Int, error) {
 	return _Usdc.Contract.BalanceOf(&_Usdc.CallOpts, account)
 }
 
 // Blacklister is a free data retrieval call binding the contract method 0xbd102430.
 //
-// Solidity: function blacklister() constant returns(address)
+// Solidity: function blacklister() view returns(address)
 func (_Usdc *UsdcCaller) Blacklister(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "blacklister")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "blacklister")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Blacklister is a free data retrieval call binding the contract method 0xbd102430.
 //
-// Solidity: function blacklister() constant returns(address)
+// Solidity: function blacklister() view returns(address)
 func (_Usdc *UsdcSession) Blacklister() (common.Address, error) {
 	return _Usdc.Contract.Blacklister(&_Usdc.CallOpts)
 }
 
 // Blacklister is a free data retrieval call binding the contract method 0xbd102430.
 //
-// Solidity: function blacklister() constant returns(address)
+// Solidity: function blacklister() view returns(address)
 func (_Usdc *UsdcCallerSession) Blacklister() (common.Address, error) {
 	return _Usdc.Contract.Blacklister(&_Usdc.CallOpts)
 }
 
 // Currency is a free data retrieval call binding the contract method 0xe5a6b10f.
 //
-// Solidity: function currency() constant returns(string)
+// Solidity: function currency() view returns(string)
 func (_Usdc *UsdcCaller) Currency(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "currency")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "currency")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Currency is a free data retrieval call binding the contract method 0xe5a6b10f.
 //
-// Solidity: function currency() constant returns(string)
+// Solidity: function currency() view returns(string)
 func (_Usdc *UsdcSession) Currency() (string, error) {
 	return _Usdc.Contract.Currency(&_Usdc.CallOpts)
 }
 
 // Currency is a free data retrieval call binding the contract method 0xe5a6b10f.
 //
-// Solidity: function currency() constant returns(string)
+// Solidity: function currency() view returns(string)
 func (_Usdc *UsdcCallerSession) Currency() (string, error) {
 	return _Usdc.Contract.Currency(&_Usdc.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_Usdc *UsdcCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_Usdc *UsdcSession) Decimals() (uint8, error) {
 	return _Usdc.Contract.Decimals(&_Usdc.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() view returns(uint8)
 func (_Usdc *UsdcCallerSession) Decimals() (uint8, error) {
 	return _Usdc.Contract.Decimals(&_Usdc.CallOpts)
 }
 
 // IsBlacklisted is a free data retrieval call binding the contract method 0xfe575a87.
 //
-// Solidity: function isBlacklisted(address _account) constant returns(bool)
+// Solidity: function isBlacklisted(address _account) view returns(bool)
 func (_Usdc *UsdcCaller) IsBlacklisted(opts *bind.CallOpts, _account common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "isBlacklisted", _account)
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "isBlacklisted", _account)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsBlacklisted is a free data retrieval call binding the contract method 0xfe575a87.
 //
-// Solidity: function isBlacklisted(address _account) constant returns(bool)
+// Solidity: function isBlacklisted(address _account) view returns(bool)
 func (_Usdc *UsdcSession) IsBlacklisted(_account common.Address) (bool, error) {
 	return _Usdc.Contract.IsBlacklisted(&_Usdc.CallOpts, _account)
 }
 
 // IsBlacklisted is a free data retrieval call binding the contract method 0xfe575a87.
 //
-// Solidity: function isBlacklisted(address _account) constant returns(bool)
+// Solidity: function isBlacklisted(address _account) view returns(bool)
 func (_Usdc *UsdcCallerSession) IsBlacklisted(_account common.Address) (bool, error) {
 	return _Usdc.Contract.IsBlacklisted(&_Usdc.CallOpts, _account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_Usdc *UsdcCaller) IsMinter(opts *bind.CallOpts, account common.Address) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "isMinter", account)
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "isMinter", account)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_Usdc *UsdcSession) IsMinter(account common.Address) (bool, error) {
 	return _Usdc.Contract.IsMinter(&_Usdc.CallOpts, account)
 }
 
 // IsMinter is a free data retrieval call binding the contract method 0xaa271e1a.
 //
-// Solidity: function isMinter(address account) constant returns(bool)
+// Solidity: function isMinter(address account) view returns(bool)
 func (_Usdc *UsdcCallerSession) IsMinter(account common.Address) (bool, error) {
 	return _Usdc.Contract.IsMinter(&_Usdc.CallOpts, account)
 }
 
 // MasterMinter is a free data retrieval call binding the contract method 0x35d99f35.
 //
-// Solidity: function masterMinter() constant returns(address)
+// Solidity: function masterMinter() view returns(address)
 func (_Usdc *UsdcCaller) MasterMinter(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "masterMinter")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "masterMinter")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // MasterMinter is a free data retrieval call binding the contract method 0x35d99f35.
 //
-// Solidity: function masterMinter() constant returns(address)
+// Solidity: function masterMinter() view returns(address)
 func (_Usdc *UsdcSession) MasterMinter() (common.Address, error) {
 	return _Usdc.Contract.MasterMinter(&_Usdc.CallOpts)
 }
 
 // MasterMinter is a free data retrieval call binding the contract method 0x35d99f35.
 //
-// Solidity: function masterMinter() constant returns(address)
+// Solidity: function masterMinter() view returns(address)
 func (_Usdc *UsdcCallerSession) MasterMinter() (common.Address, error) {
 	return _Usdc.Contract.MasterMinter(&_Usdc.CallOpts)
 }
 
 // MinterAllowance is a free data retrieval call binding the contract method 0x8a6db9c3.
 //
-// Solidity: function minterAllowance(address minter) constant returns(uint256)
+// Solidity: function minterAllowance(address minter) view returns(uint256)
 func (_Usdc *UsdcCaller) MinterAllowance(opts *bind.CallOpts, minter common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "minterAllowance", minter)
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "minterAllowance", minter)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // MinterAllowance is a free data retrieval call binding the contract method 0x8a6db9c3.
 //
-// Solidity: function minterAllowance(address minter) constant returns(uint256)
+// Solidity: function minterAllowance(address minter) view returns(uint256)
 func (_Usdc *UsdcSession) MinterAllowance(minter common.Address) (*big.Int, error) {
 	return _Usdc.Contract.MinterAllowance(&_Usdc.CallOpts, minter)
 }
 
 // MinterAllowance is a free data retrieval call binding the contract method 0x8a6db9c3.
 //
-// Solidity: function minterAllowance(address minter) constant returns(uint256)
+// Solidity: function minterAllowance(address minter) view returns(uint256)
 func (_Usdc *UsdcCallerSession) MinterAllowance(minter common.Address) (*big.Int, error) {
 	return _Usdc.Contract.MinterAllowance(&_Usdc.CallOpts, minter)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_Usdc *UsdcCaller) Name(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "name")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "name")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_Usdc *UsdcSession) Name() (string, error) {
 	return _Usdc.Contract.Name(&_Usdc.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() view returns(string)
 func (_Usdc *UsdcCallerSession) Name() (string, error) {
 	return _Usdc.Contract.Name(&_Usdc.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Usdc *UsdcCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Usdc *UsdcSession) Owner() (common.Address, error) {
 	return _Usdc.Contract.Owner(&_Usdc.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Usdc *UsdcCallerSession) Owner() (common.Address, error) {
 	return _Usdc.Contract.Owner(&_Usdc.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Usdc *UsdcCaller) Paused(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "paused")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "paused")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Usdc *UsdcSession) Paused() (bool, error) {
 	return _Usdc.Contract.Paused(&_Usdc.CallOpts)
 }
 
 // Paused is a free data retrieval call binding the contract method 0x5c975abb.
 //
-// Solidity: function paused() constant returns(bool)
+// Solidity: function paused() view returns(bool)
 func (_Usdc *UsdcCallerSession) Paused() (bool, error) {
 	return _Usdc.Contract.Paused(&_Usdc.CallOpts)
 }
 
 // Pauser is a free data retrieval call binding the contract method 0x9fd0506d.
 //
-// Solidity: function pauser() constant returns(address)
+// Solidity: function pauser() view returns(address)
 func (_Usdc *UsdcCaller) Pauser(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "pauser")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "pauser")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Pauser is a free data retrieval call binding the contract method 0x9fd0506d.
 //
-// Solidity: function pauser() constant returns(address)
+// Solidity: function pauser() view returns(address)
 func (_Usdc *UsdcSession) Pauser() (common.Address, error) {
 	return _Usdc.Contract.Pauser(&_Usdc.CallOpts)
 }
 
 // Pauser is a free data retrieval call binding the contract method 0x9fd0506d.
 //
-// Solidity: function pauser() constant returns(address)
+// Solidity: function pauser() view returns(address)
 func (_Usdc *UsdcCallerSession) Pauser() (common.Address, error) {
 	return _Usdc.Contract.Pauser(&_Usdc.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_Usdc *UsdcCaller) Symbol(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "symbol")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "symbol")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_Usdc *UsdcSession) Symbol() (string, error) {
 	return _Usdc.Contract.Symbol(&_Usdc.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() view returns(string)
 func (_Usdc *UsdcCallerSession) Symbol() (string, error) {
 	return _Usdc.Contract.Symbol(&_Usdc.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_Usdc *UsdcCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Usdc.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _Usdc.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_Usdc *UsdcSession) TotalSupply() (*big.Int, error) {
 	return _Usdc.Contract.TotalSupply(&_Usdc.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_Usdc *UsdcCallerSession) TotalSupply() (*big.Int, error) {
 	return _Usdc.Contract.TotalSupply(&_Usdc.CallOpts)
 }
@@ -1065,6 +1139,7 @@ func (_Usdc *UsdcFilterer) ParseApproval(log types.Log) (*UsdcApproval, error) {
 	if err := _Usdc.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1208,6 +1283,7 @@ func (_Usdc *UsdcFilterer) ParseBlacklisted(log types.Log) (*UsdcBlacklisted, er
 	if err := _Usdc.contract.UnpackLog(event, "Blacklisted", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1351,6 +1427,7 @@ func (_Usdc *UsdcFilterer) ParseBlacklisterChanged(log types.Log) (*UsdcBlacklis
 	if err := _Usdc.contract.UnpackLog(event, "BlacklisterChanged", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1495,6 +1572,7 @@ func (_Usdc *UsdcFilterer) ParseBurn(log types.Log) (*UsdcBurn, error) {
 	if err := _Usdc.contract.UnpackLog(event, "Burn", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1638,6 +1716,7 @@ func (_Usdc *UsdcFilterer) ParseMasterMinterChanged(log types.Log) (*UsdcMasterM
 	if err := _Usdc.contract.UnpackLog(event, "MasterMinterChanged", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1791,6 +1870,7 @@ func (_Usdc *UsdcFilterer) ParseMint(log types.Log) (*UsdcMint, error) {
 	if err := _Usdc.contract.UnpackLog(event, "Mint", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1935,6 +2015,7 @@ func (_Usdc *UsdcFilterer) ParseMinterConfigured(log types.Log) (*UsdcMinterConf
 	if err := _Usdc.contract.UnpackLog(event, "MinterConfigured", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2078,6 +2159,7 @@ func (_Usdc *UsdcFilterer) ParseMinterRemoved(log types.Log) (*UsdcMinterRemoved
 	if err := _Usdc.contract.UnpackLog(event, "MinterRemoved", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2212,6 +2294,7 @@ func (_Usdc *UsdcFilterer) ParseOwnershipTransferred(log types.Log) (*UsdcOwners
 	if err := _Usdc.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2344,6 +2427,7 @@ func (_Usdc *UsdcFilterer) ParsePause(log types.Log) (*UsdcPause, error) {
 	if err := _Usdc.contract.UnpackLog(event, "Pause", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2487,6 +2571,7 @@ func (_Usdc *UsdcFilterer) ParsePauserChanged(log types.Log) (*UsdcPauserChanged
 	if err := _Usdc.contract.UnpackLog(event, "PauserChanged", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2640,6 +2725,7 @@ func (_Usdc *UsdcFilterer) ParseTransfer(log types.Log) (*UsdcTransfer, error) {
 	if err := _Usdc.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2783,6 +2869,7 @@ func (_Usdc *UsdcFilterer) ParseUnBlacklisted(log types.Log) (*UsdcUnBlacklisted
 	if err := _Usdc.contract.UnpackLog(event, "UnBlacklisted", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -2915,5 +3002,6 @@ func (_Usdc *UsdcFilterer) ParseUnpause(log types.Log) (*UsdcUnpause, error) {
 	if err := _Usdc.contract.UnpackLog(event, "Unpause", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

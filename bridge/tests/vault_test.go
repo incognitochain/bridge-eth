@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"testing"
 	"strings"
+	"testing"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
@@ -17,7 +18,6 @@ import (
 	"github.com/incognitochain/bridge-eth/erc20"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 type VaultTestSuite struct {
@@ -53,10 +53,10 @@ func (s *VaultTestSuite) SetupTest() {
 	fmt.Println("vault delegator contract deployment gas: ", deployedTx.Gas())
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", preVaultAddress)	
-	vaultProxyAddr, deployedTx, _, e := vaultproxy.DeployVaultproxy(s.auth, s.sim, vaultAddr, admin, incognitoProxyAddress, input)
+	input, _ := vaultAbi.Pack("initialize", preVaultAddress)
+	vaultProxyAddr, deployedTx, _, e := vaultproxy.DeployTransparentUpgradeableProxy(s.auth, s.sim, vaultAddr, admin, incognitoProxyAddress, input)
 	fmt.Println("vault proxy contract deployment gas: ", deployedTx.Gas())
-	
+
 	s.vaultAddress = vaultProxyAddr
 	s.Nil(e)
 	s.sim.Commit()

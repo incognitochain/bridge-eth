@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"math/big"
 	"strconv"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -15,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/incognitochain/bridge-eth/rpccaller"
-
 )
 
 type Receipt struct {
@@ -24,6 +24,20 @@ type Receipt struct {
 
 type NormalResult struct {
 	Result interface{} `json:"result"`
+}
+
+func encodeForDerive(list types.DerivableList, i int, buf *bytes.Buffer) []byte {
+	buf.Reset()
+	list.EncodeIndex(i, buf)
+	// It's really unfortunate that we need to do perform this copy.
+	// StackTrie holds onto the values until Hash is called, so the values
+	// written to it must not alias.
+	return common.CopyBytes(buf.Bytes())
+}
+
+// deriveBufferPool holds temporary encoder buffers for DeriveSha and TX encoding.
+var encodeBufferPool = sync.Pool{
+	New: func() interface{} { return new(bytes.Buffer) },
 }
 
 // getTransactionByHashToInterface returns the transaction as a map[string]interface{} type
@@ -100,8 +114,8 @@ func getETHDepositProof(
 		fmt.Println("fuck fuck : ", err)
 		return nil, "", 0, nil, err
 	}
-	blockHash := txContent["blockHash"].(string)
-	if err != nil {
+	blockHash, success := txContent["blockHash"].(string)
+	if !success {
 		return nil, "", 0, nil, err
 	}
 	txIndexStr, success := txContent["transactionIndex"].(string)
@@ -137,18 +151,39 @@ func getETHDepositProof(
 	// Constructing the receipt trie (source: go-ethereum/core/types/derive_sha.go)
 	keybuf := new(bytes.Buffer)
 	receiptTrie := new(trie.Trie)
-	for i, tx := range siblingTxs {
+	receipts := make([]*types.Receipt, 0)
+	for _, tx := range siblingTxs {
 		siblingReceipt, err := getETHTransactionReceipt(url, common.HexToHash(tx.(string)))
 		if err != nil {
 			return nil, "", 0, nil, err
 		}
-		keybuf.Reset()
-		rlp.Encode(keybuf, uint(i))
-		encodedReceipt, err := rlp.EncodeToBytes(siblingReceipt)
-		if err != nil {
-			return nil, "", 0, nil, err
-		}
-		receiptTrie.Update(keybuf.Bytes(), encodedReceipt)
+		receipts = append(receipts, siblingReceipt)
+	}
+
+	receiptList := types.Receipts(receipts)
+	receiptTrie.Reset()
+
+	valueBuf := encodeBufferPool.Get().(*bytes.Buffer)
+	defer encodeBufferPool.Put(valueBuf)
+
+	// StackTrie requires values to be inserted in increasing hash order, which is not the
+	// order that `list` provides hashes in. This insertion sequence ensures that the
+	// order is correct.
+	var indexBuf []byte
+	for i := 1; i < receiptList.Len() && i <= 0x7f; i++ {
+		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
+		value := encodeForDerive(receiptList, i, valueBuf)
+		receiptTrie.Update(indexBuf, value)
+	}
+	if receiptList.Len() > 0 {
+		indexBuf = rlp.AppendUint64(indexBuf[:0], 0)
+		value := encodeForDerive(receiptList, 0, valueBuf)
+		receiptTrie.Update(indexBuf, value)
+	}
+	for i := 0x80; i < receiptList.Len(); i++ {
+		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
+		value := encodeForDerive(receiptList, i, valueBuf)
+		receiptTrie.Update(indexBuf, value)
 	}
 
 	// Constructing the proof for the current receipt (source: go-ethereum/trie/proof.go)
@@ -166,6 +201,5 @@ func getETHDepositProof(
 		str := base64.StdEncoding.EncodeToString(node)
 		encNodeList = append(encNodeList, str)
 	}
-
 	return blockNumber, blockHash, uint(txIndex), encNodeList, nil
 }
