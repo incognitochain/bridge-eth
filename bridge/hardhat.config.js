@@ -143,6 +143,7 @@ const testnetTokenList = [
 
 const mainnetForkNetwork = {
     chainId: 31337,
+    accounts: [deployerPrivateKey, vaultAdminPrivateKey],
     // can use mainnet keys when present (if so, remove previousVaultAdmin)
     // accounts: [deployerPrivateKey, vaultAdminPrivateKey],
     // reference parameters to use when starting Incognito nodes
@@ -169,10 +170,17 @@ const mainnetForkNetwork = {
 
 const networks = {
     hardhat: {
-        accounts: {
-            mnemonic: devMnemonic,
-            count: 8
-        },
+        accounts: [{
+                privateKey: deployerPrivateKey,
+                balance: '10000000000000000000'
+            }, {
+                privateKey : vaultAdminPrivateKey,
+                balance: '10000000000000000000'
+            }],
+            // {
+            //     mnemonic: mnemonic,
+            //     count: 8
+            // }
         forking: {
             url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
             blockNumber: 12310000,
@@ -253,7 +261,8 @@ module.exports = {
             default: 0
         },
         vaultAdmin: {
-            default: 1
+            // can fallback to deployer key
+            default: vaultAdminPrivateKey==deployerPrivateKey ? 0 : 1
         },
         ethUser: {
             default: 2

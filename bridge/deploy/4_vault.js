@@ -9,7 +9,7 @@ module.exports = async({
 }) => {
     const { deploy, log } = deployments;
     let { deployer, vaultAdmin , previousVaultAdmin: prevVaultAdmin } = await getNamedAccounts();
-
+    log(`Actors ${deployer}, ${vaultAdmin}`);
     const getAdmin = async (pVault) => {
         return await pVault.admin();
     }
@@ -131,9 +131,11 @@ module.exports = async({
             rc = await tx.wait();
             log(`Gas used: ${rc.gasUsed.toString()}`);
             const theNewVault = await getInstance('Vault', 'TransparentUpgradeableProxy');
-            let deposits = await Promise.all(tokens.map(_tokenAddr => theNewVault.totalDepositedToSCAmount(_tokenAddr)));
+            const dummySigner = new ethers.Wallet('0x0000000000000000000000000000000000000055000000000000000000000000', ethers.provider);
+            // dummySigner.connect(ethers.provider);
+            let deposits = await Promise.all(tokens.map(_tokenAddr => theNewVault.connect(dummySigner).totalDepositedToSCAmount(_tokenAddr)));
             deposits = deposits.map(d => d.toString());
-            let balances = await Promise.all(tokens.map(_tokenAddr => theNewVault.balanceOf(_tokenAddr)));
+            let balances = await Promise.all(tokens.map(_tokenAddr => theNewVault.connect(dummySigner).balanceOf(_tokenAddr)));
             balances = balances.map(b => b.toString());
 
             const compare = (arr1, arr2, keys) => {

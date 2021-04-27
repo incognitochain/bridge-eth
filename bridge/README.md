@@ -2,7 +2,7 @@ ETH bridge contracts
 
 # Live deployment
 ```bash
-npx hardhat deploy --network <network>
+RESTORE=4.5 npx hardhat deploy --network <network> --tags vault >> deploy-out.log
 # network can be localhost, kovan or mainnet
 ```
 
