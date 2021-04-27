@@ -112,6 +112,11 @@ let getImplementation = async (contractAddress) => {
     return BN.from(result);
 }
 
+let getCodeSlot = async (contractAddress, slot) => {
+    const result = await ethers.provider.getStorageAt(contractAddress, BN.from(slot));
+    return BN.from(result);
+}
+
 let getReqWithdrawSignMessage = async (vaultHelper, token, timestamp, amount, incAddress) => {
     const psd = {prefix: 1, token: token, timestamp: timestamp, amount: amount};
     let data = vaultHelper.interface.encodeFunctionData('_buildSignRequestWithdraw', [psd, incAddress]);
@@ -183,6 +188,7 @@ module.exports = {
     fromIncDecimals,
     getInstance,
     getImplementation,
+    getCodeSlot,
     generateTestIncTokenID,
     getBridgedIncTokenInfo,
     getReqWithdrawSignMessage,
