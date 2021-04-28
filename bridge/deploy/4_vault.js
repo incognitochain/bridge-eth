@@ -35,7 +35,8 @@ module.exports = async({
     const ip = await deployments.get('IncognitoProxy');
 
     const needRestore = Boolean(process.env.RESTORE);
-    const restoreAmount = ethers.utils.parseUnits(process.env.RESTORE, 'ether');
+    let restoreAmount = 0;
+    if (process.env.RESTORE) restoreAmount = ethers.utils.parseUnits(process.env.RESTORE, 'ether');
     log(`Amount to restore: ${restoreAmount.toString()}`);
     let vaultResult = await deploy('Vault', {
         from: deployer,
