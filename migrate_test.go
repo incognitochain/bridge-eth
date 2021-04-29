@@ -135,7 +135,7 @@ func TestDeployKBNTrade(t *testing.T) {
 func TestGetVaultAdmin(t *testing.T) {
 	network := "mainnet"
 	fmt.Printf("Connecting to network %s\n", network)
-	client, err := ethclient.Dial(fmt.Sprintf("https://%s.infura.io/v3/29fead42346b4bfa88dd5fd7e56b6406", network))
+	client, err := ethclient.Dial(fmt.Sprintf("https://eth-%s.alchemyapi.io/v2/2VhHLkA5jZ-RZlUXBCG_zpVnPWHPWl6E", network))
 	if err != nil {
 		t.Fatal(err)
 	}
