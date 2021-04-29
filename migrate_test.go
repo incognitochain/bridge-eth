@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -92,7 +94,7 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", common.Address{})	
+	input, _ := vaultAbi.Pack("initialize", common.Address{})
 
 	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, vaultDelegatorAddr, admin, incAddr, input)
 	if err != nil {
@@ -128,6 +130,23 @@ func TestDeployKBNTrade(t *testing.T) {
 	}
 	fmt.Println("deployed kbnTrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
+}
+
+func TestGetVaultAdmin(t *testing.T) {
+	network := "mainnet"
+	fmt.Printf("Connecting to network %s\n", network)
+	client, err := ethclient.Dial(fmt.Sprintf("https://%s.infura.io/v3/29fead42346b4bfa88dd5fd7e56b6406", network))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	fmt.Printf("New vault address: %+v \n", VaultAddress)
+	admin, err := client.StorageAt(context.Background(), common.HexToAddress(VaultAddress), common.HexToHash("0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103"), big.NewInt(12333634))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("Admin address: %+v \n", common.BytesToAddress(admin).String())
 }
 
 // func TestPauseVault(t *testing.T) {
