@@ -81,6 +81,8 @@ contract Vault {
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
 
+    string private constant MANUAL_RECOVERY_ADDRESS = "12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeTswV5f";
+
     /**
      * @dev Storage variables for Vault
      * This section is APPEND-ONLY, in order to preserve upgradeability
@@ -374,8 +376,13 @@ contract Vault {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-          (bool success, ) =  data.to.call{value: data.amount}("");
-          require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+            (bool success, ) =  data.to.call{value: data.amount}("");
+            if (!success) {
+                emit Deposit(data.token, MANUAL_RECOVERY_ADDRESS, data.amount);
+                return;
+            }
+            
+            // require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
