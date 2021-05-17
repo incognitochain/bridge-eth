@@ -81,6 +81,8 @@ contract Vault {
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
 
+    // string private constant MANUAL_RECOVERY_ADDRESS = "12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeTswV5f";
+
     /**
      * @dev Storage variables for Vault
      * This section is APPEND-ONLY, in order to preserve upgradeability
@@ -95,6 +97,12 @@ contract Vault {
     Withdrawable public prevVault;
     bool public notEntered = true;
     bool public isInitialized = false;
+
+    /**
+    * @dev Added in Storage Layout version : 2.0
+    */
+    uint16 public storageLayoutVersion;
+    string public recoveryAddress;
 
     /**
     * @dev END Storage variables
@@ -132,7 +140,8 @@ contract Vault {
         PREVAULT_NOT_PAUSED,
         SAFEMATH_EXCEPTION,
         ALREADY_INITIALIZED,
-        INVALID_SIGNATURE
+        INVALID_SIGNATURE,
+        ALREADY_UPGRADED
     }
 
     event Deposit(address token, string incognitoAddress, uint amount);
@@ -180,6 +189,18 @@ contract Vault {
         prevVault = Withdrawable(_prevVault);
         isInitialized = true;
         notEntered = true;
+    }
+
+    /**
+     * @dev "initializer" for storage layout version 2
+     * @param _recoveryAddress: manual recovery address (an Incognito address) to use when an unshield is reverted
+     */
+    function upgradeVaultStorageLayout(string calldata _recoveryAddress) external {
+        // storageLayoutVersion is a new variable introduced in this storage layout version, then set to 2 to match the storage layout version itself
+        require(storageLayoutVersion == 0, errorToString(Errors.ALREADY_UPGRADED));
+        // make sure the version increase can only happen once
+        storageLayoutVersion = 2;
+        recoveryAddress = _recoveryAddress;
     }
 
     /**
@@ -374,8 +395,13 @@ contract Vault {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-          (bool success, ) =  data.to.call{value: data.amount}("");
-          require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+            (bool success, ) =  data.to.call{value: data.amount}("");
+            if (!success) {
+                emit Deposit(data.token, recoveryAddress, data.amount);
+                return;
+            }
+            
+            // require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
