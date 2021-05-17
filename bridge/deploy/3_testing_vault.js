@@ -7,7 +7,7 @@ module.exports = async({
     getUnnamedAccounts,
 }) => {
     const { deploy, log, execute, rawTx } = deployments;
-    const { deployer, tokenUser } = await getNamedAccounts();
+    const { deployer, tokenUser, vaultAdmin , previousVaultAdmin: prevVaultAdmin } = await getNamedAccounts();
     const addresses = hre.networkCfg().deployed || {};
 
     let res = await deploy('TestingExchange', {from: deployer, args: []});
@@ -28,8 +28,30 @@ module.exports = async({
         await execute(tokenName, {from: deployer}, 'mint', testingExchange, ethers.utils.parseUnits('1', 'ether'));
     })
     log('Deployed some testing contracts for localhost network');
+
+    const ip = await deployments.get('IncognitoProxy');
+    // deploy previous implementation of Vault to local network
+    let vaultResult = await deploy('PreviousVersionVault', {
+        from: deployer,
+        args: [],
+        skipIfAlreadyDeployed: true,
+        log: true
+    });
+
+    const vaultFactory = await ethers.getContractFactory('Vault');
+    const vault = await vaultFactory.attach(vaultResult.address);
+    const initializeData = vaultFactory.interface.encodeFunctionData('initialize', ['0x0000000000000000000000000000000000000000']);
+    log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
+    let proxyResult = await deploy('TransparentUpgradeableProxy', {
+        from: deployer,
+        args: [vault.address, vaultAdmin, ip.address, initializeData],
+        skipIfAlreadyDeployed: true,
+        log: true,
+    });
+    log('Deployed previous vault implementation for localhost network');
 }
 
 module.exports.tags = ['1', 'testing', 'local'];
+module.exports.dependencies = ['incognito-proxy'];
 // always skip for public networks
 module.exports.skip = env => Promise.resolve(env.network.name != 'localhost' || process.env.FORK);

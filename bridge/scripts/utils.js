@@ -42,7 +42,7 @@ let confirm = async (txp, target = 2, network = 'development') => {
 
 let getDecimals = (_addr) =>
     // amounts of ETH will not have their decimals changed when shielded to Incognito, so we pretend ETH's decimal is 9 here
-    (!_addr || _addr==tokenAddresses.ETH) ? Promise.resolve(BN.from(9)) : ethers.getContractAt('contracts/IERC20.sol:IERC20', _addr).then(_c => _c.decimals())
+    (!_addr || _addr==tokenAddresses.ETH) ? Promise.resolve(BN.from(18)) : ethers.getContractAt('contracts/IERC20.sol:IERC20', _addr).then(_c => _c.decimals())
 
 let toIncDecimals = (_amount, _addr) => getDecimals(_addr)
     .then(_d => {
@@ -104,6 +104,14 @@ let getBridgedIncTokenInfo = (dict, tokenName) => {
         return Object.assign(dict.tokens[tokenName], {inc, sender: dict.tokenGuy});
     }
     return {address: tokenAddresses.ETH, inc: tokenAddresses.pETH, sender: dict.ethGuy};
+}
+
+let getEmittedDepositNumber = async (dict, tokenName, amountForContract) => {
+    if (dict.tokens && dict.tokens[tokenName]) {
+        const addr = dict.tokens[tokenName].address;
+        return await toIncDecimals(amountForContract, addr);
+    }
+    return amountForContract;
 }
 
 let getImplementation = async (contractAddress) => {
@@ -191,6 +199,7 @@ module.exports = {
     getCodeSlot,
     generateTestIncTokenID,
     getBridgedIncTokenInfo,
+    getEmittedDepositNumber,
     getReqWithdrawSignMessage,
     getExecuteSignMessage,
     prepareExternalCallByVault,

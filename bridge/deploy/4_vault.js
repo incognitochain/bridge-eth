@@ -9,7 +9,6 @@ module.exports = async({
 }) => {
     const { deploy, log } = deployments;
     let { deployer, vaultAdmin , previousVaultAdmin: prevVaultAdmin } = await getNamedAccounts();
-    log(`Actors ${deployer}, ${vaultAdmin}`);
     const getAdmin = async (pVault) => {
         return await pVault.admin();
     }
@@ -54,7 +53,7 @@ module.exports = async({
         try {
             isPaused = await previousVault.paused();
         } catch {}
-        needMoving = !isPaused;
+        // needMoving = !isPaused;
         // when in fork environment, simulate the real prev admin yielding permission
         if (process.env.FORK) {
             log(`FORK-ENV: "Borrowing" Admin permission and money`);
@@ -83,26 +82,29 @@ module.exports = async({
         log('No previous vault on this network. Skip upgrade...');
         previousVault = {address: '0x0000000000000000000000000000000000000000'};
     }
-    const initializeData = vaultFactory.interface.encodeFunctionData('initialize', [previousVault.address]);
-    log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
-    let proxyResult = await deploy('TransparentUpgradeableProxy', {
-        from: deployer,
-        args: [vault.address, vaultAdmin, ip.address, initializeData],
-        skipIfAlreadyDeployed: true,
-        log: true,
-    });
+
+    const proxy = await ethers.getContract('TransparentUpgradeableProxy');
+    const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', ['12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeTswV5f']);
+    log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin, upgradeData);
+    await proxy.connect(newVaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
+    // let proxyResult = await deploy('TransparentUpgradeableProxy', {
+    //     from: deployer,
+    //     args: [vault.address, vaultAdmin, ip.address, initializeData],
+    //     skipIfAlreadyDeployed: true,
+    //     log: true,
+    // });
 
     let restoringVaultResult = null, restoringVault;
     if (needRestore) {
         restoringVaultResult = await deploy('RestoringVault', {
             from: deployer,
-            args: [restoreAmount, proxyResult.address],
+            args: [restoreAmount, proxy.address],
             skipIfAlreadyDeployed: true,
             log: true
         });
         restoringVault = await ethers.getContract('RestoringVault');
     }
-    log(`DEV : Incognito nodes should use ${proxyResult.address} as EthVaultContract`);
+    log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);
     if (needMoving) {
         let tokenList = hre.networkCfg().tokenList;
         const migrateTask = async (src, dstAddress, tokens) => {
@@ -144,7 +146,7 @@ module.exports = async({
                 keys.forEach((k, i) => obj[k] = [arr1[i], arr2[i]]);
                 return obj;
             }
-            console.log(`Migrated vault ${src.address} to ${dstAddress}, then ${proxyResult.address} with tokens ${tokens}`);
+            console.log(`Migrated vault ${src.address} to ${dstAddress}, then ${proxy.address} with tokens ${tokens}`);
             console.log({"Balance Comparison" : compare(balancesBeforeMigrate, balances, tokens)});
             console.log({"Deposit Comparison" : compare(depositsBeforeMigrate, deposits, tokens)});
         }
@@ -153,14 +155,14 @@ module.exports = async({
             console.log('Performing restoration of funds');
             const tokensToRestore = [tokenList[0]];
             tokenList = tokenList.slice(1);
-            await migrateTask(previousVault, proxyResult.address, tokenList);
+            await migrateTask(previousVault, proxy.address, tokenList);
             await migrateTask(previousVault, restoringVault.address, tokensToRestore);        
         } else {
-            await migrateTask(previousVault, proxyResult.address, tokenList);
+            await migrateTask(previousVault, proxy.address, tokenList);
         }      
     }
     if (borrowedPermissionFrom) {
-        let tx = await confirm(previousVault.connect(prevVaultAdminSigner).migrate(proxyResult.address));
+        let tx = await confirm(previousVault.connect(prevVaultAdminSigner).migrate(proxy.address));
         let rc = await tx.wait();
         log(`Gas used: ${rc.gasUsed.toString()}`);
         log(`Yielding Admin role of both vaults to ${borrowedPermissionFrom}`);
