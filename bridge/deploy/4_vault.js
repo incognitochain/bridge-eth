@@ -49,7 +49,7 @@ module.exports = async({
     }
 
     
-    const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress || '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeTswV5f']);
+    const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress]);
     log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin, upgradeData);
     await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
     log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);

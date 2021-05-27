@@ -10,7 +10,7 @@
         "esm": "^3.2.25",
         "ethereum-waffle": "^3.2.2",
         "ethers": "^5.0.26",
-        "incognito": "file:../../incognito-chain-web-js",
+        "incognito": "github:incognitochain/incognito-chain-web-js#feature/verifier",
         "merkle-patricia-tree": "^4.1.0",
         "util": "^0.12.3"
     },
