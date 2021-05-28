@@ -18,9 +18,13 @@ task("list-contracts", "Exports & prints the list of deployed contracts")
         addr = await uni.uniswapV2();
         console.log(`UniswapV2Trade is using UniswapRouter ${ethers.utils.hexlify(addr)}`);
 
-        // incognitoProxy slot
+        // get data from unstructured storage
         addr = await getCodeSlot(result.TransparentUpgradeableProxy, '0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2')
         console.log(`Using IncognitoProxy instance at ${ethers.utils.hexlify(addr)}`);
+        addr = await getCodeSlot(result.TransparentUpgradeableProxy, '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103')
+        console.log(`Current Vault Admin : ${ethers.utils.hexlify(addr)}`);
+        addr = await getCodeSlot(result.TransparentUpgradeableProxy, '0x7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f8')
+        console.log(`Next Vault Admin : ${ethers.utils.hexlify(addr)}`);
     });
 
 task("unshield-status", "Asks if the contract has processed an unshield")

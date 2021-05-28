@@ -7,7 +7,7 @@ module.exports = async({
     getUnnamedAccounts,
 }) => {
     const { deploy, log, execute, rawTx } = deployments;
-    const { deployer, tokenUser, vaultAdmin , previousVaultAdmin: prevVaultAdmin } = await getNamedAccounts();
+    const { deployer, tokenUser, vaultAdmin } = await getNamedAccounts();
     const addresses = hre.networkCfg().deployed || {};
 
     const ip = await deployments.get('IncognitoProxy');
