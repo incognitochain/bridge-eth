@@ -65,7 +65,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	// Genesis committee
 	// for testnet & local env
 	beaconComm, bridgeComm, err := convertCommittees(
-		testnetBeaconCommitteePubKeys, testnetBridgeCommitteePubKeys,
+		mainnetBeaconCommitteePubKeys, mainnetBridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
