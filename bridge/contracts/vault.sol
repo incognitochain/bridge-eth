@@ -9,30 +9,30 @@ import "./IERC20.sol";
  * Math operations with safety checks
  */
 library SafeMath {
-  string private constant ERROR_MESSAGE = "SafeMath exception";
-  function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
-    uint256 c = a * b;
-    require(a == 0 || c / a == b, ERROR_MESSAGE);
-    return c;
-  }
+    string private constant ERROR_MESSAGE = "SafeMath exception";
+    function safeMul(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a * b;
+        require(a == 0 || c / a == b, ERROR_MESSAGE);
+        return c;
+    }
 
-  function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b > 0, ERROR_MESSAGE);
-    uint256 c = a / b;
-    require(a == b * c + a % b, ERROR_MESSAGE);
-    return c;
-  }
+    function safeDiv(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b > 0, ERROR_MESSAGE);
+        uint256 c = a / b;
+        require(a == b * c + a % b, ERROR_MESSAGE);
+        return c;
+    }
 
-  function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
-    require(b <= a, ERROR_MESSAGE);
-    return a - b;
-  }
+    function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b <= a, ERROR_MESSAGE);
+        return a - b;
+    }
 
-  function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
-    uint256 c = a + b;
-    require(c>=a && c>=b, ERROR_MESSAGE);
-    return c;
-  }
+    function safeAdd(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c>=a && c>=b, ERROR_MESSAGE);
+        return c;
+    }
 }
 
 
@@ -143,10 +143,10 @@ contract Vault {
     /**
      * modifier for contract version
      */
-     modifier onlyPreVault(){
+    modifier onlyPreVault(){
         require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), errorToString(Errors.ONLY_PREVAULT));
         _;
-     }
+    }
 
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -262,7 +262,7 @@ contract Vault {
         uint amount;
         bytes32 itx;
         assembly {
-            // skip first 0x20 bytes (stored length of inst)
+        // skip first 0x20 bytes (stored length of inst)
             token := mload(add(inst, 0x22)) // [3:34]
             to := mload(add(inst, 0x42)) // [34:66]
             amount := mload(add(inst, 0x62)) // [66:98]
@@ -298,18 +298,18 @@ contract Vault {
 
         // Verify instruction on beacon
         require(Incognito(_incognito()).instructionApproved(
-            true, // Only check instruction on beacon
-            beaconInstHash,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        ), errorToString(Errors.INVALID_DATA));
+                true, // Only check instruction on beacon
+                beaconInstHash,
+                heights,
+                instPaths,
+                instPathIsLefts,
+                instRoots,
+                blkData,
+                sigIdxs,
+                sigVs,
+                sigRs,
+                sigSs
+            ), errorToString(Errors.INVALID_DATA));
     }
 
     /**
@@ -342,7 +342,7 @@ contract Vault {
     ) public nonReentrant {
         require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
         BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 241 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
+        require(data.meta == 253 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
 
         // Not withdrawed
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
@@ -374,78 +374,13 @@ contract Vault {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-          (bool success, ) =  data.to.call{value: data.amount}("");
-          require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+            (bool success, ) =  data.to.call{value: data.amount}("");
+            require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         }
         emit Withdraw(data.token, data.to, data.amount);
-    }
-
-    /**
-     * @dev Burnt Proof is submited to store burnt amount of p-token/p-ETH and receiver's address
-     * Receiver then can call withdrawRequest to withdraw these token to he/she incognito address.
-     * @notice This function takes a burn instruction on Incognito Chain, checks
-     * for its validity and returns the token back to ETH chain
-     * @notice This only works when the contract is not Paused
-     * @param inst: the decoded instruction as a list of bytes
-     * @param heights: the blocks containing the instruction
-     * @param instPaths: merkle path of the instruction
-     * @param instPathIsLefts: whether each node on the path is the left or right child
-     * @param instRoots: root of the merkle tree contains all instructions
-     * @param blkData: merkle has of the block body
-     * @param sigIdxs: indices of the validators who signed this block
-     * @param sigVs: part of the signatures of the validators
-     * @param sigRs: part of the signatures of the validators
-     * @param sigSs: part of the signatures of the validators
-     */
-    function submitBurnProof(
-        bytes memory inst,
-        uint heights,
-        bytes32[] memory instPaths,
-        bool[] memory instPathIsLefts,
-        bytes32 instRoots,
-        bytes32 blkData,
-        uint[] memory sigIdxs,
-        uint8[] memory sigVs,
-        bytes32[] memory sigRs,
-        bytes32[] memory sigSs
-    ) public nonReentrant {
-        require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
-        BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 243 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
-
-        // Not withdrawed
-        require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
-        withdrawed[data.itx] = true;
-
-        // Check if balance is enough
-        if (data.token == ETH_TOKEN) {
-            require(address(this).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
-        } else {
-            uint8 decimals = getDecimals(data.token);
-            if (decimals > 9) {
-                data.amount = data.amount.safeMul(10 ** (uint(decimals) - 9));
-            }
-            require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
-        }
-
-        verifyInst(
-            inst,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        );
-
-        withdrawRequests[data.to][data.token] = withdrawRequests[data.to][data.token].safeAdd(data.amount);
-        totalDepositedToSCAmount[data.token] = totalDepositedToSCAmount[data.token].safeAdd(data.amount);
     }
 
     /**
@@ -493,167 +428,6 @@ contract Vault {
     }
 
     /**
-     * @dev User requests withdraw token contains in withdrawRequests.
-     * Deposit event will be emitted to let incognito recognize and mint new p-tokens for the user.
-     * @param incognitoAddress: incognito's address that will receive minted p-tokens.
-     * @param token: ethereum's token address (eg., ETH, DAI, ...)
-     * @param amount: amount of the token in ethereum's denomination
-     * @param signData: signature of an unique data that is signed by an account which is generated from user's incognito privkey
-     * @param timestamp: unique data generated from client (timestamp for example)
-     */
-    function requestWithdraw(
-        string calldata incognitoAddress,
-        address token,
-        uint amount,
-        bytes calldata signData,
-        bytes calldata timestamp
-    ) external nonReentrant {
-        // verify owner signs data
-        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
-
-        // migrate from preVault
-        migrateBalance(verifier, token);
-
-        require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
-        withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
-        totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
-
-        // convert denomination from ethereum's to incognito's (pcoin)
-        uint emitAmount = amount;
-        if (token != ETH_TOKEN) {
-            uint8 decimals = getDecimals(token);
-            if (decimals > 9) {
-                emitAmount = amount / (10 ** (uint(decimals) - 9));
-            }
-        }
-
-        emit Deposit(token, incognitoAddress, emitAmount);
-    }
-
-    /**
-     * @dev execute is a general function that plays a role as proxy to interact to other smart contracts.
-     * @param token: ethereum's token address (eg., ETH, DAI, ...)
-     * @param amount: amount of the token in ethereum's denomination
-     * @param recipientToken: received token address.
-     * @param exchangeAddress: address of targeting smart contract that actually executes the desired logics like trade, invest, borrow and so on.
-     * @param callData: encoded with signature and params of function from targeting smart contract.
-     * @param timestamp: unique data generated from client (timestamp for example)
-     * @param signData: signature of an unique data that is signed by an account which is generated from user's incognito privkey
-     */
-    function execute(
-        address token,
-        uint amount,
-        address recipientToken,
-        address exchangeAddress,
-        bytes calldata callData,
-        bytes calldata timestamp,
-        bytes calldata signData
-    ) external payable nonReentrant {
-        //verify ower signs data from input
-        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.EXECUTE_SIGNATURE, token, timestamp, amount), recipientToken, exchangeAddress, callData), signData);
-
-        // migrate from preVault
-        migrateBalance(verifier, token);
-        require(withdrawRequests[verifier][token] >= amount, errorToString(Errors.WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH));
-
-        // update balance of verifier
-        totalDepositedToSCAmount[token] = totalDepositedToSCAmount[token].safeSub(amount);
-        withdrawRequests[verifier][token] = withdrawRequests[verifier][token].safeSub(amount);
-
-        // define number of eth spent for forwarder.
-        uint ethAmount = msg.value;
-        if (token == ETH_TOKEN) {
-            ethAmount = ethAmount.safeAdd(amount);
-        } else {
-            // transfer token to exchangeAddress.
-            require(IERC20(token).balanceOf(address(this)) >= amount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-            IERC20(token).transfer(exchangeAddress, amount);
-            require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-        }
-        uint returnedAmount = callExtFunc(recipientToken, ethAmount, callData, exchangeAddress);
-
-        // update withdrawRequests
-        withdrawRequests[verifier][recipientToken] = withdrawRequests[verifier][recipientToken].safeAdd(returnedAmount);
-        totalDepositedToSCAmount[recipientToken] = totalDepositedToSCAmount[recipientToken].safeAdd(returnedAmount);
-    }
-
-    /**
-     * @dev single trade
-     */
-    function callExtFunc(address recipientToken, uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (uint) {
-         // get balance of recipient token before trade to compare after trade.
-        uint balanceBeforeTrade = balanceOf(recipientToken);
-        if (recipientToken == ETH_TOKEN) {
-            balanceBeforeTrade = balanceBeforeTrade.safeSub(msg.value);
-        }
-        require(address(this).balance >= ethAmount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
-        require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-
-        (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
-        require(returnedTokenAddress == recipientToken && balanceOf(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
-
-        return returnedAmount;
-    }
-
-    /**
-     * @dev verify sign data
-     */
-     function verifySignData(bytes memory data, bytes memory signData) internal returns(address){
-        bytes32 hash = keccak256(data);
-        require(!isSigDataUsed(hash), errorToString(Errors.ALREADY_USED));
-        address verifier = sigToAddress(signData, hash);
-        // reject when verifier equals zero
-        require(verifier != address(0x0), errorToString(Errors.INVALID_SIGNATURE));
-        // mark data hash of sig as used
-        sigDataUsed[hash] = true;
-
-        return verifier;
-     }
-
-    /**
-      * @dev migrate balance from previous vault
-      * Note: uncomment for next version
-      */
-    function migrateBalance(address owner, address token) internal {
-        if (address(prevVault) != address(0x0) && !migration[owner][token]) {
-            withdrawRequests[owner][token] = withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
-  	        migration[owner][token] = true;
-  	   }
-    }
-
-    /**
-     * @dev Get the amount of specific coin for specific wallet
-     */
-    function getDepositedBalance(
-        address token,
-        address owner
-    ) public view returns (uint) {
-        if (address(prevVault) != address(0x0) && !migration[owner][token]) {
- 	        return withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
- 	    }
-        return withdrawRequests[owner][token];
-    }
-
-    /**
-     * @dev Move total number of assets to newVault
-     * @notice This only works when the preVault is Paused
-     * @notice This can only be called by preVault
-     * @param assets: address of the ERC20 tokens to move, 0x0 for ETH
-     * @param amounts: total number of the ERC20 tokens to move, 0x0 for ETH
-     */
-    function updateAssets(address[] calldata assets, uint[] calldata amounts) external onlyPreVault returns(bool) {
-        require(assets.length == amounts.length,  errorToString(Errors.NOT_EQUAL));
-        require(Withdrawable(prevVault).paused(), errorToString(Errors.PREVAULT_NOT_PAUSED));
-        for (uint i = 0; i < assets.length; i++) {
-            totalDepositedToSCAmount[assets[i]] = totalDepositedToSCAmount[assets[i]].safeAdd(amounts[i]);
-        }
-        emit UpdateTokenTotal(assets, amounts);
-
-        return true;
-    }
-
-    /**
      * @dev Payable receive function to receive Ether from oldVault when migrating
      */
     receive() external payable {}
@@ -664,35 +438,35 @@ contract Vault {
      * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
      */
     function checkSuccess() private pure returns (bool) {
-		uint256 returnValue = 0;
-		assembly {
-			// check number of bytes returned from last function call
-			switch returndatasize()
+        uint256 returnValue = 0;
+        assembly {
+        // check number of bytes returned from last function call
+            switch returndatasize()
 
-			// no bytes returned: assume success
-			case 0x0 {
-				returnValue := 1
-			}
+            // no bytes returned: assume success
+            case 0x0 {
+                returnValue := 1
+            }
 
-			// 32 bytes returned: check if non-zero
-			case 0x20 {
-				// copy 32 bytes into scratch space
-				returndatacopy(0x0, 0x0, 0x20)
+            // 32 bytes returned: check if non-zero
+            case 0x20 {
+            // copy 32 bytes into scratch space
+                returndatacopy(0x0, 0x0, 0x20)
 
-				// load those bytes into returnValue
-				returnValue := mload(0x0)
-			}
+            // load those bytes into returnValue
+                returnValue := mload(0x0)
+            }
 
-			// not sure what was returned: don't mark as success
-			default { }
-		}
-		return returnValue != 0;
-	}
+            // not sure what was returned: don't mark as success
+            default { }
+        }
+        return returnValue != 0;
+    }
 
     /**
      * @dev convert enum to string value
      */
-     function errorToString(Errors error) internal pure returns(string memory) {
+    function errorToString(Errors error) internal pure returns(string memory) {
         uint8 erroNum = uint8(error);
         uint maxlength = 10;
         bytes memory reversed = new bytes(maxlength);
