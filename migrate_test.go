@@ -39,7 +39,7 @@ func TestClaimVaultAdmin(t *testing.T) {
 }
 
 func TestClaimAllVaultAdmin(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,10 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := c.Claim(auth)
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +73,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 }
 
 func TestDeployNewVaultToMigrate(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +87,10 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	fmt.Println("PrevVault address:", prevVaultAddr.Hex())
 
 	// Deploy vault
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	auth.GasPrice = big.NewInt(int64(25000000000))
 	vaultDelegatorAddr, _, _, err := vault.DeployVault(auth, client)
 	if err != nil {
@@ -103,7 +109,7 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 }
 
 func TestDeployKBNTrade(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +126,10 @@ func TestDeployKBNTrade(t *testing.T) {
 	fmt.Println("New vault address:", newVault.Hex())
 
 	// Deploy KBNTrade
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	auth.GasPrice = big.NewInt(int64(23000000000))
 	kbnTradeAddr, _, _, err := kbntrade.DeployKBNTrade(auth, client, kbnProxy)
 	if err != nil {
@@ -291,7 +300,7 @@ func TestMoveAssetsVault(t *testing.T) {
 }
 
 func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +315,7 @@ func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
 }
 
 func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.TransparentUpgradeableProxy) {
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}

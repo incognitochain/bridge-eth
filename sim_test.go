@@ -161,13 +161,13 @@ func lockSimERC20WithTxs(
 	tokenAddr common.Address,
 	amount *big.Int,
 ) (*types.Transaction, *types.Transaction, error) {
-	txApprove, err := approveERC20(genesisAcc2.PrivateKey, p.vAddr, token, amount)
+	txApprove, err := approveERC20(genesisAcc2.PrivateKey, p.vAddr, token, amount, p.sim.Blockchain().Config().ChainID.Int64())
 	if err != nil {
 		return nil, nil, err
 	}
 	p.sim.Commit()
 
-	txDeposit, err := depositERC20(genesisAcc2.PrivateKey, p.v, tokenAddr, amount)
+	txDeposit, err := depositERC20(genesisAcc2.PrivateKey, p.v, tokenAddr, amount, p.sim.Blockchain().Config().ChainID.Int64())
 	if err != nil {
 		return txApprove, nil, err
 	}

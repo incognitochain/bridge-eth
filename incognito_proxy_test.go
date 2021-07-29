@@ -28,7 +28,7 @@ func TestCompareCommittee(t *testing.T) {
 
 	// Committee on contract
 	committeeIdx := big.NewInt(0)
-	_, c := connectAndInstantiate(t)
+	_, c, _ := connectAndInstantiate(t)
 	comm, err := c.inc.GetBeaconCommittee(nil, committeeIdx)
 	if err != nil {
 		t.Fatal(err)

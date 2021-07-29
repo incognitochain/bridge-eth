@@ -26,10 +26,13 @@ func TestERC20Burn(t *testing.T) {
 	}
 
 	// Get contract instance
-	privKey, c := connectAndInstantiate(t)
+	privKey, c, chainID := connectAndInstantiate(t)
 
 	// Burn
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := Withdraw(c.v, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -40,34 +43,34 @@ func TestERC20Burn(t *testing.T) {
 
 func TestERC20Lock(t *testing.T) {
 	// Get contract instance
-	privKey, c := connectAndInstantiate(t)
+	privKey, c, chainID := connectAndInstantiate(t)
 
 	// Approve
 	amount := int64(1000)
-	_, err := approveERC20(privKey, c.vAddr, c.token, big.NewInt(amount))
+	_, err := approveERC20(privKey, c.vAddr, c.token, big.NewInt(amount), chainID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Deposit
-	if _, err := depositERC20(privKey, c.v, c.tokenAddr, big.NewInt(amount)); err != nil {
+	if _, err := depositERC20(privKey, c.v, c.tokenAddr, big.NewInt(amount), chainID); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestERC20Deposit(t *testing.T) {
-	privKey, c := connectAndInstantiate(t)
+	privKey, c, chainID := connectAndInstantiate(t)
 
 	// Deposit
 	amount := big.NewInt(int64(100))
-	if _, err := depositERC20(privKey, c.v, c.tokenAddr, amount); err != nil {
+	if _, err := depositERC20(privKey, c.v, c.tokenAddr, amount, chainID); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestERC20Redeposit(t *testing.T) {
 	// Set up client
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +106,7 @@ func TestERC20Redeposit(t *testing.T) {
 		nonce,
 		0,
 		gasPrice,
+		chainID,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -111,11 +115,11 @@ func TestERC20Redeposit(t *testing.T) {
 
 func TestERC20Approve(t *testing.T) {
 	// Get contract instances
-	privKey, c := connectAndInstantiate(t)
+	privKey, c, chainID := connectAndInstantiate(t)
 
 	// Approve
 	amount := big.NewInt(int64(100))
-	_, err := approveERC20(privKey, c.vAddr, c.token, amount)
+	_, err := approveERC20(privKey, c.vAddr, c.token, amount, chainID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +127,7 @@ func TestERC20Approve(t *testing.T) {
 
 func TestERC20Reapprove(t *testing.T) {
 	// Set up client
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,6 +159,7 @@ func TestERC20Reapprove(t *testing.T) {
 		nonce,
 		0,
 		gasPrice,
+		chainID,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -163,7 +168,7 @@ func TestERC20Reapprove(t *testing.T) {
 
 func TestGetAllowance(t *testing.T) {
 	// Get contract instances
-	privKey, c := connectAndInstantiate(t)
+	privKey, c, _ := connectAndInstantiate(t)
 
 	// Allowance
 	userAddr := crypto.PubkeyToAddress(privKey.PublicKey)
@@ -180,14 +185,17 @@ func TestGetAllowance(t *testing.T) {
 }
 
 func TestERC20Deploy(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Error(err)
 	}
 	defer client.Close()
 
 	// Deploy incognito_proxy
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	name := "CHICKEN"
 	symbol := "CKN"
 	decimals := big.NewInt(8)
@@ -200,8 +208,8 @@ func TestERC20Deploy(t *testing.T) {
 	fmt.Printf("addr: %s\n", addr.Hex())
 }
 
-func connectAndInstantiate(t *testing.T) (*ecdsa.PrivateKey, *contracts) {
-	privKey, client, err := connect()
+func connectAndInstantiate(t *testing.T) (*ecdsa.PrivateKey, *contracts, int64) {
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +219,7 @@ func connectAndInstantiate(t *testing.T) (*ecdsa.PrivateKey, *contracts) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return privKey, c
+	return privKey, c, chainID
 }
 
 func depositERC20Detail(
@@ -223,8 +231,12 @@ func depositERC20Detail(
 	nonce uint64,
 	gasLimit uint64,
 	gasPrice *big.Int,
+	chainID int64,
 ) (*types.Transaction, error) {
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		return nil, err
+	}
 	if gasLimit > 0 {
 		auth.GasLimit = gasLimit
 	}
@@ -249,6 +261,7 @@ func depositERC20(
 	v *vault.Vault,
 	tokenAddr common.Address,
 	amount *big.Int,
+	chainID int64,
 ) (*types.Transaction, error) {
 	return depositERC20Detail(
 		privKey,
@@ -259,6 +272,7 @@ func depositERC20(
 		0,
 		0,
 		nil,
+		chainID,
 	)
 }
 
@@ -270,6 +284,7 @@ func approveERC20Detail(
 	nonce uint64,
 	gasLimit uint64,
 	gasPrice *big.Int,
+	chainID int64,
 ) (*types.Transaction, error) {
 	// Check balance
 	// userAddr := crypto.PubkeyToAddress(privKey.PublicKey)
@@ -277,7 +292,10 @@ func approveERC20Detail(
 	// fmt.Printf("erc20 balance: %d\n", bal)
 
 	// Approve
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		return nil, err
+	}
 	if gasLimit > 0 {
 		auth.GasLimit = gasLimit
 	}
@@ -297,7 +315,7 @@ func approveERC20Detail(
 	return tx, nil
 }
 
-func approveERC20(privKey *ecdsa.PrivateKey, spender common.Address, token Tokener, amount *big.Int) (*types.Transaction, error) {
+func approveERC20(privKey *ecdsa.PrivateKey, spender common.Address, token Tokener, amount *big.Int, chainID int64) (*types.Transaction, error) {
 	return approveERC20Detail(
 		privKey,
 		spender,
@@ -306,6 +324,7 @@ func approveERC20(privKey *ecdsa.PrivateKey, spender common.Address, token Token
 		0,
 		0,
 		nil,
+		chainID,
 	)
 }
 

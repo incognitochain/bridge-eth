@@ -25,7 +25,7 @@ import (
 )
 
 func TestGetNonceOfPendingTx(t *testing.T) {
-	_, client, err := connect()
+	_, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestGetNonceOfPendingTx(t *testing.T) {
 }
 
 func TestGetTxStatus(t *testing.T) {
-	_, client, err := connect()
+	_, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestSwapBeacon(t *testing.T) {
 	proof := getFixedSwapBeaconProof()
 
 	// Connect to ETH
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,10 @@ func TestSwapBeacon(t *testing.T) {
 	}
 
 	// Swap
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := SwapBeacon(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -103,7 +106,7 @@ func TestSwapBeacon(t *testing.T) {
 }
 
 func TestResendETH(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +140,7 @@ func TestReburn(t *testing.T) {
 	}
 
 	// Connect to ETH
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +160,10 @@ func TestReburn(t *testing.T) {
 	}
 
 	// Burn
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	auth.GasPrice = gasPrice
 	if nonce > 0 {
 		auth.Nonce = big.NewInt(int64(nonce))
@@ -178,7 +184,7 @@ func TestMassSend(t *testing.T) {
 		"0x7A279AEe9cc310B64F0F159904271c0a68014082",
 	}
 
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,7 +244,7 @@ func TestInstructionUsed(t *testing.T) {
 	instHash := crypto.Keccak256(proof.Instruction)
 
 	// Connect to ETH
-	_, client, err := connect()
+	_, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +271,7 @@ func TestBurn(t *testing.T) {
 	// return
 
 	// Connect to ETH
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +285,10 @@ func TestBurn(t *testing.T) {
 	}
 
 	// Burn
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := Withdraw(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -289,7 +298,7 @@ func TestBurn(t *testing.T) {
 }
 
 func TestDeposit(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,6 +320,7 @@ func TestDeposit(t *testing.T) {
 		0,
 		0,
 		nil,
+		chainID,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -319,7 +329,7 @@ func TestDeposit(t *testing.T) {
 
 func TestRedeposit(t *testing.T) {
 	// Set up client
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,6 +363,7 @@ func TestRedeposit(t *testing.T) {
 		nonce,
 		0,
 		gasPrice,
+		chainID,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -367,8 +378,13 @@ func depositDetail(
 	nonce uint64,
 	gasLimit uint64,
 	gasPrice *big.Int,
+	chainID int64,
 ) (*types.Transaction, error) {
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		return nil, err
+	}
+	
 	auth.Value = amount
 	if gasLimit > 0 {
 		auth.GasLimit = gasLimit
@@ -433,7 +449,7 @@ func depositDetail(
 // }
 
 func TestDeployProxyAndVault(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,7 +467,11 @@ func TestDeployProxyAndVault(t *testing.T) {
 	// }
 
 	// Deploy incognito_proxy
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	auth.Value = big.NewInt(0)
 	// auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000
@@ -500,20 +520,24 @@ func wait(client *ethclient.Client, tx common.Hash) error {
 	return nil
 }
 
-func connect() (*ecdsa.PrivateKey, *ethclient.Client, error) {
+func connect() (*ecdsa.PrivateKey, *ethclient.Client, int64, error) {
 	privKeyHex := os.Getenv("PRIVKEY")
 	privKey, err := crypto.HexToECDSA(privKeyHex)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 	fmt.Printf("Sign Txs with address: %s\n", crypto.PubkeyToAddress(privKey.PublicKey).Hex())
 
+	chainID := int64(1)
 	network := "mainnet"
+	if chainID != 1 {
+		network = "kovan"
+	}
 	fmt.Printf("Connecting to network %s\n", network)
 	client, err := ethclient.Dial(fmt.Sprintf("https://%s.infura.io/v3/29fead42346b4bfa88dd5fd7e56b6406", network))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 
-	return privKey, client, nil
+	return privKey, client, chainID, nil
 }
