@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -155,7 +154,7 @@ func bindDai(address common.Address, caller bind.ContractCaller, transactor bind
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Dai *DaiRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Dai *DaiRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Dai.Contract.DaiCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -174,7 +173,7 @@ func (_Dai *DaiRaw) Transact(opts *bind.TransactOpts, method string, params ...i
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Dai *DaiCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Dai *DaiCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Dai.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -191,234 +190,279 @@ func (_Dai *DaiTransactorRaw) Transact(opts *bind.TransactOpts, method string, p
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address src, address guy) constant returns(uint256)
+// Solidity: function allowance(address src, address guy) view returns(uint256)
 func (_Dai *DaiCaller) Allowance(opts *bind.CallOpts, src common.Address, guy common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "allowance", src, guy)
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "allowance", src, guy)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address src, address guy) constant returns(uint256)
+// Solidity: function allowance(address src, address guy) view returns(uint256)
 func (_Dai *DaiSession) Allowance(src common.Address, guy common.Address) (*big.Int, error) {
 	return _Dai.Contract.Allowance(&_Dai.CallOpts, src, guy)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address src, address guy) constant returns(uint256)
+// Solidity: function allowance(address src, address guy) view returns(uint256)
 func (_Dai *DaiCallerSession) Allowance(src common.Address, guy common.Address) (*big.Int, error) {
 	return _Dai.Contract.Allowance(&_Dai.CallOpts, src, guy)
 }
 
 // Authority is a free data retrieval call binding the contract method 0xbf7e214f.
 //
-// Solidity: function authority() constant returns(address)
+// Solidity: function authority() view returns(address)
 func (_Dai *DaiCaller) Authority(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "authority")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "authority")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Authority is a free data retrieval call binding the contract method 0xbf7e214f.
 //
-// Solidity: function authority() constant returns(address)
+// Solidity: function authority() view returns(address)
 func (_Dai *DaiSession) Authority() (common.Address, error) {
 	return _Dai.Contract.Authority(&_Dai.CallOpts)
 }
 
 // Authority is a free data retrieval call binding the contract method 0xbf7e214f.
 //
-// Solidity: function authority() constant returns(address)
+// Solidity: function authority() view returns(address)
 func (_Dai *DaiCallerSession) Authority() (common.Address, error) {
 	return _Dai.Contract.Authority(&_Dai.CallOpts)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address src) constant returns(uint256)
+// Solidity: function balanceOf(address src) view returns(uint256)
 func (_Dai *DaiCaller) BalanceOf(opts *bind.CallOpts, src common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "balanceOf", src)
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "balanceOf", src)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address src) constant returns(uint256)
+// Solidity: function balanceOf(address src) view returns(uint256)
 func (_Dai *DaiSession) BalanceOf(src common.Address) (*big.Int, error) {
 	return _Dai.Contract.BalanceOf(&_Dai.CallOpts, src)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address src) constant returns(uint256)
+// Solidity: function balanceOf(address src) view returns(uint256)
 func (_Dai *DaiCallerSession) BalanceOf(src common.Address) (*big.Int, error) {
 	return _Dai.Contract.BalanceOf(&_Dai.CallOpts, src)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_Dai *DaiCaller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_Dai *DaiSession) Decimals() (*big.Int, error) {
 	return _Dai.Contract.Decimals(&_Dai.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_Dai *DaiCallerSession) Decimals() (*big.Int, error) {
 	return _Dai.Contract.Decimals(&_Dai.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(bytes32)
+// Solidity: function name() view returns(bytes32)
 func (_Dai *DaiCaller) Name(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "name")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "name")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(bytes32)
+// Solidity: function name() view returns(bytes32)
 func (_Dai *DaiSession) Name() ([32]byte, error) {
 	return _Dai.Contract.Name(&_Dai.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(bytes32)
+// Solidity: function name() view returns(bytes32)
 func (_Dai *DaiCallerSession) Name() ([32]byte, error) {
 	return _Dai.Contract.Name(&_Dai.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Dai *DaiCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Dai *DaiSession) Owner() (common.Address, error) {
 	return _Dai.Contract.Owner(&_Dai.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() view returns(address)
 func (_Dai *DaiCallerSession) Owner() (common.Address, error) {
 	return _Dai.Contract.Owner(&_Dai.CallOpts)
 }
 
 // Stopped is a free data retrieval call binding the contract method 0x75f12b21.
 //
-// Solidity: function stopped() constant returns(bool)
+// Solidity: function stopped() view returns(bool)
 func (_Dai *DaiCaller) Stopped(opts *bind.CallOpts) (bool, error) {
-	var (
-		ret0 = new(bool)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "stopped")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "stopped")
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
 }
 
 // Stopped is a free data retrieval call binding the contract method 0x75f12b21.
 //
-// Solidity: function stopped() constant returns(bool)
+// Solidity: function stopped() view returns(bool)
 func (_Dai *DaiSession) Stopped() (bool, error) {
 	return _Dai.Contract.Stopped(&_Dai.CallOpts)
 }
 
 // Stopped is a free data retrieval call binding the contract method 0x75f12b21.
 //
-// Solidity: function stopped() constant returns(bool)
+// Solidity: function stopped() view returns(bool)
 func (_Dai *DaiCallerSession) Stopped() (bool, error) {
 	return _Dai.Contract.Stopped(&_Dai.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(bytes32)
+// Solidity: function symbol() view returns(bytes32)
 func (_Dai *DaiCaller) Symbol(opts *bind.CallOpts) ([32]byte, error) {
-	var (
-		ret0 = new([32]byte)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "symbol")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "symbol")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(bytes32)
+// Solidity: function symbol() view returns(bytes32)
 func (_Dai *DaiSession) Symbol() ([32]byte, error) {
 	return _Dai.Contract.Symbol(&_Dai.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(bytes32)
+// Solidity: function symbol() view returns(bytes32)
 func (_Dai *DaiCallerSession) Symbol() ([32]byte, error) {
 	return _Dai.Contract.Symbol(&_Dai.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_Dai *DaiCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Dai.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _Dai.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_Dai *DaiSession) TotalSupply() (*big.Int, error) {
 	return _Dai.Contract.TotalSupply(&_Dai.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_Dai *DaiCallerSession) TotalSupply() (*big.Int, error) {
 	return _Dai.Contract.TotalSupply(&_Dai.CallOpts)
 }
@@ -442,27 +486,6 @@ func (_Dai *DaiSession) Approve(guy common.Address, wad *big.Int) (*types.Transa
 // Solidity: function approve(address guy, uint256 wad) returns(bool)
 func (_Dai *DaiTransactorSession) Approve(guy common.Address, wad *big.Int) (*types.Transaction, error) {
 	return _Dai.Contract.Approve(&_Dai.TransactOpts, guy, wad)
-}
-
-// Approve0 is a paid mutator transaction binding the contract method 0xdaea85c5.
-//
-// Solidity: function approve(address guy) returns(bool)
-func (_Dai *DaiTransactor) Approve0(opts *bind.TransactOpts, guy common.Address) (*types.Transaction, error) {
-	return _Dai.contract.Transact(opts, "approve0", guy)
-}
-
-// Approve0 is a paid mutator transaction binding the contract method 0xdaea85c5.
-//
-// Solidity: function approve(address guy) returns(bool)
-func (_Dai *DaiSession) Approve0(guy common.Address) (*types.Transaction, error) {
-	return _Dai.Contract.Approve0(&_Dai.TransactOpts, guy)
-}
-
-// Approve0 is a paid mutator transaction binding the contract method 0xdaea85c5.
-//
-// Solidity: function approve(address guy) returns(bool)
-func (_Dai *DaiTransactorSession) Approve0(guy common.Address) (*types.Transaction, error) {
-	return _Dai.Contract.Approve0(&_Dai.TransactOpts, guy)
 }
 
 // Burn is a paid mutator transaction binding the contract method 0x42966c68.
@@ -507,42 +530,21 @@ func (_Dai *DaiTransactorSession) Burn0(guy common.Address, wad *big.Int) (*type
 	return _Dai.Contract.Burn0(&_Dai.TransactOpts, guy, wad)
 }
 
-//// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-////
-//// Solidity: function mint(address guy, uint256 wad) returns()
-//func (_Dai *DaiTransactor) Mint(opts *bind.TransactOpts, guy common.Address, wad *big.Int) (*types.Transaction, error) {
-//	return _Dai.contract.Transact(opts, "mint", guy, wad)
-//}
-
-//// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-////
-//// Solidity: function mint(address guy, uint256 wad) returns()
-//func (_Dai *DaiSession) Mint(guy common.Address, wad *big.Int) (*types.Transaction, error) {
-//	return _Dai.Contract.Mint(&_Dai.TransactOpts, guy, wad)
-//}
-
-//// Mint is a paid mutator transaction binding the contract method 0x40c10f19.
-////
-//// Solidity: function mint(address guy, uint256 wad) returns()
-//func (_Dai *DaiTransactorSession) Mint(guy common.Address, wad *big.Int) (*types.Transaction, error) {
-//	return _Dai.Contract.Mint(&_Dai.TransactOpts, guy, wad)
-//}
-
-// Mint0 is a paid mutator transaction binding the contract method 0xa0712d68.
+// Mint is a paid mutator transaction binding the contract method 0xa0712d68.
 //
 // Solidity: function mint(uint256 wad) returns()
 func (_Dai *DaiTransactor) Mint(opts *bind.TransactOpts, wad *big.Int) (*types.Transaction, error) {
 	return _Dai.contract.Transact(opts, "mint", wad)
 }
 
-// Mint0 is a paid mutator transaction binding the contract method 0xa0712d68.
+// Mint is a paid mutator transaction binding the contract method 0xa0712d68.
 //
 // Solidity: function mint(uint256 wad) returns()
 func (_Dai *DaiSession) Mint(wad *big.Int) (*types.Transaction, error) {
 	return _Dai.Contract.Mint(&_Dai.TransactOpts, wad)
 }
 
-// Mint0 is a paid mutator transaction binding the contract method 0xa0712d68.
+// Mint is a paid mutator transaction binding the contract method 0xa0712d68.
 //
 // Solidity: function mint(uint256 wad) returns()
 func (_Dai *DaiTransactorSession) Mint(wad *big.Int) (*types.Transaction, error) {
@@ -909,6 +911,7 @@ func (_Dai *DaiFilterer) ParseApproval(log types.Log) (*DaiApproval, error) {
 	if err := _Dai.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1053,6 +1056,7 @@ func (_Dai *DaiFilterer) ParseBurn(log types.Log) (*DaiBurn, error) {
 	if err := _Dai.contract.UnpackLog(event, "Burn", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1196,6 +1200,7 @@ func (_Dai *DaiFilterer) ParseLogSetAuthority(log types.Log) (*DaiLogSetAuthorit
 	if err := _Dai.contract.UnpackLog(event, "LogSetAuthority", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1339,6 +1344,7 @@ func (_Dai *DaiFilterer) ParseLogSetOwner(log types.Log) (*DaiLogSetOwner, error
 	if err := _Dai.contract.UnpackLog(event, "LogSetOwner", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1483,6 +1489,7 @@ func (_Dai *DaiFilterer) ParseMint(log types.Log) (*DaiMint, error) {
 	if err := _Dai.contract.UnpackLog(event, "Mint", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1636,5 +1643,6 @@ func (_Dai *DaiFilterer) ParseTransfer(log types.Log) (*DaiTransfer, error) {
 	if err := _Dai.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

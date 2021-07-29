@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -155,7 +154,7 @@ func bindUsdcWrap(address common.Address, caller bind.ContractCaller, transactor
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_UsdcWrap *UsdcWrapRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_UsdcWrap *UsdcWrapRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _UsdcWrap.Contract.UsdcWrapCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -174,7 +173,7 @@ func (_UsdcWrap *UsdcWrapRaw) Transact(opts *bind.TransactOpts, method string, p
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_UsdcWrap *UsdcWrapCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_UsdcWrap *UsdcWrapCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _UsdcWrap.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -191,52 +190,62 @@ func (_UsdcWrap *UsdcWrapTransactorRaw) Transact(opts *bind.TransactOpts, method
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_UsdcWrap *UsdcWrapCaller) Admin(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UsdcWrap.contract.Call(opts, out, "admin")
-	return *ret0, err
+	var out []interface{}
+	err := _UsdcWrap.contract.Call(opts, &out, "admin")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_UsdcWrap *UsdcWrapSession) Admin() (common.Address, error) {
 	return _UsdcWrap.Contract.Admin(&_UsdcWrap.CallOpts)
 }
 
 // Admin is a free data retrieval call binding the contract method 0xf851a440.
 //
-// Solidity: function admin() constant returns(address)
+// Solidity: function admin() view returns(address)
 func (_UsdcWrap *UsdcWrapCallerSession) Admin() (common.Address, error) {
 	return _UsdcWrap.Contract.Admin(&_UsdcWrap.CallOpts)
 }
 
 // Implementation is a free data retrieval call binding the contract method 0x5c60da1b.
 //
-// Solidity: function implementation() constant returns(address)
+// Solidity: function implementation() view returns(address)
 func (_UsdcWrap *UsdcWrapCaller) Implementation(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UsdcWrap.contract.Call(opts, out, "implementation")
-	return *ret0, err
+	var out []interface{}
+	err := _UsdcWrap.contract.Call(opts, &out, "implementation")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Implementation is a free data retrieval call binding the contract method 0x5c60da1b.
 //
-// Solidity: function implementation() constant returns(address)
+// Solidity: function implementation() view returns(address)
 func (_UsdcWrap *UsdcWrapSession) Implementation() (common.Address, error) {
 	return _UsdcWrap.Contract.Implementation(&_UsdcWrap.CallOpts)
 }
 
 // Implementation is a free data retrieval call binding the contract method 0x5c60da1b.
 //
-// Solidity: function implementation() constant returns(address)
+// Solidity: function implementation() view returns(address)
 func (_UsdcWrap *UsdcWrapCallerSession) Implementation() (common.Address, error) {
 	return _UsdcWrap.Contract.Implementation(&_UsdcWrap.CallOpts)
 }
@@ -285,23 +294,44 @@ func (_UsdcWrap *UsdcWrapTransactorSession) UpgradeTo(newImplementation common.A
 
 // UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
 //
-// Solidity: function upgradeToAndCall(address newImplementation, bytes data) returns()
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
 func (_UsdcWrap *UsdcWrapTransactor) UpgradeToAndCall(opts *bind.TransactOpts, newImplementation common.Address, data []byte) (*types.Transaction, error) {
 	return _UsdcWrap.contract.Transact(opts, "upgradeToAndCall", newImplementation, data)
 }
 
 // UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
 //
-// Solidity: function upgradeToAndCall(address newImplementation, bytes data) returns()
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
 func (_UsdcWrap *UsdcWrapSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
 	return _UsdcWrap.Contract.UpgradeToAndCall(&_UsdcWrap.TransactOpts, newImplementation, data)
 }
 
 // UpgradeToAndCall is a paid mutator transaction binding the contract method 0x4f1ef286.
 //
-// Solidity: function upgradeToAndCall(address newImplementation, bytes data) returns()
+// Solidity: function upgradeToAndCall(address newImplementation, bytes data) payable returns()
 func (_UsdcWrap *UsdcWrapTransactorSession) UpgradeToAndCall(newImplementation common.Address, data []byte) (*types.Transaction, error) {
 	return _UsdcWrap.Contract.UpgradeToAndCall(&_UsdcWrap.TransactOpts, newImplementation, data)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_UsdcWrap *UsdcWrapTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
+	return _UsdcWrap.contract.RawTransact(opts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_UsdcWrap *UsdcWrapSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _UsdcWrap.Contract.Fallback(&_UsdcWrap.TransactOpts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_UsdcWrap *UsdcWrapTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _UsdcWrap.Contract.Fallback(&_UsdcWrap.TransactOpts, calldata)
 }
 
 // UsdcWrapAdminChangedIterator is returned from FilterAdminChanged and is used to iterate over the raw logs and unpacked data for AdminChanged events raised by the UsdcWrap contract.
@@ -435,6 +465,7 @@ func (_UsdcWrap *UsdcWrapFilterer) ParseAdminChanged(log types.Log) (*UsdcWrapAd
 	if err := _UsdcWrap.contract.UnpackLog(event, "AdminChanged", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -568,5 +599,6 @@ func (_UsdcWrap *UsdcWrapFilterer) ParseUpgraded(log types.Log) (*UsdcWrapUpgrad
 	if err := _UsdcWrap.contract.UnpackLog(event, "Upgraded", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

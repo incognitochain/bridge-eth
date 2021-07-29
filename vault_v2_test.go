@@ -168,10 +168,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	timestamp := []byte(randomizeTimestamp())
 	vaultHelperAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: REQ_WITHDRAW_PREFIX,
-		Token: tinfo.addr,
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     tinfo.addr,
 		Timestamp: timestamp,
-		Amount: deposit,
+		Amount:    deposit,
 	}
 	tempData, _ := vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
 	// tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, deposit)
@@ -183,10 +183,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 
 	// able to request withdraw
 	psData = vault.VaultHelperPreSignData{
-		Prefix: REQ_WITHDRAW_PREFIX,
-		Token: tinfo.addr,
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     tinfo.addr,
 		Timestamp: timestamp,
-		Amount: big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))),
+		Amount:    big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))),
 	}
 	tempData, _ = vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
 	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
@@ -209,10 +209,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	// amount decreased so can not request amount as amount at time withdraw from incognito
 	timestamp = []byte(randomizeTimestamp())
 	psData = vault.VaultHelperPreSignData{
-		Prefix: REQ_WITHDRAW_PREFIX,
-		Token: tinfo.addr,
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     tinfo.addr,
 		Timestamp: timestamp,
-		Amount: big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))),
+		Amount:    big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))),
 	}
 	tempData, _ = vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
 	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
@@ -228,7 +228,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	_, err = v2.p.vp.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	proxyVault, err := vaultproxy.NewVaultproxy(v2.p.vAddr, v2.p.sim)
+	proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(v2.p.vAddr, v2.p.sim)
 	_, err = proxyVault.UpgradeTo(auth, nextVaultAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
@@ -248,10 +248,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), bal, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
 	psData = vault.VaultHelperPreSignData{
-		Prefix: REQ_WITHDRAW_PREFIX,
-		Token: tinfo.addr,
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     tinfo.addr,
 		Timestamp: timestamp,
-		Amount: big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))),
+		Amount:    big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))),
 	}
 	tempData, _ = vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
 	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
@@ -532,7 +532,8 @@ func (v2 *VaulV2TestSuite) TestVaultV2UpdateVaultThenTryExecute() {
 	_, err = v2.p.vp.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	proxyVault, err := vaultproxy.NewVaultproxy(v2.p.vAddr, v2.p.sim)
+	proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(v2.p.vAddr, v2.p.sim)
+	require.Equal(v2.T(), nil, err)
 	_, err = proxyVault.UpgradeTo(auth, nextVaultAddr)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
@@ -640,10 +641,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
 	vaultHelperAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: REQ_WITHDRAW_PREFIX,
-		Token: tinfo.addr,
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     tinfo.addr,
 		Timestamp: timestamp,
-		Amount: testAmount,
+		Amount:    testAmount,
 	}
 	tempData, _ := vaultHelperAbi.Pack("_buildSignRequestWithdraw", psData, IncPaymentAddr)
 	// tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, testAmount)
@@ -666,7 +667,8 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	_, err = v2.p.vp.Pause(auth)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
-	proxyVault, err := vaultproxy.NewVaultproxy(v2.p.vAddr, v2.p.sim)
+	proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(v2.p.vAddr, v2.p.sim)
+	require.Equal(v2.T(), nil, err)
 	_, err = proxyVault.UpgradeTo(auth, nextDelegator)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
@@ -747,10 +749,10 @@ func runExecuteVault(
 ) (*types.Transaction, error) {
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: srcQty,
+		Amount:    srcQty,
 	}
 	tempData, err := vaultAbi.Pack("_buildSignExecute", psData, destoken, dapp, input)
 	// tempData, _ := vaultAbi.Pack("executeBuildData", dapp, input, timestamp, srcQty)
@@ -804,10 +806,10 @@ func buildDataReentranceAttackData(
 	}
 	vaultHelperAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: executeAmount,
+		Amount:    executeAmount,
 	}
 	tempData, err := vaultHelperAbi.Pack("_buildSignExecute", psData, destToken, dAddr, input1)
 	// tempData, _ := vaultAbi.Pack("executeBuildData", dAddr, input1, timestamp, executeAmount)
@@ -835,10 +837,10 @@ func buildDataReentranceAttackData(
 		return nil, err
 	}
 	psData = vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: executeAmount,
+		Amount:    executeAmount,
 	}
 	tempData, err = vaultHelperAbi.Pack("_buildSignExecute", psData, destToken, dAddr, input3)
 	// tempData, _ = vaultAbi.Pack("executeBuildData", dAddr, input3, timestamp, executeAmount)

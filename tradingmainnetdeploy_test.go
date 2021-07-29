@@ -12,7 +12,6 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
-	"github.com/incognitochain/bridge-eth/bridge/zrxtrade"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -122,9 +121,9 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", tradingDeploySuite.PrevVault)	
+	input, _ := vaultAbi.Pack("initialize", tradingDeploySuite.PrevVault)
 
-	vaultAddr, tx, _, err = vaultproxy.DeployVaultproxy(auth, ethClient, vaultAddr, tradingDeploySuite.Admin, tradingDeploySuite.IncProxyAddr, input)
+	vaultAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, ethClient, vaultAddr, tradingDeploySuite.Admin, tradingDeploySuite.IncProxyAddr, input)
 	// Wait until tx is confirmed
 	err = wait(ethClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
@@ -140,14 +139,4 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed kbntrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
-
-	// Deploy 0xTrade
-	zrxTradeAddr, tx, _, err := zrxtrade.DeployZrxtrade(auth, ethClient, tradingDeploySuite.WETHAddr, tradingDeploySuite.ZRXContractAddr, vaultAddr)
-	require.Equal(tradingDeploySuite.T(), nil, err)
-
-	// Wait until tx is confirmed
-	err = wait(ethClient, tx.Hash())
-	require.Equal(tradingDeploySuite.T(), nil, err)
-	fmt.Println("deployed zrxTrade")
-	fmt.Printf("addr: %s\n", zrxTradeAddr.Hex())
 }

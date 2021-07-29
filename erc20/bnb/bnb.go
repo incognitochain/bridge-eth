@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -155,7 +154,7 @@ func bindBnb(address common.Address, caller bind.ContractCaller, transactor bind
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Bnb *BnbRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Bnb *BnbRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Bnb.Contract.BnbCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -174,7 +173,7 @@ func (_Bnb *BnbRaw) Transact(opts *bind.TransactOpts, method string, params ...i
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Bnb *BnbCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Bnb *BnbCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Bnb.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -191,208 +190,248 @@ func (_Bnb *BnbTransactorRaw) Transact(opts *bind.TransactOpts, method string, p
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address , address ) constant returns(uint256)
+// Solidity: function allowance(address , address ) returns(uint256)
 func (_Bnb *BnbCaller) Allowance(opts *bind.CallOpts, arg0 common.Address, arg1 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "allowance", arg0, arg1)
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "allowance", arg0, arg1)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address , address ) constant returns(uint256)
+// Solidity: function allowance(address , address ) returns(uint256)
 func (_Bnb *BnbSession) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Bnb.Contract.Allowance(&_Bnb.CallOpts, arg0, arg1)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address , address ) constant returns(uint256)
+// Solidity: function allowance(address , address ) returns(uint256)
 func (_Bnb *BnbCallerSession) Allowance(arg0 common.Address, arg1 common.Address) (*big.Int, error) {
 	return _Bnb.Contract.Allowance(&_Bnb.CallOpts, arg0, arg1)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address ) constant returns(uint256)
+// Solidity: function balanceOf(address ) returns(uint256)
 func (_Bnb *BnbCaller) BalanceOf(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "balanceOf", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "balanceOf", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address ) constant returns(uint256)
+// Solidity: function balanceOf(address ) returns(uint256)
 func (_Bnb *BnbSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _Bnb.Contract.BalanceOf(&_Bnb.CallOpts, arg0)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address ) constant returns(uint256)
+// Solidity: function balanceOf(address ) returns(uint256)
 func (_Bnb *BnbCallerSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _Bnb.Contract.BalanceOf(&_Bnb.CallOpts, arg0)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() returns(uint8)
 func (_Bnb *BnbCaller) Decimals(opts *bind.CallOpts) (uint8, error) {
-	var (
-		ret0 = new(uint8)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() returns(uint8)
 func (_Bnb *BnbSession) Decimals() (uint8, error) {
 	return _Bnb.Contract.Decimals(&_Bnb.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint8)
+// Solidity: function decimals() returns(uint8)
 func (_Bnb *BnbCallerSession) Decimals() (uint8, error) {
 	return _Bnb.Contract.Decimals(&_Bnb.CallOpts)
 }
 
 // FreezeOf is a free data retrieval call binding the contract method 0xcd4217c1.
 //
-// Solidity: function freezeOf(address ) constant returns(uint256)
+// Solidity: function freezeOf(address ) returns(uint256)
 func (_Bnb *BnbCaller) FreezeOf(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "freezeOf", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "freezeOf", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // FreezeOf is a free data retrieval call binding the contract method 0xcd4217c1.
 //
-// Solidity: function freezeOf(address ) constant returns(uint256)
+// Solidity: function freezeOf(address ) returns(uint256)
 func (_Bnb *BnbSession) FreezeOf(arg0 common.Address) (*big.Int, error) {
 	return _Bnb.Contract.FreezeOf(&_Bnb.CallOpts, arg0)
 }
 
 // FreezeOf is a free data retrieval call binding the contract method 0xcd4217c1.
 //
-// Solidity: function freezeOf(address ) constant returns(uint256)
+// Solidity: function freezeOf(address ) returns(uint256)
 func (_Bnb *BnbCallerSession) FreezeOf(arg0 common.Address) (*big.Int, error) {
 	return _Bnb.Contract.FreezeOf(&_Bnb.CallOpts, arg0)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() returns(string)
 func (_Bnb *BnbCaller) Name(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "name")
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "name")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() returns(string)
 func (_Bnb *BnbSession) Name() (string, error) {
 	return _Bnb.Contract.Name(&_Bnb.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string)
+// Solidity: function name() returns(string)
 func (_Bnb *BnbCallerSession) Name() (string, error) {
 	return _Bnb.Contract.Name(&_Bnb.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() returns(address)
 func (_Bnb *BnbCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "owner")
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() returns(address)
 func (_Bnb *BnbSession) Owner() (common.Address, error) {
 	return _Bnb.Contract.Owner(&_Bnb.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
-// Solidity: function owner() constant returns(address)
+// Solidity: function owner() returns(address)
 func (_Bnb *BnbCallerSession) Owner() (common.Address, error) {
 	return _Bnb.Contract.Owner(&_Bnb.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() returns(string)
 func (_Bnb *BnbCaller) Symbol(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "symbol")
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "symbol")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() returns(string)
 func (_Bnb *BnbSession) Symbol() (string, error) {
 	return _Bnb.Contract.Symbol(&_Bnb.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string)
+// Solidity: function symbol() returns(string)
 func (_Bnb *BnbCallerSession) Symbol() (string, error) {
 	return _Bnb.Contract.Symbol(&_Bnb.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() returns(uint256)
 func (_Bnb *BnbCaller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Bnb.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _Bnb.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() returns(uint256)
 func (_Bnb *BnbSession) TotalSupply() (*big.Int, error) {
 	return _Bnb.Contract.TotalSupply(&_Bnb.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() returns(uint256)
 func (_Bnb *BnbCallerSession) TotalSupply() (*big.Int, error) {
 	return _Bnb.Contract.TotalSupply(&_Bnb.CallOpts)
 }
@@ -544,6 +583,27 @@ func (_Bnb *BnbTransactorSession) WithdrawEther(amount *big.Int) (*types.Transac
 	return _Bnb.Contract.WithdrawEther(&_Bnb.TransactOpts, amount)
 }
 
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() returns()
+func (_Bnb *BnbTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
+	return _Bnb.contract.RawTransact(opts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() returns()
+func (_Bnb *BnbSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _Bnb.Contract.Fallback(&_Bnb.TransactOpts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() returns()
+func (_Bnb *BnbTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _Bnb.Contract.Fallback(&_Bnb.TransactOpts, calldata)
+}
+
 // BnbBurnIterator is returned from FilterBurn and is used to iterate over the raw logs and unpacked data for Burn events raised by the Bnb contract.
 type BnbBurnIterator struct {
 	Event *BnbBurn // Event containing the contract specifics and raw log
@@ -685,6 +745,7 @@ func (_Bnb *BnbFilterer) ParseBurn(log types.Log) (*BnbBurn, error) {
 	if err := _Bnb.contract.UnpackLog(event, "Burn", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -829,6 +890,7 @@ func (_Bnb *BnbFilterer) ParseFreeze(log types.Log) (*BnbFreeze, error) {
 	if err := _Bnb.contract.UnpackLog(event, "Freeze", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -982,6 +1044,7 @@ func (_Bnb *BnbFilterer) ParseTransfer(log types.Log) (*BnbTransfer, error) {
 	if err := _Bnb.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -1126,5 +1189,6 @@ func (_Bnb *BnbFilterer) ParseUnfreeze(log types.Log) (*BnbUnfreeze, error) {
 	if err := _Bnb.contract.UnpackLog(event, "Unfreeze", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -155,7 +154,7 @@ func bindErc20(address common.Address, caller bind.ContractCaller, transactor bi
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Erc20 *Erc20Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Erc20 *Erc20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Erc20.Contract.Erc20Caller.contract.Call(opts, result, method, params...)
 }
 
@@ -174,7 +173,7 @@ func (_Erc20 *Erc20Raw) Transact(opts *bind.TransactOpts, method string, params 
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Erc20 *Erc20CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Erc20 *Erc20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Erc20.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -191,156 +190,186 @@ func (_Erc20 *Erc20TransactorRaw) Transact(opts *bind.TransactOpts, method strin
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address _owner, address _spender) constant returns(uint256 out)
+// Solidity: function allowance(address _owner, address _spender) returns(uint256 out)
 func (_Erc20 *Erc20Caller) Allowance(opts *bind.CallOpts, _owner common.Address, _spender common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Erc20.contract.Call(opts, out, "allowance", _owner, _spender)
-	return *ret0, err
+	var out []interface{}
+	err := _Erc20.contract.Call(opts, &out, "allowance", _owner, _spender)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address _owner, address _spender) constant returns(uint256 out)
+// Solidity: function allowance(address _owner, address _spender) returns(uint256 out)
 func (_Erc20 *Erc20Session) Allowance(_owner common.Address, _spender common.Address) (*big.Int, error) {
 	return _Erc20.Contract.Allowance(&_Erc20.CallOpts, _owner, _spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address _owner, address _spender) constant returns(uint256 out)
+// Solidity: function allowance(address _owner, address _spender) returns(uint256 out)
 func (_Erc20 *Erc20CallerSession) Allowance(_owner common.Address, _spender common.Address) (*big.Int, error) {
 	return _Erc20.Contract.Allowance(&_Erc20.CallOpts, _owner, _spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address arg0) constant returns(uint256 out)
+// Solidity: function balanceOf(address arg0) returns(uint256 out)
 func (_Erc20 *Erc20Caller) BalanceOf(opts *bind.CallOpts, arg0 common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Erc20.contract.Call(opts, out, "balanceOf", arg0)
-	return *ret0, err
+	var out []interface{}
+	err := _Erc20.contract.Call(opts, &out, "balanceOf", arg0)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address arg0) constant returns(uint256 out)
+// Solidity: function balanceOf(address arg0) returns(uint256 out)
 func (_Erc20 *Erc20Session) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _Erc20.Contract.BalanceOf(&_Erc20.CallOpts, arg0)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address arg0) constant returns(uint256 out)
+// Solidity: function balanceOf(address arg0) returns(uint256 out)
 func (_Erc20 *Erc20CallerSession) BalanceOf(arg0 common.Address) (*big.Int, error) {
 	return _Erc20.Contract.BalanceOf(&_Erc20.CallOpts, arg0)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256 out)
+// Solidity: function decimals() returns(uint256 out)
 func (_Erc20 *Erc20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Erc20.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _Erc20.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256 out)
+// Solidity: function decimals() returns(uint256 out)
 func (_Erc20 *Erc20Session) Decimals() (*big.Int, error) {
 	return _Erc20.Contract.Decimals(&_Erc20.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256 out)
+// Solidity: function decimals() returns(uint256 out)
 func (_Erc20 *Erc20CallerSession) Decimals() (*big.Int, error) {
 	return _Erc20.Contract.Decimals(&_Erc20.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string out)
+// Solidity: function name() returns(string out)
 func (_Erc20 *Erc20Caller) Name(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Erc20.contract.Call(opts, out, "name")
-	return *ret0, err
+	var out []interface{}
+	err := _Erc20.contract.Call(opts, &out, "name")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string out)
+// Solidity: function name() returns(string out)
 func (_Erc20 *Erc20Session) Name() (string, error) {
 	return _Erc20.Contract.Name(&_Erc20.CallOpts)
 }
 
 // Name is a free data retrieval call binding the contract method 0x06fdde03.
 //
-// Solidity: function name() constant returns(string out)
+// Solidity: function name() returns(string out)
 func (_Erc20 *Erc20CallerSession) Name() (string, error) {
 	return _Erc20.Contract.Name(&_Erc20.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string out)
+// Solidity: function symbol() returns(string out)
 func (_Erc20 *Erc20Caller) Symbol(opts *bind.CallOpts) (string, error) {
-	var (
-		ret0 = new(string)
-	)
-	out := ret0
-	err := _Erc20.contract.Call(opts, out, "symbol")
-	return *ret0, err
+	var out []interface{}
+	err := _Erc20.contract.Call(opts, &out, "symbol")
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string out)
+// Solidity: function symbol() returns(string out)
 func (_Erc20 *Erc20Session) Symbol() (string, error) {
 	return _Erc20.Contract.Symbol(&_Erc20.CallOpts)
 }
 
 // Symbol is a free data retrieval call binding the contract method 0x95d89b41.
 //
-// Solidity: function symbol() constant returns(string out)
+// Solidity: function symbol() returns(string out)
 func (_Erc20 *Erc20CallerSession) Symbol() (string, error) {
 	return _Erc20.Contract.Symbol(&_Erc20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256 out)
+// Solidity: function totalSupply() returns(uint256 out)
 func (_Erc20 *Erc20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Erc20.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _Erc20.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256 out)
+// Solidity: function totalSupply() returns(uint256 out)
 func (_Erc20 *Erc20Session) TotalSupply() (*big.Int, error) {
 	return _Erc20.Contract.TotalSupply(&_Erc20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256 out)
+// Solidity: function totalSupply() returns(uint256 out)
 func (_Erc20 *Erc20CallerSession) TotalSupply() (*big.Int, error) {
 	return _Erc20.Contract.TotalSupply(&_Erc20.CallOpts)
 }
@@ -558,6 +587,7 @@ func (_Erc20 *Erc20Filterer) ParseApproval(log types.Log) (*Erc20Approval, error
 	if err := _Erc20.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -711,5 +741,6 @@ func (_Erc20 *Erc20Filterer) ParseTransfer(log types.Log) (*Erc20Transfer, error
 	if err := _Erc20.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }

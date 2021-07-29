@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -149,7 +148,7 @@ func bindIERC20(address common.Address, caller bind.ContractCaller, transactor b
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IERC20.Contract.IERC20Caller.contract.Call(opts, result, method, params...)
 }
 
@@ -168,7 +167,7 @@ func (_IERC20 *IERC20Raw) Transact(opts *bind.TransactOpts, method string, param
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IERC20.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -185,104 +184,124 @@ func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "allowance", owner, spender)
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "allowance", owner, spender)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "balanceOf", account)
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "balanceOf", account)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20Session) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20Session) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
@@ -500,6 +519,7 @@ func (_IERC20 *IERC20Filterer) ParseApproval(log types.Log) (*IERC20Approval, er
 	if err := _IERC20.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -653,6 +673,7 @@ func (_IERC20 *IERC20Filterer) ParseTransfer(log types.Log) (*IERC20Transfer, er
 	if err := _IERC20.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -792,7 +813,7 @@ func bindKBNTrade(address common.Address, caller bind.ContractCaller, transactor
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_KBNTrade *KBNTradeRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_KBNTrade *KBNTradeRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _KBNTrade.Contract.KBNTradeCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -811,7 +832,7 @@ func (_KBNTrade *KBNTradeRaw) Transact(opts *bind.TransactOpts, method string, p
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_KBNTrade *KBNTradeCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_KBNTrade *KBNTradeCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _KBNTrade.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -828,105 +849,138 @@ func (_KBNTrade *KBNTradeTransactorRaw) Transact(opts *bind.TransactOpts, method
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_KBNTrade *KBNTradeCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _KBNTrade.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
-	return *ret0, err
+	var out []interface{}
+	err := _KBNTrade.contract.Call(opts, &out, "ETH_CONTRACT_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_KBNTrade *KBNTradeSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _KBNTrade.Contract.ETHCONTRACTADDRESS(&_KBNTrade.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_KBNTrade *KBNTradeCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _KBNTrade.Contract.ETHCONTRACTADDRESS(&_KBNTrade.CallOpts)
 }
 
 // GetConversionRates is a free data retrieval call binding the contract method 0x0aea8188.
 //
-// Solidity: function getConversionRates(address srcToken, uint256 srcQty, address destToken) constant returns(uint256, uint256)
+// Solidity: function getConversionRates(address srcToken, uint256 srcQty, address destToken) view returns(uint256, uint256)
 func (_KBNTrade *KBNTradeCaller) GetConversionRates(opts *bind.CallOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address) (*big.Int, *big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-		ret1 = new(*big.Int)
-	)
-	out := &[]interface{}{
-		ret0,
-		ret1,
+	var out []interface{}
+	err := _KBNTrade.contract.Call(opts, &out, "getConversionRates", srcToken, srcQty, destToken)
+
+	if err != nil {
+		return *new(*big.Int), *new(*big.Int), err
 	}
-	err := _KBNTrade.contract.Call(opts, out, "getConversionRates", srcToken, srcQty, destToken)
-	return *ret0, *ret1, err
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	out1 := *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return out0, out1, err
+
 }
 
 // GetConversionRates is a free data retrieval call binding the contract method 0x0aea8188.
 //
-// Solidity: function getConversionRates(address srcToken, uint256 srcQty, address destToken) constant returns(uint256, uint256)
+// Solidity: function getConversionRates(address srcToken, uint256 srcQty, address destToken) view returns(uint256, uint256)
 func (_KBNTrade *KBNTradeSession) GetConversionRates(srcToken common.Address, srcQty *big.Int, destToken common.Address) (*big.Int, *big.Int, error) {
 	return _KBNTrade.Contract.GetConversionRates(&_KBNTrade.CallOpts, srcToken, srcQty, destToken)
 }
 
 // GetConversionRates is a free data retrieval call binding the contract method 0x0aea8188.
 //
-// Solidity: function getConversionRates(address srcToken, uint256 srcQty, address destToken) constant returns(uint256, uint256)
+// Solidity: function getConversionRates(address srcToken, uint256 srcQty, address destToken) view returns(uint256, uint256)
 func (_KBNTrade *KBNTradeCallerSession) GetConversionRates(srcToken common.Address, srcQty *big.Int, destToken common.Address) (*big.Int, *big.Int, error) {
 	return _KBNTrade.Contract.GetConversionRates(&_KBNTrade.CallOpts, srcToken, srcQty, destToken)
 }
 
 // KyberNetworkProxyContract is a free data retrieval call binding the contract method 0x785250da.
 //
-// Solidity: function kyberNetworkProxyContract() constant returns(address)
+// Solidity: function kyberNetworkProxyContract() view returns(address)
 func (_KBNTrade *KBNTradeCaller) KyberNetworkProxyContract(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _KBNTrade.contract.Call(opts, out, "kyberNetworkProxyContract")
-	return *ret0, err
+	var out []interface{}
+	err := _KBNTrade.contract.Call(opts, &out, "kyberNetworkProxyContract")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // KyberNetworkProxyContract is a free data retrieval call binding the contract method 0x785250da.
 //
-// Solidity: function kyberNetworkProxyContract() constant returns(address)
+// Solidity: function kyberNetworkProxyContract() view returns(address)
 func (_KBNTrade *KBNTradeSession) KyberNetworkProxyContract() (common.Address, error) {
 	return _KBNTrade.Contract.KyberNetworkProxyContract(&_KBNTrade.CallOpts)
 }
 
 // KyberNetworkProxyContract is a free data retrieval call binding the contract method 0x785250da.
 //
-// Solidity: function kyberNetworkProxyContract() constant returns(address)
+// Solidity: function kyberNetworkProxyContract() view returns(address)
 func (_KBNTrade *KBNTradeCallerSession) KyberNetworkProxyContract() (common.Address, error) {
 	return _KBNTrade.Contract.KyberNetworkProxyContract(&_KBNTrade.CallOpts)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 minConversionRate) returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 minConversionRate) payable returns(address, uint256)
 func (_KBNTrade *KBNTradeTransactor) Trade(opts *bind.TransactOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address, minConversionRate *big.Int) (*types.Transaction, error) {
 	return _KBNTrade.contract.Transact(opts, "trade", srcToken, srcQty, destToken, minConversionRate)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 minConversionRate) returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 minConversionRate) payable returns(address, uint256)
 func (_KBNTrade *KBNTradeSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, minConversionRate *big.Int) (*types.Transaction, error) {
 	return _KBNTrade.Contract.Trade(&_KBNTrade.TransactOpts, srcToken, srcQty, destToken, minConversionRate)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 minConversionRate) returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 minConversionRate) payable returns(address, uint256)
 func (_KBNTrade *KBNTradeTransactorSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, minConversionRate *big.Int) (*types.Transaction, error) {
 	return _KBNTrade.Contract.Trade(&_KBNTrade.TransactOpts, srcToken, srcQty, destToken, minConversionRate)
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_KBNTrade *KBNTradeTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _KBNTrade.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_KBNTrade *KBNTradeSession) Receive() (*types.Transaction, error) {
+	return _KBNTrade.Contract.Receive(&_KBNTrade.TransactOpts)
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_KBNTrade *KBNTradeTransactorSession) Receive() (*types.Transaction, error) {
+	return _KBNTrade.Contract.Receive(&_KBNTrade.TransactOpts)
 }
 
 // KyberNetworkABI is the input ABI used to generate the binding from.
@@ -1049,7 +1103,7 @@ func bindKyberNetwork(address common.Address, caller bind.ContractCaller, transa
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_KyberNetwork *KyberNetworkRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_KyberNetwork *KyberNetworkRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _KyberNetwork.Contract.KyberNetworkCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -1068,7 +1122,7 @@ func (_KyberNetwork *KyberNetworkRaw) Transact(opts *bind.TransactOpts, method s
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_KyberNetwork *KyberNetworkCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_KyberNetwork *KyberNetworkCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _KyberNetwork.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1085,23 +1139,32 @@ func (_KyberNetwork *KyberNetworkTransactorRaw) Transact(opts *bind.TransactOpts
 
 // GetExpectedRate is a free data retrieval call binding the contract method 0x809a9e55.
 //
-// Solidity: function getExpectedRate(address src, address dest, uint256 srcQty) constant returns(uint256 expectedRate, uint256 slippageRate)
+// Solidity: function getExpectedRate(address src, address dest, uint256 srcQty) view returns(uint256 expectedRate, uint256 slippageRate)
 func (_KyberNetwork *KyberNetworkCaller) GetExpectedRate(opts *bind.CallOpts, src common.Address, dest common.Address, srcQty *big.Int) (struct {
 	ExpectedRate *big.Int
 	SlippageRate *big.Int
 }, error) {
-	ret := new(struct {
+	var out []interface{}
+	err := _KyberNetwork.contract.Call(opts, &out, "getExpectedRate", src, dest, srcQty)
+
+	outstruct := new(struct {
 		ExpectedRate *big.Int
 		SlippageRate *big.Int
 	})
-	out := ret
-	err := _KyberNetwork.contract.Call(opts, out, "getExpectedRate", src, dest, srcQty)
-	return *ret, err
+	if err != nil {
+		return *outstruct, err
+	}
+
+	outstruct.ExpectedRate = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	outstruct.SlippageRate = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+
+	return *outstruct, err
+
 }
 
 // GetExpectedRate is a free data retrieval call binding the contract method 0x809a9e55.
 //
-// Solidity: function getExpectedRate(address src, address dest, uint256 srcQty) constant returns(uint256 expectedRate, uint256 slippageRate)
+// Solidity: function getExpectedRate(address src, address dest, uint256 srcQty) view returns(uint256 expectedRate, uint256 slippageRate)
 func (_KyberNetwork *KyberNetworkSession) GetExpectedRate(src common.Address, dest common.Address, srcQty *big.Int) (struct {
 	ExpectedRate *big.Int
 	SlippageRate *big.Int
@@ -1111,7 +1174,7 @@ func (_KyberNetwork *KyberNetworkSession) GetExpectedRate(src common.Address, de
 
 // GetExpectedRate is a free data retrieval call binding the contract method 0x809a9e55.
 //
-// Solidity: function getExpectedRate(address src, address dest, uint256 srcQty) constant returns(uint256 expectedRate, uint256 slippageRate)
+// Solidity: function getExpectedRate(address src, address dest, uint256 srcQty) view returns(uint256 expectedRate, uint256 slippageRate)
 func (_KyberNetwork *KyberNetworkCallerSession) GetExpectedRate(src common.Address, dest common.Address, srcQty *big.Int) (struct {
 	ExpectedRate *big.Int
 	SlippageRate *big.Int
@@ -1121,21 +1184,21 @@ func (_KyberNetwork *KyberNetworkCallerSession) GetExpectedRate(src common.Addre
 
 // SwapEtherToToken is a paid mutator transaction binding the contract method 0x7a2a0456.
 //
-// Solidity: function swapEtherToToken(address token, uint256 minConversionRate) returns(uint256)
+// Solidity: function swapEtherToToken(address token, uint256 minConversionRate) payable returns(uint256)
 func (_KyberNetwork *KyberNetworkTransactor) SwapEtherToToken(opts *bind.TransactOpts, token common.Address, minConversionRate *big.Int) (*types.Transaction, error) {
 	return _KyberNetwork.contract.Transact(opts, "swapEtherToToken", token, minConversionRate)
 }
 
 // SwapEtherToToken is a paid mutator transaction binding the contract method 0x7a2a0456.
 //
-// Solidity: function swapEtherToToken(address token, uint256 minConversionRate) returns(uint256)
+// Solidity: function swapEtherToToken(address token, uint256 minConversionRate) payable returns(uint256)
 func (_KyberNetwork *KyberNetworkSession) SwapEtherToToken(token common.Address, minConversionRate *big.Int) (*types.Transaction, error) {
 	return _KyberNetwork.Contract.SwapEtherToToken(&_KyberNetwork.TransactOpts, token, minConversionRate)
 }
 
 // SwapEtherToToken is a paid mutator transaction binding the contract method 0x7a2a0456.
 //
-// Solidity: function swapEtherToToken(address token, uint256 minConversionRate) returns(uint256)
+// Solidity: function swapEtherToToken(address token, uint256 minConversionRate) payable returns(uint256)
 func (_KyberNetwork *KyberNetworkTransactorSession) SwapEtherToToken(token common.Address, minConversionRate *big.Int) (*types.Transaction, error) {
 	return _KyberNetwork.Contract.SwapEtherToToken(&_KyberNetwork.TransactOpts, token, minConversionRate)
 }
@@ -1184,21 +1247,21 @@ func (_KyberNetwork *KyberNetworkTransactorSession) SwapTokenToToken(src common.
 
 // Trade is a paid mutator transaction binding the contract method 0xcb3c28c7.
 //
-// Solidity: function trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId) returns(uint256)
+// Solidity: function trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId) payable returns(uint256)
 func (_KyberNetwork *KyberNetworkTransactor) Trade(opts *bind.TransactOpts, src common.Address, srcAmount *big.Int, dest common.Address, destAddress common.Address, maxDestAmount *big.Int, minConversionRate *big.Int, walletId common.Address) (*types.Transaction, error) {
 	return _KyberNetwork.contract.Transact(opts, "trade", src, srcAmount, dest, destAddress, maxDestAmount, minConversionRate, walletId)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xcb3c28c7.
 //
-// Solidity: function trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId) returns(uint256)
+// Solidity: function trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId) payable returns(uint256)
 func (_KyberNetwork *KyberNetworkSession) Trade(src common.Address, srcAmount *big.Int, dest common.Address, destAddress common.Address, maxDestAmount *big.Int, minConversionRate *big.Int, walletId common.Address) (*types.Transaction, error) {
 	return _KyberNetwork.Contract.Trade(&_KyberNetwork.TransactOpts, src, srcAmount, dest, destAddress, maxDestAmount, minConversionRate, walletId)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xcb3c28c7.
 //
-// Solidity: function trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId) returns(uint256)
+// Solidity: function trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId) payable returns(uint256)
 func (_KyberNetwork *KyberNetworkTransactorSession) Trade(src common.Address, srcAmount *big.Int, dest common.Address, destAddress common.Address, maxDestAmount *big.Int, minConversionRate *big.Int, walletId common.Address) (*types.Transaction, error) {
 	return _KyberNetwork.Contract.Trade(&_KyberNetwork.TransactOpts, src, srcAmount, dest, destAddress, maxDestAmount, minConversionRate, walletId)
 }
@@ -1336,7 +1399,7 @@ func bindTradeUtils(address common.Address, caller bind.ContractCaller, transact
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_TradeUtils *TradeUtilsRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_TradeUtils *TradeUtilsRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _TradeUtils.Contract.TradeUtilsCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -1355,7 +1418,7 @@ func (_TradeUtils *TradeUtilsRaw) Transact(opts *bind.TransactOpts, method strin
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_TradeUtils *TradeUtilsCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_TradeUtils *TradeUtilsCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _TradeUtils.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1372,26 +1435,31 @@ func (_TradeUtils *TradeUtilsTransactorRaw) Transact(opts *bind.TransactOpts, me
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_TradeUtils *TradeUtilsCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _TradeUtils.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
-	return *ret0, err
+	var out []interface{}
+	err := _TradeUtils.contract.Call(opts, &out, "ETH_CONTRACT_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_TradeUtils *TradeUtilsSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_TradeUtils *TradeUtilsCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
 }

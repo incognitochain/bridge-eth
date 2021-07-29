@@ -1,0 +1,125 @@
+Nothing to compile
+deploying "IncognitoProxy" (tx: 0x02fed582c6b68966a226238063ab509e1162cddde1971e3d717c3a841cf09eba)...: deployed at 0x74594291AFEff92B3c5C3eE1c791056c03c49373 with 3471869 gas
+deploying "Vault" (tx: 0x5a2c59863e0f6594440386d4b2df26e64f601ac59fe485a76938c706230ded63)...: deployed at 0xc04aE943D4Be46EEad5a68587B0f61C274045cd0 with 4847108 gas
+will deploy proxy & upgrade with params 0xc04aE943D4Be46EEad5a68587B0f61C274045cd0 0x126748A0144968DD14b0187B906dE62378c59067 0x74594291AFEff92B3c5C3eE1c791056c03c49373 0xc4d66de80000000000000000000000007c7e371d1e25771f2242833c1a354dce846f3ec8
+deploying "TransparentUpgradeableProxy" (tx: 0xd3ea59902185b13765e931947c7884297111ae250daa687ca59dfca163271225)...: deployed at 0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7 with 1120535 gas
+
+DEV : Incognito nodes should use 0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7 as EthVaultContract
+admin 0x126748A0144968DD14b0187B906dE62378c59067 will upgrade 0x7c7e371D1e25771f2242833C1A354dCE846f3ec8 to 0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7
+0x4595767d3060f571565ec315d2f813b9a2681cfbd49d938cb42f6c898161a092 => waiting for 2 confirmations
+Gas used: 45733
+0x294ac155bb322846cf79626f1ccf51b69121bc8d0b6d36f277601663fa25ee63 => waiting for 2 confirmations
+Gas used: 31914
+0x845d737482e24581bc78d178cdda311b2c3befb401af331b626ec5e3a24db622 => waiting for 2 confirmations
+Gas used: 211123
+{
+  'Balance Comparison': {
+    '0xE94747D0CDE29064e543B682D2E928795F86bEDe': [ '0', '0' ],
+    '0x7ecd5a768add5c4b620c17d169f91c537cec8b4c': [ '0', '0' ],
+    '0x42886047bffcc8207688d7f480a569f24779f406': [ '0', '0' ],
+    '0x7079f3762805cff9c979a5bdc6f5648bcfee76c8': [ '0', '0' ],
+    '0x628796a2d192b3c595cacf03ecaf1f51a78198e3': [ '0', '0' ],
+    '0x4c6e1efc12fdfd568186b7baec0a43fffb4bcccf': [ '0', '0' ],
+    '0x64f42416317fe7996b0c547d823effb7d8bf2988': [ '0', '0' ],
+    '0xe6a51cf10d43365c179ab54b78e0d875b1364dc0': [ '0', '0' ],
+    '0x1ff4bc2720e26128287782e3a549879e89714f88': [ '0', '0' ],
+    '0x5d661f79c7fb221a962db80ada71e20ccae588e1': [ '0', '0' ],
+    '0xafbbb0875bb95c4983253effe4e0fffe1c544633': [ '0', '0' ],
+    '0xbe2aea7e0c174aea3027ae88cc33990a960ad512': [ '0', '0' ],
+    '0x25e91e333fb7c8993db8ba70ece97a00cf78ee39': [ '0', '0' ],
+    '0xd17ae18e75b7f908672caca4b3387910e1603a62': [ '0', '0' ],
+    '0x2517dcc7b71d76fa4dbd8bd7d63be2954afc071d': [ '0', '0' ],
+    '0x6911a48876cdc65eaed95569e9bd64cb8701aaa2': [ '0', '0' ]
+  }
+}
+{
+  'Deposit Comparison': {
+    '0xE94747D0CDE29064e543B682D2E928795F86bEDe': [ '0', '0' ],
+    '0x7ecd5a768add5c4b620c17d169f91c537cec8b4c': [ '0', '0' ],
+    '0x42886047bffcc8207688d7f480a569f24779f406': [ '0', '0' ],
+    '0x7079f3762805cff9c979a5bdc6f5648bcfee76c8': [ '0', '0' ],
+    '0x628796a2d192b3c595cacf03ecaf1f51a78198e3': [ '0', '0' ],
+    '0x4c6e1efc12fdfd568186b7baec0a43fffb4bcccf': [ '0', '0' ],
+    '0x64f42416317fe7996b0c547d823effb7d8bf2988': [ '0', '0' ],
+    '0xe6a51cf10d43365c179ab54b78e0d875b1364dc0': [ '0', '0' ],
+    '0x1ff4bc2720e26128287782e3a549879e89714f88': [ '0', '0' ],
+    '0x5d661f79c7fb221a962db80ada71e20ccae588e1': [ '0', '0' ],
+    '0xafbbb0875bb95c4983253effe4e0fffe1c544633': [ '0', '0' ],
+    '0xbe2aea7e0c174aea3027ae88cc33990a960ad512': [ '0', '0' ],
+    '0x25e91e333fb7c8993db8ba70ece97a00cf78ee39': [ '0', '0' ],
+    '0xd17ae18e75b7f908672caca4b3387910e1603a62': [ '0', '0' ],
+    '0x2517dcc7b71d76fa4dbd8bd7d63be2954afc071d': [ '0', '0' ],
+    '0x6911a48876cdc65eaed95569e9bd64cb8701aaa2': [ '0', '0' ]
+  }
+}
+Using trade router addresses
+{
+  kyber: '0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D',
+  kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+  testingTokens: [
+    '0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd',
+    '0xdB7ec4E4784118D9733710e46F7C83fE7889596a',
+    '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
+  ]
+}
+deploying "KBNTrade" (tx: 0x78d1480d02ae694987b3de95bae0915738d3cca29224a055dad7ca391d21d910)...: deployed at 0x1ec63144756FC4905341ef5907fB7873cCDdb798 with 711431 gas
+deploying "UniswapV2Trade" (tx: 0x6be7a71f958cad6cf33bcd08ccc73577550be56ef6ae6fdd672df0edafc474b8)...: deployed at 0xCd2Ca09366a16b0Bc374874D7B9d45C54AcDa900 with 1047026 gas
+
+0xf25be1500eac63847fd990c1b0e984ec5f1caf9093ac1262287e6a6f352d90e8 => waiting for 2 confirmations
+Gas used: 239221
+{
+  'Balance Comparison': {
+    '0x0000000000000000000000000000000000000000': [ '39716281298777868863', '39716281298777868863' ],
+    '0xE94747D0CDE29064e543B682D2E928795F86bEDe': [ '0', '0' ],
+    '0x7ecd5a768add5c4b620c17d169f91c537cec8b4c': [ '0', '0' ],
+    '0x42886047bffcc8207688d7f480a569f24779f406': [ '0', '0' ],
+    '0x7079f3762805cff9c979a5bdc6f5648bcfee76c8': [ '0', '0' ],
+    '0x628796a2d192b3c595cacf03ecaf1f51a78198e3': [ '0', '0' ],
+    '0x4c6e1efc12fdfd568186b7baec0a43fffb4bcccf': [ '0', '0' ],
+    '0x64f42416317fe7996b0c547d823effb7d8bf2988': [ '0', '0' ],
+    '0xe6a51cf10d43365c179ab54b78e0d875b1364dc0': [ '0', '0' ],
+    '0x1ff4bc2720e26128287782e3a549879e89714f88': [ '0', '0' ],
+    '0x5d661f79c7fb221a962db80ada71e20ccae588e1': [ '0', '0' ],
+    '0xafbbb0875bb95c4983253effe4e0fffe1c544633': [ '0', '0' ],
+    '0xbe2aea7e0c174aea3027ae88cc33990a960ad512': [ '0', '0' ],
+    '0x25e91e333fb7c8993db8ba70ece97a00cf78ee39': [ '0', '0' ],
+    '0xd17ae18e75b7f908672caca4b3387910e1603a62': [ '0', '0' ],
+    '0x2517dcc7b71d76fa4dbd8bd7d63be2954afc071d': [ '0', '0' ],
+    '0x6911a48876cdc65eaed95569e9bd64cb8701aaa2': [ '0', '0' ]
+  }
+}
+{
+  'Deposit Comparison': {
+    '0x0000000000000000000000000000000000000000': [ '101001998001000000', '101001998001000000' ],
+    '0xE94747D0CDE29064e543B682D2E928795F86bEDe': [ '0', '0' ],
+    '0x7ecd5a768add5c4b620c17d169f91c537cec8b4c': [ '0', '0' ],
+    '0x42886047bffcc8207688d7f480a569f24779f406': [ '0', '0' ],
+    '0x7079f3762805cff9c979a5bdc6f5648bcfee76c8': [ '0', '0' ],
+    '0x628796a2d192b3c595cacf03ecaf1f51a78198e3': [ '0', '0' ],
+    '0x4c6e1efc12fdfd568186b7baec0a43fffb4bcccf': [ '0', '0' ],
+    '0x64f42416317fe7996b0c547d823effb7d8bf2988': [ '0', '0' ],
+    '0xe6a51cf10d43365c179ab54b78e0d875b1364dc0': [ '0', '0' ],
+    '0x1ff4bc2720e26128287782e3a549879e89714f88': [ '0', '0' ],
+    '0x5d661f79c7fb221a962db80ada71e20ccae588e1': [ '0', '0' ],
+    '0xafbbb0875bb95c4983253effe4e0fffe1c544633': [ '0', '0' ],
+    '0xbe2aea7e0c174aea3027ae88cc33990a960ad512': [ '0', '0' ],
+    '0x25e91e333fb7c8993db8ba70ece97a00cf78ee39': [ '0', '0' ],
+    '0xd17ae18e75b7f908672caca4b3387910e1603a62': [ '0', '0' ],
+    '0x2517dcc7b71d76fa4dbd8bd7d63be2954afc071d': [ '0', '0' ],
+    '0x6911a48876cdc65eaed95569e9bd64cb8701aaa2': [ '0', '0' ]
+  }
+}
+Using trade router addresses
+{
+  kyber: '0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D',
+  kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+  uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+  testingTokens: [
+    '0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd',
+    '0xdB7ec4E4784118D9733710e46F7C83fE7889596a',
+    '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
+  ]
+}
+reusing "KBNTrade" at 0x1ec63144756FC4905341ef5907fB7873cCDdb798
+reusing "UniswapV2Trade" at 0xCd2Ca09366a16b0Bc374874D7B9d45C54AcDa900

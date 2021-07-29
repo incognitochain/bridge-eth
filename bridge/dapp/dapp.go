@@ -20,7 +20,6 @@ var (
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
@@ -155,7 +154,7 @@ func bindDapp(address common.Address, caller bind.ContractCaller, transactor bin
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Dapp *DappRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Dapp *DappRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Dapp.Contract.DappCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -174,7 +173,7 @@ func (_Dapp *DappRaw) Transact(opts *bind.TransactOpts, method string, params ..
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_Dapp *DappCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_Dapp *DappCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _Dapp.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -191,162 +190,198 @@ func (_Dapp *DappTransactorRaw) Transact(opts *bind.TransactOpts, method string,
 
 // Reentrance is a free data retrieval call binding the contract method 0x002a3bb1.
 //
-// Solidity: function reentrance() constant returns(uint256)
+// Solidity: function reentrance() view returns(uint256)
 func (_Dapp *DappCaller) Reentrance(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Dapp.contract.Call(opts, out, "reentrance")
-	return *ret0, err
+	var out []interface{}
+	err := _Dapp.contract.Call(opts, &out, "reentrance")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Reentrance is a free data retrieval call binding the contract method 0x002a3bb1.
 //
-// Solidity: function reentrance() constant returns(uint256)
+// Solidity: function reentrance() view returns(uint256)
 func (_Dapp *DappSession) Reentrance() (*big.Int, error) {
 	return _Dapp.Contract.Reentrance(&_Dapp.CallOpts)
 }
 
 // Reentrance is a free data retrieval call binding the contract method 0x002a3bb1.
 //
-// Solidity: function reentrance() constant returns(uint256)
+// Solidity: function reentrance() view returns(uint256)
 func (_Dapp *DappCallerSession) Reentrance() (*big.Int, error) {
 	return _Dapp.Contract.Reentrance(&_Dapp.CallOpts)
 }
 
 // TestAmount is a free data retrieval call binding the contract method 0x788c8081.
 //
-// Solidity: function test_amount() constant returns(uint256)
+// Solidity: function test_amount() view returns(uint256)
 func (_Dapp *DappCaller) TestAmount(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _Dapp.contract.Call(opts, out, "test_amount")
-	return *ret0, err
+	var out []interface{}
+	err := _Dapp.contract.Call(opts, &out, "test_amount")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TestAmount is a free data retrieval call binding the contract method 0x788c8081.
 //
-// Solidity: function test_amount() constant returns(uint256)
+// Solidity: function test_amount() view returns(uint256)
 func (_Dapp *DappSession) TestAmount() (*big.Int, error) {
 	return _Dapp.Contract.TestAmount(&_Dapp.CallOpts)
 }
 
 // TestAmount is a free data retrieval call binding the contract method 0x788c8081.
 //
-// Solidity: function test_amount() constant returns(uint256)
+// Solidity: function test_amount() view returns(uint256)
 func (_Dapp *DappCallerSession) TestAmount() (*big.Int, error) {
 	return _Dapp.Contract.TestAmount(&_Dapp.CallOpts)
 }
 
 // Vault is a free data retrieval call binding the contract method 0xfbfa77cf.
 //
-// Solidity: function vault() constant returns(address)
+// Solidity: function vault() view returns(address)
 func (_Dapp *DappCaller) Vault(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _Dapp.contract.Call(opts, out, "vault")
-	return *ret0, err
+	var out []interface{}
+	err := _Dapp.contract.Call(opts, &out, "vault")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Vault is a free data retrieval call binding the contract method 0xfbfa77cf.
 //
-// Solidity: function vault() constant returns(address)
+// Solidity: function vault() view returns(address)
 func (_Dapp *DappSession) Vault() (common.Address, error) {
 	return _Dapp.Contract.Vault(&_Dapp.CallOpts)
 }
 
 // Vault is a free data retrieval call binding the contract method 0xfbfa77cf.
 //
-// Solidity: function vault() constant returns(address)
+// Solidity: function vault() view returns(address)
 func (_Dapp *DappCallerSession) Vault() (common.Address, error) {
 	return _Dapp.Contract.Vault(&_Dapp.CallOpts)
 }
 
 // ReEntranceAttack is a paid mutator transaction binding the contract method 0xbabd22a4.
 //
-// Solidity: function ReEntranceAttack(address destToken, bytes datacall) returns(address, uint256)
+// Solidity: function ReEntranceAttack(address destToken, bytes datacall) payable returns(address, uint256)
 func (_Dapp *DappTransactor) ReEntranceAttack(opts *bind.TransactOpts, destToken common.Address, datacall []byte) (*types.Transaction, error) {
 	return _Dapp.contract.Transact(opts, "ReEntranceAttack", destToken, datacall)
 }
 
 // ReEntranceAttack is a paid mutator transaction binding the contract method 0xbabd22a4.
 //
-// Solidity: function ReEntranceAttack(address destToken, bytes datacall) returns(address, uint256)
+// Solidity: function ReEntranceAttack(address destToken, bytes datacall) payable returns(address, uint256)
 func (_Dapp *DappSession) ReEntranceAttack(destToken common.Address, datacall []byte) (*types.Transaction, error) {
 	return _Dapp.Contract.ReEntranceAttack(&_Dapp.TransactOpts, destToken, datacall)
 }
 
 // ReEntranceAttack is a paid mutator transaction binding the contract method 0xbabd22a4.
 //
-// Solidity: function ReEntranceAttack(address destToken, bytes datacall) returns(address, uint256)
+// Solidity: function ReEntranceAttack(address destToken, bytes datacall) payable returns(address, uint256)
 func (_Dapp *DappTransactorSession) ReEntranceAttack(destToken common.Address, datacall []byte) (*types.Transaction, error) {
 	return _Dapp.Contract.ReEntranceAttack(&_Dapp.TransactOpts, destToken, datacall)
 }
 
 // ReturnAmountWithoutTranfer is a paid mutator transaction binding the contract method 0x68076763.
 //
-// Solidity: function ReturnAmountWithoutTranfer(address destToken) returns(address, uint256)
+// Solidity: function ReturnAmountWithoutTranfer(address destToken) payable returns(address, uint256)
 func (_Dapp *DappTransactor) ReturnAmountWithoutTranfer(opts *bind.TransactOpts, destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.contract.Transact(opts, "ReturnAmountWithoutTranfer", destToken)
 }
 
 // ReturnAmountWithoutTranfer is a paid mutator transaction binding the contract method 0x68076763.
 //
-// Solidity: function ReturnAmountWithoutTranfer(address destToken) returns(address, uint256)
+// Solidity: function ReturnAmountWithoutTranfer(address destToken) payable returns(address, uint256)
 func (_Dapp *DappSession) ReturnAmountWithoutTranfer(destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.Contract.ReturnAmountWithoutTranfer(&_Dapp.TransactOpts, destToken)
 }
 
 // ReturnAmountWithoutTranfer is a paid mutator transaction binding the contract method 0x68076763.
 //
-// Solidity: function ReturnAmountWithoutTranfer(address destToken) returns(address, uint256)
+// Solidity: function ReturnAmountWithoutTranfer(address destToken) payable returns(address, uint256)
 func (_Dapp *DappTransactorSession) ReturnAmountWithoutTranfer(destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.Contract.ReturnAmountWithoutTranfer(&_Dapp.TransactOpts, destToken)
 }
 
 // RevertCall is a paid mutator transaction binding the contract method 0x80f9c685.
 //
-// Solidity: function revertCall(address destToken) returns(address, uint256)
+// Solidity: function revertCall(address destToken) payable returns(address, uint256)
 func (_Dapp *DappTransactor) RevertCall(opts *bind.TransactOpts, destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.contract.Transact(opts, "revertCall", destToken)
 }
 
 // RevertCall is a paid mutator transaction binding the contract method 0x80f9c685.
 //
-// Solidity: function revertCall(address destToken) returns(address, uint256)
+// Solidity: function revertCall(address destToken) payable returns(address, uint256)
 func (_Dapp *DappSession) RevertCall(destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.Contract.RevertCall(&_Dapp.TransactOpts, destToken)
 }
 
 // RevertCall is a paid mutator transaction binding the contract method 0x80f9c685.
 //
-// Solidity: function revertCall(address destToken) returns(address, uint256)
+// Solidity: function revertCall(address destToken) payable returns(address, uint256)
 func (_Dapp *DappTransactorSession) RevertCall(destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.Contract.RevertCall(&_Dapp.TransactOpts, destToken)
 }
 
 // SimpleCall is a paid mutator transaction binding the contract method 0x84ea73e7.
 //
-// Solidity: function simpleCall(address destToken) returns(address, uint256)
+// Solidity: function simpleCall(address destToken) payable returns(address, uint256)
 func (_Dapp *DappTransactor) SimpleCall(opts *bind.TransactOpts, destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.contract.Transact(opts, "simpleCall", destToken)
 }
 
 // SimpleCall is a paid mutator transaction binding the contract method 0x84ea73e7.
 //
-// Solidity: function simpleCall(address destToken) returns(address, uint256)
+// Solidity: function simpleCall(address destToken) payable returns(address, uint256)
 func (_Dapp *DappSession) SimpleCall(destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.Contract.SimpleCall(&_Dapp.TransactOpts, destToken)
 }
 
 // SimpleCall is a paid mutator transaction binding the contract method 0x84ea73e7.
 //
-// Solidity: function simpleCall(address destToken) returns(address, uint256)
+// Solidity: function simpleCall(address destToken) payable returns(address, uint256)
 func (_Dapp *DappTransactorSession) SimpleCall(destToken common.Address) (*types.Transaction, error) {
 	return _Dapp.Contract.SimpleCall(&_Dapp.TransactOpts, destToken)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_Dapp *DappTransactor) Fallback(opts *bind.TransactOpts, calldata []byte) (*types.Transaction, error) {
+	return _Dapp.contract.RawTransact(opts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_Dapp *DappSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _Dapp.Contract.Fallback(&_Dapp.TransactOpts, calldata)
+}
+
+// Fallback is a paid mutator transaction binding the contract fallback function.
+//
+// Solidity: fallback() payable returns()
+func (_Dapp *DappTransactorSession) Fallback(calldata []byte) (*types.Transaction, error) {
+	return _Dapp.Contract.Fallback(&_Dapp.TransactOpts, calldata)
 }

@@ -53,7 +53,7 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			desc:   "Success",
 			caller: genesisAcc,
 			paused: true,
-			err: false,
+			err:    false,
 		},
 		{
 			desc:   "Not admin",
@@ -113,16 +113,16 @@ func TestFixedIsWithdrawedFalse(t *testing.T) {
 	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Deploy new Vault
-	vDelegatorAddr, _, _, err :=  vault.DeployVault(auth, p.sim)
+	vDelegatorAddr, _, _, err := vault.DeployVault(auth, p.sim)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
 	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
-	
+
 	// set new delegator
-	proxyVault, err := vaultproxy.NewVaultproxy(p.vAddr, p.sim)
+	proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(p.vAddr, p.sim)
 	_, err = proxyVault.UpgradeTo(auth, vDelegatorAddr)
 	assert.Nil(t, err)
 	p.sim.Commit()
@@ -168,16 +168,16 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	assert.Equal(t, bal, big.NewInt(150000000000))
 
 	// Deploy new delegator
-	vDelegatorAddr, _, _, err :=  vault.DeployVault(auth, p.sim)
+	vDelegatorAddr, _, _, err := vault.DeployVault(auth, p.sim)
 	assert.Nil(t, err)
 	p.sim.Commit()
 
 	_, err = p.vp.Pause(auth)
 	assert.Nil(t, err)
 	p.sim.Commit()
-	
+
 	// set new delegator
-	proxyVault, err := vaultproxy.NewVaultproxy(p.vAddr, p.sim)
+	proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(p.vAddr, p.sim)
 	_, err = proxyVault.UpgradeTo(auth, vDelegatorAddr)
 	assert.Nil(t, err)
 	p.sim.Commit()
@@ -226,7 +226,6 @@ func TestFixedWithdrawERC20(t *testing.T) {
 		t.Fatalf("incorrect balance after withdrawing, expect %d, got %d", 1000000000, bal)
 	}
 }
-
 
 // func TestFixedMoveERC20(t *testing.T) {
 // 	p, _, _ := setupFixedCommittee() // New SimulatedBackend each time => ERC20 address is fixed
@@ -586,17 +585,17 @@ func extractAmountInDepositERC20Event(sim *backends.SimulatedBackend, tx *types.
 		return nil, errors.WithStack(err)
 	}
 
-	e := struct {
-		Token            ec.Address
-		IncognitoAddress string
-		Amount           *big.Int
-	}{}
+	//e := struct {
+	//	Token            ec.Address
+	//	IncognitoAddress string
+	//	Amount           *big.Int
+	//}{}
 	fmt.Printf("%+v\n", cAbi.Events["Deposit"])
-	err = cAbi.Unpack(&e, "Deposit", data)
-	if err != nil {
+	depositResult, err := cAbi.Unpack("Deposit", data)
+	if err != nil || len(depositResult) < 3 {
 		return nil, errors.WithStack(err)
 	}
-	return e.Amount, nil
+	return depositResult[2].(*big.Int), nil
 }
 
 func TestFixedDepositOverbalanceERC20(t *testing.T) {
@@ -1089,13 +1088,6 @@ func buildDecodedWithdrawInst(meta, shard int, tokenID, withdrawer ec.Address, a
 	decoded = append(decoded, toBytes32BigEndian(make([]byte, 32))...) // txID
 	decoded = append(decoded, make([]byte, 16)...)                     // incTokenID, variable length
 	return decoded
-}
-
-type committees struct {
-	beacons     []ec.Address
-	bridges     []ec.Address
-	beaconPrivs [][]byte
-	bridgePrivs [][]byte
 }
 
 func getFixedBurnProofETH() *decodedProof {
