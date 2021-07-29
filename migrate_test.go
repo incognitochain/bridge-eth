@@ -51,7 +51,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	}
 
 	auth := bind.NewKeyedTransactor(privKey)
-	_, err = c.Claim(auth)
+	tx, err := c.Claim(auth)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,6 +61,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	auth.Nonce = big.NewInt(int64(tx.Nonce()) + 1)
 
 	_, err = c.Claim(auth)
 	if err != nil {
