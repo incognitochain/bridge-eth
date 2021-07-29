@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"encoding/json"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -22,7 +22,15 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/pkg/errors"
+	"github.com/incognitochain/bridge-eth/rpccaller"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
+
+type EstimateRes struct {
+	rpccaller.RPCBaseRes
+	Result interface{} `json:"Result"`
+}
 
 func TestGetNonceOfPendingTx(t *testing.T) {
 	_, client, _, err := connect()
@@ -168,6 +176,33 @@ func TestReburn(t *testing.T) {
 	if nonce > 0 {
 		auth.Nonce = big.NewInt(int64(nonce))
 	}
+
+	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultABI))
+	if err != nil {
+		t.Fatal(err)
+	}
+	input, err := vaultAbi.Pack(
+		"withdraw", 
+		proof.Instruction,
+		proof.Heights[0],
+		proof.InstPaths[0],
+		proof.InstPathIsLefts[0],
+		proof.InstRoots[0],
+		proof.BlkData[0],
+		proof.SigIdxs[0],
+		proof.SigVs[0],
+		proof.SigRs[0],
+		proof.SigSs[0],
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gasLimit, err := EstimateGas(ethereum.CallMsg{From: auth.From, To: &vaultAddr, GasPrice: auth.GasPrice, Value: auth.Value, Data: input})
+	if err != nil {
+		t.Fatal(err)
+	}
+	auth.GasLimit = gasLimit
 	tx, err := Withdraw(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -528,16 +563,72 @@ func connect() (*ecdsa.PrivateKey, *ethclient.Client, int64, error) {
 	}
 	fmt.Printf("Sign Txs with address: %s\n", crypto.PubkeyToAddress(privKey.PublicKey).Hex())
 
-	chainID := int64(1)
-	network := "mainnet"
-	if chainID != 1 {
-		network = "kovan"
+	ethNodeEndpoint := os.Getenv("ETHNODE")
+	if len(ethNodeEndpoint) == 0 {
+		return nil, nil, 0, errors.New("os env value of ETHNODE not set yet")
 	}
-	fmt.Printf("Connecting to network %s\n", network)
-	client, err := ethclient.Dial(fmt.Sprintf("https://%s.infura.io/v3/29fead42346b4bfa88dd5fd7e56b6406", network))
+	client, err := ethclient.Dial(ethNodeEndpoint)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	chainID, err := client.ChainID(context.Background())
 	if err != nil {
 		return nil, nil, 0, err
 	}
 
-	return privKey, client, chainID, nil
+	return privKey, client, chainID.Int64(), nil
+}
+
+
+func ToCallArg(msg ethereum.CallMsg) interface{} {
+	arg := map[string]interface{}{
+		"from": msg.From,
+		"to":   msg.To,
+	}
+	if len(msg.Data) > 0 {
+		arg["data"] = hexutil.Bytes(msg.Data)
+	}
+	if msg.Value != nil {
+		arg["value"] = (*hexutil.Big)(msg.Value)
+	}
+	if msg.Gas != 0 {
+		arg["gas"] = hexutil.Uint64(msg.Gas)
+	}
+	if msg.GasPrice != nil {
+		arg["gasPrice"] = (*hexutil.Big)(msg.GasPrice)
+	}
+	return arg
+}
+
+func EstimateGas(msg ethereum.CallMsg) (uint64, error) {
+	var resp EstimateRes
+	rpcClient := rpccaller.NewRPCClient()
+	params := []interface{}{
+		ToCallArg(msg),
+		"latest",
+	}
+	err := rpcClient.RPCCall(
+		"",
+		os.Getenv("ETHNODE"),
+		"",
+		"eth_estimateGas",
+		params,
+		&resp,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	bb, _ := json.Marshal(resp)
+	fmt.Println("Estimate gas res: ", string(bb))
+	if resp.RPCError != nil {
+		return 0, errors.New(resp.RPCError.Message)
+	}
+	hexString := resp.Result.(string)
+	n := new(big.Int)
+	n.SetString(hexString, 16)
+	if n.Cmp(big.NewInt(0)) != 0 {
+		return 0, errors.New("Call estimate gas got error")
+	}
+	return n.Uint64(), nil
 }
