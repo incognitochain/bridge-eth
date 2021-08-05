@@ -29,17 +29,23 @@ contract Agency {
         require(success, "Agency: call to external contract failed");
     }
     
-    function executeWithEth(address destination, bytes calldata data) onlyFactory payable external {
-        _execute(msg.value, destination, data);
-    }
-    
-    function executeWithERC20(address token, address destination, bytes calldata data) onlyFactory external {
-        IERC20 tokenInst = IERC20(token);
-        // check amout allowed to destination and execute approve if not meet the condition
-        if (tokenInst.allowance(address(this), destination) == 0) {
-            tokenInst.approve(destination, APPROVE_MAX);
+    function executeWithEth(address[] calldata destinations, uint[] calldata amounts, bytes[] calldata datas) onlyFactory payable external {
+        require(destinations.length == datas.length, "invalid input datas");
+        uint checksum;
+        for (uint i = 0; i < destinations.length; i++) {
+            _execute(amounts[i], destinations[i], datas[i]);
+            checksum += amounts[i];
         }
-        _execute(0, destination, data);
+
+        require(checksum == msg.value, "invalid input amount");
+    }
+
+    function executeWithERC20(address[] calldata destinations, bytes[] calldata datas) onlyFactory external {
+        require(destinations.length == datas.length, "invalid input datas");
+
+        for (uint i = 0; i < destinations.length; i++) {
+            _execute(0, destinations[i], datas[i]);
+        }
     }
 }
 
@@ -87,31 +93,46 @@ contract Factory is Verifier {
         string prefix;
         address token;
         bytes timestamp;
-        uint amount;
     }
 
-    function newPreSignData(address token, bytes calldata timestamp, uint amount) pure internal returns (PreSignData memory) {
-        PreSignData memory psd = PreSignData(PREFIX_SIGNATURE, token, timestamp, amount);
+    function newPreSignData(address token, bytes calldata timestamp) pure internal returns (PreSignData memory) {
+        PreSignData memory psd = PreSignData(PREFIX_SIGNATURE, token, timestamp);
         return psd;
     }
 
-    function orderAgency(bytes calldata signData, address token, bytes calldata data, uint amount, bytes calldata timestamp) external payable returns(address, uint) {
-        address verifier = verifySignData(abi.encode(newPreSignData(token, timestamp, amount), data), signData);
-        require(verifier != address(0x0), "Invalid signature");
-        address tmp;
+    function _order(address agency, bytes calldata data) internal {
+        (bool success, ) = agency.call{value: msg.value}(data);
+        require(success, "Factory: call to external contract failed");
+    }
+
+    /**
+     * @dev check agency exist or not then create new or query based on result.
+     */
+    function _agency(bytes calldata signData, address token, bytes calldata data, bytes calldata timestamp) internal returns(address agency) {
+        address verifier = verifySignData(abi.encode(newPreSignData(token, timestamp), data), signData);
         if (agencies[verifier] == address(0x0)) {
-            tmp = address(new Agency(address(this)));
-            agencies[verifier] = tmp;
+            agency = address(new Agency(address(this)));
+            agencies[verifier] = agency;
         } else {
-            tmp = agencies[verifier];
+            agency = agencies[verifier];
         }
-    
+    }
+ 
+    function orderAgency(bytes calldata signData, address token, bytes calldata data, bytes calldata timestamp) external payable returns(address, uint) {
+        address agency = _agency(signData, token, data, timestamp);
+        _order(agency, data);
+        
+        return (address(0x0), 0);
+    }   
+
+    function orderAgencyWithToken(bytes calldata signData, address token, bytes calldata data, bytes calldata timestamp) external payable returns(address, uint) {
+        address agency = _agency(signData, token, data, timestamp);
         if (token != ETH_TOKEN) {
-            IERC20(token).transfer(tmp, amount);
+            IERC20 tokenInst = IERC20(token);
+            tokenInst.transfer(agency, tokenInst.balanceOf(address(this)));
             require(checkSuccess(), "transfer token failed");
         }
-        (bool success, ) = tmp.call{value: msg.value}(data);
-        require(success, "Factory: call to external contract failed");
+        _order(agency, data);
         
         return (address(0x0), 0);
     }   
