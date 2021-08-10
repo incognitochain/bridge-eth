@@ -122,19 +122,23 @@ contract Factory is Verifier {
         address agency = _agency(signData, token, data, timestamp);
         _order(agency, data);
         
-        return (address(0x0), 0);
+        return (address(0x1), 0);
     }   
 
     function orderAgencyWithToken(bytes calldata signData, address token, bytes calldata data, bytes calldata timestamp) external payable returns(address, uint) {
         address agency = _agency(signData, token, data, timestamp);
         if (token != ETH_TOKEN) {
             IERC20 tokenInst = IERC20(token);
-            tokenInst.transfer(agency, tokenInst.balanceOf(address(this)));
+            uint amount = tokenInst.balanceOf(address(this));
+            require(amount > 0, "Execute with zero token amount");
+            tokenInst.transfer(agency, amount);
             require(checkSuccess(), "transfer token failed");
+        } else {
+            require(msg.value > 0, "Execute with zero token amount");
         }
         _order(agency, data);
         
-        return (address(0x0), 0);
+        return (address(0x1), 0);
     }   
     
     
