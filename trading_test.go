@@ -6,19 +6,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"math/big"
 	"math/rand"
+	"strings"
 	"time"
 
+	"github.com/incognitochain/bridge-eth/bridge/prv"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/common/base58"
 	"github.com/incognitochain/bridge-eth/consensus/signatureschemes/bridgesig"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/sha3"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -31,7 +32,7 @@ import (
 )
 
 const (
-	EXECUTE_PREFIX = 0
+	EXECUTE_PREFIX      = 0
 	REQ_WITHDRAW_PREFIX = 1
 )
 
@@ -59,6 +60,7 @@ type TradingTestSuite struct {
 	IncEtherTokenIDStr string
 	IncDAITokenIDStr   string
 	IncSAITokenIDStr   string
+	IncPRVTokenIDStr   string
 
 	IncBridgeHost string
 	IncRPCHost    string
@@ -76,6 +78,8 @@ type TradingTestSuite struct {
 
 	VaultAddr            common.Address
 	KBNTradeDeployedAddr common.Address
+	PRVERC20Addr         common.Address
+	PRVBEP20Addr         common.Address
 
 	KyberContractAddr common.Address
 }
@@ -94,19 +98,21 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncEtherTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000099"
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
+	tradingSuite.IncPRVTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000004"
 
 	tradingSuite.EtherAddressStr = "0x0000000000000000000000000000000000000000"
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "B8DB29A7A43FB88AD520F762C5FDF6F1B0155637FA1E5CB2C796AFE9E5C04E31"
+	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 	tradingSuite.ETHOwnerAddrStr = "FD94c46ab8dCF0928d5113a6fEaa925793504e16"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
-	tradingSuite.VaultAddr = common.HexToAddress("0x88D9531eCCDee7fDd2061D2053F92B1E00596804")
+	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
+	tradingSuite.PRVERC20Addr = common.HexToAddress("0xD8bE01040faB3C3711E4Da2F7c8E0BA90aE35FE6")
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -311,6 +317,57 @@ func (tradingSuite *TradingTestSuite) callBurningPToken(
 	return res.Result.(map[string]interface{}), nil
 }
 
+func (tradingSuite *TradingTestSuite) callBurningPRV(
+	amount *big.Int,
+	remoteAddrStr string,
+	burningMethod string,
+) (map[string]interface{}, error) {
+	rpcClient := rpccaller.NewRPCClient()
+	meta := map[string]interface{}{
+		"TokenID":     tradingSuite.IncPRVTokenIDStr,
+		"TokenTxType": 1,
+		"TokenName":   "",
+		"TokenSymbol": "",
+		"TokenAmount": amount.Uint64(),
+		"TokenReceivers": map[string]uint64{
+			tradingSuite.IncBurningAddrStr: amount.Uint64(),
+		},
+		"RemoteAddress": remoteAddrStr,
+		"Privacy":       true,
+		"TokenFee":      0,
+	}
+	params := []interface{}{
+		tradingSuite.IncPrivKeyStr,
+		map[string]interface{}{
+			tradingSuite.IncBurningAddrStr: amount.Uint64(),
+		},
+		-1,
+		0,
+		meta,
+		"",
+		0,
+	}
+	var res BurningForDepositToSCRes
+	err := rpcClient.RPCCall(
+		"",
+		tradingSuite.IncRPCHost,
+		"",
+		burningMethod,
+		params,
+		&res,
+	)
+	if err != nil {
+		fmt.Println("calling burning ptokens err: ", err)
+		return nil, err
+	}
+	bb, _ := json.Marshal(res)
+	fmt.Println("calling burning ptokens res: ", string(bb))
+	if res.RPCError != nil {
+		return nil, errors.New(res.RPCError.Message)
+	}
+	return res.Result.(map[string]interface{}), nil
+}
+
 func (tradingSuite *TradingTestSuite) submitBurnProofForDepositToSC(
 	burningTxIDStr string,
 ) {
@@ -357,6 +414,29 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForWithdrawal(
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("burned, txHash: %x\n", txHash[:])
+}
+
+func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
+	burningTxIDStr string,
+) {
+	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, "getprverc20burnproof")
+	require.Equal(tradingSuite.T(), nil, err)
+
+	// Get contract instance
+	c, err := prv.NewPrv(tradingSuite.PRVERC20Addr, tradingSuite.ETHClient)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	// Burn
+	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth.GasPrice = big.NewInt(1e9)
+	tx, err := SubmitMintPRVProof(c, auth, proof)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	txHash := tx.Hash()
+	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Printf("mint evm prv, txHash: %x\n", txHash[:])
 }
 
 func (tradingSuite *TradingTestSuite) genKeysPairForSC() {
@@ -413,10 +493,10 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: REQ_WITHDRAW_PREFIX,
-		Token: token,
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     token,
 		Timestamp: timestamp,
-		Amount: amount,
+		Amount:    amount,
 	}
 	tempData, _ := vaultAbi.Pack("_buildSignRequestWithdraw", psData, tradingSuite.IncPaymentAddrStr)
 	data := rawsha3(tempData[4:])
