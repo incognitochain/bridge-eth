@@ -102,14 +102,14 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     /**
      * @dev Returns the address of vault.
      */
-    function vault() public virtual returns (address) {
+    function vault() public view virtual returns (address) {
         return _vault;
     }
 
     /**
      * @dev Returns the incognito proxy.
      */
-    function incognitoProxy() public virtual returns (address) {
+    function incognitoProxy() public view virtual returns (address) {
         return _incognitoProxy;
     }
 
