@@ -62,6 +62,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     string private _name;
     string private _symbol;
     address private _incognitoProxy;
+    address private _vault;
 
     /**
     * @dev END Storage variables
@@ -91,12 +92,23 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * All two of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(string memory name_, string memory symbol_, address incognitoProxy_) {
+    constructor(string memory name_, string memory symbol_, address incognitoProxy_, address vault_) {
         _name = name_;
         _symbol = symbol_;
         _incognitoProxy = incognitoProxy_;
+        _vault = vault_;
     }
 
+    /**
+     * @dev Returns the address of vault.
+     */
+    function vault() public virtual returns (address) {
+        return _vault;
+    }
+
+    /**
+     * @dev Returns the incognito proxy.
+     */
     function incognitoProxy() public virtual returns (address) {
         return _incognitoProxy;
     }
@@ -270,6 +282,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     ) internal virtual {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(recipient != _vault, "ERC20: transfer to incognito vault address");
 
         _beforeTokenTransfer(sender, recipient, amount);
 
@@ -380,7 +393,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         require(inst.length >= 130, "ERC20: invalid inst");
         BurnInstData memory data = _parseBurnInst(inst);
         // Check instruction type
-        require(data.meta == 241 && data.shard == 1, "ERC20: invalid inst's data"); 
+        require(data.meta == 151 && data.shard == 1, "ERC20: invalid inst's data"); 
         // Check token address
         require(data.token == address(this), "ERC20: invalid token");
         // Not withdrawed
@@ -437,11 +450,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         }
         _totalSupply -= amount;
 
-        emit Transfer(account, address(0), amount);
-
         _afterTokenTransfer(account, address(0), amount);
 
         emit Deposit(address(this), incognitoAddress, amount);
+
+        emit Transfer(account, address(0), amount);
 
         return true;
     }

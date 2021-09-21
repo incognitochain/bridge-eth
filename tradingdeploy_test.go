@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
-	"github.com/incognitochain/bridge-eth/bridge/kbntrade"
-	"github.com/incognitochain/bridge-eth/bridge/uniswap"
+	"github.com/incognitochain/bridge-eth/bridge/prv"
+	// "github.com/incognitochain/bridge-eth/bridge/kbntrade"
+	// "github.com/incognitochain/bridge-eth/bridge/uniswap"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 
@@ -82,7 +83,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	// Deploy incognito_proxy
 	auth := bind.NewKeyedTransactor(tradingDeploySuite.ETHPrivKey)
 	auth.Value = big.NewInt(0)
-	// auth.GasPrice = big.NewInt(10000000000)
+	auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000
 	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.ETHClient, admin, beaconComm, bridgeComm)
 	require.Equal(tradingDeploySuite.T(), nil, err)
@@ -119,22 +120,31 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// Deploy kbntrade
-	kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr)
-	require.Equal(tradingDeploySuite.T(), nil, err)
-	fmt.Println("deployed kbntrade")
-	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
+	// kbnTradeAddr, tx, _, err := kbntrade.DeployKBNTrade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.KyberContractAddr)
+	// require.Equal(tradingDeploySuite.T(), nil, err)
+	// fmt.Println("deployed kbntrade")
+	// fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
 
-	// Wait until tx is confirmed
-	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	require.Equal(tradingDeploySuite.T(), nil, err)
+	// // Wait until tx is confirmed
+	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	// require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// Deploy uniswaptrade
-	uniswapAddr, tx, _, err := uniswap.DeployUniswapV2Trade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr)
-	require.Equal(tradingDeploySuite.T(), nil, err)
-	fmt.Println("deployed uniswap adapter")
-	fmt.Printf("addr: %s\n", uniswapAddr.Hex())
+	// // Deploy uniswaptrade
+	// uniswapAddr, tx, _, err := uniswap.DeployUniswapV2Trade(auth, tradingDeploySuite.ETHClient, tradingDeploySuite.UniswapRouteContractAddr)
+	// require.Equal(tradingDeploySuite.T(), nil, err)
+	// fmt.Println("deployed uniswap adapter")
+	// fmt.Printf("addr: %s\n", uniswapAddr.Hex())
 
-	// Wait until tx is confirmed
+	// // Wait until tx is confirmed
+	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	// require.Equal(tradingDeploySuite.T(), nil, err)
+
+	// Deploy prv token
+	prvToken, tx, _, err := prv.DeployPrv(auth, tradingDeploySuite.ETHClient, "Incognito", "PRV", incAddr, vaultAddr)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed prv token")
+	fmt.Printf("addr: %s\n", prvToken.Hex())
+
 	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
 }

@@ -90,12 +90,12 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 
 	// 0x kovan env
-	tradingSuite.IncBurningAddrStr = "15pABFiJVeh9D5uiQEhQX4SVibGGbdAVipQxBdxkmDqAJaoG1EdFKHBrNfs"
+	tradingSuite.IncBurningAddrStr = "12RxahVABnAVCGP3LGwCn8jkQxgw7z1x14wztHzn455TTVpi1wBq9YGwkRMQg3J4e657AbAnCvYCJSdA9czBUNuCKwGSRQt55Xwz8WA"
 	tradingSuite.IncPrivKeyStr = "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
-	tradingSuite.IncPaymentAddrStr = "12S5Lrs1XeQLbqN4ySyKtjAjd2d7sBP2tjFijzmp6avrrkQCNFMpkXm3FPzj2Wcu2ZNqJEmh9JriVuRErVwhuQnLmWSaggobEWsBEci"
+	tradingSuite.IncPaymentAddrStr = "12sgXzDx3VwsahLz9agUiQaoSyehsotQR3SegPPTGHEAaporysdxZdufdB2zVD33mu1g8qTaQUJFKqapqmPiwP7Swj5i3bZUXkq713XzjTH1XUMmD5i1QbBtasvhWN6zmQaasdzXtNV8nUb66EXG"
 	// tradingSuite.GeneratedPubKeyForSCStr = "8224890Cd5A537792d1B8B56c95FAb8a1A5E98B1"
 
-	tradingSuite.IncEtherTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000099"
+	tradingSuite.IncEtherTokenIDStr = "dae027b21d8d57114da11209dce8eeb587d01adf59d4fc356a8be5eedc146859"
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
 	tradingSuite.IncPRVTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000004"
@@ -105,14 +105,14 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
 	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
-	tradingSuite.ETHOwnerAddrStr = "FD94c46ab8dCF0928d5113a6fEaa925793504e16"
+	tradingSuite.ETHOwnerAddrStr = "D7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
-	tradingSuite.PRVERC20Addr = common.HexToAddress("0xD8bE01040faB3C3711E4Da2F7c8E0BA90aE35FE6")
+	tradingSuite.PRVERC20Addr = common.HexToAddress("0xAbFf10a3F834517Fa106f4BAA4b4CB8D608517F7")
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -511,4 +511,68 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	}
 	fmt.Printf("request withdrawal, txHash: %x\n", txHash[:])
 	return txHash
+}
+
+func (tradingSuite *TradingTestSuite) burnPRV(
+	amt float64,
+	incPaymentAddrStr string,
+	contractAddress common.Address,
+) common.Hash {
+	c, err := prv.NewPrv(contractAddress, tradingSuite.ETHClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth.GasPrice = big.NewInt(1e9)
+
+	tx, err := c.Burn(auth, incPaymentAddrStr, big.NewInt(int64(amt * float64(1e9))))
+	require.Equal(tradingSuite.T(), nil, err)
+	txHash := tx.Hash()
+
+	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Printf("burn prv token, txHash: %x\n", txHash[:])
+	return txHash
+}
+
+func (tradingSuite *TradingTestSuite) callIssuingPRVReq(
+	incTokenIDStr string,
+	ethDepositProof []string,
+	ethBlockHash string,
+	ethTxIdx uint,
+	methodName string,
+) (map[string]interface{}, error) {
+	rpcClient := rpccaller.NewRPCClient()
+	meta := map[string]interface{}{
+		"IncTokenID": incTokenIDStr,
+		"BlockHash":  ethBlockHash,
+		"ProofStrs":  ethDepositProof,
+		"TxIndex":    ethTxIdx,
+	}
+	params := []interface{}{
+		tradingSuite.IncPrivKeyStr,
+		nil,
+		5,
+		-1,
+		meta,
+	}
+	var res IssuingETHRes
+	err := rpcClient.RPCCall(
+		"",
+		tradingSuite.IncRPCHost,
+		"",
+		methodName,
+		params,
+		&res,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	response, _ := json.Marshal(res)
+	fmt.Println("get response", string(response))
+
+	if res.RPCError != nil {
+		return nil, errors.New(res.RPCError.Message)
+	}
+	return res.Result.(map[string]interface{}), nil
 }
