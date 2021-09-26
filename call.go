@@ -5,7 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
-	"github.com/incognitochain/bridge-eth/bridge/prv"
+	"github.com/incognitochain/bridge-eth/bridge/prveth"
 )
 
 func Withdraw(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
@@ -52,7 +52,7 @@ func SubmitBurnProof(v *vault.Vault, auth *bind.TransactOpts, proof *decodedProo
 	return tx, nil
 }
 
-func SubmitMintPRVProof(v *prv.Prv, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
+func SubmitMintPRVProof(v *prveth.Prveth, auth *bind.TransactOpts, proof *decodedProof) (*types.Transaction, error) {
 	// auth.GasPrice = big.NewInt(20000000000)
 	tx, err := v.Mint(
 		auth,

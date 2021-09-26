@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/incognitochain/bridge-eth/bridge/prv"
+	"github.com/incognitochain/bridge-eth/bridge/prveth"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/common/base58"
 	"github.com/incognitochain/bridge-eth/consensus/signatureschemes/bridgesig"
@@ -76,6 +76,9 @@ type TradingTestSuite struct {
 	ETHPrivKey *ecdsa.PrivateKey
 	ETHClient  *ethclient.Client
 
+	BSCHost    string
+	BSCClient  *ethclient.Client
+
 	VaultAddr            common.Address
 	KBNTradeDeployedAddr common.Address
 	PRVERC20Addr         common.Address
@@ -108,6 +111,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.ETHOwnerAddrStr = "D7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
+	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
+	
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
@@ -169,6 +174,11 @@ func (tradingSuite *TradingTestSuite) connectToETH() {
 	require.Equal(tradingSuite.T(), nil, err)
 
 	tradingSuite.ETHClient = client
+
+	client, err = ethclient.Dial(tradingSuite.BSCHost)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	tradingSuite.BSCClient = client
 	tradingSuite.ETHPrivKey = privKey
 }
 
@@ -418,12 +428,14 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForWithdrawal(
 
 func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
 	burningTxIDStr string,
+	contractAddress common.Address,
+	method string,
 ) {
-	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, "getprverc20burnproof")
+	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, method)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Get contract instance
-	c, err := prv.NewPrv(tradingSuite.PRVERC20Addr, tradingSuite.ETHClient)
+	c, err := prveth.NewPrveth(contractAddress, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Burn
@@ -518,7 +530,7 @@ func (tradingSuite *TradingTestSuite) burnPRV(
 	incPaymentAddrStr string,
 	contractAddress common.Address,
 ) common.Hash {
-	c, err := prv.NewPrv(contractAddress, tradingSuite.ETHClient)
+	c, err := prveth.NewPrveth(contractAddress, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
 	auth.GasPrice = big.NewInt(1e9)

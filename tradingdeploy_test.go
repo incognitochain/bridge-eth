@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
-	"github.com/incognitochain/bridge-eth/bridge/prv"
+	"github.com/incognitochain/bridge-eth/bridge/prveth"
+	"github.com/incognitochain/bridge-eth/bridge/prvbsc"
 	// "github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	// "github.com/incognitochain/bridge-eth/bridge/uniswap"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
@@ -83,7 +84,6 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	// Deploy incognito_proxy
 	auth := bind.NewKeyedTransactor(tradingDeploySuite.ETHPrivKey)
 	auth.Value = big.NewInt(0)
-	auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000
 	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.ETHClient, admin, beaconComm, bridgeComm)
 	require.Equal(tradingDeploySuite.T(), nil, err)
@@ -139,13 +139,30 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 	// require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// Deploy prv token
-	prvToken, tx, _, err := prv.DeployPrv(auth, tradingDeploySuite.ETHClient, "Incognito", "PRV", incAddr, vaultAddr)
+	vaultAddr = common.HexToAddress("0x43d037a562099a4c2c95b1e2120cc43054450629")
+	auth.Nonce = big.NewInt(40)
+	auth.GasPrice = big.NewInt(10000000000)
+
+	// Deploy prv erc20 token
+	incAddr = common.HexToAddress("0xfAb5ab70500d1fab1e736829b4bf85e8bAC5fff2")
+
+	prvToken, tx, _, err := prveth.DeployPrveth(auth, tradingDeploySuite.ETHClient, "Incognito", "PRV", incAddr, vaultAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
-	fmt.Println("deployed prv token")
+	fmt.Println("deployed prv erc20 token")
 	fmt.Printf("addr: %s\n", prvToken.Hex())
 
 	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
+
+	incAddr = common.HexToAddress("0xd190620159d82731F9951326Bafdc873a16CB2b1")
+	auth.GasPrice = big.NewInt(10000000000)
+
+	prvToken, tx, _, err = prvbsc.DeployPrvbsc(auth, tradingDeploySuite.BSCClient, "Incognito", "PRV", incAddr, vaultAddr)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed prv bep20 token")
+	fmt.Printf("addr: %s\n", prvToken.Hex())
+
+	err = wait(tradingDeploySuite.BSCClient, tx.Hash())
 	require.Equal(tradingDeploySuite.T(), nil, err)
 }
 
