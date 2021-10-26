@@ -61,6 +61,7 @@ type TradingTestSuite struct {
 	IncDAITokenIDStr   string
 	IncSAITokenIDStr   string
 	IncPRVTokenIDStr   string
+	IncPDEXTokenIDStr  string
 
 	IncBridgeHost string
 	IncRPCHost    string
@@ -76,13 +77,15 @@ type TradingTestSuite struct {
 	ETHPrivKey *ecdsa.PrivateKey
 	ETHClient  *ethclient.Client
 
-	BSCHost    string
-	BSCClient  *ethclient.Client
+	BSCHost   string
+	BSCClient *ethclient.Client
 
 	VaultAddr            common.Address
 	KBNTradeDeployedAddr common.Address
 	PRVERC20Addr         common.Address
 	PRVBEP20Addr         common.Address
+	PDEXERC20Addr        common.Address
+	PDEXBEP20Addr        common.Address
 
 	KyberContractAddr common.Address
 }
@@ -102,6 +105,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
 	tradingSuite.IncPRVTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000004"
+	tradingSuite.IncPDEXTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000006"
 
 	tradingSuite.EtherAddressStr = "0x0000000000000000000000000000000000000000"
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
@@ -112,12 +116,16 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
-	
+
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
-	tradingSuite.PRVERC20Addr = common.HexToAddress("0xAbFf10a3F834517Fa106f4BAA4b4CB8D608517F7")
+
+	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
+	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
+	tradingSuite.PDEXERC20Addr = common.HexToAddress("0x9c59b98fcC33f2859A2aB11BC2aAfDcf513b6c33")
+	tradingSuite.PDEXBEP20Addr = common.HexToAddress("0xa43F2911dF4a560A1F687Eba359D047753Cd9BD9")
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -300,8 +308,8 @@ func (tradingSuite *TradingTestSuite) callBurningPToken(
 	params := []interface{}{
 		tradingSuite.IncPrivKeyStr,
 		nil,
-		5,
 		-1,
+		0,
 		meta,
 		"",
 		0,
@@ -430,22 +438,25 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
 	burningTxIDStr string,
 	contractAddress common.Address,
 	method string,
+	clientInst *ethclient.Client,
+	chainID int64,
 ) {
 	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, method)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Get contract instance
-	c, err := prveth.NewPrveth(contractAddress, tradingSuite.ETHClient)
+	c, err := prveth.NewPrveth(contractAddress, clientInst)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Burn
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
-	auth.GasPrice = big.NewInt(1e9)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(chainID))
+	require.Equal(tradingSuite.T(), nil, err)
+	auth.GasPrice = big.NewInt(1e10)
 	tx, err := SubmitMintPRVProof(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(clientInst, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("mint evm prv, txHash: %x\n", txHash[:])
@@ -529,17 +540,20 @@ func (tradingSuite *TradingTestSuite) burnPRV(
 	amt float64,
 	incPaymentAddrStr string,
 	contractAddress common.Address,
+	clientInst *ethclient.Client,
+	chainID int64,
 ) common.Hash {
-	c, err := prveth.NewPrveth(contractAddress, tradingSuite.ETHClient)
+	c, err := prveth.NewPrveth(contractAddress, clientInst)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(chainID))
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(1e9)
 
-	tx, err := c.Burn(auth, incPaymentAddrStr, big.NewInt(int64(amt * float64(1e9))))
+	tx, err := c.Burn(auth, incPaymentAddrStr, big.NewInt(int64(amt*float64(1e9))))
 	require.Equal(tradingSuite.T(), nil, err)
 	txHash := tx.Hash()
 
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(clientInst, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("burn prv token, txHash: %x\n", txHash[:])

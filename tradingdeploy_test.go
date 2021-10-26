@@ -4,23 +4,23 @@ package main
 import (
 	"fmt"
 	"math/big"
-	// "strings"
+	"strings"
 
 	"testing"
 
-	// "github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
+	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/pdexbsc"
 	"github.com/incognitochain/bridge-eth/bridge/pdexeth"
-	// "github.com/incognitochain/bridge-eth/bridge/prvbsc"
-	// "github.com/incognitochain/bridge-eth/bridge/prveth"
-	// "github.com/incognitochain/bridge-eth/bridge/vaultbsc"
+	"github.com/incognitochain/bridge-eth/bridge/prvbsc"
+	"github.com/incognitochain/bridge-eth/bridge/prveth"
+	"github.com/incognitochain/bridge-eth/bridge/vaultbsc"
 
 	// "github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	// "github.com/incognitochain/bridge-eth/bridge/uniswap"
-	// "github.com/incognitochain/bridge-eth/bridge/vault"
-	// "github.com/incognitochain/bridge-eth/bridge/vaultproxy"
+	"github.com/incognitochain/bridge-eth/bridge/vault"
+	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 
-	// "github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -73,9 +73,9 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// Genesis committee
 	// for testnet & local env
-	// beaconComm, bridgeComm, err := convertCommittees(
-	// 	testnetBeaconCommitteePubKeys, testnetBridgeCommitteePubKeys,
-	// )
+	beaconComm, bridgeComm, err := convertCommittees(
+		testnetBeaconCommitteePubKeys, testnetBridgeCommitteePubKeys,
+	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
 		beaconComm, bridgeComm, err := convertCommittees(
@@ -83,59 +83,56 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		)
 	*/
 
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	// Deploy incognito_proxy
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(42))
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	auth.Value = big.NewInt(0)
 	auth.GasPrice = big.NewInt(1000000000)
-	// incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.ETHClient, admin, beaconComm, bridgeComm)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	incAddr, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.ETHClient, admin, beaconComm, bridgeComm)
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// // incAddr := common.HexToAddress(IncognitoProxyAddress)
-	// fmt.Println("deployed incognito_proxy")
-	// fmt.Printf("addr: %s\n", incAddr.Hex())
+	// incAddr := common.HexToAddress(IncognitoProxyAddress)
+	fmt.Println("deployed incognito_proxy")
+	fmt.Printf("addr: %s\n", incAddr.Hex())
 
-	// // Wait until tx is confirmed
-	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	// Wait until tx is confirmed
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// // Deploy vault
-	// prevVault := common.Address{}
-	// vaultAddr, tx, _, err := vault.DeployVault(auth, tradingDeploySuite.ETHClient)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-	// fmt.Println("deployed vault")
-	// fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	// Deploy vault
+	prevVault := common.Address{}
+	vaultAddr, tx, _, err := vault.DeployVault(auth, tradingDeploySuite.ETHClient)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed vault")
+	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
-	// // Wait until tx is confirmed
-	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	// Wait until tx is confirmed
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	// input, _ := vaultAbi.Pack("initialize", prevVault)
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	input, _ := vaultAbi.Pack("initialize", prevVault)
 
-	// // Deploy vault proxy
-	// vaultAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, incAddr, input)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-	// fmt.Println("deployed vault proxy")
-	// fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	// Deploy vault proxy
+	vaultAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, vaultAddr, admin, incAddr, input)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed vault proxy")
+	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
-	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// prvToken, tx, _, err := prveth.DeployPrveth(auth, tradingDeploySuite.ETHClient, "Incognito", "PRV", incAddr, vaultAddr)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-	// fmt.Println("deployed prv erc20 token")
-	// fmt.Printf("addr: %s\n", prvToken.Hex())
+	prvToken, tx, _, err := prveth.DeployPrveth(auth, tradingDeploySuite.ETHClient, "Incognito", "PRV", incAddr, vaultAddr)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed prv erc20 token")
+	fmt.Printf("addr: %s\n", prvToken.Hex())
 
-	// err = wait(tradingDeploySuite.ETHClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	incAddr := common.HexToAddress("0x347b65251d6D2f40dE8F44024F57FEB7b532d2eb")
-	vaultAddr := common.HexToAddress("0xE0D5e7217c6C4bc475404b26d763fAD3F14D2b86")
-
-	prvToken, tx, _, err := pdexeth.DeployPdexeth(auth, tradingDeploySuite.ETHClient, "Incognito", "PDEX", incAddr, vaultAddr)
+	prvToken, tx, _, err = pdexeth.DeployPdexeth(auth, tradingDeploySuite.ETHClient, "Incognito", "PDEX", incAddr, vaultAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	fmt.Println("deployed pdex erc20 token")
 	fmt.Printf("addr: %s\n", prvToken.Hex())
@@ -148,49 +145,46 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(97))
 	require.Equal(tradingDeploySuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(10000000000)
-	// incAddr, tx, _, err = incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.BSCClient, admin, beaconComm, bridgeComm)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	incAddr, tx, _, err = incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.BSCClient, admin, beaconComm, bridgeComm)
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// // incAddr := common.HexToAddress(IncognitoProxyAddress)
-	// fmt.Println("deployed incognito_proxy")
-	// fmt.Printf("addr: %s\n", incAddr.Hex())
+	// incAddr := common.HexToAddress(IncognitoProxyAddress)
+	fmt.Println("deployed incognito_proxy")
+	fmt.Printf("addr: %s\n", incAddr.Hex())
 
-	// // Wait until tx is confirmed
-	// err = wait(tradingDeploySuite.BSCClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	// Wait until tx is confirmed
+	err = wait(tradingDeploySuite.BSCClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// // Deploy vault
-	// vaultAddr, tx, _, err = vaultbsc.DeployVaultbsc(auth, tradingDeploySuite.BSCClient)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-	// fmt.Println("deployed vault")
-	// fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	// Deploy vault
+	vaultAddr, tx, _, err = vaultbsc.DeployVaultbsc(auth, tradingDeploySuite.BSCClient)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed vault")
+	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
-	// // Wait until tx is confirmed
-	// err = wait(tradingDeploySuite.BSCClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	// Wait until tx is confirmed
+	err = wait(tradingDeploySuite.BSCClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// // vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	// // input, _ := vaultAbi.Pack("initialize", prevVault)
+	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+	// input, _ := vaultAbi.Pack("initialize", prevVault)
 
-	// // Deploy vault proxy
-	// vaultAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.BSCClient, vaultAddr, admin, incAddr, input)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-	// fmt.Println("deployed vault proxy")
-	// fmt.Printf("addr: %s\n", vaultAddr.Hex())
+	// Deploy vault proxy
+	vaultAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.BSCClient, vaultAddr, admin, incAddr, input)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed vault proxy")
+	fmt.Printf("addr: %s\n", vaultAddr.Hex())
 
-	// err = wait(tradingDeploySuite.BSCClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
+	err = wait(tradingDeploySuite.BSCClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	// prvToken, tx, _, err = prvbsc.DeployPrvbsc(auth, tradingDeploySuite.BSCClient, "Incognito", "PRV", incAddr, vaultAddr)
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-	// fmt.Println("deployed prv bep20 token")
-	// fmt.Printf("addr: %s\n", prvToken.Hex())
+	prvToken, tx, _, err = prvbsc.DeployPrvbsc(auth, tradingDeploySuite.BSCClient, "Incognito", "PRV", incAddr, vaultAddr)
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	fmt.Println("deployed prv bep20 token")
+	fmt.Printf("addr: %s\n", prvToken.Hex())
 
-	// err = wait(tradingDeploySuite.BSCClient, tx.Hash())
-	// require.Equal(tradingDeploySuite.T(), nil, err)
-
-	incAddr = common.HexToAddress("0xae9B3ef330DCc6355843b3AaA97b5bB306CEE40c")
-	vaultAddr = common.HexToAddress("0x1ce57B254DC2DBB41e1aeA296Dc7dBD6fb549241")
+	err = wait(tradingDeploySuite.BSCClient, tx.Hash())
+	require.Equal(tradingDeploySuite.T(), nil, err)
 
 	prvToken, tx, _, err = pdexbsc.DeployPdexbsc(auth, tradingDeploySuite.BSCClient, "Incognito", "PDEX", incAddr, vaultAddr)
 	require.Equal(tradingDeploySuite.T(), nil, err)
