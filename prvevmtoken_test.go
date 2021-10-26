@@ -187,7 +187,7 @@ func (tradingSuite *PrvEvmTokenTestSuite) Test3BurnAndMintPDEXERC20() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(60 * time.Second)
 
-	tradingSuite.submitBurnProofForMintPRV(burningTxID.(string), tradingSuite.PDEXERC20Addr, "getpdexerc20burnproof", tradingSuite.ETHClient, 42)
+	tradingSuite.submitBurnProofForMintPRV(burningTxID.(string), tradingSuite.PDEXERC20Addr, "getpdexerc20burnproof", tradingSuite.ETHClient, tradingSuite.ETHChainID)
 	time.Sleep(30 * time.Second)
 
 	// pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
@@ -235,7 +235,7 @@ func (tradingSuite *PrvEvmTokenTestSuite) Test4BurnAndMintPDEXBEP20() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(60 * time.Second)
 
-	tradingSuite.submitBurnProofForMintPRV(burningTxID.(string), tradingSuite.PDEXBEP20Addr, "getpdexbep20burnproof", tradingSuite.BSCClient, 97)
+	tradingSuite.submitBurnProofForMintPRV(burningTxID.(string), tradingSuite.PDEXBEP20Addr, "getpdexbep20burnproof", tradingSuite.BSCClient, tradingSuite.BSCChainID)
 	time.Sleep(30 * time.Second)
 
 	// pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
