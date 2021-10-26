@@ -547,7 +547,7 @@ func (tradingSuite *TradingTestSuite) burnPRV(
 	require.Equal(tradingSuite.T(), nil, err)
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(chainID))
 	require.Equal(tradingSuite.T(), nil, err)
-	auth.GasPrice = big.NewInt(1e9)
+	auth.GasPrice = big.NewInt(1e10)
 
 	tx, err := c.Burn(auth, incPaymentAddrStr, big.NewInt(int64(amt*float64(1e9))))
 	require.Equal(tradingSuite.T(), nil, err)
