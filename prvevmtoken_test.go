@@ -174,7 +174,7 @@ func (tradingSuite *PrvEvmTokenTestSuite) Test3BurnAndMintPDEXERC20() {
 	decimal := tradingSuite.PRVDecimal
 	burnPRV := big.NewInt(int64(tradingSuite.BurnPRV * math.Pow(10, float64(decimal))))
 
-	fmt.Println("------------ STEP 1: burning PRV to mint PRV to SC --------------")
+	fmt.Println("------------ STEP 1: burning PDEX to mint PDEX to SC --------------")
 	// make a burn tx to incognito chain as a result of deposit to SC
 	burningRes, err := tradingSuite.callBurningPToken(
 		tradingSuite.IncPDEXTokenIDStr,
@@ -191,29 +191,32 @@ func (tradingSuite *PrvEvmTokenTestSuite) Test3BurnAndMintPDEXERC20() {
 	time.Sleep(30 * time.Second)
 
 	// pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
-	// fmt.Println("------------ STEP 2: burn PRV from SC to mint PRV on incognito --------------")
-	// txHash := tradingSuite.burnPRV(
-	// 	tradingSuite.BurnPRV,
-	// 	tradingSuite.IncPaymentAddrStr,
-	// 	tradingSuite.PRVBEP20Addr,
-	// )
-	// // txHash := common.HexToHash("0xbb1d4535fa5a2ad294bca45e5c5b72dfa5c0feb6f05361a1ef7f8cb521d4193a")
-	// time.Sleep(30 * time.Second)
-	// _, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
-	// require.Equal(tradingSuite.T(), nil, err)
-	// fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
+	fmt.Println("------------ STEP 2: burn PDEX from SC to mint PDEX on incognito --------------")
+	txHash := tradingSuite.burnPRV(
+		10,
+		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.PDEXERC20Addr,
+		tradingSuite.ETHClient,
+		tradingSuite.ETHChainID,
+	)
+	// txHash := common.HexToHash("0xbb1d4535fa5a2ad294bca45e5c5b72dfa5c0feb6f05361a1ef7f8cb521d4193a")
+	time.Sleep(30 * time.Second)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-	// fmt.Println("Waiting 90s for 15 blocks confirmation")
-	// time.Sleep(60 * time.Second)
-	// _, err = tradingSuite.callIssuingPRVReq(
-	// 	tradingSuite.IncPRVTokenIDStr,
-	// 	ethDepositProof,
-	// 	ethBlockHash,
-	// 	ethTxIdx,
-	// 	"createandsendtxwithissuingprvbep20req",
-	// )
-	// require.Equal(tradingSuite.T(), nil, err)
-	// time.Sleep(120 * time.Second)
+	fmt.Println("Waiting 90s for 15 blocks confirmation")
+	time.Sleep(60 * time.Second)
+	result, err := tradingSuite.callIssuingPRVReq(
+		tradingSuite.IncPDEXTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+		"createandsendtxwithissuingpdexerc20req",
+	)
+	fmt.Printf("result: %+v\n", result)
+	require.Equal(tradingSuite.T(), nil, err)
+	time.Sleep(120 * time.Second)
 }
 
 func (tradingSuite *PrvEvmTokenTestSuite) Test4BurnAndMintPDEXBEP20() {
@@ -239,27 +242,29 @@ func (tradingSuite *PrvEvmTokenTestSuite) Test4BurnAndMintPDEXBEP20() {
 	time.Sleep(30 * time.Second)
 
 	// pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
-	// fmt.Println("------------ STEP 2: burn PRV from SC to mint PRV on incognito --------------")
-	// txHash := tradingSuite.burnPRV(
-	// 	tradingSuite.BurnPRV,
-	// 	tradingSuite.IncPaymentAddrStr,
-	// 	tradingSuite.PRVBEP20Addr,
-	// )
-	// // txHash := common.HexToHash("0xbb1d4535fa5a2ad294bca45e5c5b72dfa5c0feb6f05361a1ef7f8cb521d4193a")
-	// time.Sleep(30 * time.Second)
-	// _, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
-	// require.Equal(tradingSuite.T(), nil, err)
-	// fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
+	fmt.Println("------------ STEP 2: burn PDEX from SC to mint PRV on incognito --------------")
+	txHash := tradingSuite.burnPRV(
+		tradingSuite.BurnPRV,
+		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.PDEXBEP20Addr,
+		tradingSuite.BSCClient,
+		tradingSuite.BSCChainID,
+	)
+	// txHash := common.HexToHash("0xbb1d4535fa5a2ad294bca45e5c5b72dfa5c0feb6f05361a1ef7f8cb521d4193a")
+	time.Sleep(30 * time.Second)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.BSCHost, txHash)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-	// fmt.Println("Waiting 90s for 15 blocks confirmation")
-	// time.Sleep(60 * time.Second)
-	// _, err = tradingSuite.callIssuingPRVReq(
-	// 	tradingSuite.IncPRVTokenIDStr,
-	// 	ethDepositProof,
-	// 	ethBlockHash,
-	// 	ethTxIdx,
-	// 	"createandsendtxwithissuingprvbep20req",
-	// )
-	// require.Equal(tradingSuite.T(), nil, err)
-	// time.Sleep(120 * time.Second)
+	fmt.Println("Waiting 90s for 15 blocks confirmation")
+	time.Sleep(60 * time.Second)
+	_, err = tradingSuite.callIssuingPRVReq(
+		tradingSuite.IncPDEXTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+		"createandsendtxwithissuingpdexbep20req",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	time.Sleep(120 * time.Second)
 }
