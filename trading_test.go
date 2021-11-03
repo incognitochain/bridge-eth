@@ -32,8 +32,10 @@ import (
 )
 
 const (
-	EXECUTE_PREFIX      = 0
-	REQ_WITHDRAW_PREFIX = 1
+	EXECUTE_PREFIX          = 0
+	REQ_WITHDRAW_PREFIX     = 1
+	BSC_EXECUTE_PREFIX      = 2
+	BSC_REQ_WITHDRAW_PREFIX = 3
 )
 
 type IssuingETHRes struct {
@@ -80,7 +82,11 @@ type TradingTestSuite struct {
 	BSCHost   string
 	BSCClient *ethclient.Client
 
+	ChainIDETH uint
+	ChainIDBSC uint
+
 	VaultAddr            common.Address
+	VaultBSCAddr         common.Address
 	KBNTradeDeployedAddr common.Address
 	PRVERC20Addr         common.Address
 	PRVBEP20Addr         common.Address
@@ -98,8 +104,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	// 0x kovan env
 	tradingSuite.IncBurningAddrStr = "12RxahVABnAVCGP3LGwCn8jkQxgw7z1x14wztHzn455TTVpi1wBq9YGwkRMQg3J4e657AbAnCvYCJSdA9czBUNuCKwGSRQt55Xwz8WA"
 	tradingSuite.IncPrivKeyStr = "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
-	tradingSuite.IncPaymentAddrStr = "12sgXzDx3VwsahLz9agUiQaoSyehsotQR3SegPPTGHEAaporysdxZdufdB2zVD33mu1g8qTaQUJFKqapqmPiwP7Swj5i3bZUXkq713XzjTH1XUMmD5i1QbBtasvhWN6zmQaasdzXtNV8nUb66EXG"
-	// tradingSuite.GeneratedPubKeyForSCStr = "8224890Cd5A537792d1B8B56c95FAb8a1A5E98B1"
+	tradingSuite.IncPaymentAddrStr = "12svfkP6w5UDJDSCwqH978PvqiqBxKmUnA9em9yAYWYJVRv7wuXY1qhhYpPAm4BDz2mLbFrRmdK3yRhnTqJCZXKHUmoi7NV83HCH2YFpctHNaDdkSiQshsjw2UFUuwdEvcidgaKmF3VJpY5f8RdN"
 
 	tradingSuite.IncEtherTokenIDStr = "dae027b21d8d57114da11209dce8eeb587d01adf59d4fc356a8be5eedc146859"
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
@@ -111,8 +116,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
-	tradingSuite.ETHOwnerAddrStr = "D7d93b7fa42b60b6076f3017fCA99b69257A912D"
+	tradingSuite.ETHPrivKeyStr = "eecbeb089a9a2fd1768f373b0cbeae6dea8b8a30dc0e798df69a8e9648c8f262"
+	tradingSuite.ETHOwnerAddrStr = "126748A0144968DD14b0187B906dE62378c59067"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
@@ -121,11 +126,15 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
+	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
 	tradingSuite.PDEXERC20Addr = common.HexToAddress("0x9c59b98fcC33f2859A2aB11BC2aAfDcf513b6c33")
 	tradingSuite.PDEXBEP20Addr = common.HexToAddress("0xa43F2911dF4a560A1F687Eba359D047753Cd9BD9")
+
+	tradingSuite.ChainIDBSC = 97
+	tradingSuite.ChainIDETH = 42
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -193,8 +202,10 @@ func (tradingSuite *TradingTestSuite) connectToETH() {
 func (tradingSuite *TradingTestSuite) depositETH(
 	amt float64,
 	incPaymentAddrStr string,
+	vaultAddr common.Address,
+	client *ethclient.Client,
 ) common.Hash {
-	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	c, err := vault.NewVault(vaultAddr, client)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
@@ -203,7 +214,7 @@ func (tradingSuite *TradingTestSuite) depositETH(
 	require.Equal(tradingSuite.T(), nil, err)
 	txHash := tx.Hash()
 
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(client, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("deposited, txHash: %x\n", txHash[:])
@@ -248,6 +259,7 @@ func (tradingSuite *TradingTestSuite) callIssuingETHReq(
 	ethDepositProof []string,
 	ethBlockHash string,
 	ethTxIdx uint,
+	method string,
 ) (map[string]interface{}, error) {
 	rpcClient := rpccaller.NewRPCClient()
 	meta := map[string]interface{}{
@@ -268,7 +280,7 @@ func (tradingSuite *TradingTestSuite) callIssuingETHReq(
 		"",
 		tradingSuite.IncRPCHost,
 		"",
-		"createandsendtxwithissuingethreq",
+		method,
 		params,
 		&res,
 	)
@@ -388,23 +400,27 @@ func (tradingSuite *TradingTestSuite) callBurningPRV(
 
 func (tradingSuite *TradingTestSuite) submitBurnProofForDepositToSC(
 	burningTxIDStr string,
+	chainID *big.Int,
+	method string,
+	vaultAddr common.Address,
+	client *ethclient.Client,
 ) {
-	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, "getburnprooffordeposittosc")
+	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, method)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Get contract instance
-	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	c, err := vault.NewVault(vaultAddr, client)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Burn
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
-	// auth.GasPrice = big.NewInt(1000000)
-	// auth.GasLimit = 4000000
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth.GasPrice = big.NewInt(1e10)
 	tx, err := SubmitBurnProof(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(client, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("burned, txHash: %x\n", txHash[:])
@@ -503,20 +519,36 @@ func (tradingSuite *TradingTestSuite) getDepositedBalance(
 	return bal
 }
 
+func (tradingSuite *TradingTestSuite) getDepositedBalanceBSC(
+	token common.Address,
+	ownerAddrStr string,
+) *big.Int {
+	c, err := vault.NewVault(tradingSuite.VaultBSCAddr, tradingSuite.BSCClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	owner := common.HexToAddress(ownerAddrStr)
+	bal, err := c.GetDepositedBalance(nil, token, owner)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Printf("deposited balance: %d\n", bal)
+	return bal
+}
+
 func (tradingSuite *TradingTestSuite) requestWithdraw(
 	withdrawalETHTokenIDStr string,
 	amount *big.Int,
+	client *ethclient.Client,
+	chainID *big.Int, 
+	vaultAddrr common.Address,
+	signaturePrefix uint8,
 ) common.Hash {
-	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	c, err := vault.NewVault(vaultAddrr, client)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
-
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
+	require.Equal(tradingSuite.T(), nil, err)
 	token := common.HexToAddress(withdrawalETHTokenIDStr)
-	// amount := big.NewInt(0.1 * params.Ether)
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix:    REQ_WITHDRAW_PREFIX,
+		Prefix:    signaturePrefix,
 		Token:     token,
 		Timestamp: timestamp,
 		Amount:    amount,
@@ -524,12 +556,12 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	tempData, _ := vaultAbi.Pack("_buildSignRequestWithdraw", psData, tradingSuite.IncPaymentAddrStr)
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
-	auth.GasPrice = big.NewInt(50000000000)
+	auth.GasPrice = big.NewInt(1e10)
 	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(client, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("request withdrawal, txHash: %x\n", txHash[:])

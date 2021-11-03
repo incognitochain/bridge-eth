@@ -246,12 +246,16 @@ func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {
 	txHash := tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
 	)
 	time.Sleep(10 * time.Second)
 
 	txHash = tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
 	)
 	time.Sleep(10 * time.Second)
 
@@ -266,6 +270,7 @@ func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -283,7 +288,13 @@ func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string), 
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.EtherAddressStr,
 		pubKeyToAddrStr,

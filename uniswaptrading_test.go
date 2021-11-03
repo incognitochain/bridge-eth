@@ -164,6 +164,8 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	txHash := tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
 	)
 	// time.Sleep(15 * time.Second)
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -177,6 +179,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -194,7 +197,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.EtherAddressStr,
 		pubKeyToAddrStr,
@@ -219,6 +228,10 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.DAIAddressStr,
 		daiTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -233,6 +246,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -296,6 +310,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -315,7 +330,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.DAIAddressStr,
 		pubKeyToAddrStr,
@@ -340,6 +361,10 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.MRKAddressStr,
 		mrkTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -355,6 +380,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -413,6 +439,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("issuingRes: ", issuingRes)
@@ -431,7 +458,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string), 
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.MRKAddressStr,
 		pubKeyToAddrStr,
@@ -455,6 +488,10 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.EtherAddressStr,
 		etherTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -470,6 +507,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(140 * time.Second)
