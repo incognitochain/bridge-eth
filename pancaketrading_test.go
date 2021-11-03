@@ -34,7 +34,7 @@ type PancakeTradingTestSuite struct {
 	WBTCAddr         common.Address
 	WBUSDAddr        common.Address
 	WXRPAddr         common.Address
-	WDAIAddr         common.Address
+	WUSDTAddr         common.Address
 
 	// token amounts for tests
 	DepositingEther      float64
@@ -60,8 +60,8 @@ func (tradingSuite *PancakeTradingTestSuite) SetupSuite() {
 	// tokens
 	tradingSuite.WBNBAddr = common.HexToAddress("0xae13d989dac2f0debff460ac112a837c89baa7cd")
 	tradingSuite.WBTCAddr = common.HexToAddress("0x6ce8da28e2f864420840cf74474eff5fd80e65b8")
-	tradingSuite.WDAIAddr = common.HexToAddress("0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867")
-	tradingSuite.WBUSDAddr = common.HexToAddress("0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee")
+	tradingSuite.WUSDTAddr = common.HexToAddress("0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684") // USDT
+	tradingSuite.WBUSDAddr = common.HexToAddress("0x78867bbeef44f2326bf8ddd1941a4439382ef2a7")
 	tradingSuite.WXRPAddr = common.HexToAddress("0xa83575490d7df4e2f47b7d38ef351a2722ca45b9")
 
 	tradingSuite.DepositingEther = float64(0.01)
@@ -98,7 +98,7 @@ func (tradingSuite *PancakeTradingTestSuite) getExpectedAmount(
 	path []common.Address,
 	srcQty *big.Int,
 ) *big.Int {
-	c, err := pancakeproxy.NewPancakeproxyrouter(tradingSuite.PanackeTradeDeployedAddr, tradingSuite.ETHClient)
+	c, err := pancakeproxy.NewPancakeproxyrouter(tradingSuite.PanackeRouteContractAddr, tradingSuite.BSCClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	amounts, err := c.GetAmountsOut(nil, srcQty, path)
 	require.Equal(tradingSuite.T(), nil, err)
@@ -113,33 +113,42 @@ func (tradingSuite *PancakeTradingTestSuite) executeWithPancake(
 	deadline uint,
 	isNative bool,
 ) {
-	require.Equal(tradingSuite.T(), 0, len(path))
+	require.NotEqual(tradingSuite.T(), 0, len(path))
 
-	tradeAbi, _ := abi.JSON(strings.NewReader(pancakeproxy.PancakeproxyABI))
+	tradeAbi, err := abi.JSON(strings.NewReader(pancakeproxy.PancakeproxyMetaData.ABI))
+	require.Equal(tradingSuite.T(), nil, err)
 
 	// Get contract instance
-	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	c, err := vault.NewVault(tradingSuite.VaultBSCAddr, tradingSuite.BSCClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDBSC)))
 	require.Equal(tradingSuite.T(), nil, err)
-	auth.GasPrice = big.NewInt(10000000000)
+	auth.GasPrice = big.NewInt(1e10)
 	expectOutputAmount := tradingSuite.getExpectedAmount(path, srcQty)
-	input, _ := tradeAbi.Pack("trade", path, srcQty, expectOutputAmount, deadline, isNative)
+	input, err := tradeAbi.Pack("trade", path, srcQty, expectOutputAmount, big.NewInt(int64(deadline)), isNative)
+	require.Equal(tradingSuite.T(), nil, err)
 	timestamp := []byte(randomizeTimestamp())
-	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	require.Equal(tradingSuite.T(), nil, err)
+	sourceToken := path[0]
+	if path[0].String() == tradingSuite.WBNBAddr.String() {
+		sourceToken = common.HexToAddress(tradingSuite.EtherAddressStr)
+	}
 	psData := vault.VaultHelperPreSignData{
 		Prefix:    BSC_EXECUTE_PREFIX,
-		Token:     path[0],
+		Token:     sourceToken,
 		Timestamp: timestamp,
 		Amount:    srcQty,
 	}
-	tempData, _ := vaultAbi.Pack("_buildSignExecute", psData, path[len(path)-1], tradingSuite.PanackeTradeDeployedAddr, input)
+	tempData, err := vaultAbi.Pack("_buildSignExecute", psData, path[len(path)-1], tradingSuite.PanackeTradeDeployedAddr, input)
+	require.Equal(tradingSuite.T(), nil, err)
 	data := rawsha3(tempData[4:])
-	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
+	signBytes, err := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
+	require.Equal(tradingSuite.T(), nil, err)
 
 	tx, err := c.Execute(
 		auth,
-		path[0],
+		sourceToken,
 		srcQty,
 		path[len(path)-1],
 		tradingSuite.PanackeTradeDeployedAddr,
@@ -149,10 +158,10 @@ func (tradingSuite *PancakeTradingTestSuite) executeWithPancake(
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(tradingSuite.BSCClient, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
-	fmt.Printf("Uniswap trade executed , txHash: %x\n", txHash[:])
+	fmt.Printf("Pancake trade executed , txHash: %x\n", txHash[:])
 }
 
 func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
@@ -210,7 +219,7 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 		common.HexToAddress(tradingSuite.EtherAddressStr),
 		pubKeyToAddrStr,
 	)
-	fmt.Println("deposited BNB: ", deposited)
+	fmt.Printf("address own asset %v \n", pubKeyToAddrStr) 
 
 	fmt.Println("------------ step 3: execute trade BNB for DAI through Pancake --------------")
 	tradingSuite.executeWithPancake(
@@ -218,21 +227,21 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 		[]common.Address{
 			tradingSuite.WBNBAddr,
 			tradingSuite.WBUSDAddr,
-			tradingSuite.WDAIAddr,
+			tradingSuite.WUSDTAddr,
 		},
 		uint(time.Now().Unix()+60000),
 		false,
 	)
 	time.Sleep(15 * time.Second)
 	daiTraded := tradingSuite.getDepositedBalanceBSC(
-		tradingSuite.WDAIAddr,
+		tradingSuite.WUSDTAddr,
 		pubKeyToAddrStr,
 	)
-	fmt.Println("daiTraded: ", daiTraded)
+	fmt.Println("usdtTraded: ", daiTraded)
 
 	fmt.Println("------------ step 4: withdrawing DAI from SC to pDAI on Incognito --------------")
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
-		tradingSuite.WBNBAddr.String(),
+		tradingSuite.WUSDTAddr.String(),
 		daiTraded,
 		tradingSuite.BSCClient,
 		big.NewInt(int64(tradingSuite.ChainIDBSC)),
@@ -241,7 +250,7 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 	)
 	time.Sleep(45 * time.Second)
 
-	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.ETHHost, txHashByEmittingWithdrawalReq)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.BSCHost, txHashByEmittingWithdrawalReq)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
@@ -263,21 +272,27 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 		tradingSuite.IncDAITokenIDStr,
 		withdrawingPDAI,
 		tradingSuite.ETHOwnerAddrStr,
-		"createandsendburningrequest",
+		"createandsendburningbscrequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	burningTxID, found = burningRes["TxID"]
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getbscburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
-		tradingSuite.WDAIAddr,
+		tradingSuite.WUSDTAddr,
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
 	)
 	tradingSuite.DAIBalanceAfterStep1 = bal
-	fmt.Println("DAI balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
+	fmt.Println("USDT balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
 }
 
 // func (tradingSuite *PancakeTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {

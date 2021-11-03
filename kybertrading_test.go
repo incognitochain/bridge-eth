@@ -283,7 +283,13 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.KBNAddressStr),
@@ -417,7 +423,13 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.OMGAddressStr),
@@ -544,7 +556,13 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.EtherAddressStr),

@@ -264,7 +264,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.DAIAddressStr),
@@ -398,7 +404,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.MRKAddressStr),
@@ -525,7 +537,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.EtherAddressStr),

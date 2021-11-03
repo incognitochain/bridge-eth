@@ -428,23 +428,27 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForDepositToSC(
 
 func (tradingSuite *TradingTestSuite) submitBurnProofForWithdrawal(
 	burningTxIDStr string,
+	method string,
+	vaultAddr common.Address,
+	client *ethclient.Client,
+	chainID uint,
 ) {
-	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, "getburnproof")
+	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, method)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Get contract instance
-	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	c, err := vault.NewVault(vaultAddr, client)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Burn
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
-	// auth.GasPrice = big.NewInt(1000000)
-	// auth.GasLimit = 4000000
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(chainID)))
+	require.Equal(tradingSuite.T(), nil, err)
+	auth.GasPrice = big.NewInt(1e10)
 	tx, err := Withdraw(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	txHash := tx.Hash()
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(client, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("burned, txHash: %x\n", txHash[:])
