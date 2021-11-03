@@ -29,11 +29,11 @@ type PancakeTradingTestSuite struct {
 	PanackeTradeDeployedAddr common.Address
 	PanackeRouteContractAddr common.Address
 
-	IncMRKTokenIDStr string
-	WBNBAddr         common.Address
-	WBTCAddr         common.Address
-	WBUSDAddr        common.Address
-	WXRPAddr         common.Address
+	IncBUSDTokenIDStr string
+	WBNBAddr          common.Address
+	WBTCAddr          common.Address
+	WBUSDAddr         common.Address
+	WXRPAddr          common.Address
 	WUSDTAddr         common.Address
 
 	// token amounts for tests
@@ -53,7 +53,7 @@ func NewPanckeTradingTestSuite(tradingTestSuite *TradingTestSuite) *PancakeTradi
 func (tradingSuite *PancakeTradingTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	// Bsc testnet env
-	tradingSuite.IncMRKTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
+	tradingSuite.IncBUSDTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
 	tradingSuite.PanackeTradeDeployedAddr = common.HexToAddress("0xD772475E9CFA0F1134aef4B3A5BA83De014DEc45")
 	tradingSuite.PanackeRouteContractAddr = common.HexToAddress("0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3")
 
@@ -165,7 +165,7 @@ func (tradingSuite *PancakeTradingTestSuite) executeWithPancake(
 }
 
 func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
-	fmt.Println("============ TEST TRADE ETHER FOR DAI WITH pancake ===========")
+	fmt.Println("============ TEST TRADE BNB FOR USDT WITH pancake ===========")
 	fmt.Println("------------ STEP 0: declaration & initialization --------------")
 	tradeAmount := big.NewInt(int64(tradingSuite.DepositingEther * params.Ether))
 	burningPETH := big.NewInt(0).Div(tradeAmount, big.NewInt(1000000000))
@@ -219,9 +219,9 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 		common.HexToAddress(tradingSuite.EtherAddressStr),
 		pubKeyToAddrStr,
 	)
-	fmt.Printf("address own asset %v \n", pubKeyToAddrStr) 
+	fmt.Printf("address own asset %v \n", pubKeyToAddrStr)
 
-	fmt.Println("------------ step 3: execute trade BNB for DAI through Pancake --------------")
+	fmt.Println("------------ step 3: execute trade BNB for USDT through Pancake --------------")
 	tradingSuite.executeWithPancake(
 		deposited,
 		[]common.Address{
@@ -239,7 +239,7 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 	)
 	fmt.Println("usdtTraded: ", daiTraded)
 
-	fmt.Println("------------ step 4: withdrawing DAI from SC to pDAI on Incognito --------------")
+	fmt.Println("------------ step 4: withdrawing USDT from SC to pUSDT on Incognito --------------")
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.WUSDTAddr.String(),
 		daiTraded,
@@ -257,7 +257,7 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
 	time.Sleep(50 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
-		tradingSuite.IncDAITokenIDStr,
+		tradingSuite.IncUSDTTokenIDStr,
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
@@ -266,10 +266,10 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
 
-	fmt.Println("------------ step 5: withdrawing pDAI from Incognito to DAI --------------")
+	fmt.Println("------------ step 5: withdrawing pUSDT from Incognito to USDT --------------")
 	withdrawingPDAI := big.NewInt(0).Div(daiTraded, big.NewInt(1e9))
 	burningRes, err = tradingSuite.callBurningPToken(
-		tradingSuite.IncDAITokenIDStr,
+		tradingSuite.IncUSDTTokenIDStr,
 		withdrawingPDAI,
 		tradingSuite.ETHOwnerAddrStr,
 		"createandsendburningbscrequest",
@@ -282,255 +282,322 @@ func (tradingSuite *PancakeTradingTestSuite) Test1TradeEthForDAIWithPancake() {
 	tradingSuite.submitBurnProofForWithdrawal(
 		burningTxID.(string),
 		"getbscburnproof",
-		tradingSuite.VaultAddr,
-		tradingSuite.ETHClient,
-		tradingSuite.ChainIDETH,
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+		tradingSuite.ChainIDBSC,
 	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		tradingSuite.WUSDTAddr,
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.BSCClient,
 	)
 	tradingSuite.DAIBalanceAfterStep1 = bal
 	fmt.Println("USDT balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
 }
 
-// func (tradingSuite *PancakeTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
-// 	fmt.Println("============ TEST TRADE DAI FOR MRK WITH UNISWAP AGGREGATOR ===========")
-// 	fmt.Println("------------ step 0: declaration & initialization --------------")
-// 	depositingDAI := tradingSuite.DAIBalanceAfterStep1
-// 	burningPDAI := big.NewInt(0).Div(depositingDAI, big.NewInt(1000000000))
-// 	tradeAmount := depositingDAI
+func (tradingSuite *PancakeTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
+	fmt.Println("============ TEST TRADE USDT FOR BUSD WITH PANCAKE ===========")
+	fmt.Println("------------ step 0: declaration & initialization --------------")
+	depositingDAI := tradingSuite.DAIBalanceAfterStep1
+	burningPDAI := big.NewInt(0).Div(depositingDAI, big.NewInt(1000000000))
+	tradeAmount := depositingDAI
 
-// 	daibal := tradingSuite.getBalanceOnETHNet(
-// 		common.HexToAddress(tradingSuite.DAIAddressStr),
-// 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
-// 	)
-// 	fmt.Println("dai balance of owner: ", daibal)
+	daibal := tradingSuite.getBalanceOnETHNet(
+		tradingSuite.WUSDTAddr,
+		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.BSCClient,
+	)
+	fmt.Println("dai balance of owner: ", daibal)
 
-// 	pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
-// 	fmt.Println("pubKeyToAddrStr: ", pubKeyToAddrStr)
+	pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
+	fmt.Println("pubKeyToAddrStr: ", pubKeyToAddrStr)
 
-// 	fmt.Println("------------ step 1: porting DAI to pDAI --------------")
-// 	txHash := tradingSuite.depositERC20ToBridge(
-// 		depositingDAI,
-// 		common.HexToAddress(tradingSuite.DAIAddressStr),
-// 		tradingSuite.IncPaymentAddrStr,
-// 	)
+	fmt.Println("------------ step 1: porting USDT to pUSDT --------------")
+	txHash := tradingSuite.depositERC20ToBridge(
+		depositingDAI,
+		tradingSuite.WUSDTAddr,
+		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+		tradingSuite.ChainIDBSC,
+	)
 
-// 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.BSCHost, txHash)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-// 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-// 	time.Sleep(90 * time.Second)
+	fmt.Println("Waiting 90s for 15 blocks confirmation")
+	time.Sleep(50 * time.Second)
 
-// 	_, err = tradingSuite.callIssuingETHReq(
-// 		tradingSuite.IncDAITokenIDStr,
-// 		ethDepositProof,
-// 		ethBlockHash,
-// 		ethTxIdx,
-// 		"createandsendtxwithissuingethreq",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	time.Sleep(120 * time.Second)
-// 	// TODO: check the new balance on peth of the incognito account
+	_, err = tradingSuite.callIssuingETHReq(
+		tradingSuite.IncUSDTTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+		"createandsendtxwithissuingbscreq",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	time.Sleep(120 * time.Second)
+	// TODO: check the new balance on peth of the incognito account
 
-// 	fmt.Println("------------ step 2: burning pDAI to deposit DAI to SC --------------")
+	fmt.Println("------------ step 2: burning pUSDT to deposit USDT to SC --------------")
 
-// 	// make a burn tx to incognito chain as a result of deposit to SC
-// 	burningRes, err := tradingSuite.callBurningPToken(
-// 		tradingSuite.IncDAITokenIDStr,
-// 		burningPDAI,
-// 		pubKeyToAddrStr[2:],
-// 		"createandsendburningfordeposittoscrequest",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	burningTxID, found := burningRes["TxID"]
-// 	require.Equal(tradingSuite.T(), true, found)
-// 	time.Sleep(120 * time.Second)
+	// make a burn tx to incognito chain as a result of deposit to SC
+	burningRes, err := tradingSuite.callBurningPToken(
+		tradingSuite.IncUSDTTokenIDStr,
+		burningPDAI,
+		pubKeyToAddrStr[2:],
+		"createandsendburningpbscfordeposittoscrequest",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	burningTxID, found := burningRes["TxID"]
+	require.Equal(tradingSuite.T(), true, found)
+	time.Sleep(120 * time.Second)
 
-// 	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
-// 	deposited := tradingSuite.getDepositedBalanceBSC(
-// 		tradingSuite.DAIAddressStr,
-// 		pubKeyToAddrStr,
-// 	)
-// 	fmt.Println("deposited dai: ", deposited)
-// 	// require.Equal(tradingSuite.T(), big.NewInt(0).Mul(burningPDAI, big.NewInt(1000000000)), deposited)
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDBSC)),
+		"getburnpbscprooffordeposittosc",
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+	)
 
-// 	fmt.Println("------------ step 3: execute trade DAI for MRK through Uniswap aggregator --------------")
-// 	tradingSuite.executeWithUniswap(
-// 		tradeAmount,
-// 		tradingSuite.DAIAddressStr,
-// 		tradingSuite.MRKAddressStr,
-// 	)
-// 	time.Sleep(15 * time.Second)
-// 	mrkTraded := tradingSuite.getDepositedBalanceBSC(
-// 		tradingSuite.MRKAddressStr,
-// 		pubKeyToAddrStr,
-// 	)
-// 	fmt.Println("mrkTraded: ", mrkTraded)
+	deposited := tradingSuite.getDepositedBalanceBSC(
+		tradingSuite.WUSDTAddr,
+		pubKeyToAddrStr,
+	)
+	fmt.Println("deposited dai: ", deposited)
+	// require.Equal(tradingSuite.T(), big.NewInt(0).Mul(burningPDAI, big.NewInt(1000000000)), deposited)
 
-// 	fmt.Println("------------ step 4: withdrawing MRK from SC to pMRK on Incognito --------------")
-// 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
-// 		tradingSuite.MRKAddressStr,
-// 		mrkTraded,
-// 	)
-// 	time.Sleep(15 * time.Second)
+	fmt.Println("------------ step 3: execute trade DAI for MRK through Uniswap aggregator --------------")
+	tradingSuite.executeWithPancake(
+		deposited,
+		[]common.Address{
+			tradingSuite.WUSDTAddr,
+			tradingSuite.WBUSDAddr,
+		},
+		uint(time.Now().Unix()+60000),
+		false,
+	)
+	time.Sleep(15 * time.Second)
+	busdTraded := tradingSuite.getDepositedBalanceBSC(
+		tradingSuite.WBUSDAddr,
+		pubKeyToAddrStr,
+	)
+	fmt.Println("busd Traded: ", busdTraded)
 
-// 	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.ETHHost, txHashByEmittingWithdrawalReq)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
+	fmt.Println("------------ step 4: withdrawing BUSD from SC to pBUSD on Incognito --------------")
+	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
+		tradingSuite.WBUSDAddr.String(),
+		tradeAmount,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDBSC)),
+		tradingSuite.VaultBSCAddr,
+		BSC_REQ_WITHDRAW_PREFIX,
+	)
+	time.Sleep(15 * time.Second)
 
-// 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-// 	time.Sleep(90 * time.Second)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.BSCHost, txHashByEmittingWithdrawalReq)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-// 	_, err = tradingSuite.callIssuingETHReq(
-// 		tradingSuite.IncMRKTokenIDStr,
-// 		ethDepositProof,
-// 		ethBlockHash,
-// 		ethTxIdx,
-// 		"createandsendtxwithissuingethreq",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	time.Sleep(120 * time.Second)
+	fmt.Println("Waiting 90s for 15 blocks confirmation")
+	time.Sleep(90 * time.Second)
 
-// 	fmt.Println("------------ step 5: withdrawing pMRK from Incognito to MRK --------------")
-// 	withdrawingPMRK := big.NewInt(0).Div(mrkTraded, big.NewInt(1000000000)) // MRK decimal 18
-// 	burningRes, err = tradingSuite.callBurningPToken(
-// 		tradingSuite.IncMRKTokenIDStr,
-// 		withdrawingPMRK,
-// 		tradingSuite.ETHOwnerAddrStr,
-// 		"createandsendburningrequest",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	burningTxID, found = burningRes["TxID"]
-// 	require.Equal(tradingSuite.T(), true, found)
-// 	time.Sleep(120 * time.Second)
+	_, err = tradingSuite.callIssuingETHReq(
+		tradingSuite.IncBUSDTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+		"createandsendtxwithissuingbscreq",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	time.Sleep(120 * time.Second)
 
-// 	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	fmt.Println("------------ step 5: withdrawing pMRK from Incognito to MRK --------------")
+	withdrawingPBUSD := big.NewInt(0).Div(busdTraded, big.NewInt(1000000000)) // MRK decimal 18
+	burningRes, err = tradingSuite.callBurningPToken(
+		tradingSuite.IncBUSDTokenIDStr,
+		withdrawingPBUSD,
+		tradingSuite.ETHOwnerAddrStr,
+		"createandsendburningbscrequest",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	burningTxID, found = burningRes["TxID"]
+	require.Equal(tradingSuite.T(), true, found)
+	time.Sleep(120 * time.Second)
 
-// 	bal := tradingSuite.getBalanceOnETHNet(
-// 		common.HexToAddress(tradingSuite.MRKAddressStr),
-// 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
-// 	)
-// 	tradingSuite.MRKBalanceAfterStep2 = bal
-// 	fmt.Println("MRK balance after step 2: ", tradingSuite.MRKBalanceAfterStep2)
-// 	// require.Equal(tradingSuite.T(), withdrawingPMRK.Uint64(), bal.Uint64())
-// 	// require.Equal(tradingSuite.T(), withdrawingPMRK.Uint64(), bal.Div(bal, big.NewInt(1000000000)).Uint64())
-// }
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getbscburnproof",
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+		tradingSuite.ChainIDBSC,
+	)
 
-// func (tradingSuite *PancakeTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
-// 	fmt.Println("============ TEST TRADE SALT FOR ETH WITH UNISWAP AGGREGATOR ===========")
-// 	fmt.Println("------------ step 0: declaration & initialization --------------")
-// 	depositingMRK := tradingSuite.MRKBalanceAfterStep2
-// 	burningPMRK := big.NewInt(0).Div(depositingMRK, big.NewInt(1000000000))
-// 	tradeAmount := depositingMRK
+	bal := tradingSuite.getBalanceOnETHNet(
+		tradingSuite.WBUSDAddr,
+		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.BSCClient,
+	)
+	tradingSuite.MRKBalanceAfterStep2 = bal
+	fmt.Println("BUSD balance after step 2: ", tradingSuite.MRKBalanceAfterStep2)
+}
 
-// 	pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
-// 	fmt.Println("pubKeyToAddrStr: ", pubKeyToAddrStr)
+func (tradingSuite *PancakeTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
+	fmt.Println("============ TEST TRADE BUSD FOR BNB WITH PANCAKE ===========")
+	fmt.Println("------------ step 0: declaration & initialization --------------")
+	depositingMRK := tradingSuite.MRKBalanceAfterStep2
+	burningPMRK := big.NewInt(0).Div(depositingMRK, big.NewInt(1000000000))
 
-// 	fmt.Println("------------ step 1: porting MRK to pMRK --------------")
-// 	txHash := tradingSuite.depositERC20ToBridge(
-// 		depositingMRK,
-// 		common.HexToAddress(tradingSuite.MRKAddressStr),
-// 		tradingSuite.IncPaymentAddrStr,
-// 	)
+	pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
+	fmt.Println("pubKeyToAddrStr: ", pubKeyToAddrStr)
 
-// 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
+	fmt.Println("------------ step 1: porting BUSD to pBUSD --------------")
+	txHash := tradingSuite.depositERC20ToBridge(
+		depositingMRK,
+		tradingSuite.WBUSDAddr,
+		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+		tradingSuite.ChainIDBSC,
+	)
 
-// 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-// 	time.Sleep(90 * time.Second)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.BSCHost, txHash)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-// 	issuingRes, err := tradingSuite.callIssuingETHReq(
-// 		tradingSuite.IncMRKTokenIDStr,
-// 		ethDepositProof,
-// 		ethBlockHash,
-// 		ethTxIdx,
-// 		"createandsendtxwithissuingethreq",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	fmt.Println("issuingRes: ", issuingRes)
-// 	time.Sleep(120 * time.Second)
+	fmt.Println("Waiting 90s for 15 blocks confirmation")
+	time.Sleep(50 * time.Second)
 
-// 	fmt.Println("------------ step 2: burning pMRK to deposit MRK to SC --------------")
-// 	// make a burn tx to incognito chain as a result of deposit to SC
-// 	burningRes, err := tradingSuite.callBurningPToken(
-// 		tradingSuite.IncMRKTokenIDStr,
-// 		burningPMRK,
-// 		pubKeyToAddrStr[2:],
-// 		"createandsendburningfordeposittoscrequest",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	burningTxID, found := burningRes["TxID"]
-// 	require.Equal(tradingSuite.T(), true, found)
-// 	time.Sleep(140 * time.Second)
+	issuingRes, err := tradingSuite.callIssuingETHReq(
+		tradingSuite.IncBUSDTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+		"createandsendtxwithissuingbscreq",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("issuingRes: ", issuingRes)
+	time.Sleep(120 * time.Second)
 
-// 	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
-// 	deposited := tradingSuite.getDepositedBalanceBSC(
-// 		tradingSuite.MRKAddressStr,
-// 		pubKeyToAddrStr,
-// 	)
-// 	fmt.Println("deposited mrk: ", deposited)
-// 	// require.Equal(tradingSuite.T(), big.NewInt(0).Mul(burningPMRK, big.NewInt(1000000000)), deposited)
+	fmt.Println("------------ step 2: burning pBUSD to deposit BUSD to SC --------------")
+	// make a burn tx to incognito chain as a result of deposit to SC
+	burningRes, err := tradingSuite.callBurningPToken(
+		tradingSuite.IncBUSDTokenIDStr,
+		burningPMRK,
+		pubKeyToAddrStr[2:],
+		"createandsendburningpbscfordeposittoscrequest",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	burningTxID, found := burningRes["TxID"]
+	require.Equal(tradingSuite.T(), true, found)
+	time.Sleep(120 * time.Second)
 
-// 	fmt.Println("------------ step 3: execute trade MRK for ETH through Uniswap aggregator --------------")
-// 	tradingSuite.executeWithUniswap(
-// 		tradeAmount,
-// 		tradingSuite.MRKAddressStr,
-// 		tradingSuite.EtherAddressStr,
-// 	)
-// 	etherTraded := tradingSuite.getDepositedBalanceBSC(
-// 		tradingSuite.EtherAddressStr,
-// 		pubKeyToAddrStr,
-// 	)
-// 	fmt.Println("etherTraded: ", etherTraded)
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDBSC)),
+		"getburnpbscprooffordeposittosc",
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+	)
 
-// 	fmt.Println("------------ step 4: withdrawing ETH from SC to pETH on Incognito --------------")
-// 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
-// 		tradingSuite.EtherAddressStr,
-// 		etherTraded,
-// 	)
-// 	time.Sleep(15 * time.Second)
+	deposited := tradingSuite.getDepositedBalanceBSC(
+		tradingSuite.WBUSDAddr,
+		pubKeyToAddrStr,
+	)
+	fmt.Println("deposited mrk: ", deposited)
+	// require.Equal(tradingSuite.T(), big.NewInt(0).Mul(burningPMRK, big.NewInt(1000000000)), deposited)
 
-// 	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.ETHHost, txHashByEmittingWithdrawalReq)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
+	fmt.Println("------------ step 3: execute trade BUSD for BNB through Pancake aggregator --------------")
+	tradingSuite.executeWithPancake(
+		big.NewInt(0).Div(deposited, big.NewInt(2)),
+		[]common.Address{
+			tradingSuite.WUSDTAddr,
+			tradingSuite.WBUSDAddr,
+			tradingSuite.WBNBAddr,
+		},
+		uint(time.Now().Unix()+60000),
+		true,
+	)
+	etherTraded := tradingSuite.getDepositedBalanceBSC(
+		common.HexToAddress(tradingSuite.EtherAddressStr),
+		pubKeyToAddrStr,
+	)
+	fmt.Println("bnb Traded: ", etherTraded)
+	require.NotEqual(tradingSuite.T(), 0, etherTraded)
 
-// 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-// 	time.Sleep(90 * time.Second)
+	tradingSuite.executeWithPancake(
+		big.NewInt(0).Div(deposited, big.NewInt(2)),
+		[]common.Address{
+			tradingSuite.WUSDTAddr,
+			tradingSuite.WBUSDAddr,
+			tradingSuite.WBNBAddr,
+		},
+		uint(time.Now().Unix()+60000),
+		false,
+	)
+	wBNBTraded := tradingSuite.getDepositedBalanceBSC(
+		tradingSuite.WBNBAddr,
+		pubKeyToAddrStr,
+	)
+	fmt.Println("wBNB Traded: ", wBNBTraded)
+	require.NotEqual(tradingSuite.T(), 0, wBNBTraded)
 
-// 	_, err = tradingSuite.callIssuingETHReq(
-// 		tradingSuite.IncEtherTokenIDStr,
-// 		ethDepositProof,
-// 		ethBlockHash,
-// 		ethTxIdx,
-//		"createandsendtxwithissuingethreq",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	time.Sleep(140 * time.Second)
+	fmt.Println("------------ step 4: withdrawing ETH from SC to pETH on Incognito --------------")
+	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
+		tradingSuite.EtherAddressStr,
+		etherTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDBSC)),
+		tradingSuite.VaultBSCAddr,
+		BSC_REQ_WITHDRAW_PREFIX,
+	)
+	time.Sleep(15 * time.Second)
 
-// 	fmt.Println("------------ step 5: withdrawing pETH from Incognito to ETH --------------")
-// 	withdrawingPETH := big.NewInt(0).Div(etherTraded, big.NewInt(1000000000))
-// 	burningRes, err = tradingSuite.callBurningPToken(
-// 		tradingSuite.IncEtherTokenIDStr,
-// 		withdrawingPETH,
-// 		tradingSuite.ETHOwnerAddrStr,
-// 		"createandsendburningrequest",
-// 	)
-// 	require.Equal(tradingSuite.T(), nil, err)
-// 	burningTxID, found = burningRes["TxID"]
-// 	require.Equal(tradingSuite.T(), true, found)
-// 	time.Sleep(140 * time.Second)
+	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.BSCHost, txHashByEmittingWithdrawalReq)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-// 	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	fmt.Println("Waiting 90s for 15 blocks confirmation")
+	time.Sleep(90 * time.Second)
 
-// 	bal := tradingSuite.getBalanceOnETHNet(
-// 		common.HexToAddress(tradingSuite.EtherAddressStr),
-// 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
-// 	)
-// 	fmt.Println("Ether balance after step 3: ", bal)
-// 	// require.Equal(tradingSuite.T(), withdrawingPETH.Uint64(), bal.Div(bal, big.NewInt(1000000000)).Uint64())
-// }
+	_, err = tradingSuite.callIssuingETHReq(
+		tradingSuite.IncEtherTokenIDStr,
+		ethDepositProof,
+		ethBlockHash,
+		ethTxIdx,
+		"createandsendtxwithissuingbscreq",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	time.Sleep(140 * time.Second)
+
+	fmt.Println("------------ step 5: withdrawing pETH from Incognito to ETH --------------")
+	withdrawingPETH := big.NewInt(0).Div(etherTraded, big.NewInt(1000000000))
+	burningRes, err = tradingSuite.callBurningPToken(
+		tradingSuite.IncEtherTokenIDStr,
+		withdrawingPETH,
+		tradingSuite.ETHOwnerAddrStr,
+		"createandsendburningbscrequest",
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	burningTxID, found = burningRes["TxID"]
+	require.Equal(tradingSuite.T(), true, found)
+	time.Sleep(140 * time.Second)
+
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getbscburnproof",
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
+		tradingSuite.ChainIDBSC,
+	)
+
+	bal := tradingSuite.getBalanceOnETHNet(
+		common.HexToAddress(tradingSuite.EtherAddressStr),
+		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.BSCClient,
+	)
+	fmt.Println("BNB balance after step 3: ", bal)
+}

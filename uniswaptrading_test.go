@@ -275,6 +275,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.DAIAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.DAIBalanceAfterStep1 = bal
 	fmt.Println("DAI balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
@@ -291,6 +292,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	daibal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.DAIAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("dai balance of owner: ", daibal)
 
@@ -302,6 +304,9 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 		depositingDAI,
 		common.HexToAddress(tradingSuite.DAIAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -415,6 +420,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.MRKAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.MRKBalanceAfterStep2 = bal
 	fmt.Println("MRK balance after step 2: ", tradingSuite.MRKBalanceAfterStep2)
@@ -437,6 +443,9 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 		depositingMRK,
 		common.HexToAddress(tradingSuite.MRKAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -548,6 +557,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.EtherAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("Ether balance after step 3: ", bal)
 	// require.Equal(tradingSuite.T(), withdrawingPETH.Uint64(), bal.Div(bal, big.NewInt(1000000000)).Uint64())

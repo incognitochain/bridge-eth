@@ -294,6 +294,7 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.KBNAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.KBNBalanceAfterStep1 = bal
 	fmt.Println("KBN balance after step 1: ", tradingSuite.KBNBalanceAfterStep1)
@@ -310,6 +311,7 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	kbnbal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.KBNAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("kbn balance of owner: ", kbnbal)
 
@@ -321,6 +323,9 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 		depositingKBN,
 		common.HexToAddress(tradingSuite.KBNAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -434,6 +439,7 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.OMGAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.SALTBalanceAfterStep2 = bal
 	fmt.Println("SALT balance after step 2: ", tradingSuite.SALTBalanceAfterStep2)
@@ -456,6 +462,9 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 		depositingOMG,
 		common.HexToAddress(tradingSuite.OMGAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -567,6 +576,7 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.EtherAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("Ether balance after step 3: ", bal)
 	// require.Equal(tradingSuite.T(), withdrawingPETH.Uint64(), bal.Div(bal, big.NewInt(1000000000)).Uint64())

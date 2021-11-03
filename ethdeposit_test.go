@@ -87,6 +87,9 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositERC20() {
 		depositingDAI,
 		common.HexToAddress(ethDepositSuite.DAIAddressStr),
 		ethDepositSuite.IncPaymentAddrStr,
+		ethDepositSuite.VaultAddr,
+		ethDepositSuite.ETHClient,
+		ethDepositSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(ethDepositSuite.ETHHost, txHash)

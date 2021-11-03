@@ -61,6 +61,7 @@ type TradingTestSuite struct {
 
 	IncEtherTokenIDStr string
 	IncDAITokenIDStr   string
+	IncUSDTTokenIDStr  string
 	IncSAITokenIDStr   string
 	IncPRVTokenIDStr   string
 	IncPDEXTokenIDStr  string
@@ -107,8 +108,9 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncPaymentAddrStr = "12svfkP6w5UDJDSCwqH978PvqiqBxKmUnA9em9yAYWYJVRv7wuXY1qhhYpPAm4BDz2mLbFrRmdK3yRhnTqJCZXKHUmoi7NV83HCH2YFpctHNaDdkSiQshsjw2UFUuwdEvcidgaKmF3VJpY5f8RdN"
 
 	tradingSuite.IncEtherTokenIDStr = "dae027b21d8d57114da11209dce8eeb587d01adf59d4fc356a8be5eedc146859"
-	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
+	tradingSuite.IncUSDTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
+	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000096"
 	tradingSuite.IncPRVTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000004"
 	tradingSuite.IncPDEXTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000006"
 
@@ -163,14 +165,15 @@ func (tradingSuite *TradingTestSuite) TestTradingTestSuite() {
 func (tradingSuite *TradingTestSuite) getBalanceOnETHNet(
 	tokenAddr common.Address,
 	ownerAddr common.Address,
+	client *ethclient.Client,
 ) *big.Int {
 	if tokenAddr.Hex() == tradingSuite.EtherAddressStr {
-		balance, err := tradingSuite.ETHClient.BalanceAt(context.Background(), ownerAddr, nil)
+		balance, err := client.BalanceAt(context.Background(), ownerAddr, nil)
 		require.Equal(tradingSuite.T(), nil, err)
 		return balance
 	}
 	// erc20 token
-	instance, err := erc20.NewErc20(tokenAddr, tradingSuite.ETHClient)
+	instance, err := erc20.NewErc20(tokenAddr, client)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	balance, err := instance.BalanceOf(&bind.CallOpts{}, ownerAddr)
@@ -225,21 +228,23 @@ func (tradingSuite *TradingTestSuite) depositERC20ToBridge(
 	amt *big.Int,
 	tokenAddr common.Address,
 	incPaymentAddrStr string,
+	vaultAddr common.Address,
+	client *ethclient.Client,
+	chainID uint,
 ) common.Hash {
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
-	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(chainID)))
+	require.Equal(tradingSuite.T(), nil, err)
+	c, err := vault.NewVault(vaultAddr, client)
 	require.Equal(tradingSuite.T(), nil, err)
 
-	erc20Token, _ := erc20.NewErc20(tokenAddr, tradingSuite.ETHClient)
-	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 1000000
-	tx2, apprErr := erc20Token.Approve(auth, tradingSuite.VaultAddr, amt)
+	erc20Token, _ := erc20.NewErc20(tokenAddr, client)
+	auth.GasPrice = big.NewInt(1e10)
+	tx2, apprErr := erc20Token.Approve(auth, vaultAddr, amt)
 	tx2Hash := tx2.Hash()
 	fmt.Printf("Approve tx, txHash: %x\n", tx2Hash[:])
 	require.Equal(tradingSuite.T(), nil, apprErr)
 	time.Sleep(15 * time.Second)
-	auth.GasPrice = big.NewInt(50000000000)
-	auth.GasLimit = 1000000
+	auth.GasPrice = big.NewInt(1e10)
 
 	fmt.Println("Starting deposit erc20 to vault contract")
 	tx, err := c.DepositERC20(auth, tokenAddr, amt, incPaymentAddrStr)
@@ -247,7 +252,7 @@ func (tradingSuite *TradingTestSuite) depositERC20ToBridge(
 	fmt.Println("Finished deposit erc20 to vault contract")
 	txHash := tx.Hash()
 
-	if err := wait(tradingSuite.ETHClient, txHash); err != nil {
+	if err := wait(client, txHash); err != nil {
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("deposited erc20 token to bridge, txHash: %x\n", txHash[:])
@@ -540,7 +545,7 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	withdrawalETHTokenIDStr string,
 	amount *big.Int,
 	client *ethclient.Client,
-	chainID *big.Int, 
+	chainID *big.Int,
 	vaultAddrr common.Address,
 	signaturePrefix uint8,
 ) common.Hash {
