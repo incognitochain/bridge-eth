@@ -174,4 +174,9 @@ contract PancakeProxy {
 		}
 		return returnValue != 0;
 	}
+
+    /**
+     * @dev Payable receive function to receive Ether from oldVault when migrating
+     */
+    receive() external payable {}
 }
