@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -29,11 +29,11 @@ type PancakeTradingTestSuite struct {
 	PanackeTradeDeployedAddr common.Address
 	PanackeRouteContractAddr common.Address
 
-	IncBUSDTokenIDStr string 
+	IncBUSDTokenIDStr string
 	WBNBAddr          common.Address
 	WBTCAddr          common.Address
 	WBUSDAddr         common.Address
-	WXRPAddr          common.Address 
+	WXRPAddr          common.Address
 	WUSDTAddr         common.Address
 
 	// token amounts for tests

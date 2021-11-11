@@ -1,4 +1,4 @@
-package main
+package bridge
 
 const (
 	IncognitoProxyAddress = "0xE34ebFf7aF293dcdDf0443818442BB5d558662Dd" // v37 - mainnet, for branch master-temp-B, with admin, 7+22 validators
