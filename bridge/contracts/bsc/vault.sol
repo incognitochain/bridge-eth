@@ -416,7 +416,7 @@ contract Vault {
     ) public nonReentrant {
         require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
         BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 154 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
+        require(data.meta == 152 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
 
         // Not withdrawed
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
