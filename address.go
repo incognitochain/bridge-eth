@@ -12,4 +12,6 @@ const (
 	NewVaultTmp           = "0x97875355eF55Ae35613029df8B1C8Cf8f89c9066" // v4-main - mainnet, with pkyber, fixed deposit/trade
 	PrevVault             = "0x97875355eF55Ae35613029df8B1C8Cf8f89c9066" // v3-main
 	UniswapRoute          = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+	BSCVaultAddress		  = "0x43D037A562099A4C2c95b1E2120cc43054450629"
+	BSCNewImplementation  = ""
 )

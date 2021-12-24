@@ -38,6 +38,32 @@ func TestClaimVaultAdmin(t *testing.T) {
 	}
 }
 
+func TestUpdateImplementation(t *testing.T) {
+	privKey, client, chainID, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get vault instance
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(BSCVaultAddress), client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	auth.GasPrice = big.NewInt(1e10)
+
+	tx, err := c.UpgradeTo(auth, common.HexToAddress(BSCNewImplementation))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Printf("Created transaction: %s\n", tx.Hash().String())
+}
+
 func TestClaimAllVaultAdmin(t *testing.T) {
 	privKey, client, chainID, err := connect()
 	if err != nil {
