@@ -54,7 +54,7 @@ func TestUpdateImplementation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	auth.GasPrice = big.NewInt(1e10)
+	auth.GasPrice = big.NewInt(5e9)
 
 	tx, err := c.UpgradeTo(auth, common.HexToAddress(BSCNewImplementation))
 	if err != nil {
