@@ -83,11 +83,16 @@ type TradingTestSuite struct {
 	BSCHost   string
 	BSCClient *ethclient.Client
 
+	PLGHost   string
+	PLGClient *ethclient.Client
+
 	ChainIDETH uint
 	ChainIDBSC uint
+	ChainIDPLG uint
 
 	VaultAddr            common.Address
 	VaultBSCAddr         common.Address
+	VaultPLGAddr         common.Address
 	KBNTradeDeployedAddr common.Address
 	PRVERC20Addr         common.Address
 	PRVBEP20Addr         common.Address
@@ -123,12 +128,14 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
+	tradingSuite.PLGHost = "https://rpc-mumbai.maticvigil.com"
 
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
+	tradingSuite.VaultPLGAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
@@ -137,6 +144,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.ChainIDBSC = 97
 	tradingSuite.ChainIDETH = 42
+	tradingSuite.ChainIDPLG = 80001
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -192,13 +200,16 @@ func (tradingSuite *TradingTestSuite) connectToETH() {
 	fmt.Printf("Connecting to network %s\n", network)
 	client, err := ethclient.Dial(tradingSuite.ETHHost)
 	require.Equal(tradingSuite.T(), nil, err)
-
 	tradingSuite.ETHClient = client
 
 	client, err = ethclient.Dial(tradingSuite.BSCHost)
 	require.Equal(tradingSuite.T(), nil, err)
-
 	tradingSuite.BSCClient = client
+
+	client, err = ethclient.Dial(tradingSuite.PLGHost)
+	require.Equal(tradingSuite.T(), nil, err)
+	tradingSuite.PLGClient = client
+
 	tradingSuite.ETHPrivKey = privKey
 }
 
