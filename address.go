@@ -13,5 +13,5 @@ const (
 	PrevVault             = "0x97875355eF55Ae35613029df8B1C8Cf8f89c9066" // v3-main
 	UniswapRoute          = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 	BSCVaultAddress		  = "0x43D037A562099A4C2c95b1E2120cc43054450629"
-	BSCNewImplementation  = ""
+	BSCNewImplementation  = "0x3a56dd5413dd623f0bd751eefd6ec3cfa3f6fcf2"
 )
