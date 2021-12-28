@@ -137,7 +137,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
-	tradingSuite.VaultPLGAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
+	tradingSuite.VaultPLGAddr = common.HexToAddress("0x76eEE3fF9C8E651c669d7cfb69D10A67856325De")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
