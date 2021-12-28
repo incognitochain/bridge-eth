@@ -36,6 +36,8 @@ const (
 	REQ_WITHDRAW_PREFIX     = 1
 	BSC_EXECUTE_PREFIX      = 2
 	BSC_REQ_WITHDRAW_PREFIX = 3
+	PLG_EXECUTE_PREFIX      = 2
+	PLG_REQ_WITHDRAW_PREFIX = 3
 )
 
 type IssuingETHRes struct {
@@ -544,6 +546,19 @@ func (tradingSuite *TradingTestSuite) getDepositedBalanceBSC(
 	ownerAddrStr string,
 ) *big.Int {
 	c, err := vault.NewVault(tradingSuite.VaultBSCAddr, tradingSuite.BSCClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	owner := common.HexToAddress(ownerAddrStr)
+	bal, err := c.GetDepositedBalance(nil, token, owner)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Printf("deposited balance: %d\n", bal)
+	return bal
+}
+
+func (tradingSuite *TradingTestSuite) getDepositedBalancePLG(
+	token common.Address,
+	ownerAddrStr string,
+) *big.Int {
+	c, err := vault.NewVault(tradingSuite.VaultPLGAddr, tradingSuite.PLGClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	owner := common.HexToAddress(ownerAddrStr)
 	bal, err := c.GetDepositedBalance(nil, token, owner)
