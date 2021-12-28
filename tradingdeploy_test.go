@@ -15,6 +15,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/prvbsc"
 	"github.com/incognitochain/bridge-eth/bridge/prveth"
 	"github.com/incognitochain/bridge-eth/bridge/vaultbsc"
+	"github.com/incognitochain/bridge-eth/bridge/vaultplg"
 
 	// "github.com/incognitochain/bridge-eth/bridge/kbntrade"
 	// "github.com/incognitochain/bridge-eth/bridge/uniswap"
@@ -245,7 +246,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		// Deploy vault
-		vaultAddrPLG, tx, _, err := vaultbsc.DeployVaultbsc(auth, tradingDeploySuite.PLGClient)
+		vaultAddrPLG, tx, _, err := vaultplg.DeployVaultplg(auth, tradingDeploySuite.PLGClient)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		fmt.Println("deployed vault")
 		fmt.Printf("addr: %s\n", vaultAddrPLG.Hex())
@@ -266,6 +267,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 		err = wait(tradingDeploySuite.PLGClient, tx.Hash())
 		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		return
 	}
 
 	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 3 ===============")
