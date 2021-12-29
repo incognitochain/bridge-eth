@@ -125,8 +125,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "eecbeb089a9a2fd1768f373b0cbeae6dea8b8a30dc0e798df69a8e9648c8f262"
-	tradingSuite.ETHOwnerAddrStr = "126748A0144968DD14b0187B906dE62378c59067"
+	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
+	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
@@ -223,8 +223,10 @@ func (tradingSuite *TradingTestSuite) depositETH(
 ) common.Hash {
 	c, err := vault.NewVault(vaultAddr, client)
 	require.Equal(tradingSuite.T(), nil, err)
-
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	chainID, err := client.ChainID(auth.Context)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.Value = big.NewInt(int64(amt * params.Ether))
 	tx, err := c.Deposit(auth, incPaymentAddrStr)
 	require.Equal(tradingSuite.T(), nil, err)
