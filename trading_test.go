@@ -36,8 +36,8 @@ const (
 	REQ_WITHDRAW_PREFIX     = 1
 	BSC_EXECUTE_PREFIX      = 2
 	BSC_REQ_WITHDRAW_PREFIX = 3
-	PLG_EXECUTE_PREFIX      = 2
-	PLG_REQ_WITHDRAW_PREFIX = 3
+	PLG_EXECUTE_PREFIX      = 4
+	PLG_REQ_WITHDRAW_PREFIX = 5
 )
 
 type IssuingETHRes struct {
@@ -125,7 +125,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
+	tradingSuite.ETHPrivKeyStr = "eecbeb089a9a2fd1768f373b0cbeae6dea8b8a30dc0e798df69a8e9648c8f262"
 	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
