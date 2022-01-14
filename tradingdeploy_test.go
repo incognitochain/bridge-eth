@@ -4,8 +4,8 @@ package bridge
 import (
 	"fmt"
 	"math/big"
-	"strings"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
@@ -14,6 +14,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/pdexeth"
 	"github.com/incognitochain/bridge-eth/bridge/prvbsc"
 	"github.com/incognitochain/bridge-eth/bridge/prveth"
+	"github.com/incognitochain/bridge-eth/bridge/puniswapproxy" // uniswap for polygon
 	"github.com/incognitochain/bridge-eth/bridge/vaultbsc"
 	"github.com/incognitochain/bridge-eth/bridge/vaultplg"
 
@@ -37,6 +38,7 @@ type TradingDeployTestSuite struct {
 	WETHAddr                  common.Address
 	UniswapRouteContractAddr  common.Address
 	PancakeRouterContractAddr common.Address
+	PolygonUniswapRouteAddr   common.Address
 }
 
 func NewTradingDeployTestSuite(tradingTestSuite *TradingTestSuite) *TradingDeployTestSuite {
@@ -55,6 +57,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) SetupSuite() {
 	tradingDeploySuite.UniswapRouteContractAddr = common.HexToAddress("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
 	// pancake v02
 	tradingDeploySuite.PancakeRouterContractAddr = common.HexToAddress("0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3")
+	// polygon
+	tradingDeploySuite.PolygonUniswapRouteAddr = common.HexToAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
 }
 
 func (tradingDeploySuite *TradingDeployTestSuite) TearDownSuite() {
@@ -96,8 +100,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	auth.Value = big.NewInt(0)
 	auth.GasPrice = big.NewInt(1000000000)
 
-	/* 
-		network: 
+	/*
+		network:
 		0 - deploy all
 		1 - ETH
 		2 - BSC
@@ -226,7 +230,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		return
-	}	
+	}
 
 	if network == "3" || network == "0" {
 		fmt.Println("============== DEPLOY INCOGNITO CONTRACT ON POLYGON ===============")
@@ -264,6 +268,15 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		fmt.Println("deployed vault proxy")
 		fmt.Printf("addr: %s\n", vaultAddrPLG.Hex())
+
+		err = wait(tradingDeploySuite.PLGClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Deploy puniswap
+		uniswapProxy, tx, _, err := puniswap.DeployPuniswap(auth, tradingDeploySuite.PLGClient, tradingDeploySuite.PolygonUniswapRouteAddr)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed puniswap proxy")
+		fmt.Printf("addr: %s\n", uniswapProxy.Hex())
 
 		err = wait(tradingDeploySuite.PLGClient, tx.Hash())
 		require.Equal(tradingDeploySuite.T(), nil, err)
