@@ -1,34 +1,80 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
-import './IERC20.sol';
-import '@uniswap/v3-periphery/contracts/libraries/Path.sol';
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
+pragma abicoder v2;
+import "../IERC20.sol";
+import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
-contract PancakeProxy {
+interface ISwapRouter2 is ISwapRouter {
+	function WETH9() external returns(address);
+}
+
+interface Wmatic is IERC20 {
+	function withdraw(uint256 amount) external;
+}
+
+contract UniswapProxy {
+	using Path for bytes;
     // Variables
     address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
     uint constant public MAX = uint(-1);
-    address public WBNB_CONTRACT_ADDRESS;
-    IPancakeRouter02 public pancakeRouter02;
+    ISwapRouter2 public swaprouter02;
+	Wmatic public wmatic;
 
-    // Functions
     /**
      * @dev Contract constructor
-     * @param _pancake02 uniswap routes contract address
+     * @param _swaproute02 uniswap routes contract address
      */
-    constructor(IPancakeRouter02 _pancake02) public {
-        pancakeRouter02 = _pancake02;
-        WBNB_CONTRACT_ADDRESS = pancakeRouter02.WETH();
+    constructor(ISwapRouter2 _swaproute02) payable {
+        swaprouter02 = _swaproute02;
+        wmatic = Wmatic(swaprouter02.WETH9());
     }
 
-    
-    
-	function balanceOf(address token) internal view returns (uint256) {
-		if (token == ETH_CONTRACT_ADDRESS) {
-			return address(this).balance;
+    function tradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative) external payable returns(address, uint) {
+		checkApproved(IERC20(params.tokenIn), params.amountIn);
+		uint amountOut = swaprouter02.exactInputSingle{value: msg.value}(params);
+		require(amountOut >= params.amountOutMinimum, "lower than expected output");
+		address returnToken = withdrawMatic(params.tokenOut, amountOut, isNative);
+		return (returnToken, amountOut);
+	}
+
+	function tradeInput(ISwapRouter2.ExactInputParams calldata params, bool isNative) external payable returns(address, uint) {
+		(address tokenIn,,) = params.path.decodeFirstPool();
+		checkApproved(IERC20(tokenIn), params.amountIn);
+		uint amountOut = swaprouter02.exactInput{value: msg.value}(params);
+		bytes memory tempPath = params.path;
+		address returnToken;
+		while (true) {
+            bool hasMultiplePools = tempPath.hasMultiplePools();
+			// decide whether to continue or terminate
+            if (hasMultiplePools) {
+                tempPath = tempPath.skipToken();
+            } else {
+                (,returnToken,) = tempPath.decodeFirstPool();
+                break;
+            }
 		}
-        return IERC20(token).balanceOf(address(this));
-    }
+		returnToken = withdrawMatic(returnToken, amountOut, isNative);
+        return (returnToken, amountOut);
+	}
+
+	function checkApproved(IERC20 srcToken, uint256 amount) internal {
+		if (msg.value == 0 && srcToken.allowance(address(this), address(swaprouter02)) < amount) {
+                srcToken.approve(address(swaprouter02), MAX);
+		}
+	}
+
+	function withdrawMatic(address tokenOut, uint amountOut, bool isNative) internal returns(address returnToken) {
+		if (tokenOut == address(wmatic) && isNative) {
+			// convert wmatic to matic
+			// recipient in params must be this contract
+			wmatic.withdraw(amountOut);
+			returnToken = ETH_CONTRACT_ADDRESS;
+			transfer(returnToken, amountOut);
+		} else {
+			returnToken = tokenOut;
+		}
+	}
 
 	function transfer(address token, uint amount) internal {
 		if (token == ETH_CONTRACT_ADDRESS) {
