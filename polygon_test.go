@@ -66,7 +66,7 @@ func (tradingSuite *PolygonTestSuite) SetupSuite() {
 	tradingSuite.WMATICAddr = common.HexToAddress("0x9c3c9283d3e44854697cd22d3faa240cfb032889")
 	tradingSuite.WETHAddr = common.HexToAddress("0xa6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa")
 
-	tradingSuite.DepositingEther = float64(0.001)
+	tradingSuite.DepositingEther = float64(0.2)
 }
 
 func (tradingSuite *PolygonTestSuite) TearDownSuite() {
@@ -137,6 +137,7 @@ func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 	paths []common.Address,
 	fees []int64,
 	isNative bool,
+	isTestMultiPath bool,
 ) {
 	require.Equal(tradingSuite.T(), true, len(fees) != 0)
 	require.Equal(tradingSuite.T(), len(paths), len(fees)+1)
@@ -161,7 +162,7 @@ func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 		recipient = tradingSuite.UniswapDeployedAddr
 	}
 	var input []byte
-	if len(fees) > 1 {
+	if len(fees) > 1 || isTestMultiPath {
 		agr = &pUniswapHelper.IUinswpaHelperExactInputParams{
 			Path:             tradingSuite.buildPath(paths, fees),
 			Recipient:        recipient,
@@ -286,18 +287,42 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		[]common.Address{tradingSuite.WMATICAddr, tradingSuite.WETHAddr},
 		[]int64{LOW},
 		false,
+		false,
 	)
 	time.Sleep(15 * time.Second)
 	daiTraded := tradingSuite.getDepositedBalancePLG(
 		tradingSuite.WETHAddr,
 		pubKeyToAddrStr,
 	)
+
+	testCrossPoolTrade := big.NewInt(0).Div(daiTraded, big.NewInt(3))
+	tradingSuite.executeWithPUniswap(
+		testCrossPoolTrade,
+		[]common.Address{tradingSuite.WETHAddr, tradingSuite.WMATICAddr},
+		[]int64{LOW},
+		true,
+		false,
+	)
+
+	tradingSuite.executeWithPUniswap(
+		testCrossPoolTrade,
+		[]common.Address{tradingSuite.WETHAddr, tradingSuite.WMATICAddr},
+		[]int64{LOW},
+		false,
+		true,
+	)
+
+	daiTraded = tradingSuite.getDepositedBalancePLG(
+		tradingSuite.WETHAddr,
+		pubKeyToAddrStr,
+	)
+
 	fmt.Println("weth: ", daiTraded)
 
 	fmt.Println("------------ step 3: withdrawing MATIC from SC to pMATIC on Incognito --------------")
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.WETHAddr.String(),
-		deposited,
+		daiTraded,
 		tradingSuite.PLGClient,
 		big.NewInt(int64(tradingSuite.ChainIDPLG)),
 		tradingSuite.VaultPLGAddr,
