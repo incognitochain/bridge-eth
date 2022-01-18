@@ -58,7 +58,7 @@ func (tradingSuite *PolygonTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	// Polygon testnet env
 	tradingSuite.IncBUSDTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
-	tradingSuite.UniswapDeployedAddr = common.HexToAddress("0x24a0d13FE42d7156e13F22CCfDE09EED5e4B9Cc2")
+	tradingSuite.UniswapDeployedAddr = common.HexToAddress("0x1eAD6d41B17776E04f0E4FEE4803Ed7d410786fe")
 	tradingSuite.UniswapRouteContractAddr = common.HexToAddress("0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45")
 	tradingSuite.UNiswapQuoteContractAddr = common.HexToAddress("0x61ffe014ba17989e743c5f6cb21bf9697530b21e")
 
@@ -136,7 +136,6 @@ func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 	srcQty *big.Int,
 	paths []common.Address,
 	fees []int64,
-	deadline int64,
 	isNative bool,
 ) {
 	require.Equal(tradingSuite.T(), true, len(fees) != 0)
@@ -286,7 +285,6 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		deposited,
 		[]common.Address{tradingSuite.WMATICAddr, tradingSuite.WETHAddr},
 		[]int64{LOW},
-		time.Now().Unix()+60000,
 		false,
 	)
 	time.Sleep(15 * time.Second)
@@ -350,7 +348,7 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		tradingSuite.PLGClient,
 	)
 	tradingSuite.DAIBalanceAfterStep1 = bal
-	fmt.Println("USDT balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
+	fmt.Println("WETH balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
 }
 
 func (tradingSuite *PolygonTestSuite) buildPath(paths []common.Address, fees []int64) []byte {

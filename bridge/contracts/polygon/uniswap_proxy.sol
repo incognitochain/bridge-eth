@@ -5,6 +5,22 @@ import "../IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
 
 interface ISwapRouter2 {
+	/// @notice Call multiple functions in the current contract and return the data from all of them if they all succeed
+	/// @dev The `msg.value` should not be trusted for any method callable from multicall.
+	/// @param deadline The time by which this function must be called before failing
+	/// @param data The encoded function data for each of the calls to make to this contract
+	/// @return results The results from each of the calls passed in via data
+	function multicall(uint256 deadline, bytes[] calldata data) external payable returns (bytes[] memory results);
+
+	/// @notice Call multiple functions in the current contract and return the data from all of them if they all succeed
+	/// @dev The `msg.value` should not be trusted for any method callable from multicall.
+	/// @param previousBlockhash The expected parent blockHash
+	/// @param data The encoded function data for each of the calls to make to this contract
+	/// @return results The results from each of the calls passed in via data
+	function multicall(bytes32 previousBlockhash, bytes[] calldata data)
+	external
+	payable
+	returns (bytes[] memory results);
 	struct ExactInputSingleParams {
 		address tokenIn;
 		address tokenOut;
@@ -83,13 +99,24 @@ contract UniswapProxy {
 		return (returnToken, amountOut);
 	}
 
+	function multiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint32 amount, bool isNative) external payable returns(address, uint) {
+		checkApproved(sellToken, amount);
+		uint256 amountOut;
+		bytes[] memory results = swaprouter02.multicall{value: msg.value}(deadline, data);
+		for (uint i = 0; i < results.length; i++) {
+			amountOut += abi.decode(results[i], (uint256));
+		}
+		address returnToken = withdrawMatic(buyToken, amountOut, isNative);
+		return (returnToken, amountOut);
+	}
+
 	function checkApproved(IERC20 srcToken, uint256 amount) internal {
 		if (msg.value == 0 && srcToken.allowance(address(this), address(swaprouter02)) < amount) {
 			srcToken.approve(address(swaprouter02), MAX);
 		}
 	}
 
-	function withdrawMatic(address tokenOut, uint amountOut, bool isNative) internal returns(address returnToken) {
+	function withdrawMatic(address tokenOut, uint256 amountOut, bool isNative) internal returns(address returnToken) {
 		if (tokenOut == address(wmatic) && isNative) {
 			// convert wmatic to matic
 			// recipient in params must be this contract
