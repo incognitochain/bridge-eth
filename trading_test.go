@@ -125,7 +125,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "eecbeb089a9a2fd1768f373b0cbeae6dea8b8a30dc0e798df69a8e9648c8f262"
+	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
@@ -137,7 +137,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
-	tradingSuite.VaultPLGAddr = common.HexToAddress("0x76eEE3fF9C8E651c669d7cfb69D10A67856325De")
+	tradingSuite.VaultPLGAddr = common.HexToAddress("0x493b80D988916a4E712b4d8fb9e123b5a477de1E")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")

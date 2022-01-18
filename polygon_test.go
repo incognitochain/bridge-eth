@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/params"
 	pUniswapHelper "github.com/incognitochain/bridge-eth/bridge/puniswaphelper"
+	puniswap "github.com/incognitochain/bridge-eth/bridge/puniswapproxy"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/stretchr/testify/suite"
 	"math/big"
@@ -16,8 +18,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,6 +28,7 @@ type PolygonTestSuite struct {
 
 	UniswapDeployedAddr      common.Address
 	UniswapRouteContractAddr common.Address
+	UNiswapQuoteContractAddr common.Address
 
 	IncBUSDTokenIDStr string
 	WMATICAddr        common.Address
@@ -57,8 +58,9 @@ func (tradingSuite *PolygonTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	// Polygon testnet env
 	tradingSuite.IncBUSDTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
-	tradingSuite.UniswapDeployedAddr = common.HexToAddress("0xD772475E9CFA0F1134aef4B3A5BA83De014DEc45")
+	tradingSuite.UniswapDeployedAddr = common.HexToAddress("0x24a0d13FE42d7156e13F22CCfDE09EED5e4B9Cc2")
 	tradingSuite.UniswapRouteContractAddr = common.HexToAddress("0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45")
+	tradingSuite.UNiswapQuoteContractAddr = common.HexToAddress("0x61ffe014ba17989e743c5f6cb21bf9697530b21e")
 
 	// tokens
 	tradingSuite.WMATICAddr = common.HexToAddress("0x9c3c9283d3e44854697cd22d3faa240cfb032889")
@@ -99,7 +101,7 @@ func (tradingSuite *PolygonTestSuite) getExpectedAmount(
 	paths []common.Address,
 	fees []int64,
 ) *big.Int {
-	c, err := pUniswapHelper.NewPUniswapHelper(tradingSuite.UniswapRouteContractAddr, tradingSuite.PLGClient)
+	c, err := pUniswapHelper.NewPUniswapHelper(tradingSuite.UNiswapQuoteContractAddr, tradingSuite.PLGClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	var amountOut *big.Int
 	var amountIn *big.Int
@@ -113,14 +115,14 @@ func (tradingSuite *PolygonTestSuite) getExpectedAmount(
 		amountIn = inputParam.AmountIn
 		amountOut = result.AmountOut
 	} else {
-		inputSingleParam := &pUniswapHelper.IUinswpaHelperQuoteExactInputSingleParams{
+		inputSingleParam := pUniswapHelper.IUinswpaHelperQuoteExactInputSingleParams{
 			TokenIn:           paths[0],
 			TokenOut:          paths[len(paths)-1],
 			Fee:               big.NewInt(fees[0]),
 			AmountIn:          srcQty,
 			SqrtPriceLimitX96: big.NewInt(0),
 		}
-		result, err := c.QuoteExactInputSingle(nil, *inputSingleParam)
+		result, err := c.QuoteExactInputSingle(nil, inputSingleParam)
 		require.Equal(tradingSuite.T(), nil, err)
 		amountIn = inputSingleParam.AmountIn
 		amountOut = result.AmountOut
@@ -140,7 +142,7 @@ func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 	require.Equal(tradingSuite.T(), true, len(fees) != 0)
 	require.Equal(tradingSuite.T(), len(paths), len(fees)+1)
 
-	tradeAbi, err := abi.JSON(strings.NewReader(pUniswapHelper.PUniswapHelperMetaData.ABI))
+	tradeAbi, err := abi.JSON(strings.NewReader(puniswap.PuniswapMetaData.ABI))
 	require.Equal(tradingSuite.T(), nil, err)
 
 	// Get contract instance
@@ -159,25 +161,27 @@ func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 	if isNative && bytes.Compare(paths[len(paths)-1].Bytes(), tradingSuite.WMATICAddr.Bytes()) == 0 {
 		recipient = tradingSuite.UniswapDeployedAddr
 	}
+	var input []byte
 	if len(fees) > 1 {
 		agr = &pUniswapHelper.IUinswpaHelperExactInputParams{
 			Path:             tradingSuite.buildPath(paths, fees),
 			Recipient:        recipient,
-			Deadline:         big.NewInt(deadline),
 			AmountIn:         srcQty,
 			AmountOutMinimum: expectOutputAmount,
 		}
+		input, err = tradeAbi.Pack("tradeInput", agr, isNative)
 	} else {
 		agr = &pUniswapHelper.IUinswpaHelperExactInputSingleParams{
 			TokenIn:           paths[0],
 			TokenOut:          paths[len(paths)-1],
 			Fee:               big.NewInt(fees[0]),
+			Recipient:         recipient,
 			AmountIn:          srcQty,
 			SqrtPriceLimitX96: big.NewInt(0),
+			AmountOutMinimum:  expectOutputAmount,
 		}
+		input, err = tradeAbi.Pack("tradeInputSingle", agr, isNative)
 	}
-
-	input, err := tradeAbi.Pack("trade", agr, isNative)
 	require.Equal(tradingSuite.T(), nil, err)
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultHelperABI))

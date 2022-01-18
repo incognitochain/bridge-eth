@@ -3,9 +3,34 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 import "../IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
-interface ISwapRouter2 is ISwapRouter {
+interface ISwapRouter2 {
+	struct ExactInputSingleParams {
+		address tokenIn;
+		address tokenOut;
+		uint24 fee;
+		address recipient;
+		uint256 amountIn;
+		uint256 amountOutMinimum;
+		uint160 sqrtPriceLimitX96;
+	}
+
+	/// @notice Swaps `amountIn` of one token for as much as possible of another token
+	/// @param params The parameters necessary for the swap, encoded as `ExactInputSingleParams` in calldata
+	/// @return amountOut The amount of the received token
+	function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
+
+	struct ExactInputParams {
+		bytes path;
+		address recipient;
+		uint256 amountIn;
+		uint256 amountOutMinimum;
+	}
+
+	/// @notice Swaps `amountIn` of one token for as much as possible of another along the specified path
+	/// @param params The parameters necessary for the multi-hop swap, encoded as `ExactInputParams` in calldata
+	/// @return amountOut The amount of the received token
+	function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut);
 	function WETH9() external returns(address);
 }
 
@@ -15,22 +40,22 @@ interface Wmatic is IERC20 {
 
 contract UniswapProxy {
 	using Path for bytes;
-    // Variables
-    address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
-    uint constant public MAX = uint(-1);
-    ISwapRouter2 public swaprouter02;
+	// Variables
+	address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
+	uint constant public MAX = uint(-1);
+	ISwapRouter2 public swaprouter02;
 	Wmatic public wmatic;
 
-    /**
+	/**
      * @dev Contract constructor
      * @param _swaproute02 uniswap routes contract address
      */
-    constructor(ISwapRouter2 _swaproute02) payable {
-        swaprouter02 = _swaproute02;
-        wmatic = Wmatic(swaprouter02.WETH9());
-    }
+	constructor(ISwapRouter2 _swaproute02) payable {
+		swaprouter02 = _swaproute02;
+		wmatic = Wmatic(swaprouter02.WETH9());
+	}
 
-    function tradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative) external payable returns(address, uint) {
+	function tradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative) external payable returns(address, uint) {
 		checkApproved(IERC20(params.tokenIn), params.amountIn);
 		uint amountOut = swaprouter02.exactInputSingle{value: msg.value}(params);
 		require(amountOut >= params.amountOutMinimum, "lower than expected output");
@@ -45,22 +70,22 @@ contract UniswapProxy {
 		bytes memory tempPath = params.path;
 		address returnToken;
 		while (true) {
-            bool hasMultiplePools = tempPath.hasMultiplePools();
+			bool hasMultiplePools = tempPath.hasMultiplePools();
 			// decide whether to continue or terminate
-            if (hasMultiplePools) {
-                tempPath = tempPath.skipToken();
-            } else {
-                (,returnToken,) = tempPath.decodeFirstPool();
-                break;
-            }
+			if (hasMultiplePools) {
+				tempPath = tempPath.skipToken();
+			} else {
+				(,returnToken,) = tempPath.decodeFirstPool();
+				break;
+			}
 		}
 		returnToken = withdrawMatic(returnToken, amountOut, isNative);
-        return (returnToken, amountOut);
+		return (returnToken, amountOut);
 	}
 
 	function checkApproved(IERC20 srcToken, uint256 amount) internal {
 		if (msg.value == 0 && srcToken.allowance(address(this), address(swaprouter02)) < amount) {
-                srcToken.approve(address(swaprouter02), MAX);
+			srcToken.approve(address(swaprouter02), MAX);
 		}
 	}
 
@@ -80,23 +105,23 @@ contract UniswapProxy {
 		if (token == ETH_CONTRACT_ADDRESS) {
 			require(address(this).balance >= amount);
 			(bool success, ) = msg.sender.call{value: amount}("");
-          	require(success);
+			require(success);
 		} else {
 			IERC20(token).transfer(msg.sender, amount);
 			require(checkSuccess());
 		}
 	}
 
-    /**
+	/**
      * @dev Check if transfer() and transferFrom() of ERC20 succeeded or not
      * This check is needed to fix https://github.com/ethereum/solidity/issues/4116
      * This function is copied from https://github.com/AdExNetwork/adex-protocol-eth/blob/master/contracts/libs/SafeERC20.sol
      */
-    function checkSuccess() internal pure returns (bool) {
+	function checkSuccess() internal pure returns (bool) {
 		uint256 returnValue = 0;
 
 		assembly {
-			// check number of bytes returned from last function call
+		// check number of bytes returned from last function call
 			switch returndatasize()
 
 			// no bytes returned: assume success
@@ -106,10 +131,10 @@ contract UniswapProxy {
 
 			// 32 bytes returned: check if non-zero
 			case 0x20 {
-				// copy 32 bytes into scratch space
+			// copy 32 bytes into scratch space
 				returndatacopy(0x0, 0x0, 0x20)
 
-				// load those bytes into returnValue
+			// load those bytes into returnValue
 				returnValue := mload(0x0)
 			}
 
@@ -119,8 +144,8 @@ contract UniswapProxy {
 		return returnValue != 0;
 	}
 
-    /**
+	/**
      * @dev Payable receive function to receive Ether from oldVault when migrating
      */
-    receive() external payable {}
+	receive() external payable {}
 }
