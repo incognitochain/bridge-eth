@@ -58,7 +58,7 @@ func (tradingSuite *PolygonTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	// Polygon testnet env
 	tradingSuite.IncBUSDTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
-	tradingSuite.UniswapDeployedAddr = common.HexToAddress("0x1eAD6d41B17776E04f0E4FEE4803Ed7d410786fe")
+	tradingSuite.UniswapDeployedAddr = common.HexToAddress("0x3Aa036cF80684332aC40CcF64371f6a356570e63")
 	tradingSuite.UniswapRouteContractAddr = common.HexToAddress("0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45")
 	tradingSuite.UNiswapQuoteContractAddr = common.HexToAddress("0x61ffe014ba17989e743c5f6cb21bf9697530b21e")
 
@@ -132,6 +132,114 @@ func (tradingSuite *PolygonTestSuite) getExpectedAmount(
 	return amountOut
 }
 
+const MAX_PERCENT = 10000
+
+func (tradingSuite *PolygonTestSuite) executeWithPUniswapMultiTrade(
+	srcQty *big.Int,
+	paths [][]common.Address,
+	fees [][]int64,
+	percents []int64,
+	isNative bool,
+	deadline int64,
+	isTestMultiPath []bool,
+) {
+	require.Equal(tradingSuite.T(), true, len(fees) != 0)
+	require.Equal(tradingSuite.T(), len(paths), len(fees))
+	require.Equal(tradingSuite.T(), len(percents), len(fees))
+
+	tradeAbi1, err := abi.JSON(strings.NewReader(pUniswapHelper.PUniswapHelperMetaData.ABI))
+	require.Equal(tradingSuite.T(), nil, err)
+	tradeAbi, err := abi.JSON(strings.NewReader(puniswap.PuniswapMetaData.ABI))
+	require.Equal(tradingSuite.T(), nil, err)
+
+	// Get contract instance
+	c, err := vault.NewVault(tradingSuite.VaultPLGAddr, tradingSuite.PLGClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDPLG)))
+	require.Equal(tradingSuite.T(), nil, err)
+	auth.GasPrice = big.NewInt(3e10)
+	var calldata [][]byte
+	for i := 0; i < len(fees); i++ {
+		var agr interface{}
+		amount := big.NewInt(0).Div(big.NewInt(0).Mul(srcQty, big.NewInt(percents[i])), big.NewInt(MAX_PERCENT))
+		expectOutputAmount := tradingSuite.getExpectedAmount(
+			amount,
+			paths[i],
+			fees[i],
+		)
+		recipient := tradingSuite.VaultPLGAddr
+		if isNative && bytes.Compare(paths[i][len(paths[i])-1].Bytes(), tradingSuite.WMATICAddr.Bytes()) == 0 {
+			recipient = tradingSuite.UniswapDeployedAddr
+		}
+		var input []byte
+		if len(fees[i]) > 1 || isTestMultiPath[i] {
+			agr = &pUniswapHelper.IUinswpaHelperExactInputParams{
+				Path:             tradingSuite.buildPath(paths[i], fees[i]),
+				Recipient:        recipient,
+				AmountIn:         amount,
+				AmountOutMinimum: expectOutputAmount,
+			}
+			input, err = tradeAbi1.Pack("exactInput", agr)
+			require.Equal(tradingSuite.T(), nil, err)
+		} else {
+			agr = &pUniswapHelper.IUinswpaHelperExactInputSingleParams{
+				TokenIn:           paths[i][0],
+				TokenOut:          paths[i][len(paths[i])-1],
+				Fee:               big.NewInt(fees[i][0]),
+				Recipient:         recipient,
+				AmountIn:          amount,
+				SqrtPriceLimitX96: big.NewInt(0),
+				AmountOutMinimum:  expectOutputAmount,
+			}
+			input, err = tradeAbi1.Pack("exactInputSingle", agr)
+			require.Equal(tradingSuite.T(), nil, err)
+		}
+		calldata = append(calldata, input)
+	}
+	input, err := tradeAbi.Pack("multiTrades", big.NewInt(deadline), calldata, paths[0][0], paths[0][len(paths[0])-1], srcQty, isNative)
+	require.Equal(tradingSuite.T(), nil, err)
+	timestamp := []byte(randomizeTimestamp())
+	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	require.Equal(tradingSuite.T(), nil, err)
+	sourceToken := paths[0][0]
+	// todo: compare pTokenID
+	if paths[0][0].String() == tradingSuite.WMATICAddr.String() {
+		sourceToken = common.HexToAddress(tradingSuite.EtherAddressStr)
+	}
+	destToken := paths[0][len(paths[0])-1]
+	if paths[0][len(paths[0])-1].String() == tradingSuite.WMATICAddr.String() && isNative {
+		destToken = common.HexToAddress(tradingSuite.EtherAddressStr)
+	}
+	psData := vault.VaultHelperPreSignData{
+		Prefix:    PLG_EXECUTE_PREFIX,
+		Token:     sourceToken,
+		Timestamp: timestamp,
+		Amount:    srcQty,
+	}
+	tempData, err := vaultAbi.Pack("_buildSignExecute", psData, destToken, tradingSuite.UniswapDeployedAddr, input)
+	require.Equal(tradingSuite.T(), nil, err)
+	data := rawsha3(tempData[4:])
+	signBytes, err := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	tx, err := c.Execute(
+		auth,
+		sourceToken,
+		srcQty,
+		destToken,
+		tradingSuite.UniswapDeployedAddr,
+		input,
+		timestamp,
+		signBytes,
+	)
+	require.Equal(tradingSuite.T(), nil, err)
+	txHash := tx.Hash()
+	if err := wait(tradingSuite.PLGClient, txHash); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Printf("pUniswap trade executed , txHash: %x\n", txHash[:])
+}
+
 func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 	srcQty *big.Int,
 	paths []common.Address,
@@ -187,6 +295,7 @@ func (tradingSuite *PolygonTestSuite) executeWithPUniswap(
 	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	require.Equal(tradingSuite.T(), nil, err)
 	sourceToken := paths[0]
+	// todo: compare pTokenID
 	if paths[0].String() == tradingSuite.WMATICAddr.String() {
 		sourceToken = common.HexToAddress(tradingSuite.EtherAddressStr)
 	}
@@ -281,7 +390,7 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 	)
 	fmt.Printf("address own asset %v \n", pubKeyToAddrStr)
 
-	fmt.Println("------------ step 3: execute trade BNB for USDT through Pancake --------------")
+	fmt.Println("------------ step 3: execute trade MATIC for USDT through Pancake --------------")
 	tradingSuite.executeWithPUniswap(
 		deposited,
 		[]common.Address{tradingSuite.WMATICAddr, tradingSuite.WETHAddr},
@@ -295,7 +404,7 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		pubKeyToAddrStr,
 	)
 
-	testCrossPoolTrade := big.NewInt(0).Div(daiTraded, big.NewInt(3))
+	testCrossPoolTrade := big.NewInt(0).Div(daiTraded, big.NewInt(4))
 	tradingSuite.executeWithPUniswap(
 		testCrossPoolTrade,
 		[]common.Address{tradingSuite.WETHAddr, tradingSuite.WMATICAddr},
@@ -310,6 +419,16 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		[]int64{LOW},
 		false,
 		true,
+	)
+
+	tradingSuite.executeWithPUniswapMultiTrade(
+		testCrossPoolTrade,
+		[][]common.Address{{tradingSuite.WETHAddr, tradingSuite.WMATICAddr}, {tradingSuite.WETHAddr, tradingSuite.WMATICAddr}},
+		[][]int64{{LOW}, {MEDIUM}},
+		[]int64{70, 30},
+		false,
+		time.Now().Unix()+60000,
+		[]bool{false, false},
 	)
 
 	daiTraded = tradingSuite.getDepositedBalancePLG(
@@ -319,7 +438,7 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 
 	fmt.Println("weth: ", daiTraded)
 
-	fmt.Println("------------ step 3: withdrawing MATIC from SC to pMATIC on Incognito --------------")
+	fmt.Println("------------ step 3: withdrawing WETH from SC to pWETH on Incognito --------------")
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.WETHAddr.String(),
 		daiTraded,
@@ -346,8 +465,8 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
 
-	fmt.Println("------------ step 4: withdrawing pMATIC from Incognito to MATIC --------------")
-	withdrawingPDAI := big.NewInt(0).Div(deposited, big.NewInt(1e9))
+	fmt.Println("------------ step 4: withdrawing pWETH from Incognito to WETH --------------")
+	withdrawingPDAI := big.NewInt(0).Div(daiTraded, big.NewInt(1e9))
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncUSDTTokenIDStr,
 		withdrawingPDAI,

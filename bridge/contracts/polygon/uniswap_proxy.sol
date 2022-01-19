@@ -99,14 +99,15 @@ contract UniswapProxy {
 		return (returnToken, amountOut);
 	}
 
-	function multiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint32 amount, bool isNative) external payable returns(address, uint) {
-		checkApproved(sellToken, amount);
+	function multiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint256 sellAmount, bool isNative) external payable returns(address, uint) {
+		checkApproved(sellToken, sellAmount);
 		uint256 amountOut;
 		bytes[] memory results = swaprouter02.multicall{value: msg.value}(deadline, data);
 		for (uint i = 0; i < results.length; i++) {
 			amountOut += abi.decode(results[i], (uint256));
 		}
 		address returnToken = withdrawMatic(buyToken, amountOut, isNative);
+
 		return (returnToken, amountOut);
 	}
 
