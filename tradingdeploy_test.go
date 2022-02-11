@@ -3,6 +3,7 @@ package bridge
 // Basic imports
 import (
 	"fmt"
+	"github.com/incognitochain/bridge-eth/bridge/pcurve"
 	"math/big"
 	"os"
 	"strings"
@@ -36,6 +37,7 @@ type TradingDeployTestSuite struct {
 	KyberContractAddr         common.Address
 	ZRXContractAddr           common.Address
 	WETHAddr                  common.Address
+	PWETHAddr                 common.Address
 	UniswapRouteContractAddr  common.Address
 	PancakeRouterContractAddr common.Address
 	PolygonUniswapRouteAddr   common.Address
@@ -59,6 +61,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) SetupSuite() {
 	tradingDeploySuite.PancakeRouterContractAddr = common.HexToAddress("0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3")
 	// polygon
 	tradingDeploySuite.PolygonUniswapRouteAddr = common.HexToAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
+	tradingDeploySuite.PWETHAddr = common.HexToAddress("0x9c3c9283d3e44854697cd22d3faa240cfb032889")
 }
 
 func (tradingDeploySuite *TradingDeployTestSuite) TearDownSuite() {
@@ -277,6 +280,15 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		fmt.Println("deployed puniswap proxy")
 		fmt.Printf("addr: %s\n", uniswapProxy.Hex())
+
+		err = wait(tradingDeploySuite.PLGClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Deploy pcurve
+		curveProxy, tx, _, err := pcurve.DeployPcurve(auth, tradingDeploySuite.PLGClient, tradingDeploySuite.PolygonUniswapRouteAddr)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed curve proxy")
+		fmt.Printf("addr: %s\n", curveProxy.Hex())
 
 		err = wait(tradingDeploySuite.PLGClient, tx.Hash())
 		require.Equal(tradingDeploySuite.T(), nil, err)
