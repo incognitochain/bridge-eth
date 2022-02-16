@@ -348,14 +348,16 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		tradingSuite.PLGClient,
 	)
 	time.Sleep(15 * time.Second)
+
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.PLGHost, txHash)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(50 * time.Second)
+	// time.Sleep(50 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
-		tradingSuite.IncEtherTokenIDStr,
+		// tradingSuite.IncEtherTokenIDStr,
+		"a697a5c08d173de37372a20946e37d9e4adeeba68571b29b8ca4a2e1c3fc27fa",
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,

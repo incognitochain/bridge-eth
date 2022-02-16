@@ -130,10 +130,10 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
-	tradingSuite.PLGHost = "https://rpc-mumbai.maticvigil.com"
+	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 
-	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
-	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
+	tradingSuite.IncBridgeHost = "https://testnet.incognito.org/fullnode"
+	tradingSuite.IncRPCHost = "https://testnet.incognito.org/fullnode"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
@@ -255,9 +255,9 @@ func (tradingSuite *TradingTestSuite) depositERC20ToBridge(
 	erc20Token, _ := erc20.NewErc20(tokenAddr, client)
 	auth.GasPrice = big.NewInt(1e10)
 	tx2, apprErr := erc20Token.Approve(auth, vaultAddr, amt)
+	require.Equal(tradingSuite.T(), nil, apprErr)
 	tx2Hash := tx2.Hash()
 	fmt.Printf("Approve tx, txHash: %x\n", tx2Hash[:])
-	require.Equal(tradingSuite.T(), nil, apprErr)
 	time.Sleep(15 * time.Second)
 	auth.GasPrice = big.NewInt(1e10)
 
