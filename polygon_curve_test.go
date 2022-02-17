@@ -64,7 +64,7 @@ func (tradingSuite *PolygonCurveTestSuite) SetupSuite() {
 	tradingSuite.IncBUSDTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
 	tradingSuite.UNiswapQuoteContractAddr = common.HexToAddress("0x61ffe014ba17989e743c5f6cb21bf9697530b21e")
 	tradingSuite.PLGHost = "http://127.0.0.1:8545"
-	tradingSuite.PolygonPool1 = common.HexToAddress("0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81")
+	tradingSuite.PolygonPool1 = common.HexToAddress("0x225fb4176f0e20cdb66b4a3df70ca3063281e855")
 	tradingSuite.PolygonPool2 = common.HexToAddress("0x751B1e21756bDbc307CBcC5085c042a0e9AaEf36")
 	//tradingSuite.VaultPLGAddr = common.HexToAddress("0x43D037A562099A4C2c95b1E2120cc43054450629")
 	client, err := ethclient.Dial(tradingSuite.PLGHost)
@@ -128,7 +128,6 @@ func (tradingSuite *PolygonCurveTestSuite) SetupSuite() {
 
 	err = wait(tradingSuite.PLGClient, tx.Hash())
 	require.Equal(tradingSuite.T(), nil, err)
-
 	tradingSuite.v, err = vault.NewVault(tradingSuite.VaultPLGAddr, tradingSuite.PLGClient)
 	require.Equal(tradingSuite.T(), nil, err)
 }
@@ -242,9 +241,9 @@ func (tradingSuite *PolygonCurveTestSuite) executeWithPcurve(
 	}
 	var input []byte
 	if isUnderlying {
-		input, err = tradeAbi.Pack("exchange", i, j, srcQty, expectOutputAmount, curvePool)
-	} else {
 		input, err = tradeAbi.Pack("exchangeUnderlying", i, j, srcQty, expectOutputAmount, curvePool)
+	} else {
+		input, err = tradeAbi.Pack("exchange", i, j, srcQty, expectOutputAmount, curvePool)
 	}
 	require.Equal(tradingSuite.T(), nil, err)
 
@@ -266,7 +265,10 @@ func (tradingSuite *PolygonCurveTestSuite) executeWithPcurve(
 	data := rawsha3(tempData[4:])
 	signBytes, err := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 	require.Equal(tradingSuite.T(), nil, err)
-
+	auth.GasLimit = 4000000
+	auth.GasPrice = big.NewInt(10000000000)
+	fmt.Printf("source token %v\n", sourceToken.Hex())
+	fmt.Printf("dest token %v\n", recipient.Hex())
 	tx, err := c.Execute(
 		auth,
 		sourceToken,
@@ -292,7 +294,7 @@ func (tradingSuite *PolygonCurveTestSuite) Test1TradeEthForDAIWithPancake() {
 	// swap from matic to usdc
 	quickSwap, err := uniswap.NewUniswapV2(tradingSuite.QuickSwap, tradingSuite.PLGClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth, err = bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDPLG)))
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDPLG)))
 	require.Equal(tradingSuite.T(), nil, err)
 	value, ok := big.NewInt(0).SetString("10000000000000000000", 10)
 	require.Equal(tradingSuite.T(), true, ok)
@@ -315,11 +317,32 @@ func (tradingSuite *PolygonCurveTestSuite) Test1TradeEthForDAIWithPancake() {
 	usdcBalance, err := erc20Token.BalanceOf(nil, auth.From)
 	require.Equal(tradingSuite.T(), nil, err)
 	require.Equal(tradingSuite.T(), 1, usdcBalance.Cmp(big.NewInt(0)))
+
+	// test swap through proxy directly
+	usdcToken, err := erc20.NewErc20(tradingSuite.USDCAddress, tradingSuite.PLGClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	tx, err = usdcToken.Transfer(auth, tradingSuite.PcurveDeployedAddr, big.NewInt(1e6))
+	require.Equal(tradingSuite.T(), nil, err)
+	err = wait(tradingSuite.PLGClient, tx.Hash())
+	require.Equal(tradingSuite.T(), nil, err)
+	proxyCurve, err := pcurve.NewPcurve(tradingSuite.PcurveDeployedAddr, tradingSuite.PLGClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth.GasLimit = 2000000
+	tx, err = proxyCurve.ExchangeUnderlying(auth, big.NewInt(2), big.NewInt(3), big.NewInt(1e6), big.NewInt(10), tradingSuite.PolygonPool1)
+	require.Equal(tradingSuite.T(), nil, err)
+	err = wait(tradingSuite.PLGClient, tx.Hash())
+	require.Equal(tradingSuite.T(), nil, err)
+
+	usdtToken, err := erc20.NewErc20(tradingSuite.USDTAddress, tradingSuite.PLGClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	balance, err := usdtToken.BalanceOf(nil, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Printf("usdt balance after trade proxy %v\n", balance.String())
 	auth.GasLimit = 0
 	// assumed the shielding flow is working
 	// deposite erc20 token to vault
 	tradingSuite.depositERC20ToBridge(
-		usdcBalance,
+		big.NewInt(0).Sub(usdcBalance, big.NewInt(1e6)),
 		tradingSuite.USDCAddress,
 		tradingSuite.IncPaymentAddrStr,
 		tradingSuite.VaultPLGAddr,
@@ -342,8 +365,8 @@ func (tradingSuite *PolygonCurveTestSuite) Test1TradeEthForDAIWithPancake() {
 	fmt.Println("------------ step 3: execute trade From USDC for USDT through curve finance --------------")
 	tradingSuite.executeWithPcurve(
 		deposited,
-		big.NewInt(1),
 		big.NewInt(2),
+		big.NewInt(3),
 		tradingSuite.PolygonPool1,
 		true,
 	)
