@@ -38,6 +38,8 @@ const (
 	BSC_REQ_WITHDRAW_PREFIX = 3
 	PLG_EXECUTE_PREFIX      = 4
 	PLG_REQ_WITHDRAW_PREFIX = 5
+	FTM_EXECUTE_PREFIX      = 6
+	FTM_REQ_WITHDRAW_PREFIX = 7
 )
 
 type IssuingETHRes struct {
@@ -67,6 +69,7 @@ type TradingTestSuite struct {
 	IncSAITokenIDStr   string
 	IncPRVTokenIDStr   string
 	IncPDEXTokenIDStr  string
+	IncFTMTokenIDStr   string
 
 	IncBridgeHost string
 	IncRPCHost    string
@@ -88,13 +91,18 @@ type TradingTestSuite struct {
 	PLGHost   string
 	PLGClient *ethclient.Client
 
+	FTMHost   string
+	FTMClient *ethclient.Client
+
 	ChainIDETH uint
 	ChainIDBSC uint
 	ChainIDPLG uint
+	ChainIDFTM uint
 
 	VaultAddr            common.Address
 	VaultBSCAddr         common.Address
 	VaultPLGAddr         common.Address
+	VaultFTMAddr         common.Address
 	KBNTradeDeployedAddr common.Address
 	PRVERC20Addr         common.Address
 	PRVBEP20Addr         common.Address
@@ -120,6 +128,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000096"
 	tradingSuite.IncPRVTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000004"
 	tradingSuite.IncPDEXTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000006"
+	tradingSuite.IncFTMTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000100"
 
 	tradingSuite.EtherAddressStr = "0x0000000000000000000000000000000000000000"
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
@@ -131,13 +140,16 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://rpc-mumbai.maticvigil.com"
+	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
 
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
+	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
 	tradingSuite.VaultPLGAddr = common.HexToAddress("0x493b80D988916a4E712b4d8fb9e123b5a477de1E")
+	tradingSuite.VaultFTMAddr = common.HexToAddress("0x2B0ef11745b726f9FdBE571b3F83AEa4248891A7")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
@@ -147,6 +159,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.ChainIDBSC = 97
 	tradingSuite.ChainIDETH = 42
 	tradingSuite.ChainIDPLG = 80001
+	tradingSuite.ChainIDFTM = 4002
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -212,6 +225,10 @@ func (tradingSuite *TradingTestSuite) connectToETH() {
 	require.Equal(tradingSuite.T(), nil, err)
 	tradingSuite.PLGClient = client
 
+	client, err = ethclient.Dial(tradingSuite.FTMHost)
+	require.Equal(tradingSuite.T(), nil, err)
+	tradingSuite.FTMClient = client
+
 	tradingSuite.ETHPrivKey = privKey
 }
 
@@ -227,7 +244,7 @@ func (tradingSuite *TradingTestSuite) depositETH(
 	require.Equal(tradingSuite.T(), nil, err)
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth.Value = big.NewInt(int64(amt * params.Ether))
+	auth.Value = new(big.Int).SetUint64(uint64(amt * params.Ether))
 	tx, err := c.Deposit(auth, incPaymentAddrStr)
 	require.Equal(tradingSuite.T(), nil, err)
 	txHash := tx.Hash()
@@ -436,6 +453,7 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForDepositToSC(
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
 	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(1e10)
+	// auth.GasLimit = uint64(5000000) // for FTM testnet
 	tx, err := SubmitBurnProof(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
 
@@ -463,7 +481,8 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForWithdrawal(
 	// Burn
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(chainID)))
 	require.Equal(tradingSuite.T(), nil, err)
-	auth.GasPrice = big.NewInt(1e10)
+	auth.GasPrice = big.NewInt(1e9)
+	// auth.GasLimit = uint64(5000000) // for FTM testnet
 	tx, err := Withdraw(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
 
@@ -569,6 +588,19 @@ func (tradingSuite *TradingTestSuite) getDepositedBalancePLG(
 	return bal
 }
 
+func (tradingSuite *TradingTestSuite) getDepositedBalanceFTM(
+	token common.Address,
+	ownerAddrStr string,
+) *big.Int {
+	c, err := vault.NewVault(tradingSuite.VaultFTMAddr, tradingSuite.FTMClient)
+	require.Equal(tradingSuite.T(), nil, err)
+	owner := common.HexToAddress(ownerAddrStr)
+	bal, err := c.GetDepositedBalance(nil, token, owner)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Printf("deposited balance: %d\n", bal)
+	return bal
+}
+
 func (tradingSuite *TradingTestSuite) requestWithdraw(
 	withdrawalETHTokenIDStr string,
 	amount *big.Int,
@@ -594,6 +626,8 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
 	auth.GasPrice = big.NewInt(1e10)
+	// auth.GasLimit = uint64(5000000) // for FTM testnet
+
 	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp)
 	require.Equal(tradingSuite.T(), nil, err)
 
