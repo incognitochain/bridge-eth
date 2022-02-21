@@ -110,7 +110,7 @@ func (tradingSuite *PolygonTestSuite) getExpectedAmount(
 			Path:     tradingSuite.buildPath(paths, fees),
 			AmountIn: srcQty,
 		}
-		result, err := c.QuoteExactInput(nil, inputParam.Path, inputParam.AmountOutMinimum)
+		result, err := c.QuoteExactInput(nil, inputParam.Path, inputParam.AmountIn)
 		require.Equal(tradingSuite.T(), nil, err)
 		amountIn = inputParam.AmountIn
 		amountOut = result.AmountOut
@@ -501,11 +501,12 @@ func (tradingSuite *PolygonTestSuite) buildPath(paths []common.Address, fees []i
 	var temp []byte
 	for i := 0; i < len(fees); i++ {
 		temp = append(temp, paths[i].Bytes()...)
-		fee, err := hex.DecodeString(fmt.Sprintf("%06x", fees[i]))
+		temp1 := fmt.Sprintf("%06x", fees[i])
+		fee, err := hex.DecodeString(temp1)
 		require.Equal(tradingSuite.T(), nil, err)
 		temp = append(temp, fee...)
 	}
 	temp = append(temp, paths[len(paths)-1].Bytes()...)
-
+	fmt.Printf("%v\n", hex.EncodeToString(temp))
 	return temp
 }
