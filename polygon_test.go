@@ -110,7 +110,7 @@ func (tradingSuite *PolygonTestSuite) getExpectedAmount(
 			Path:     tradingSuite.buildPath(paths, fees),
 			AmountIn: srcQty,
 		}
-		result, err := c.QuoteExactInput(nil, inputParam.Path, inputParam.AmountOutMinimum)
+		result, err := c.QuoteExactInput(nil, inputParam.Path, inputParam.AmountIn)
 		require.Equal(tradingSuite.T(), nil, err)
 		amountIn = inputParam.AmountIn
 		amountOut = result.AmountOut
