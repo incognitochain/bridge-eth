@@ -9,7 +9,7 @@ interface ICurveSwap {
 	function underlying_coins(uint256 index) external view returns (address);
 	function get_dy(uint256 i, uint256 j, uint256 amount) external view returns (uint256);
 	function get_dy_underlying(uint256 i, uint256 j, uint256 amount) external view returns (uint256);
-	function exchange(uint256 amount, address[6] route, uint256[8] indices, uint256 mintReceived, address receiver) payable external;
+	function exchange(uint256 amount, address[6] calldata route, uint256[8] calldata indices, uint256 mintReceived, address receiver) payable external;
 }
 
 //interface iWETH is IERC20 {
@@ -41,7 +41,7 @@ contract CurveProxy {
 		require(amountOut >= minAmount, "Not enough coin");
 		transfer(exactDest, amountOut);
 
-		return (exactDest, amountOut);
+		return (exactDest , amountOut);
 	}
 
 	function exchangeUnderlying(uint256 i, uint256 j, uint256 amount, uint256 minAmount, ICurveSwap curvePool) external returns(address, uint) {
@@ -61,14 +61,13 @@ contract CurveProxy {
 		IERC20 source,
 		IERC20 dest,
 		uint256 amount,
-		address[6] route,
-		uint256[8] indices,
+		address[6] calldata route,
+		uint256[8] calldata indices,
 		uint256 mintReceived,
-		address receiver,
 		ICurveSwap curvePool
 	) external payable returns(address, uint256) {
 		require(amount > 0, "invalid swap amount");
-		address exactDest = dest == ETH_CURVE_ADDRESS ? ETH_CONTRACT_ADDRESS : dest;
+		address exactDest = address(dest) == ETH_CURVE_ADDRESS ? ETH_CONTRACT_ADDRESS : address(dest);
 		checkApproved(source, amount, address(curvePool));
 		curvePool.exchange{value: msg.value}(amount, route, indices, mintReceived, address(this));
 		uint256 amountOut = balanceOf(dest);
@@ -79,7 +78,7 @@ contract CurveProxy {
 	}
 
 	function balanceOf(IERC20 token) internal view returns (uint256) {
-		if (token == ETH_CONTRACT_ADDRESS) {
+		if (address(token) == ETH_CONTRACT_ADDRESS) {
 			return address(this).balance;
 		}
 		return token.balanceOf(address(this));
