@@ -104,6 +104,8 @@ func getETHTransactionReceipt(url string, txHash common.Hash) (*types.Receipt, e
 	return res.Result, nil
 }
 
+const ADDRESS_0 = "0x0000000000000000000000000000000000000000"
+
 func getETHDepositProof(
 	url string,
 	txHash common.Hash,
@@ -152,10 +154,19 @@ func getETHDepositProof(
 	keybuf := new(bytes.Buffer)
 	receiptTrie := new(trie.Trie)
 	receipts := make([]*types.Receipt, 0)
-	for _, tx := range siblingTxs {
+	for i, tx := range siblingTxs {
 		siblingReceipt, err := getETHTransactionReceipt(url, common.HexToHash(tx.(string)))
 		if err != nil {
 			return nil, "", 0, nil, err
+		}
+		if i == len(siblingTxs)-1 {
+			txOut, err := getETHTransactionByHash(url, common.HexToHash(tx.(string)))
+			if err != nil {
+				return nil, "", 0, nil, err
+			}
+			if txOut["to"] == ADDRESS_0 && txOut["from"] == ADDRESS_0 {
+				break
+			}
 		}
 		receipts = append(receipts, siblingReceipt)
 	}

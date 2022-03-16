@@ -287,7 +287,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		// Deploy pcurve
-		curveProxy, tx, _, err := pcurve.DeployPcurve(auth, tradingDeploySuite.PLGClient, tradingDeploySuite.PolygonUniswapRouteAddr)
+		curveProxy, tx, _, err := pcurve.DeployPcurve(auth, tradingDeploySuite.PLGClient)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		fmt.Println("deployed curve proxy")
 		fmt.Printf("addr: %s\n", curveProxy.Hex())
