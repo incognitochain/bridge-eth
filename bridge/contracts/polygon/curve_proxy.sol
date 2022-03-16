@@ -3,56 +3,86 @@ pragma solidity 0.7.6;
 import "../IERC20.sol";
 
 interface ICurveSwap {
-    function exchange(uint256 i, uint256 j, uint256 amount, uint256 minAmount) payable external returns (uint256);
-    function exchange_underlying(uint256 i, uint256 j, uint256 amount, uint256 minAmount) payable external returns (uint256);
-	function coins(uint256 index) external returns (address);
-	function underlying_coins(uint256 index) external returns (address);
+	function exchange(uint256 i, uint256 j, uint256 amount, uint256 minAmount) external returns (uint256);
+	function exchange_underlying(uint256 i, uint256 j, uint256 amount, uint256 minAmount) external returns (uint256);
+	function coins(uint256 index) external view returns (address);
+	function underlying_coins(uint256 index) external view returns (address);
+	function get_dy(uint256 i, uint256 j, uint256 amount) external view returns (uint256);
+	function get_dy_underlying(uint256 i, uint256 j, uint256 amount) external view returns (uint256);
+	function exchange(uint256 amount, address[6] calldata route, uint256[8] calldata indices, uint256 mintReceived, address receiver) payable external;
 }
 
-interface iWETH is IERC20 {
-	function withdraw(uint256 amount) external;
-}
+//interface iWETH is IERC20 {
+//	function withdraw(uint256 amount) external;
+//}
 
 contract CurveProxy {
 	// Variables
 	address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
-    address constant public ETH_CURVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address public WETH;
+	address constant public ETH_CURVE_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+	address public WETH;
 	uint constant public MAX = uint(-1);
 
-	/**
-     * @dev Contract constructor
-     * @param _weth uniswap routes contract address
-     */
-	constructor(address _weth) payable {
-		WETH = _weth;	
-	}
+	//	/**
+	//     * @dev Contract constructor
+	//     * @param _weth uniswap routes contract address
+	//     */
+	//	constructor(address _weth) payable {
+	//		WETH = _weth;
+	//	}
 
-    function exchange(uint256 i, uint256 j, uint256 amount, uint256 minAmount, ICurveSwap curvePool) payable external returns(address, uint) {
+	function exchange(uint256 i, uint256 j, uint256 amount, uint256 minAmount, ICurveSwap curvePool) external returns(address, uint) {
 		require(amount > 0, "invalid swap amount");
 		address source = curvePool.coins(i);
-		address dest = curvePool.coins(j); 
+		address dest = curvePool.coins(j);
 		address exactDest = dest == ETH_CURVE_ADDRESS ? ETH_CONTRACT_ADDRESS : dest;
 		checkApproved(IERC20(source), amount, address(curvePool));
 		uint256 amountOut = curvePool.exchange(i, j, amount, minAmount);
 		require(amountOut >= minAmount, "Not enough coin");
-		transfer(exactDest, amountOut);	
+		transfer(exactDest, amountOut);
 
 		return (exactDest , amountOut);
-    }
+	}
 
-	function exchangeUnderlying(uint256 i, uint256 j, uint256 amount, uint256 minAmount, ICurveSwap curvePool) payable external returns(address, uint) {
+	function exchangeUnderlying(uint256 i, uint256 j, uint256 amount, uint256 minAmount, ICurveSwap curvePool) external returns(address, uint) {
 		require(amount > 0, "invalid swap amount");
 		address source = curvePool.underlying_coins(i);
-		address dest = curvePool.coins(j); 
+		address dest = curvePool.underlying_coins(j);
 		address exactDest = dest == ETH_CURVE_ADDRESS ? ETH_CONTRACT_ADDRESS : dest;
 		checkApproved(IERC20(source), amount, address(curvePool));
 		uint256 amountOut = curvePool.exchange_underlying(i, j, amount, minAmount);
 		require(amountOut >= minAmount, "Not enough coin");
-		transfer(exactDest, amountOut);	
+		transfer(exactDest, amountOut);
 
-		return (exactDest , amountOut);
-    }
+		return (exactDest, amountOut);
+	}
+
+	function exchange(
+		IERC20 source,
+		IERC20 dest,
+		uint256 amount,
+		address[6] calldata route,
+		uint256[8] calldata indices,
+		uint256 mintReceived,
+		ICurveSwap curvePool
+	) external payable returns(address, uint256) {
+		require(amount > 0, "invalid swap amount");
+		address exactDest = address(dest) == ETH_CURVE_ADDRESS ? ETH_CONTRACT_ADDRESS : address(dest);
+		checkApproved(source, amount, address(curvePool));
+		curvePool.exchange{value: msg.value}(amount, route, indices, mintReceived, address(this));
+		uint256 amountOut = balanceOf(dest);
+		require(amountOut >= mintReceived, "Not enough coin");
+		transfer(exactDest, amountOut);
+
+		return (exactDest, amountOut);
+	}
+
+	function balanceOf(IERC20 token) internal view returns (uint256) {
+		if (address(token) == ETH_CONTRACT_ADDRESS) {
+			return address(this).balance;
+		}
+		return token.balanceOf(address(this));
+	}
 
 	function checkApproved(IERC20 srcToken, uint256 amount, address destination) internal {
 		if (msg.value == 0 && srcToken.allowance(address(this), address(destination)) < amount) {

@@ -110,7 +110,7 @@ func (tradingSuite *PolygonTestSuite) getExpectedAmount(
 			Path:     tradingSuite.buildPath(paths, fees),
 			AmountIn: srcQty,
 		}
-		result, err := c.QuoteExactInput(nil, inputParam.Path, inputParam.AmountOutMinimum)
+		result, err := c.QuoteExactInput(nil, inputParam.Path, inputParam.AmountIn)
 		require.Equal(tradingSuite.T(), nil, err)
 		amountIn = inputParam.AmountIn
 		amountOut = result.AmountOut
@@ -348,14 +348,16 @@ func (tradingSuite *PolygonTestSuite) Test1TradeEthForDAIWithPancake() {
 		tradingSuite.PLGClient,
 	)
 	time.Sleep(15 * time.Second)
+
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.PLGHost, txHash)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(50 * time.Second)
+	// time.Sleep(50 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
-		tradingSuite.IncEtherTokenIDStr,
+		// tradingSuite.IncEtherTokenIDStr,
+		"a697a5c08d173de37372a20946e37d9e4adeeba68571b29b8ca4a2e1c3fc27fa",
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
@@ -499,11 +501,12 @@ func (tradingSuite *PolygonTestSuite) buildPath(paths []common.Address, fees []i
 	var temp []byte
 	for i := 0; i < len(fees); i++ {
 		temp = append(temp, paths[i].Bytes()...)
-		fee, err := hex.DecodeString(fmt.Sprintf("%06x", fees[i]))
+		temp1 := fmt.Sprintf("%06x", fees[i])
+		fee, err := hex.DecodeString(temp1)
 		require.Equal(tradingSuite.T(), nil, err)
 		temp = append(temp, fee...)
 	}
 	temp = append(temp, paths[len(paths)-1].Bytes()...)
-
+	fmt.Printf("%v\n", hex.EncodeToString(temp))
 	return temp
 }
