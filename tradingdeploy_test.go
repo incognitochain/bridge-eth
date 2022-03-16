@@ -3,7 +3,6 @@ package bridge
 // Basic imports
 import (
 	"fmt"
-	"github.com/incognitochain/bridge-eth/bridge/pcurve"
 	"math/big"
 	"os"
 	"strings"
@@ -11,12 +10,14 @@ import (
 
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	pancakeproxy "github.com/incognitochain/bridge-eth/bridge/pancake"
+	"github.com/incognitochain/bridge-eth/bridge/pcurve"
 	"github.com/incognitochain/bridge-eth/bridge/pdexbsc"
 	"github.com/incognitochain/bridge-eth/bridge/pdexeth"
 	"github.com/incognitochain/bridge-eth/bridge/prvbsc"
 	"github.com/incognitochain/bridge-eth/bridge/prveth"
-	"github.com/incognitochain/bridge-eth/bridge/puniswapproxy" // uniswap for polygon
+	puniswap "github.com/incognitochain/bridge-eth/bridge/puniswapproxy" // uniswap for polygon
 	"github.com/incognitochain/bridge-eth/bridge/vaultbsc"
+	"github.com/incognitochain/bridge-eth/bridge/vaultftm"
 	"github.com/incognitochain/bridge-eth/bridge/vaultplg"
 
 	// "github.com/incognitochain/bridge-eth/bridge/kbntrade"
@@ -84,9 +85,14 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	fmt.Println("Admin address:", admin.Hex())
 
 	// Genesis committee
-	// for testnet & local env
+	// LOCAL
+	// beaconComm, bridgeComm, err := convertCommittees(
+	// 	localBeaconCommitteePubKeys, localBridgeCommitteePubKeys,
+	// )
+
+	// TESTNET2
 	beaconComm, bridgeComm, err := convertCommittees(
-		testnetBeaconCommitteePubKeys, testnetBridgeCommitteePubKeys,
+		testnet2BeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
@@ -109,6 +115,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		1 - ETH
 		2 - BSC
 		3 - POLYGON
+		4 - FANTOM
 	*/
 	network := os.Getenv("NETWORK")
 
@@ -296,7 +303,69 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		return
 	}
 
-	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 3 ===============")
+	if network == "4" || network == "0" {
+		fmt.Println("============== DEPLOY INCOGNITO CONTRACT ON FANTOM ===============")
+
+		auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(int64(tradingDeploySuite.ChainIDFTM)))
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// auth.GasPrice = big.NewInt(500000)
+		auth.GasLimit = uint64(5000000)
+		incAddrFTM, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.FTMClient, admin, beaconComm, bridgeComm)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// incAddr := common.HexToAddress(IncognitoProxyAddress)
+		fmt.Println("deployed incognito_proxy")
+		fmt.Printf("addr: %s\n", incAddrFTM.Hex())
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.FTMClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Deploy vault
+		vaultAddrFTM, tx, _, err := vaultftm.DeployVaultftm(auth, tradingDeploySuite.FTMClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed vault")
+		fmt.Printf("addr: %s\n", vaultAddrFTM.Hex())
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.FTMClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		prevVaultFTM := common.Address{}
+		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+		input, _ := vaultAbi.Pack("initialize", prevVaultFTM)
+
+		// Deploy vault proxy
+		vaultAddrFTM, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.FTMClient, vaultAddrFTM, admin, incAddrFTM, input)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed vault proxy")
+		fmt.Printf("addr: %s\n", vaultAddrFTM.Hex())
+
+		err = wait(tradingDeploySuite.FTMClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// // Deploy puniswap
+		// uniswapProxy, tx, _, err := puniswap.DeployPuniswap(auth, tradingDeploySuite.PLGClient, tradingDeploySuite.PolygonUniswapRouteAddr)
+		// require.Equal(tradingDeploySuite.T(), nil, err)
+		// fmt.Println("deployed puniswap proxy")
+		// fmt.Printf("addr: %s\n", uniswapProxy.Hex())
+
+		// err = wait(tradingDeploySuite.PLGClient, tx.Hash())
+		// require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// // Deploy pcurve
+		// curveProxy, tx, _, err := pcurve.DeployPcurve(auth, tradingDeploySuite.PLGClient, tradingDeploySuite.PolygonUniswapRouteAddr)
+		// require.Equal(tradingDeploySuite.T(), nil, err)
+		// fmt.Println("deployed curve proxy")
+		// fmt.Printf("addr: %s\n", curveProxy.Hex())
+
+		// err = wait(tradingDeploySuite.PLGClient, tx.Hash())
+		// require.Equal(tradingDeploySuite.T(), nil, err)
+
+		return
+	}
+
+	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 4 ===============")
 }
 
 func convertCommittees(
@@ -328,62 +397,62 @@ func convertCommittees(
 	return beaconOld, bridgeOld, nil
 }
 
-func TestDisplayCommitteesMainnet(t *testing.T) {
-	fmt.Println("Mainnet Committees: [")
-	beaconComms := mainnetBeaconCommitteePubKeys
-	brigeComms := mainnetBridgeCommitteePubKeys
-	beaconOld := make([]common.Address, len(beaconComms))
-	for i, pk := range beaconComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		beaconOld[i] = addr
-		fmt.Printf("  %s,\n", addr.Hex())
-	}
-	fmt.Println("]")
+// func TestDisplayCommitteesMainnet(t *testing.T) {
+// 	fmt.Println("Mainnet Committees: [")
+// 	beaconComms := mainnetBeaconCommitteePubKeys
+// 	brigeComms := mainnetBridgeCommitteePubKeys
+// 	beaconOld := make([]common.Address, len(beaconComms))
+// 	for i, pk := range beaconComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		beaconOld[i] = addr
+// 		fmt.Printf("  %s,\n", addr.Hex())
+// 	}
+// 	fmt.Println("]")
 
-	bridgeOld := make([]common.Address, len(brigeComms))
-	for i, pk := range brigeComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		bridgeOld[i] = addr
-		fmt.Printf("%s,\n", addr.Hex())
-	}
-}
+// 	bridgeOld := make([]common.Address, len(brigeComms))
+// 	for i, pk := range brigeComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		bridgeOld[i] = addr
+// 		fmt.Printf("%s,\n", addr.Hex())
+// 	}
+// }
 
-func TestDisplayCommitteesTestnet(t *testing.T) {
-	fmt.Println("Testnet Committees: [")
-	beaconComms := testnetBeaconCommitteePubKeys
-	brigeComms := testnetBridgeCommitteePubKeys
-	beaconOld := make([]common.Address, len(beaconComms))
-	for i, pk := range beaconComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		beaconOld[i] = addr
-		fmt.Printf("  %s,\n", addr.Hex())
-	}
-	fmt.Println("]")
+// func TestDisplayCommitteesTestnet(t *testing.T) {
+// 	fmt.Println("Testnet Committees: [")
+// 	beaconComms := testnet2BridgeCommitteePubKeys
+// 	brigeComms := testnet2BeaconCommitteePubKeys
+// 	beaconOld := make([]common.Address, len(beaconComms))
+// 	for i, pk := range beaconComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		beaconOld[i] = addr
+// 		fmt.Printf("  %s,\n", addr.Hex())
+// 	}
+// 	fmt.Println("]")
 
-	bridgeOld := make([]common.Address, len(brigeComms))
-	for i, pk := range brigeComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		bridgeOld[i] = addr
-		fmt.Printf("%s,\n", addr.Hex())
-	}
-}
+// 	bridgeOld := make([]common.Address, len(brigeComms))
+// 	for i, pk := range brigeComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		bridgeOld[i] = addr
+// 		fmt.Printf("%s,\n", addr.Hex())
+// 	}
+// }
