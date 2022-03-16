@@ -85,9 +85,14 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	fmt.Println("Admin address:", admin.Hex())
 
 	// Genesis committee
-	// for testnet & local env
+	// LOCAL
+	// beaconComm, bridgeComm, err := convertCommittees(
+	// 	localBeaconCommitteePubKeys, localBridgeCommitteePubKeys,
+	// )
+
+	// TESTNET2
 	beaconComm, bridgeComm, err := convertCommittees(
-		testnetBeaconCommitteePubKeys, testnetBridgeCommitteePubKeys,
+		testnet2BeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
@@ -392,62 +397,62 @@ func convertCommittees(
 	return beaconOld, bridgeOld, nil
 }
 
-func TestDisplayCommitteesMainnet(t *testing.T) {
-	fmt.Println("Mainnet Committees: [")
-	beaconComms := mainnetBeaconCommitteePubKeys
-	brigeComms := mainnetBridgeCommitteePubKeys
-	beaconOld := make([]common.Address, len(beaconComms))
-	for i, pk := range beaconComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		beaconOld[i] = addr
-		fmt.Printf("  %s,\n", addr.Hex())
-	}
-	fmt.Println("]")
+// func TestDisplayCommitteesMainnet(t *testing.T) {
+// 	fmt.Println("Mainnet Committees: [")
+// 	beaconComms := mainnetBeaconCommitteePubKeys
+// 	brigeComms := mainnetBridgeCommitteePubKeys
+// 	beaconOld := make([]common.Address, len(beaconComms))
+// 	for i, pk := range beaconComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		beaconOld[i] = addr
+// 		fmt.Printf("  %s,\n", addr.Hex())
+// 	}
+// 	fmt.Println("]")
 
-	bridgeOld := make([]common.Address, len(brigeComms))
-	for i, pk := range brigeComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		bridgeOld[i] = addr
-		fmt.Printf("%s,\n", addr.Hex())
-	}
-}
+// 	bridgeOld := make([]common.Address, len(brigeComms))
+// 	for i, pk := range brigeComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		bridgeOld[i] = addr
+// 		fmt.Printf("%s,\n", addr.Hex())
+// 	}
+// }
 
-func TestDisplayCommitteesTestnet(t *testing.T) {
-	fmt.Println("Testnet Committees: [")
-	beaconComms := testnetBeaconCommitteePubKeys
-	brigeComms := testnetBridgeCommitteePubKeys
-	beaconOld := make([]common.Address, len(beaconComms))
-	for i, pk := range beaconComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		beaconOld[i] = addr
-		fmt.Printf("  %s,\n", addr.Hex())
-	}
-	fmt.Println("]")
+// func TestDisplayCommitteesTestnet(t *testing.T) {
+// 	fmt.Println("Testnet Committees: [")
+// 	beaconComms := testnet2BridgeCommitteePubKeys
+// 	brigeComms := testnet2BeaconCommitteePubKeys
+// 	beaconOld := make([]common.Address, len(beaconComms))
+// 	for i, pk := range beaconComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		beaconOld[i] = addr
+// 		fmt.Printf("  %s,\n", addr.Hex())
+// 	}
+// 	fmt.Println("]")
 
-	bridgeOld := make([]common.Address, len(brigeComms))
-	for i, pk := range brigeComms {
-		cpk := &CommitteePublicKey{}
-		cpk.FromString(pk)
-		addr, err := convertPubkeyToAddress(*cpk)
-		if err != nil {
-			return
-		}
-		bridgeOld[i] = addr
-		fmt.Printf("%s,\n", addr.Hex())
-	}
-}
+// 	bridgeOld := make([]common.Address, len(brigeComms))
+// 	for i, pk := range brigeComms {
+// 		cpk := &CommitteePublicKey{}
+// 		cpk.FromString(pk)
+// 		addr, err := convertPubkeyToAddress(*cpk)
+// 		if err != nil {
+// 			return
+// 		}
+// 		bridgeOld[i] = addr
+// 		fmt.Printf("%s,\n", addr.Hex())
+// 	}
+// }
