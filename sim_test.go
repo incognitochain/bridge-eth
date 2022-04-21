@@ -481,7 +481,7 @@ func printReceipt(sim *backends.SimulatedBackend, tx *types.Transaction) {
 	}
 }
 
-func getAndDecodeBridgeSwapProof(url string, block int) (*decodedProof, error) {
+func getAndDecodeBridgeSwapProof(url string, block int) (*DecodedProof, error) {
 	body := getBridgeSwapProof(url, block)
 	if len(body) < 1 {
 		return nil, fmt.Errorf("no bridge swap proof found")
