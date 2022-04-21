@@ -133,6 +133,28 @@ func GetAndDecodeBurnProofV2(
 	return decodeProof(&r)
 }
 
+func GetAndDecodeBurnProofUnifiedToken(
+	incBridgeHost string,
+	txID string,
+	dataIndex int,
+	networkID uint,
+) (*decodedProof, error) {
+	body, err := getBurnProofUnifiedToken(incBridgeHost, txID, dataIndex, networkID)
+	if err != nil {
+		return nil, err
+	}
+	if len(body) < 1 {
+		return nil, fmt.Errorf("burn proof for deposit to SC not found")
+	}
+
+	r := getProofResult{}
+	err = json.Unmarshal([]byte(body), &r)
+	if err != nil {
+		return nil, err
+	}
+	return decodeProof(&r)
+}
+
 func getCommittee(url string) ([]common.Address, []common.Address, error) {
 	payload := strings.NewReader("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"getbeaconbeststate\",\n    \"params\": []\n}")
 
@@ -225,6 +247,43 @@ func getBurnProofV2(
 		txID = "87c89c1c19cec3061eff9cfefdcc531d9456ac48de568b3974c5b0a88d5f3834"
 	}
 	payload := strings.NewReader(fmt.Sprintf("{\n    \"id\": 1,\n    \"jsonrpc\": \"1.0\",\n    \"method\": \"%s\",\n    \"params\": [\n    \t\"%s\"\n    ]\n}", rpcMethod, txID))
+
+	req, _ := http.NewRequest("POST", incBridgeHost, payload)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+func getBurnProofUnifiedToken(
+	incBridgeHost string,
+	txID string,
+	dataIndex int,
+	networkID uint,
+) (string, error) {
+	if len(txID) == 0 {
+		return "", errors.New("the tx invalid!")
+	}
+	payload := strings.NewReader(fmt.Sprintf(`
+	{
+		"id": 1,
+		"jsonrpc": "1.0",
+		"method": "bridgeaggGetBurntProof",
+		"params": [
+			{
+				"TxReqID": "%v",
+				"DataIndex": %v,
+				"NetworkID": %v
+			}
+		]
+	}
+	`, txID, dataIndex, networkID))
 
 	req, _ := http.NewRequest("POST", incBridgeHost, payload)
 	res, err := http.DefaultClient.Do(req)
