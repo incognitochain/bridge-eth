@@ -80,8 +80,10 @@ contract Vault {
      */
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
+    uint8 constant public CURRENT_NETWORK_ID = 1; // Ethereum
+    uint8 constant public BURN_REQUEST_METADATA_TYPE = 241;
+    uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
 
-    // string private constant MANUAL_RECOVERY_ADDRESS = "12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeTswV5f";
 
     /**
      * @dev Storage variables for Vault
@@ -117,9 +119,21 @@ contract Vault {
         bytes32 itx; // Incognito's burning tx
     }
 
+    struct RedepositOptions {
+        address redepositToken;
+        bytes redepositIncAddress;
+        address withdrawAddress;
+    }
+
     enum Prefix {
-        EXECUTE_SIGNATURE,
-        REQUEST_WITHDRAW_SIGNATURE
+        ETHEREUM_EXECUTE_SIGNATURE,
+        ETHEREUM_REQUEST_WITHDRAW_SIGNATURE,
+        BSC_EXECUTE_SIGNATURE,
+        BSC_REQUEST_WITHDRAW_SIGNATURE,
+        PLG_EXECUTE_SIGNATURE,
+        PLG_REQUEST_WITHDRAW_SIGNATURE,
+        FTM_EXECUTE_SIGNATURE,
+        FTM_REQUEST_WITHDRAW_SIGNATURE
     }
 
     // error code
@@ -141,13 +155,16 @@ contract Vault {
         SAFEMATH_EXCEPTION,
         ALREADY_INITIALIZED,
         INVALID_SIGNATURE,
-        ALREADY_UPGRADED
+        ALREADY_UPGRADED,
+        INVALID_DATA_BURN_CALL_INST,
+        ONLY_SELF_CALL
     }
 
     event Deposit(address token, string incognitoAddress, uint amount);
     event Withdraw(address token, address to, uint amount);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
+    event Redeposit(address token, bytes redepositIncAddress, uint256 amount);
 
     /**
      * modifier for contract version
@@ -296,6 +313,39 @@ contract Vault {
         return data;
     }
 
+    function _getBytes(bytes calldata b, uint256 offset, uint256 len) internal pure returns (bytes memory, uint256) {
+        if (len == 0) {
+            return (bytes(b[offset:]), b.length);
+        }
+        bytes memory result = bytes(b[offset:offset+len]);
+        return (result, offset + len);
+    }
+
+    /**
+     * @dev Parses an extended burn instruction and returns the components
+     * @param inst: the full instruction, containing both metadata and body
+     */
+    function parseCalldataFromBurnInst(bytes calldata inst) public view returns (BurnInstData memory, RedepositOptions memory, bytes memory) {
+        require(inst.length >= 296, errorToString(Errors.INVALID_DATA_BURN_CALL_INST));
+        BurnInstData memory bdata;
+        // layout: meta(1), shard(1), network(1), extToken(32), extCallAddr(32), amount(32), txID(32), recvToken(32), withdrawAddr(32), redepositAddr(101), extCalldata(*)
+        {
+            bdata.meta = uint8(inst[0]);
+            bdata.shard = uint8(inst[1]);
+            uint8 networkID = uint8(inst[2]);
+            require(bdata.meta == BURN_CALL_REQUEST_METADATA_TYPE && bdata.shard == 1 && networkID == CURRENT_NETWORK_ID, errorToString(Errors.INVALID_DATA_BURN_CALL_INST));
+        }
+        RedepositOptions memory opt;
+        bytes memory externalCalldata;
+
+        {
+            (bdata.token, bdata.to, bdata.amount, bdata.itx, opt.redepositToken, opt.withdrawAddress) = abi.decode(inst[3:195], (address, address, uint256, bytes32, address, address));
+        }
+    
+        opt.redepositIncAddress = bytes(inst[195:296]);
+        return (bdata, opt, bytes(inst[296:]));
+    }
+
     /**
      * @dev Verifies that a burn instruction is valid
      * @notice All params except inst are the list of 2 elements corresponding to
@@ -363,7 +413,7 @@ contract Vault {
     ) public nonReentrant {
         require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
         BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 241 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
+        require(data.meta == BURN_REQUEST_METADATA_TYPE && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
 
         // Not withdrawed
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
@@ -407,6 +457,90 @@ contract Vault {
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         }
         emit Withdraw(data.token, data.to, data.amount);
+    }
+
+    function executeWithBurnProof(
+        bytes calldata inst,
+        uint heights,
+        bytes32[] memory instPaths,
+        bool[] memory instPathIsLefts,
+        bytes32 instRoots,
+        bytes32 blkData,
+        uint[] memory sigIdxs,
+        uint8[] memory sigVs,
+        bytes32[] memory sigRs,
+        bytes32[] memory sigSs
+    ) public nonReentrant {
+        (BurnInstData memory data, RedepositOptions memory rOptions, bytes memory externalCalldata) = parseCalldataFromBurnInst(inst); // parse function also does sanity checks
+        require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED)); // check if txID has been used previously
+        withdrawed[data.itx] = true;
+        // check if vault balance is sufficient
+        if (data.token == ETH_TOKEN) {
+            require(address(this).balance >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+        } else {
+            uint8 decimals = getDecimals(data.token);
+            if (decimals > 9) {
+                data.amount = data.amount.safeMul(10 ** (uint(decimals) - 9));
+            }
+            require(IERC20(data.token).balanceOf(address(this)) >= data.amount.safeAdd(totalDepositedToSCAmount[data.token]), errorToString(Errors.TOKEN_NOT_ENOUGH));
+        }
+
+        verifyInst(
+            inst,
+            heights,
+            instPaths,
+            instPathIsLefts,
+            instRoots,
+            blkData,
+            sigIdxs,
+            sigVs,
+            sigRs,
+            sigSs
+        );
+
+        uint balanceBeforeTrade = balanceOf(rOptions.redepositToken);
+        // perform external msgcall
+        try this._callExternal(data.token, data.to, data.amount, externalCalldata) returns (bytes memory result) {
+            (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
+            require(returnedTokenAddress == rOptions.redepositToken && balanceOf(rOptions.redepositToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
+
+            if (rOptions.withdrawAddress == address(0)) {
+                // after executing, one can redeposit to Incognito Chain
+                emit Redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount);
+            } else {
+                // TODO: refund upon revert
+                if (rOptions.redepositToken == ETH_TOKEN) {
+                    (bool success, ) = rOptions.withdrawAddress.call{value: returnedAmount}("");
+                    require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+                } else {
+                    IERC20(rOptions.redepositToken).transfer(rOptions.withdrawAddress, returnedAmount);
+                    require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
+                }
+
+                // alternatively, the received funds can be withdrawn
+                emit Withdraw(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount);
+            }
+        } catch Error(string memory reason) {
+            emit Redeposit(data.token, rOptions.redepositIncAddress, data.amount);
+        }
+    }
+
+    function _callExternal(address token, address to, uint256 amount, bytes memory externalCalldata) external onlySelf() returns (bytes memory result) {
+        bool success;
+        if (token == ETH_TOKEN) {
+            (success, result) = to.call{value: amount}(externalCalldata);
+        } else {
+            IERC20(token).transfer(to, amount);
+            require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
+            (success, result) = to.call{value: 0}(externalCalldata);
+        }
+        require(success, string(result));
+        return result;
+    }
+
+    modifier onlySelf() {
+        require(address(this) == msg.sender, errorToString(Errors.ONLY_SELF_CALL));
+        _;
     }
 
     /**
@@ -535,7 +669,7 @@ contract Vault {
         bytes calldata timestamp
     ) external nonReentrant {
         // verify owner signs data
-        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
+        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.ETHEREUM_REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -576,7 +710,7 @@ contract Vault {
         bytes calldata signData
     ) external payable nonReentrant {
         //verify ower signs data from input
-        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.EXECUTE_SIGNATURE, token, timestamp, amount), recipientToken, exchangeAddress, callData), signData);
+        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.ETHEREUM_EXECUTE_SIGNATURE, token, timestamp, amount), recipientToken, exchangeAddress, callData), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
