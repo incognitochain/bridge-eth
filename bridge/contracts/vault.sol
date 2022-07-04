@@ -4,6 +4,7 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  * Math operations with safety checks
@@ -122,7 +123,7 @@ contract Vault {
     struct RedepositOptions {
         address redepositToken;
         bytes redepositIncAddress;
-        address withdrawAddress;
+        address payable withdrawAddress;
     }
 
     enum Prefix {
@@ -164,7 +165,7 @@ contract Vault {
     event Withdraw(address token, address to, uint amount);
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
-    event Redeposit(address token, bytes redepositIncAddress, uint256 amount);
+    event Redeposit(address token, bytes redepositIncAddress, uint256 amount, bytes32 itx);
 
     /**
      * modifier for contract version
@@ -311,14 +312,6 @@ contract Vault {
         data.amount = amount;
         data.itx = itx;
         return data;
-    }
-
-    function _getBytes(bytes calldata b, uint256 offset, uint256 len) internal pure returns (bytes memory, uint256) {
-        if (len == 0) {
-            return (bytes(b[offset:]), b.length);
-        }
-        bytes memory result = bytes(b[offset:offset+len]);
-        return (result, offset + len);
     }
 
     /**
@@ -506,36 +499,38 @@ contract Vault {
 
             if (rOptions.withdrawAddress == address(0)) {
                 // after executing, one can redeposit to Incognito Chain
-                emit Redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount);
+                emit Redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
             } else {
-                // TODO: refund upon revert
-                if (rOptions.redepositToken == ETH_TOKEN) {
-                    (bool success, ) = rOptions.withdrawAddress.call{value: returnedAmount}("");
-                    require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-                } else {
-                    IERC20(rOptions.redepositToken).transfer(rOptions.withdrawAddress, returnedAmount);
-                    require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-                }
-
                 // alternatively, the received funds can be withdrawn
-                emit Withdraw(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount);
+                try this._transferExternal(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount) {
+                    emit Withdraw(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount);
+                } catch Error(string memory reason) {
+                    // upon revert, emit Redeposit event
+                    emit Redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
+                }
             }
         } catch Error(string memory reason) {
-            emit Redeposit(data.token, rOptions.redepositIncAddress, data.amount);
+            emit Redeposit(data.token, rOptions.redepositIncAddress, data.amount, data.itx);
+        }
+    }
+
+    function _transferExternal(address token, address payable to, uint256 amount) external onlySelf() {
+        if (token == ETH_TOKEN) {
+            Address.sendValue(to, amount);
+        } else {
+            IERC20(token).transfer(to, amount);
+            require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         }
     }
 
     function _callExternal(address token, address to, uint256 amount, bytes memory externalCalldata) external onlySelf() returns (bytes memory result) {
-        bool success;
         if (token == ETH_TOKEN) {
-            (success, result) = to.call{value: amount}(externalCalldata);
+            return Address.functionCallWithValue(to, externalCalldata, amount);
         } else {
             IERC20(token).transfer(to, amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-            (success, result) = to.call{value: 0}(externalCalldata);
+            return Address.functionCall(to, externalCalldata);
         }
-        require(success, string(result));
-        return result;
     }
 
     modifier onlySelf() {
