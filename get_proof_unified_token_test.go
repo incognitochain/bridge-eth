@@ -25,7 +25,7 @@ func (t *UnifiedTokenTestSuite) TestGetAndDecodeBurnProofUnifiedToken() {
 
 	proof, err := GetAndDecodeBurnProofUnifiedToken(
 		"http://51.89.21.38:11334",
-		"c56d4a8233495ca1df64fe18868ac73c6f2960faf54e55d50b548b9800988585",
+		"d6454ea0c91a0ad06471e240e00ba5b2de4dad8cfe9f786aec67a5a29750cd0b",
 		0,
 		3,
 	)
