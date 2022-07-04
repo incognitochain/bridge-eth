@@ -274,7 +274,7 @@ func getBurnProofUnifiedToken(
 	{
 		"id": 1,
 		"jsonrpc": "1.0",
-		"method": "bridgeaggGetBurntProof",
+		"method": "bridgeaggGetBurnProof",
 		"params": [
 			{
 				"TxReqID": "%v",
