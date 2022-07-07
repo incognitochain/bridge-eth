@@ -22,10 +22,31 @@ module.exports = async({
         skipIfAlreadyDeployed: true,
         log: true
     });
-
-    const proxy = await ethers.getContract('TransparentUpgradeableProxy');
     const vaultFactory = await ethers.getContractFactory('Vault');
     const vault = await vaultFactory.attach(vaultResult.address);
+
+    let previousVault, needMoving = false;
+    try {
+        previousVault = await ethers.getContract('PrevVault');
+        let isPaused = true;
+        try {
+            isPaused = await previousVault.paused();
+        } catch {}
+        needMoving = !isPaused;
+    } catch (e) {
+        previousVault = {address: '0x0000000000000000000000000000000000000000'};
+    }
+    
+    const initializeData = vaultFactory.interface.encodeFunctionData('initialize', [previousVault.address]);
+    log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
+    let proxyResult = await deploy('TransparentUpgradeableProxy', {
+        from: deployer,
+        args: [vault.address, vaultAdmin, ip.address, initializeData],
+        skipIfAlreadyDeployed: true,
+        log: true,
+    });
+
+    const proxy = await ethers.getContract('TransparentUpgradeableProxy');
     let borrowedPermissionFrom = null;
     try {
         // when in fork environment, simulate the real prev admin yielding permission
@@ -48,10 +69,11 @@ module.exports = async({
         throw e;
     }
 
-    
-    const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress]);
-    log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin, upgradeData);
-    await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
+    if (!proxyResult.newlyDeployed) {
+        const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress]);
+        log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin, upgradeData);
+        await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
+    }
     log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);
 
     if (borrowedPermissionFrom) {
@@ -62,5 +84,5 @@ module.exports = async({
     }
 };
 
-module.exports.tags = ['3', 'vault', 'proxy'];
+module.exports.tags = ['4', 'vault', 'proxy'];
 module.exports.dependencies = ['fork', 'incognito-proxy'];

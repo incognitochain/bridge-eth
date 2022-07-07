@@ -39,13 +39,14 @@ describe("Vault - Shield & Unshield", () => {
     describe('(UN)SHIELD ETHER', async function() {
         it(`should receive ${ethers.utils.formatUnits(startEth, 'gwei')} (gwei) ETH deposit`, shield(startEth));
         const amount = getPartOf(startEth, 50);
-        it(`should withdraw ${ethers.utils.formatUnits(startEth, 'gwei')}`, unshield(amount));
+        it(`should withdraw ${ethers.utils.formatUnits(amount, 'gwei')}`, unshield(amount));
         // it(`should fail to withdraw ${ethers.utils.formatUnits(startEth, 'gwei')}, then recover`, unshieldRevertRecover(amount));
     });
 
     describe('(UN)SHIELD TOKEN', async function() {
         it(`should receive ${ethers.utils.formatUnits(startToken, 'gwei')} (gwei) Token1 deposit`, shieldToken(startToken, 'Token1'));
-        it(`should withdraw ${ethers.utils.formatUnits(startToken, 'gwei')}`, unshieldToken(startToken, 'Token1'));
+        const amount = getPartOf(startToken, 50);
+        it(`should withdraw ${ethers.utils.formatUnits(amount, 'gwei')}`, unshieldToken(amount, 'Token1'));
     });
 
     describe('RECOVER FAILED UNSHIELD', async function() {

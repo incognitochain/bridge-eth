@@ -6,7 +6,7 @@ const fs = require('fs');
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async() => {
+task("accounts", "Prints the list of accounts", async () => {
     const accounts = await ethers.getSigners();
 
     for (const account of accounts) {
@@ -16,18 +16,19 @@ task("accounts", "Prints the list of accounts", async() => {
 require('./scripts/tasks');
 
 const devCommittees = {
-    beacons : [
+    beacons: [
         "0x3cD69B1A595B7A9589391538d29ee7663326e4d3"
     ],
-    bridges : [
+    bridges: [
         "0xD2902ab2F5dF2b17C5A5aa380f511F04a2542E10"
     ],
 };
 const devCommitteesBig = {
-    beacons: ["0xD7d93b7fa42b60b6076f3017fCA99b69257A912D",
-        "0xf25ee30cfed2d2768C51A6Eb6787890C1c364cA4",
-        "0x0D8c517557f3edE116988DD7EC0bAF83b96fe0Cb",
-        "0xc225fcd5CE8Ad42863182Ab71acb6abD9C4ddCbE"
+    beacons: [
+        "0x3cD69B1A595B7A9589391538d29ee7663326e4d3",
+        "0xc687470342f4E80ECEf6bBd25e276266d40b8429",
+        "0x2A40c96b41AdEc5641F28eF923e270B73e29bb53",
+        "0x131B772A9ADe1793F000024eAb23b77bEd3BFe64",
     ],
     bridges: ["0x3c78124783E8e39D1E084FdDD0E097334ba2D945",
         "0x76E34d8a527961286E55532620Af5b84F3C6538F",
@@ -57,7 +58,7 @@ const testnetCommittees = {
     bridges: []
 };
 
-const devProviders = ['http://localhost:9334', 'http://localhost:9338'];
+const devProviders = ['http://localhost:8334', 'http://localhost:8334'];
 
 const devMnemonic = 'test test test test test test test test test test test junk';
 let readKey = (filename, defaultValue = '') => {
@@ -109,34 +110,41 @@ const mainnetForkNetwork = {
 
 const networks = {
     hardhat: {
-        accounts: [{
-                privateKey: deployerPrivateKey,
-                balance: '10000000000000000000'
-            }, {
-                privateKey : vaultAdminPrivateKey,
-                balance: '10000000000000000000'
-            }],
-            // {
-            //     mnemonic: mnemonic,
-            //     count: 8
-            // }
+        accounts:
+        // [{
+        //         privateKey: deployerPrivateKey,
+        //         balance: '10000000000000000000'
+        //     }, {
+        //         privateKey : vaultAdminPrivateKey,
+        //         balance: '10000000000000000000'
+        //     }],
+        {
+            mnemonic: mnemonic,
+            count: 8
+        },
         forking: {
             url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
             blockNumber: 12310000,
             enabled: Boolean(process.env.FORK)
-        }
-    },
-    localhost: process.env.FORK ? mainnetForkNetwork : {
-        chainId: 31337,
-        geth_name_conf: '127.0.0.1',
-        geth_port_conf: '8545',
-        geth_protocol_conf: 'HTTP',
+        },
         deployed: {
             kyberEtherAddress: '0x0000000000000000000000000000000000000000',
         },
-        committees: devCommittees,
+        committees: devCommitteesBig,
         providers: devProviders,
-        recoveryAddress: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8'
+        recoveryAddress: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8',
+        chainId: 31337,
+        numShards: 2,
+    },
+    localhost: process.env.FORK ? mainnetForkNetwork : {
+        deployed: {
+            kyberEtherAddress: '0x0000000000000000000000000000000000000000',
+        },
+        committees: devCommitteesBig,
+        providers: devProviders,
+        recoveryAddress: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8',
+        chainId: 31337,
+        numShards: 2,
     },
     kovan: {
         chainId: 42,
@@ -192,17 +200,43 @@ extendEnvironment(hre => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-    solidity: "0.6.12",
+    solidity: {
+        compilers: [
+            {
+                version: "0.6.12",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 1000
+                    }
+                },
+            },
+            {
+                version: "0.8.9",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 1000
+                    }
+                },
+            },
+        ]
+    },
     paths: {
         tests: './tests'
     },
+    mocha: {
+        bail: true,
+        timeout: 1200000,
+    },
+    networks,
     namedAccounts: {
         deployer: {
             default: 0
         },
         vaultAdmin: {
             // can fallback to deployer key
-            default: vaultAdminPrivateKey==deployerPrivateKey ? 0 : 1
+            default: vaultAdminPrivateKey == deployerPrivateKey ? 0 : 1
         },
         ethUser: {
             default: 2
@@ -217,9 +251,4 @@ module.exports = {
             default: 5
         }
     },
-    mocha: {
-        bail: true,
-        timeout: 1200000,
-    },
-    networks,
 };

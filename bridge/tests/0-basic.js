@@ -2,11 +2,12 @@ const { expect } = require("chai");
 const hre = require("hardhat");
 const { deployments, ethers } = hre;
 const BN = ethers.BigNumber;
-const {tokenAddresses} = require('../scripts/constants');
-const {getPartOf, chooseOneFrom, confirm, fromIncDecimals, toIncDecimals, getInstance, getImplementation, generateTestIncTokenID} = require('../scripts/utils');
-const { Inc } = require('../scripts/external');
-const {proveEth, formatBurnProof} = require('../scripts/prove');
+const { tokenAddresses } = require('../scripts/constants');
+const { getPartOf, chooseOneFrom, confirm, fromIncDecimals, toIncDecimals, getInstance, getImplementation, generateTestIncTokenID } = require('../scripts/utils');
+const { inc } = require('../scripts/external');
+const { proveEth, formatBurnProof } = require('../scripts/prove');
 const path = require('path');
+require('dotenv').config();
 
 let setupTest = () => {
     return async function() {
@@ -17,25 +18,19 @@ let setupTest = () => {
         // 0 is deployer, we use 1 2 3 5 for named accounts, skipping 4
         [this.deployer, this.vaultAdmin, this.ethUser, this.tokenUser, _, this.unshieldSender] = this.signers;
 
-        this.ethGuy = {signer: this.ethUser, inc: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8', incPrivate: '112t8rnXoBXrThDTACHx2rbEq7nBgrzcZhVZV4fvNEcGJetQ13spZRMuW5ncvsKA1KvtkauZuK2jV8pxEZLpiuHtKX3FkKv2uC5ZeRC8L6we'};
-        this.tokenGuy = {signer: this.tokenUser, inc: '12sttFKciCWyRbNsK1yD1mWEwZoeWi1JtWJZ7gKTbx5eB25U4FnrfkxgxbnZ8zDn2QNhhW44HBZJ1EnfwVBueR44D5ucWxGNpXZMawoCmv6G2cwKi4xkasuysu3WtpV5ZMSYgaJ1mwe9fqgVD9mh', incPrivate: '112t8rnZUQXxcbayAZvyyZyKDhwVJBLkHuTKMhrS51nQZcXKYXGopUTj22JtZ8KxYQcak54KUQLhimv1GLLPFk1cc8JCHZ2JwxCRXGsg4gXU'};
+        this.ethGuy = { signer: this.ethUser, inc: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8', incPrivate: '112t8rnXoBXrThDTACHx2rbEq7nBgrzcZhVZV4fvNEcGJetQ13spZRMuW5ncvsKA1KvtkauZuK2jV8pxEZLpiuHtKX3FkKv2uC5ZeRC8L6we' };
+        this.tokenGuy = { signer: this.tokenUser, inc: '12sttFKciCWyRbNsK1yD1mWEwZoeWi1JtWJZ7gKTbx5eB25U4FnrfkxgxbnZ8zDn2QNhhW44HBZJ1EnfwVBueR44D5ucWxGNpXZMawoCmv6G2cwKi4xkasuysu3WtpV5ZMSYgaJ1mwe9fqgVD9mh', incPrivate: '112t8rnZUQXxcbayAZvyyZyKDhwVJBLkHuTKMhrS51nQZcXKYXGopUTj22JtZ8KxYQcak54KUQLhimv1GLLPFk1cc8JCHZ2JwxCRXGsg4gXU' };
 
         this.recoveryAddress = '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8';
         this.recoveryPrivateKey = '112t8rnXoBXrThDTACHx2rbEq7nBgrzcZhVZV4fvNEcGJetQ13spZRMuW5ncvsKA1KvtkauZuK2jV8pxEZLpiuHtKX3FkKv2uC5ZeRC8L6we';
         // TestingVault is never in live deployment, so it is deployed in test setup
         const { deploy } = deployments;
-        const deployResult = await deploy('TestingVault', {from: this.deployer.address, args: [], log: true});
+        const deployResult = await deploy('TestingVault', { from: this.deployer.address, args: [], log: true });
         [this.implementation, this.proxy, this.upgradedImpl, this.vaultHelper] = await Promise.all(['Vault', 'TransparentUpgradeableProxy', 'TestingVault', 'VaultHelper'].map(name => getInstance(name, null)));
         this.vault = await getInstance('Vault', 'TransparentUpgradeableProxy');
         this.upgradedVault = await getInstance('TestingVault', 'TransparentUpgradeableProxy');
-
-        await Inc.init();
-        this.inc = new Inc.SimpleWallet();
-        this.incBridge = new Inc.SimpleWallet();
-        
-        this.inc.setProvider(hre.networkCfg().providers[0]);
-        this.incBridge.setProvider(hre.networkCfg().providers[1]);
-        this.transactor = await this.inc.NewTransactor(this.ethGuy.incPrivate);
+        await inc.init(null, hre.networkCfg().providers[0], hre.networkCfg().numShards || 8);
+        this.transactor = await inc.NewTransactor(this.ethGuy.incPrivate);
 
         const names = ['Token1', 'Token2', 'Token3'];
         if (hre.networkCfg().deployed.testingTokens) {
@@ -70,16 +65,15 @@ let setupTest = () => {
 let shield = (ethIn) => {
     return async function() {
         // as per Incognito specs, deposit and wait more than 15 blocks
-        const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, {value: ethIn}), this.nConfirm + 1);
+        const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, { value: ethIn }), this.nConfirm);
         // in this test case, this call should emit only one event
         // console.log(`Deposit : ${tx.hash} => achieved ${nConfirm + 1} confirmations`);
         await expect(tx).to.emit(this.vault, 'Deposit')
-        .withArgs(tokenAddresses.ETH, this.ethGuy.inc, ethIn);
-        const proveResult = await proveEth(tx.hash, Inc.utils.base64Encode);
-        const txor = await this.inc.NewTransactor(this.ethGuy.incPrivate);
-        const issuingResponse = await txor.shield({ transfer: { fee: 10, tokenID: tokenAddresses.pETH }, extra: { ethBlockHash: proveResult.ethBlockHash, ethDepositProof: proveResult.encodedProof, txIndex: proveResult.txIndex }});
-        // const issuingResponse = await this.inc.rpc.issueIncToken(this.ethGuy.incPrivate, tokenAddresses.pETH, proveResult.ethBlockHash, proveResult.encodedProof, proveResult.txIndex);
-        await expect(issuingResponse).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
+            .withArgs(tokenAddresses.ETH, this.ethGuy.inc, ethIn);
+        const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);
+        const txor = await inc.NewTransactor(this.ethGuy.incPrivate);
+        const { result: issuingResponse } = await inc.Tx(txor).shield(tokenAddresses.pETH, proveResult.ethBlockHash, proveResult.encodedProof, proveResult.txIndex).send().catch(console.error);
+        await expect(issuingResponse).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
         let change = await txor.waitBalanceChange(tokenAddresses.pETH);
         change = BN.from(change.balance) - BN.from(change.oldBalance);
         change = await fromIncDecimals(change, tokenAddresses.ETH);
@@ -90,17 +84,17 @@ let shield = (ethIn) => {
 let unshield = (ethOut) => {
     return async function() {
         const amount = await toIncDecimals(ethOut, tokenAddresses.ETH);
-        const txor = await this.inc.NewTransactor(this.ethGuy.incPrivate);
-        const burnResult = await txor.burn({ transfer: { fee: 10, tokenID: tokenAddresses.pETH, info: "BURN ETHER" }, extra: { remoteAddress: this.ethGuy.signer.address, burnAmount: amount.toString(),  burningType: Inc.constants.BurningRequestMeta }});
-        await expect(burnResult).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
-        await this.transactor.waitTx(burnResult.Response.txId, this.nConfirm + 1);
-        const burnProof = await this.incBridge.rpc.getBurnProof(burnResult.Response.txId, false);
+        const txor = await inc.NewTransactor(this.ethGuy.incPrivate);
+        const { result: burnResult } = await inc.Tx(txor).withTokenID(tokenAddresses.pETH).withInfo("BURN ETHER").burningRequest(amount.toString(), this.ethGuy.signer.address).send();
+        await expect(burnResult).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
+        await this.transactor.waitTx(burnResult.txId);
+        const burnProof = await inc.rpc.getBurnProof(burnResult.txId, false);
         let params = await formatBurnProof(burnProof);
 
         const balanceBefore = await this.ethGuy.signer.getBalance();
         const tx = await confirm(this.vault.connect(this.unshieldSender).withdraw(...params));
         await expect(tx).to.emit(this.vault, 'Withdraw')
-        .withArgs(tokenAddresses.ETH, this.ethGuy.signer.address, ethOut);
+            .withArgs(tokenAddresses.ETH, this.ethGuy.signer.address, ethOut);
         const receipt = await tx.wait();
         console.log(`Unshield gas : ${receipt.gasUsed.toString()}`);
 
@@ -113,14 +107,14 @@ let unshield = (ethOut) => {
 let unshieldRevertRecover = (ethAmount, fixedTestcase = null) => {
     return async function() {
         const amount = await toIncDecimals(ethAmount);
-        let txor = await this.inc.NewTransactor(this.ethGuy.incPrivate);
+        let txor = await inc.NewTransactor(this.ethGuy.incPrivate);
         let burnProof;
         if (!fixedTestcase) {
             // unshield pETH to a contract address that cannot receive ETH
-            const burnResult = await txor.burn({transfer: { fee: 10, tokenID: tokenAddresses.pETH, info: "BURN ETHER" }, extra: { remoteAddress: this.testingTokens[0].address, burnAmount: amount.toString(), burningType: Inc.constants.BurningRequestMeta }});
-            await expect(burnResult).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
-            await this.transactor.waitTx(burnResult.Response.txId, this.nConfirm + 1);
-            burnProof = await this.incBridge.rpc.getBurnProof(burnResult.Response.txId, false);
+            const { result: burnResult } = await inc.Tx(txor).withTokenID(tokenAddresses.pETH).withInfo("BURN ETHER").burningRequest(amount.toString(), this.testingTokens[0].address).send();
+            await expect(burnResult).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
+            await this.transactor.waitTx(burnResult.txId);
+            burnProof = await inc.rpc.getBurnProof(burnResult.txId, false);
         } else {
             // make sure the testing network was deployed with "mainnet" committees
             console.log('Simulating a recovery on mainnet');
@@ -129,21 +123,21 @@ let unshieldRevertRecover = (ethAmount, fixedTestcase = null) => {
 
         let params = await formatBurnProof(burnProof);
         const balanceBefore = await this.ethGuy.signer.getBalance();
-        const tx = await confirm(this.vault.connect(this.unshieldSender).withdraw(...params), this.nConfirm + 1);
+        const tx = await confirm(this.vault.connect(this.unshieldSender).withdraw(...params), this.nConfirm);
         await expect(tx).to.not.emit(this.vault, 'Withdraw');
         await expect(tx).to.emit(this.vault, 'Deposit')
-        .withArgs(tokenAddresses.ETH, this.recoveryAddress, ethAmount);
-        
+            .withArgs(tokenAddresses.ETH, this.recoveryAddress, ethAmount);
+
         const balance = await ethers.provider.getBalance(this.testingTokens[0].address);
         // calculate the ETH balance increase after withdrawal
         await expect(balance).to.equal(BN.from(0));
 
         // issue pETH back to the recovery address
         if (this.recoveryPrivateKey) {
-            const proveResult = await proveEth(tx.hash, Inc.utils.base64Encode);
-            txor = await this.inc.NewTransactor(this.recoveryPrivateKey);
-            const issuingResponse = await txor.shield({ transfer: { fee: 10, tokenID: tokenAddresses.pETH }, extra: { ethBlockHash: proveResult.ethBlockHash, ethDepositProof: proveResult.encodedProof, txIndex: proveResult.txIndex }});
-            await expect(issuingResponse).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
+            const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);
+            txor = await inc.NewTransactor(this.recoveryPrivateKey);
+            const { result: issuingResponse } = await inc.Tx(txor).shield(tokenAddresses.pETH, proveResult.ethBlockHash, proveResult.encodedProof, proveResult.txIndex).send();
+            await expect(issuingResponse).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
             let change = await txor.waitBalanceChange(tokenAddresses.pETH);
             change = BN.from(change.balance) - BN.from(change.oldBalance);
             await expect(change.toString()).to.equal(amount.toString(), 'issuing amount mismatch');
@@ -158,31 +152,31 @@ let shieldToken = (_amount, _tokenName) => {
         // console.log(tokenContract.address);
         const appr = await confirm(tokenContract.connect(this.tokenGuy.signer).approve(this.vault.address, _amount));
         await expect(appr).to.emit(tokenContract, 'Approval')
-        .withArgs(this.tokenGuy.signer.address, this.vault.address, _amount);
+            .withArgs(this.tokenGuy.signer.address, this.vault.address, _amount);
         // as per Incognito specs, deposit and wait more than 15 blocks
         const incAmount = await toIncDecimals(_amount, tokenContract.address);
-        const tx = await confirm(this.vault.connect(this.tokenGuy.signer).depositERC20(tokenContract.address, _amount, this.tokenGuy.inc), this.nConfirm + 1);
+        const tx = await confirm(this.vault.connect(this.tokenGuy.signer).depositERC20(tokenContract.address, _amount, this.tokenGuy.inc), this.nConfirm);
         await expect(tx).to.emit(this.vault, 'Deposit')
-        .withArgs(ethers.utils.getAddress(tokenContract.address), this.tokenGuy.inc, incAmount);
-        const proveResult = await proveEth(tx.hash, Inc.utils.base64Encode);
-        const txor = await this.inc.NewTransactor(this.tokenGuy.incPrivate);
-        const issuingResponse = await txor.shield({ transfer: { fee: 10, tokenID: generateTestIncTokenID(tokenContract.address) }, extra: { ethBlockHash: proveResult.ethBlockHash, ethDepositProof: proveResult.encodedProof, txIndex: proveResult.txIndex }});
-        await expect(issuingResponse).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
+            .withArgs(ethers.utils.getAddress(tokenContract.address), this.tokenGuy.inc, incAmount);
+        const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);
+        const txor = await inc.NewTransactor(this.tokenGuy.incPrivate);
+        const { result: issuingResponse } = await inc.Tx(txor).shield(generateTestIncTokenID(tokenContract.address), proveResult.ethBlockHash, proveResult.encodedProof, proveResult.txIndex).send();
+        await expect(issuingResponse).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
         let change = await txor.waitBalanceChange(generateTestIncTokenID(tokenContract.address));
         await expect(incAmount).to.equal(change.balance - change.oldBalance, 'token issuing amount mismatch');
     }
 }
 
-let unshieldToken = (_amount, _tokenName, _expectations = {balanceChange : true}) => {
+let unshieldToken = (_amount, _tokenName, _expectations = { balanceChange: true }) => {
     return async function() {
         const tokenContract = this.tokens[_tokenName];
         // switch to Incognito's decimal
         const incAmount = await toIncDecimals(_amount, tokenContract.address);
-        const txor = await this.inc.NewTransactor(this.tokenGuy.incPrivate);
-        const burnResult = await txor.burn({ transfer: { fee: 10, tokenID: generateTestIncTokenID(tokenContract.address), info: "BURN TOKEN" }, extra: { remoteAddress: this.tokenGuy.signer.address, burnAmount: incAmount.toString(), burningType: Inc.constants.BurningRequestMeta }});
-        await expect(burnResult).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
-        await this.transactor.waitTx(burnResult.Response.txId, this.nConfirm + 1);
-        const burnProof = await this.incBridge.rpc.getBurnProof(burnResult.Response.txId, false);
+        const txor = await inc.NewTransactor(this.tokenGuy.incPrivate);
+        const { result: burnResult } = await inc.Tx(txor).withTokenID(generateTestIncTokenID(tokenContract.address)).withInfo("BURN TOKEN").burningRequest(incAmount.toString(), this.tokenGuy.signer.address).send();
+        await expect(burnResult).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
+        await this.transactor.waitTx(burnResult.txId);
+        const burnProof = await inc.rpc.getBurnProof(burnResult.txId, false);
         let params = await formatBurnProof(burnProof);
 
         const balanceBefore = await tokenContract.balanceOf(this.tokenGuy.signer.address);
@@ -191,7 +185,7 @@ let unshieldToken = (_amount, _tokenName, _expectations = {balanceChange : true}
         const balance = await tokenContract.balanceOf(this.tokenGuy.signer.address);
         if (_expectations.balanceChange) {
             await expect(tx).to.emit(this.vault, 'Withdraw')
-            .withArgs(tokenContract.address, this.tokenGuy.signer.address, _amount);
+                .withArgs(tokenContract.address, this.tokenGuy.signer.address, _amount);
             await expect(BN.from(balance).sub(BN.from(balanceBefore))).to.equal(_amount, "withdrawn balance must go to Ethereum address");
         } else {
             await expect(BN.from(balance).sub(BN.from(balanceBefore))).to.equal(0, "there must be no balance change");

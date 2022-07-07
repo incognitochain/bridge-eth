@@ -15,7 +15,7 @@ describe('Vault - Upgrade & Pausing', () => {
     it('should shield some ERC20 token', shieldToken(startToken, 'Token1'));
 
     it('should have correct storageLayoutVersion', async function() {
-        const v = await this.vault.storageLayoutVersion();
+        const v = await this.vault.connect(this.ethUser).storageLayoutVersion();
         expect(v).to.equal(2);
         await expect(this.vault.upgradeVaultStorageLayout("")).to.be.reverted;
     })
@@ -78,7 +78,7 @@ describe('Vault - Upgrade & Pausing', () => {
 
     it('should upgrade to previous safe implementation & unpause', async function() {
         await confirm(this.proxy.connect(this.vaultAdmin).upgradeTo(this.implementation.address));
-        await confirm(this.proxy.connect(this.vaultAdmin).unpause(), this.nConfirm + 1);
+        await confirm(this.proxy.connect(this.vaultAdmin).unpause(), this.nConfirm);
 
         const currentImpl = await getImplementation(this.proxy.address);
         await expect(currentImpl).to.equal(this.implementation.address);

@@ -4,7 +4,7 @@ const level = require('level');
 const rlp = require('rlp');
 const os = require('os');
 const db = level(os.tmpdir());
-const { Trie } = require('./external');
+const { Trie, intToBuffer } = require('./external');
 
 let flattenLog = (l) => {
     let res = [];
@@ -17,14 +17,12 @@ let flattenLog = (l) => {
 
 let getTrieReceipt = (_r) => {
     let g = _r.cumulativeGasUsed;
-    // _gasCumul.iadd(g);
     let receipt = {
         status: _r.status ? 1 : 0,
         gasUsed: Buffer.from(ethers.utils.arrayify(g.toHexString())),
         bitvector: Buffer.from(ethers.utils.arrayify(_r.logsBloom)),
         logs: _r.logs.map(flattenLog),
     }
-    // console.debug('receipt', receipt);
     return receipt;
 }
 
@@ -38,21 +36,25 @@ let prove = (txh, encoder) => {
         .then(block => {
             // grab all receipts in that block via web3
             return Promise.all(block.transactions.map(ethers.provider.getTransactionReceipt))
-        })
-        .then(receipts => {
-            // rebuild the receipt trie
-            // let gasCumulator = BN.from(0);
-            let sequence = Promise.resolve();
-            receipts.forEach((r, i) => {
-                // cumulating gas is totally synchronous
-                let encoded = rlp.encode(Object.values(getTrieReceipt(r)));
-                // console.debug(ethers.utils.hexlify(encoded));
-                // these trie-writing promises need to be executed sequentially
-                sequence = sequence.then(_ => {
-                    return trie.put(rlp.encode(i), encoded)
-                })
+            .then(async receipts => {
+                // rebuild the receipt trie
+                // let gasCumulator = BN.from(0);
+                let sequence = Promise.resolve();
+                for (let i=0; i<receipts.length; i++) {
+                    // cumulating gas is totally synchronous
+                    let encoded = rlp.encode(Object.values(getTrieReceipt(receipts[i])));
+                    // console.debug(ethers.utils.hexlify(encoded));
+                    // these trie-writing promises need to be executed sequentially
+                    const tx = await ethers.provider.getTransaction(txh);
+                    if (tx.type != 0) {
+                        encoded = Buffer.concat([intToBuffer(tx.type), encoded])
+                    }
+                    sequence = sequence.then(_ => {
+                        return trie.put(rlp.encode(i), encoded)
+                    })
+                }
+                return sequence;
             })
-            return sequence;
         })
         .then(_ => Trie.createProof(trie, rlp.encode(myIndex)))
         // encode base64 to include in Incognito TX

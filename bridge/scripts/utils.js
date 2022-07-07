@@ -94,16 +94,18 @@ let getInstance = async (abiname, deployedName = null, deployedAddress = null) =
     return await fac.attach(c.address);
 }
 
-let generateTestIncTokenID = (tokenAddress) => ethers.utils.keccak256(tokenAddress).slice(2);
+let generateTestIncTokenID = (tokenAddress) => {
+    return tokenAddresses.pTokens[tokenAddress] || ethers.utils.keccak256(tokenAddress).slice(2);
+}
 
 // return useful information for testing : deterministic Incognito Bridged Token ID, current test sender
 let getBridgedIncTokenInfo = (dict, tokenName) => {
     if (dict.tokens && dict.tokens[tokenName]) {
         const addr = dict.tokens[tokenName].address;
         const inc = generateTestIncTokenID(addr);
-        return Object.assign(dict.tokens[tokenName], {inc, sender: dict.tokenGuy});
+        return Object.assign(dict.tokens[tokenName], {inc, sender: dict.tokenGuy, unify: tokenAddresses.unify[addr]});
     }
-    return {address: tokenAddresses.ETH, inc: tokenAddresses.pETH, sender: dict.ethGuy};
+    return {address: tokenAddresses.ETH, inc: tokenAddresses.pETH, sender: dict.ethGuy, unify: tokenAddresses.unify[tokenAddresses.ETH]};
 }
 
 let getEmittedDepositNumber = async (dict, tokenName, amountForContract) => {

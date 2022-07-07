@@ -5,7 +5,7 @@ const BN = ethers.BigNumber;
 const {tokenAddresses} = require('../scripts/constants');
 const { setupTest, shield, shieldToken, unshield, unshieldToken } = require('./0-basic');
 const {getPartOf, chooseOneFrom, confirm, fromIncDecimals, toIncDecimals, getInstance, getImplementation, generateTestIncTokenID, getReqWithdrawSignMessage, getExecuteSignMessage, prepareExternalCallByVault, getBridgedIncTokenInfo, getEmittedDepositNumber} = require('../scripts/utils');
-const { Inc } = require('../scripts/external');
+const { inc } = require('../scripts/external');
 const { proveEth, formatBurnProof } = require('../scripts/prove');
 
 let tradeSetup =  () => {
@@ -24,11 +24,11 @@ let moveToContract = (ethOut, privKey, tokenName) => {
         const myToken = getBridgedIncTokenInfo(this, tokenName);
         const actionSigner = new ethers.Wallet(privKey);
         const incAmount = await toIncDecimals(ethOut, myToken.address);
-        const txor = await this.inc.NewTransactor(myToken.sender.incPrivate);
-        const burnResult = await txor.burn({ transfer: { fee: 10, tokenID: myToken.inc, info: "BURN ETHER TO CONTRACT" }, extra: { remoteAddress: actionSigner.address, burnAmount: incAmount.toString(), burningType: Inc.constants.BurningRequestToSCMeta }});
-        await expect(burnResult).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
-        await this.transactor.waitTx(burnResult.Response.txId, this.nConfirm + 1);
-        const burnProof = await this.incBridge.rpc.getBurnProof(burnResult.Response.txId, true);
+        const txor = await inc.NewTransactor(myToken.sender.incPrivate);
+        const { result: burnResult } = await inc.Tx(txor).withTokenID(myToken.inc).withInfo("BURN ETHER TO CONTRACT").burningRequest(incAmount.toString(), actionSigner.address, inc.constants.BurningRequestToSCMeta).send();
+        await expect(burnResult).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
+        await this.transactor.waitTx(burnResult.txId);
+        const burnProof = await inc.rpc.getBurnProof(burnResult.txId, true);
         let params = await formatBurnProof(burnProof);
         const balanceBefore = await this.vault.getDepositedBalance(myToken.address, actionSigner.address);
         const tx = await confirm(this.vault.connect(this.unshieldSender).submitBurnProof(...params, {gasLimit: 300000}));
@@ -65,15 +65,15 @@ let moveToIncognitoChain = (amount, privKey, tokenName) => {
         // console.log(`recover into ${recoveredAddress} vs...`);
         await expect(recoveredAddress).to.equal(actionSigner.address)
         // as per Incognito specs, deposit and wait more than 15 blocks
-        const tx = await confirm(this.vault.connect(this.unshieldSender).requestWithdraw(myToken.sender.inc, myToken.address, amount, signature, timestamp), this.nConfirm + 1);
+        const tx = await confirm(this.vault.connect(this.unshieldSender).requestWithdraw(myToken.sender.inc, myToken.address, amount, signature, timestamp), this.nConfirm);
         // in this test case, this call should emit only one event
         // console.log(`Deposit : ${tx.hash} => achieved ${nConfirm + 1} confirmations`);
         await expect(tx).to.emit(this.vault, 'Deposit')
         .withArgs(ethers.utils.getAddress(myToken.address), myToken.sender.inc, await getEmittedDepositNumber(this, tokenName, amount));
-        const proveResult = await proveEth(tx.hash, Inc.utils.base64Encode);
-        const txor = await this.inc.NewTransactor(myToken.sender.incPrivate);
-        const issuingResponse = await txor.shield({ transfer: { fee: 10, tokenID: myToken.inc }, extra: { ethBlockHash: proveResult.ethBlockHash, ethDepositProof: proveResult.encodedProof, txIndex: proveResult.txIndex }});
-        await expect(issuingResponse).to.have.nested.property('Response.txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
+        const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);
+        const txor = await inc.NewTransactor(myToken.sender.incPrivate);
+        const { result: issuingResponse } = await inc.Tx(txor).shield(myToken.inc, proveResult.ethBlockHash, proveResult.encodedProof, proveResult.txIndex).send();
+        await expect(issuingResponse).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
         let change = await txor.waitBalanceChange(myToken.inc);
 
         await expect(incAmount).to.equal(change.balance - change.oldBalance, 'issuing amount mismatch');
@@ -102,7 +102,7 @@ let trade = (exchangeName, amount, privKey, srcTokenName, tradedTokenName, useWo
         // console.log(`before execute call, ${tradedToken.address} balance of ${actionSigner.address} is ${balanceBefore.toString()}`);
         // const temp = await this.vault.getDepositedBalance(srcToken.address, actionSigner.address);
         // console.log(`before execute call, ${srcToken.address} balance of ${actionSigner.address} is ${temp.toString()}`);
-        const tx = await confirm(this.vault.connect(this.unshieldSender).execute(srcToken.address, amount, tradedToken.address, exchange.address, encodedTradeCall, timestamp, signature), this.nConfirm + 1);
+        const tx = await confirm(this.vault.connect(this.unshieldSender).execute(srcToken.address, amount, tradedToken.address, exchange.address, encodedTradeCall, timestamp, signature), this.nConfirm);
         const balance = await this.vault.getDepositedBalance(tradedToken.address, actionSigner.address);
         // console.log(tradeReturn, balance, balanceBefore);
         await expect(tradeReturn).to.lte(balance.sub(balanceBefore), 'traded amount mismatch');
@@ -151,14 +151,14 @@ describe('Trading Test', async function() {
         let mySigningKey = ethers.utils.randomBytes(32);
         it(`should move ${ethers.utils.formatUnits(amount, 'gwei')} to contract`, moveToContract(amount, mySigningKey));
         it(`should move ${ethers.utils.formatUnits(amount, 'gwei')} back to Incognito chain`, moveToIncognitoChain(amount, mySigningKey));
-        it(`should withdraw ${ethers.utils.formatUnits(startEth, 'gwei')}`, unshield(startEth));
+        it(`should withdraw ${ethers.utils.formatUnits(startEth, 'gwei')}`, unshield(amount));
 
         it(`should receive ${ethers.utils.formatUnits(startEth, 'gwei')} token deposit`, shieldToken(startToken, 'Token1'));
         amount = getPartOf(startToken, 50);
         mySigningKey = ethers.utils.randomBytes(32);
         it(`should move ${ethers.utils.formatUnits(amount, 'gwei')} to contract`, moveToContract(amount, mySigningKey, 'Token1'));
         it(`should move ${ethers.utils.formatUnits(amount, 'gwei')} back to Incognito chain`, moveToIncognitoChain(amount, mySigningKey, 'Token1'));
-        it(`should withdraw ${ethers.utils.formatUnits(startToken, 'gwei')}`, unshieldToken(startToken, 'Token1'));
+        it(`should withdraw ${ethers.utils.formatUnits(startToken, 'gwei')}`, unshieldToken(amount, 'Token1'));
     })
 
     describe('Trade Ether', async function() {
@@ -189,3 +189,7 @@ describe('Trading Test', async function() {
         // it(`should move all token3 back to Incognito chain`, moveToIncognitoChain(0, mySigningKey, 'Token3'));
     })
 })
+
+module.exports = {
+    tradeSetup,
+}

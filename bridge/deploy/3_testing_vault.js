@@ -45,16 +45,16 @@ module.exports = async({
     await rawTx({from:deployer, to: testingExchange, value: ethers.utils.parseUnits('1', 'ether')});
     let tokenNames = ['Token1', 'Token2', 'Token3'];
     // deploy test ERC20 token contracts and mint them to tokenUser & testingExchange
-    tokenNames.forEach(async tokenName => {
+    for (const tokenName of tokenNames) {
         const res = await deploy(tokenName, {from: deployer, args: []});
         console.log(`Token ${res.address}`);
         await execute(tokenName, {from: deployer}, 'mint', tokenUser, ethers.utils.parseUnits('10', 'ether'));
         await execute(tokenName, {from: deployer}, 'mint', testingExchange, ethers.utils.parseUnits('1', 'ether'));
-    })
+    }
     log('Deployed some testing contracts for localhost network');
 }
 
-module.exports.tags = ['1', 'testing', 'local'];
+module.exports.tags = ['3', 'testing', 'local'];
 module.exports.dependencies = ['incognito-proxy'];
 // always skip for public networks
-module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'kovan') || process.env.FORK);
+// module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'kovan') || process.env.FORK);
