@@ -36,6 +36,41 @@ library SafeMath {
   }
 }
 
+/**
+ * @title Counters
+ * @author Matt Condon (@shrugs)
+ * @dev Provides counters that can only be incremented or decremented by one. This can be used e.g. to track the number
+ * of elements in a mapping, issuing ERC721 ids, or counting request ids.
+ *
+ * Include with `using Counters for Counters.Counter;`
+ * Since it is not possible to overflow a 256 bit integer with increments of one, `increment` can skip the {SafeMath}
+ * overflow check, thereby saving gas. This does assume however correct usage, in that the underlying `_value` is never
+ * directly accessed.
+ */
+library Counters {
+    using SafeMath for uint256;
+
+    struct Counter {
+        // This variable should never be directly accessed by users of the library: interactions must be restricted to
+        // the library's function. As of Solidity v0.5.2, this cannot be enforced, though there is a proposal to add
+        // this feature: see https://github.com/ethereum/solidity/issues/4637
+        uint256 _value; // default: 0
+    }
+
+    function current(Counter storage counter) internal view returns (uint256) {
+        return counter._value;
+    }
+
+    function increment(Counter storage counter) internal {
+        // The {SafeMath} overflow check can be skipped here, see the comment at the top
+        counter._value += 1;
+    }
+
+    function decrement(Counter storage counter) internal {
+        counter._value = counter._value.safeSub(1);
+    }
+}
+
 
 /**
  * @dev Interface of the contract capable of checking if an instruction is
@@ -75,6 +110,7 @@ interface Withdrawable {
  */
 contract Vault {
     using SafeMath for uint;
+    using Counters for Counters.Counter;
     /**
      * @dev Storage slot with the incognito proxy.
      * This is the keccak-256 hash of "eip1967.proxy.incognito." subtracted by 1
@@ -106,6 +142,11 @@ contract Vault {
     */
     uint16 public storageLayoutVersion;
     string public recoveryAddress;
+
+    /**
+    * @dev Added in Storage Layout version : 2.0
+    */
+    Counters.Counter private idCounter;
 
     /**
     * @dev END Storage variables
@@ -166,6 +207,7 @@ contract Vault {
     event UpdateTokenTotal(address[] assets, uint[] amounts);
     event UpdateIncognitoProxy(address newIncognitoProxy);
     event Redeposit(address token, bytes redepositIncAddress, uint256 amount, bytes32 itx);
+    event DepositV2(address token, string incognitoAddress, uint amount, uint256 depositID);
 
     /**
      * modifier for contract version
@@ -269,6 +311,47 @@ contract Vault {
         require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
 
         emit Deposit(token, incognitoAddress, emitAmount);
+    }
+
+    /**
+     * @dev Makes a ETH deposit to the vault to mint pETH over at Incognito Chain
+     * @notice This only works when the contract is not Paused
+     * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
+     * @param incognitoAddress: Incognito Address to receive pETH
+     */
+    function deposit_V2(string calldata incognitoAddress) external payable nonReentrant {
+        require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
+        emit DepositV2(ETH_TOKEN, incognitoAddress, msg.value, idCounter.current());
+        idCounter.increment();
+    }
+
+    /**
+     * @dev Makes a ERC20 deposit to the vault to mint pERC20 over at Incognito Chain
+     * @notice This only works when the contract is not Paused
+     * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
+     * @notice Before calling this function, enough ERC20 must be allowed to
+     * tranfer from msg.sender to this contract
+     * @param token: address of the ERC20 token
+     * @param amount: to deposit to the vault and mint on Incognito Chain
+     * @param incognitoAddress: Incognito Address to receive pERC20
+     */
+    function depositERC20_V2(address token, uint amount, string calldata incognitoAddress) external nonReentrant {
+        IERC20 erc20Interface = IERC20(token);
+        uint8 decimals = getDecimals(address(token));
+        uint tokenBalance = erc20Interface.balanceOf(address(this));
+        uint beforeTransfer = tokenBalance;
+        uint emitAmount = amount;
+        if (decimals > 9) {
+            emitAmount = emitAmount / (10 ** (uint(decimals) - 9));
+            tokenBalance = tokenBalance / (10 ** (uint(decimals) - 9));
+        }
+        require(emitAmount <= 10 ** 18 && tokenBalance <= 10 ** 18 && emitAmount.safeAdd(tokenBalance) <= 10 ** 18, errorToString(Errors.VALUE_OVER_FLOW));
+        erc20Interface.transferFrom(msg.sender, address(this), amount);
+        require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
+        require(balanceOf(token).safeSub(beforeTransfer) == amount, errorToString(Errors.NOT_EQUAL));
+
+        emit DepositV2(token, incognitoAddress, emitAmount, idCounter.current());
+        idCounter.increment();
     }
 
     /**
@@ -491,27 +574,40 @@ contract Vault {
             sigSs
         );
 
-        uint balanceBeforeTrade = balanceOf(rOptions.redepositToken);
-        // perform external msgcall
-        try this._callExternal(data.token, data.to, data.amount, externalCalldata) returns (bytes memory result) {
-            (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
-            require(returnedTokenAddress == rOptions.redepositToken && balanceOf(rOptions.redepositToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
 
+        // perform external msgcall
+        try this._callExternal(data.token, data.to, data.amount, externalCalldata, rOptions.redepositToken) returns (uint256 returnedAmount) {
             if (rOptions.withdrawAddress == address(0)) {
                 // after executing, one can redeposit to Incognito Chain
-                emit Redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
+                _redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
             } else {
                 // alternatively, the received funds can be withdrawn
                 try this._transferExternal(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount) {
                     emit Withdraw(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount);
                 } catch Error(string memory reason) {
                     // upon revert, emit Redeposit event
-                    emit Redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
+                    _redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
+                    return;
                 }
             }
         } catch Error(string memory reason) {
-            emit Redeposit(data.token, rOptions.redepositIncAddress, data.amount, data.itx);
+            _redeposit(data.token, rOptions.redepositIncAddress, data.amount, data.itx);
+            return;
         }
+    }
+
+    function _redeposit(address token, bytes memory redepositIncAddress, uint256 amount, bytes32 itx) internal {
+        uint emitAmount = amount;
+        if (token == ETH_TOKEN) {
+            require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
+        } else {
+            uint8 decimals = getDecimals(address(token));
+            if (decimals > 9) {
+                emitAmount = emitAmount / (10 ** (uint(decimals) - 9));
+            }
+            require(emitAmount <= 10 ** 18, errorToString(Errors.VALUE_OVER_FLOW));
+        }
+        emit Redeposit(token, redepositIncAddress, emitAmount, itx);
     }
 
     function _transferExternal(address token, address payable to, uint256 amount) external onlySelf() {
@@ -523,14 +619,20 @@ contract Vault {
         }
     }
 
-    function _callExternal(address token, address to, uint256 amount, bytes memory externalCalldata) external onlySelf() returns (bytes memory result) {
+    function _callExternal(address token, address to, uint256 amount, bytes memory externalCalldata, address redepositToken) external onlySelf() returns (uint256) {
+        uint balanceBeforeTrade = balanceOf(redepositToken);
+        bytes memory result;
         if (token == ETH_TOKEN) {
-            return Address.functionCallWithValue(to, externalCalldata, amount);
+            result = Address.functionCallWithValue(to, externalCalldata, amount);
         } else {
             IERC20(token).transfer(to, amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-            return Address.functionCall(to, externalCalldata);
+            result = Address.functionCall(to, externalCalldata);
         }
+        require(result.length == 64, errorToString(Errors.INVALID_RETURN_DATA));
+        (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
+        require(returnedTokenAddress == redepositToken && balanceOf(redepositToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
+        return returnedAmount;
     }
 
     modifier onlySelf() {
