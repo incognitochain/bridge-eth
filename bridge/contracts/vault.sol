@@ -584,13 +584,13 @@ contract Vault {
                 // alternatively, the received funds can be withdrawn
                 try this._transferExternal(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount) {
                     emit Withdraw(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount);
-                } catch Error(string memory reason) {
+                } catch {
                     // upon revert, emit Redeposit event
                     _redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
                     return;
                 }
             }
-        } catch Error(string memory reason) {
+        } catch {
             _redeposit(data.token, rOptions.redepositIncAddress, data.amount, data.itx);
             return;
         }

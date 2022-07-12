@@ -60,25 +60,21 @@ task("show-committees", "Asks the IncProxy contract for its committee at height"
 
 subtask("contract-call-setup", "Unshield (withdraw) from Incognito")
     .setAction(async (taskArgs, hre) => {
-        const { Inc } = require('./external');
+        const { inc } = require('./external');
         const { getInstance, confirm, toIncDecimals } = require('./utils');
         const { proveEth, formatBurnProof } = require('./prove');
         const { tokenAddresses } = require('./constants');
         const BN = ethers.BigNumber;
         const signers = await ethers.getSigners();
         const defaultSigner = signers[3];
-        await Inc.init();
-        const inc = new Inc.SimpleWallet();
-        const incBridge = new Inc.SimpleWallet();
-        inc.setProvider(hre.networkCfg().providers[0]);
-        incBridge.setProvider(hre.networkCfg().providers[1]);
+        await inc.init(null, hre.networkCfg().providers[0], taskArgs.shards ? taskArgs.shards : 8);
         const transactor = taskArgs.privkey ? await inc.NewTransactor(taskArgs.privkey) : null;
         const vault = await getInstance('Vault', 'TransparentUpgradeableProxy');
         const proxy = await getInstance('TransparentUpgradeableProxy');
 
         return {
             getInstance, confirm, proveEth, formatBurnProof,
-            Inc, inc, incBridge, transactor, tokenAddresses,
+            Inc, inc, transactor, tokenAddresses,
             BN, toIncDecimals,
             defaultSigner,
             vault, proxy,
@@ -133,13 +129,13 @@ task("unshield", "Unshield (withdraw) from Incognito")
     .setAction(async taskArgs => {
         try {
             let { token, amount, to, privkey } = taskArgs;
-            const { getInstance, toIncDecimals, transactor, Inc, inc, incBridge, formatBurnProof, defaultSigner, BN, tokenAddresses, confirm, vault } = await run('contract-call-setup', { privkey });
+            const { getInstance, toIncDecimals, transactor, Inc, inc, formatBurnProof, defaultSigner, BN, tokenAddresses, confirm, vault } = await run('contract-call-setup', { privkey });
             amount = BN.from(amount);
             if (to.length != 42) to = defaultSigner.address;
             const incAmount = await toIncDecimals(amount, token);
             const burnResult = await transactor.burn({ transfer: { fee: 10, tokenID: tokenAddresses.pTokens[token], info: "BURN TOKEN" }, extra: { remoteAddress: to, burnAmount: incAmount.toString(), burningType: Inc.constants.BurningRequestMeta }});
             await transactor.waitTx(burnResult.Response.txId, 16);
-            const burnProof = await incBridge.rpc.getBurnProof(burnResult.Response.txId, false);
+            const burnProof = await inc.rpc.getBurnProof(burnResult.Response.txId, false);
             let params = await formatBurnProof(burnProof);
 
             let getBalance = (token, addr) => token == tokenAddresses.ETH ? ethers.provider.getBalance(addr) : getInstance('contracts/IERC20.sol:IERC20', null, token).then(t => t.balanceOf(addr));

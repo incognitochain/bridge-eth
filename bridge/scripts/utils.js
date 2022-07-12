@@ -44,22 +44,22 @@ let getDecimals = (_addr) =>
     // amounts of ETH will not have their decimals changed when shielded to Incognito, so we pretend ETH's decimal is 9 here
     (!_addr || _addr==tokenAddresses.ETH) ? Promise.resolve(BN.from(18)) : ethers.getContractAt('contracts/IERC20.sol:IERC20', _addr).then(_c => _c.decimals())
 
-let toIncDecimals = (_amount, _addr) => getDecimals(_addr)
+let toIncDecimals = (_amount, _addr,  _useUnified = false) => getDecimals(_addr)
     .then(_d => {
         let result = BN.from(_amount);
-        if (_d.lte(9)) return result;
+        if (!_useUnified && _d.lte(9)) return result;
         const ten = BN.from(10);
         // console.log(`${result} * ${ten.pow(_d.subn(9))}`);
-        return result.div(ten.pow(_d.sub(9)));
+        return result.mul(ten.pow(9)).div(ten.pow(_d));
     })
 
-let fromIncDecimals = (_amount, _addr) => getDecimals(_addr)
+let fromIncDecimals = (_amount, _addr, _useUnified = false) => getDecimals(_addr)
     .then(_d => {
         let result = BN.from(_amount);
-        if (_d.lte(9)) return result;
+        if (!_useUnified && _d.lte(9)) return result;
         const ten = BN.from(10);
         // console.log(`${result} / ${ten.pow(_d.subn(9))}`);
-        return result.mul(ten.pow(_d.sub(9)));
+        return result.mul(ten.pow(_d)).div(ten.pow(9));
     })
 
 // useful for binding Vault ABI to proxy address, or get an IERC20 token contract instance...
@@ -163,7 +163,7 @@ let prepareExternalCallByVault = async (ctx, exchangeName, srcToken, dstToken, t
         const tokensToKyber = [srcToken, dstToken].map(getTokenAddressForKyber);
         let [ expectedRate, worstRate ] = await exchange.getConversionRates(tokensToKyber[0], amount, tokensToKyber[1]);
         let chosenRate = useWorstRate ? worstRate : expectedRate;
-        console.log(`Kyber pair ${tokensToKyber} -> rate ${expectedRate.toString()} / ${worstRate.toString()}\nChoose ${chosenRate.toString()}`);
+        // console.log(`Kyber pair ${tokensToKyber} -> rate ${expectedRate.toString()} / ${worstRate.toString()}\nChoose ${chosenRate.toString()}`);
         tradeReturn = amount.mul(chosenRate).div("1000000000000000000");
         console.log(`via Kyber, trade ${ethers.utils.formatUnits(amount, 'gwei')} of ${srcToken} for ${ethers.utils.formatUnits(tradeReturn, 'gwei')} of ${dstToken}`);
         const encodedTradeCall = exchange.interface.encodeFunctionData('trade', [srcToken, amount, dstToken, chosenRate]);
