@@ -136,13 +136,6 @@ contract Vault {
     Withdrawable public prevVault;
     bool public notEntered = true;
     bool public isInitialized = false;
-
-    /**
-    * @dev Added in Storage Layout version : 2.0
-    */
-    uint16 public storageLayoutVersion;
-    string public recoveryAddress;
-
     /**
     * @dev Added in Storage Layout version : 2.0
     */
@@ -249,18 +242,6 @@ contract Vault {
         prevVault = Withdrawable(_prevVault);
         isInitialized = true;
         notEntered = true;
-    }
-
-    /**
-     * @dev "initializer" for storage layout version 2
-     * @param _recoveryAddress: manual recovery address (an Incognito address) to use when an unshield is reverted
-     */
-    function upgradeVaultStorageLayout(string calldata _recoveryAddress) external {
-        // storageLayoutVersion is a new variable introduced in this storage layout version, then set to 2 to match the storage layout version itself
-        require(storageLayoutVersion == 0, errorToString(Errors.ALREADY_UPGRADED));
-        // make sure the version increase can only happen once
-        storageLayoutVersion = 2;
-        recoveryAddress = _recoveryAddress;
     }
 
     /**
@@ -521,13 +502,8 @@ contract Vault {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-            (bool success, ) =  data.to.call{value: data.amount}("");
-            if (!success) {
-                emit Deposit(data.token, recoveryAddress, data.amount);
-                return;
-            }
-            
-            // require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+            (bool success, ) =  data.to.call{value: data.amount}("");        
+            require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));

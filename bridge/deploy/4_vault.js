@@ -70,9 +70,10 @@ module.exports = async({
     }
 
     if (!proxyResult.newlyDeployed) {
-        const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress]);
-        log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin, upgradeData);
-        await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
+        // const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress]);
+        log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin);
+        await proxy.connect(vaultAdminSigner).upgradeTo(vault.address);
+        // await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
     }
     log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);
 

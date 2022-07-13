@@ -175,7 +175,7 @@ const burnForCallRefundedInstruction = (exchangeName, amount, srcTokenName = nul
         const externalNetworkID = 1; // test networkID: Ethereum
         // create & send burn tx
         const { result: burnResult } = await inc.Tx(txor).withTokenID(useUnified.burn ? srcToken.unify : srcToken.inc).withInfo("BURN ETHER")
-            .burnForCall(...makeInvalidBurnParams(changeIndex, incAmount.toString(), srcToken.inc, externalNetworkID, exchange.address,
+            .burnForCall(...makeInvalidBurnParams(this, changeIndex, incAmount.toString(), srcToken.inc, externalNetworkID, exchange.address,
                 encodedTradeCall, tradedToken.address), withdrawAddress)
             .send().catch(console.error);
         
@@ -200,7 +200,7 @@ const burnForCallRefundedEvent = (exchangeName, amount, srcTokenName = null, tra
         const { encodedTradeCall, hashedData, exchange, tradeReturn } = await prepareExternalCallByVault(this, exchangeName, srcToken.address, tradedToken.address, timestamp, amount);
         const externalNetworkID = 1; // test networkID: Ethereum
         // create & send burn tx
-        const incParams = makeInvalidBurnParams(changeIndex, incAmount.toString(), srcToken.inc, externalNetworkID, exchange.address,
+        const incParams = makeInvalidBurnParams(this, changeIndex, incAmount.toString(), srcToken.inc, externalNetworkID, exchange.address,
                 encodedTradeCall, tradedToken.address);
         const { result: burnResult } = await inc.Tx(txor).withTokenID(useUnified.burn ? srcToken.unify : srcToken.inc).withInfo("BURN ETHER")
             .burnForCall(...incParams, withdrawAddress)
@@ -259,6 +259,32 @@ const burnForCallWithdrawException = (exchangeName, amount, srcTokenName = null,
     }
 }
 
+const burnForCallRevert = (exchangeName, amount, srcTokenName = null, tradedTokenName = null, options = { useWithdraw: false, useUnified: { burn: true }, changeIndex: 6 }) => {
+    return async function() {
+        srcTokenName = null;
+        const [srcToken, tradedToken] = [srcTokenName, tradedTokenName].map(n => getBridgedIncTokenInfo(this, n));
+        const txor = await inc.NewTransactor(srcToken.sender.incPrivate);
+        const { useWithdraw, useUnified, changeIndex } = options;
+        const withdrawAddress = useWithdraw ? srcToken.sender.signer.address : undefined;
+        const incAmount = await toIncDecimals(amount, srcToken.address, useUnified.burn);
+        // encode calldata
+        const timestamp = ethers.utils.hexlify(ethers.utils.randomBytes(6));
+        const { encodedTradeCall, hashedData, exchange, tradeReturn } = await prepareExternalCallByVault(this, exchangeName, srcToken.address, tradedToken.address, timestamp, amount);
+        const externalNetworkID = 1; // test networkID: Ethereum
+        // create & send burn tx
+         const incParams = makeInvalidBurnParams(this, changeIndex, incAmount.toString(), srcToken.inc, externalNetworkID, exchange.address,
+                encodedTradeCall, tradedToken.address);
+        const { result: burnResult } = await inc.Tx(txor).withTokenID(useUnified.burn ? srcToken.unify : srcToken.inc).withInfo("BURN ETHER")
+            .burnForCall(...incParams, withdrawAddress).send().catch(console.error);
+        await expect(burnResult).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
+        await this.transactor.waitTx(burnResult.txId);
+        const burnProof = await inc.rpc.unified_getBurnProof(burnResult.txId);
+        let params = await formatBurnProof(burnProof);
+        // submit burn proof
+        await expect(this.vault.connect(this.unshieldSender).executeWithBurnProof(...params)).to.be.reverted;
+    }
+}
+
 const invalidFunctionSignature = ethers.utils.arrayify(ethers.utils.keccak256(ethers.utils.toUtf8Bytes('nonexistentFunction'))).slice(0, 4);
 
 const changeByte = (s) => {
@@ -272,7 +298,7 @@ const changeByte = (s) => {
     return arr;
 }
 
-const makeInvalidBurnParams = (ind, ...params) => {
+const makeInvalidBurnParams = (ctx, ind, ...params) => {
     let [incAmount, srcToken, externalNetworkID, exchangeAddress, encodedTradeCall, tradedToken] = params;
     if (ind == 0) {
         console.log('use invalid (reduced) burn amount');
@@ -287,12 +313,17 @@ const makeInvalidBurnParams = (ind, ...params) => {
         console.log('use invalid function signature for call');
         params[4] = ethers.utils.hexlify(ethers.utils.concat([invalidFunctionSignature, ethers.utils.arrayify(params[4]).slice(4)]));
     } else if (ind == 4) {
-        console.log('use invalid EncodedCall inputs');
-        let data = changeByte(ethers.utils.arrayify(params[4]).slice(4));
-        params[4] = ethers.utils.hexlify(ethers.utils.concat([ethers.utils.arrayify(params[4]).slice(0, 4), data])).slice(2);
+        console.log('use invalid EncodedCall inputs (src == dst)');
+        const iface = ctx.kyber.interface;
+        let [srcToken, amount, dstToken, chosenRate] = iface.decodeFunctionData('trade', params[4]);
+        params[4] = iface.encodeFunctionData('trade', [dstToken, amount, dstToken, chosenRate]);
     } else if (ind == 5) {
         console.log('use invalid ReceiveToken address');
         params[5] = ethers.utils.hexlify(changeByte(params[5])).slice(2);
+    } else if (ind == 6) {
+        console.log('use different networkID (2)');
+        params[2] = 2;
+        params[1] = "a474ec7214b16ad6a6a355e732f2f511d8f2aa79cb4bd498ca46b05f3cfb0e53";
     }
     // console.log('final params', params);
     return params;
@@ -307,7 +338,5 @@ module.exports = {
     burnForCallRefundedInstruction,
     burnForCallRefundedEvent,
     burnForCallWithdrawException,
-    invalidFunctionSignature,
-    changeByte,
-    makeInvalidBurnParams,
+    burnForCallRevert,
 }

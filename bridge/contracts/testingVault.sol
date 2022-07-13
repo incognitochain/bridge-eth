@@ -1383,7 +1383,7 @@ contract TestingExchange {
         return srcAmount;
     }
     function swapTokenToToken(IERC20 src, uint srcAmount, IERC20 dest, uint minConversionRate) external returns(uint) {
-        // src.transferFrom(msg.sender, address(this), srcAmount);
+        src.transferFrom(msg.sender, address(this), srcAmount);
         dest.transfer(msg.sender, srcAmount);
         return srcAmount;
     }
@@ -1394,7 +1394,7 @@ contract TestingExchange {
         return val;
     }
     function swapTokenToEther(IERC20 token, uint srcAmount, uint minConversionRate) external returns(uint) {
-        // token.transferFrom(msg.sender, address(this), srcAmount);
+        token.transferFrom(msg.sender, address(this), srcAmount);
         msg.sender.call{value: srcAmount}("");
         return srcAmount;
     }
