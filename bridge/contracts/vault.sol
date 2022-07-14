@@ -4,6 +4,7 @@ pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "./IERC20.sol";
+// import "hardhat/console.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
 /**
@@ -382,7 +383,7 @@ contract Vault {
      * @dev Parses an extended burn instruction and returns the components
      * @param inst: the full instruction, containing both metadata and body
      */
-    function parseCalldataFromBurnInst(bytes calldata inst) public view returns (BurnInstData memory, RedepositOptions memory, bytes memory) {
+    function parseCalldataFromBurnInst(bytes calldata inst) public pure returns (BurnInstData memory, RedepositOptions memory, bytes memory) {
         require(inst.length >= 296, errorToString(Errors.INVALID_DATA_BURN_CALL_INST));
         BurnInstData memory bdata;
         // layout: meta(1), shard(1), network(1), extToken(32), extCallAddr(32), amount(32), txID(32), recvToken(32), withdrawAddr(32), redepositAddr(101), extCalldata(*)
@@ -393,8 +394,6 @@ contract Vault {
             require(bdata.meta == BURN_CALL_REQUEST_METADATA_TYPE && bdata.shard == 1 && networkID == CURRENT_NETWORK_ID, errorToString(Errors.INVALID_DATA_BURN_CALL_INST));
         }
         RedepositOptions memory opt;
-        bytes memory externalCalldata;
-
         {
             (bdata.token, bdata.to, bdata.amount, bdata.itx, opt.redepositToken, opt.withdrawAddress) = abi.decode(inst[3:195], (address, address, uint256, bytes32, address, address));
         }
@@ -522,7 +521,7 @@ contract Vault {
         uint8[] memory sigVs,
         bytes32[] memory sigRs,
         bytes32[] memory sigSs
-    ) public nonReentrant {
+    ) external nonReentrant {
         (BurnInstData memory data, RedepositOptions memory rOptions, bytes memory externalCalldata) = parseCalldataFromBurnInst(inst); // parse function also does sanity checks
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED)); // check if txID has been used previously
         withdrawed[data.itx] = true;
