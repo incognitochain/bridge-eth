@@ -8,6 +8,12 @@ const { inc } = require('../scripts/external');
 const { proveEth, formatBurnProof } = require('../scripts/prove');
 const path = require('path');
 require('dotenv').config();
+// redirect console logs
+require('console2file').default({
+    filePath: 'tests/test.log',
+    fileOnly: true,
+    labels: true
+});
 
 let setupTest = () => {
     return async function() {
@@ -21,8 +27,6 @@ let setupTest = () => {
         this.ethGuy = { signer: this.ethUser, inc: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8', incPrivate: '112t8rnXoBXrThDTACHx2rbEq7nBgrzcZhVZV4fvNEcGJetQ13spZRMuW5ncvsKA1KvtkauZuK2jV8pxEZLpiuHtKX3FkKv2uC5ZeRC8L6we' };
         this.tokenGuy = { signer: this.tokenUser, inc: '12sttFKciCWyRbNsK1yD1mWEwZoeWi1JtWJZ7gKTbx5eB25U4FnrfkxgxbnZ8zDn2QNhhW44HBZJ1EnfwVBueR44D5ucWxGNpXZMawoCmv6G2cwKi4xkasuysu3WtpV5ZMSYgaJ1mwe9fqgVD9mh', incPrivate: '112t8rnZUQXxcbayAZvyyZyKDhwVJBLkHuTKMhrS51nQZcXKYXGopUTj22JtZ8KxYQcak54KUQLhimv1GLLPFk1cc8JCHZ2JwxCRXGsg4gXU' };
 
-        this.recoveryAddress = '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8';
-        this.recoveryPrivateKey = '112t8rnXoBXrThDTACHx2rbEq7nBgrzcZhVZV4fvNEcGJetQ13spZRMuW5ncvsKA1KvtkauZuK2jV8pxEZLpiuHtKX3FkKv2uC5ZeRC8L6we';
         // TestingVault is never in live deployment, so it is deployed in test setup
         const { deploy } = deployments;
         const deployResult = await deploy('TestingVault', { from: this.deployer.address, args: [], log: true });
@@ -50,8 +54,6 @@ let setupTest = () => {
             }
         } else {
             this.testingTokens = await Promise.all(names.map(n => getInstance(n)));
-            // reserve one for testing shield / unshield; others are for trading into
-            // [ this.currentToken, this.tradingTokens ] = chooseOneFrom(this.testingTokens);
         }
         // store token name map
         this.tokens = {};
@@ -101,47 +103,6 @@ let unshield = (ethOut) => {
         const balance = await this.ethGuy.signer.getBalance();
         // calculate the ETH balance increase after withdrawal
         await expect(BN.from(balance).sub(BN.from(balanceBefore))).to.equal(ethOut);
-    }
-}
-
-let unshieldRevertRecover = (ethAmount, fixedTestcase = null) => {
-    return async function() {
-        const amount = await toIncDecimals(ethAmount);
-        let txor = await inc.NewTransactor(this.ethGuy.incPrivate);
-        let burnProof;
-        if (!fixedTestcase) {
-            // unshield pETH to a contract address that cannot receive ETH
-            const { result: burnResult } = await inc.Tx(txor).withTokenID(tokenAddresses.pETH).withInfo("BURN ETHER").burningRequest(amount.toString(), this.testingTokens[0].address).send();
-            await expect(burnResult).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending withdraw TX failed");
-            await this.transactor.waitTx(burnResult.txId);
-            burnProof = await inc.rpc.getBurnProof(burnResult.txId, false);
-        } else {
-            // make sure the testing network was deployed with "mainnet" committees
-            console.log('Simulating a recovery on mainnet');
-            burnProof = fixedTestcase;
-        }
-
-        let params = await formatBurnProof(burnProof);
-        const balanceBefore = await this.ethGuy.signer.getBalance();
-        const tx = await confirm(this.vault.connect(this.unshieldSender).withdraw(...params), this.nConfirm);
-        await expect(tx).to.not.emit(this.vault, 'Withdraw');
-        await expect(tx).to.emit(this.vault, 'Deposit')
-            .withArgs(tokenAddresses.ETH, this.recoveryAddress, ethAmount);
-
-        const balance = await ethers.provider.getBalance(this.testingTokens[0].address);
-        // calculate the ETH balance increase after withdrawal
-        await expect(balance).to.equal(BN.from(0));
-
-        // issue pETH back to the recovery address
-        if (this.recoveryPrivateKey) {
-            const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);
-            txor = await inc.NewTransactor(this.recoveryPrivateKey);
-            const { result: issuingResponse } = await inc.Tx(txor).shield(tokenAddresses.pETH, proveResult.ethBlockHash, proveResult.encodedProof, proveResult.txIndex).send();
-            await expect(issuingResponse).to.have.nested.property('txId').that.is.a('string').with.lengthOf(64, "sending issuing TX failed");
-            let change = await txor.waitBalanceChange(tokenAddresses.pETH);
-            change = BN.from(change.balance) - BN.from(change.oldBalance);
-            await expect(change.toString()).to.equal(amount.toString(), 'issuing amount mismatch');
-        }
     }
 }
 
@@ -198,6 +159,5 @@ module.exports = {
     shield,
     shieldToken,
     unshield,
-    unshieldRevertRecover,
     unshieldToken
 }

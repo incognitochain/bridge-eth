@@ -4,7 +4,6 @@ try {
     inc = require('incognito');
     const path = require('path');
     require = require('esm')(module/*, options*/)
-    Inc = require('incognito');
     const t = require('./trie');
     Trie = t.Trie;
     intToBuffer = t.intToBuffer;

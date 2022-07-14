@@ -18,7 +18,7 @@ let tradeSetup = () => {
     }
 }
 
-describe("Unified Shield & Unshield", async function() {
+describe("Test pApp Burn & Unified Token (un)shield", async function() {
     const startEth = ethers.utils.parseUnits('0.00005', 'ether');
     const startToken = ethers.utils.parseUnits('0.00001', 'ether');
     before(setupTest());
