@@ -4,90 +4,70 @@ const { deployments, ethers } = hre;
 const BN = ethers.BigNumber;
 const {tokenAddresses} = require('../scripts/constants');
 const { setupTest, shieldToken, unshieldToken } = require('./0-basic');
-const {getPartOf, confirm, fromIncDecimals, toIncDecimals, getInstance, getImplementation} = require('../scripts/utils');
+const {getPartOf, confirm, fromIncDecimals, toIncDecimals, getInstance, getImplementation, getCodeSlot} = require('../scripts/utils');
 const { Inc } = require('../scripts/external');
 
-describe('Vault - Upgrade & Pausing', () => {
+describe('Vault - Upgrade & Pausing', async function(){
     const startEth = ethers.utils.parseUnits('0.00005', 'ether');
     const startToken = ethers.utils.parseUnits('0.00001', 'ether');
     before(setupTest());
     const amount = getPartOf(startToken, 25);
-    it('should shield some ERC20 token', shieldToken(startToken, 'Token1'));
+    it.skip('should shield some ERC20 token', shieldToken(startToken, 'Token1'));
 
-    it('should have correct storageLayoutVersion', async function() {
-        const v = await this.vault.connect(this.ethUser).storageLayoutVersion();
-        expect(v).to.equal(2);
-        await expect(this.vault.upgradeVaultStorageLayout("")).to.be.reverted;
+    it('should have valid state', async function() {
+        const v = await this.vault.connect(this.ethUser);
+        expect(await v.isInitialized()).to.equal(true);
+        this.previousVaultAddress = (await deployments.get('PreviousVersionVault')).address;
+        this.latestVaultAddress = (await deployments.get('Vault')).address;
+        await expect(BN.from(this.previousVaultAddress)).to.not.equal(BN.from(0), 'need non-zero previous vault');
     })
-
-    it('should upgrade to future implementation, preserving balances', async function() {
-        let myTokenAddresses = this.testingTokens.map(t => t.address);
-        myTokenAddresses.push(tokenAddresses.ETH);
-        // proxy starts off pointing to Vault
-        let currentImpl = await getImplementation(this.proxy.address);
-        await expect(currentImpl).to.equal(this.implementation.address);
-        // get total balance to compare later
-        const balancesBeforeUpgrade = await Promise.all(myTokenAddresses.map(_tokenAddr => this.vault.balanceOf(_tokenAddr)));
-
-        const upgradeData = this.upgradedImpl.interface.encodeFunctionData('upgradeVaultStorageLayout', []);
-        console.log('will upgrade proxy to new implementation with params', this.upgradedImpl.address, this.vaultAdmin.address, upgradeData);
-        await this.proxy.connect(this.vaultAdmin).upgradeToAndCall(this.upgradedImpl.address, upgradeData);
-        await confirm(this.upgradedVault.setAllowWithdraw(true));
-
-        currentImpl = await getImplementation(this.proxy.address);
-        await expect(currentImpl).to.equal(this.upgradedImpl.address);
-        const v = await this.upgradedVault.storageLayoutVersion();
-        expect(v).to.equal(3);
-        await expect(this.upgradedVault.upgradeVaultStorageLayout()).to.be.reverted;
-
-        // plug ABI of new vault to the proxy i just upgraded
-        const balances = await Promise.all(myTokenAddresses.map(_tokenAddr => this.upgradedVault.balanceOf(_tokenAddr)));
-        console.log('balances before upgrade', balancesBeforeUpgrade.map(b => b.toString()));
-        console.log('after upgrade', balances.map(b => b.toString()));
-        await expect(balances).to.deep.equal(balancesBeforeUpgrade);
-
-    });
-    // withdraw less than half of the deposited "Token 1"
-
-    it('should unshield token with this new implementation', unshieldToken(amount, 'Token1', {balanceChange : true}));
-
-    it('suppose the new implementation acts maliciously', async function() {
-        await confirm(this.upgradedVault.setAllowWithdraw(false));
-    });
-    it('unshield token success but no token payout', unshieldToken(amount, 'Token1', {balanceChange : false}));
-
-    it('should pause, rejecting all calls', async function() {
-        const tokenContract = this.testingTokens[0];
-        // "false" means we expect no balance change, since this implementation we just upgraded to is flawed
-        // now we need to pause the proxy to avoid more damage
-        await confirm(this.proxy.connect(this.vaultAdmin).pause());
-        // after pause, all calls should revert
-        const appr = await confirm(tokenContract.connect(this.tokenGuy.signer).approve(this.upgradedVault.address, amount));
-        await expect(appr).to.emit(tokenContract, 'Approval')
-        .withArgs(this.tokenGuy.signer.address, this.upgradedVault.address, amount);
-        try {
-            await expect(this.upgradedVault.connect(this.unshieldSender).estimateGas.depositERC20(tokenContract.address, amount, this.tokenGuy.inc)).to.be.reverted;
-        } catch(e) {
-            if (hre.network.name == 'localhost') throw e;
-            else {
-                console.error("Skipping known issue: testnet provider does not register Transaction Revert");
-                console.error(e);
+    
+    describe('Vault can upgrade implementation', async function() {
+        it('should pause, rejecting all calls', async function() {
+            const tokenContract = this.testingTokens[0];
+            let myTokenAddresses = [tokenAddresses.ETH, ...this.testingTokens.map(t => t.address)];
+            this.balancesBeforeUpgrade = await Promise.all(myTokenAddresses.map(_tokenAddr => this.vault.balanceOf(_tokenAddr)));
+            const getAdmin = (pVault) => {
+                return getCodeSlot(pVault.address, '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103');
             }
-        }
+            console.info('admin', await getAdmin(this.vault), this.vaultAdmin.address);
+            await confirm(this.proxy.connect(this.vaultAdmin).pause());
+            // after pause, all calls should revert
+            const appr = await confirm(tokenContract.connect(this.tokenGuy.signer).approve(this.vault.address, amount));
+            await expect(appr).to.emit(tokenContract, 'Approval')
+            .withArgs(this.tokenGuy.signer.address, this.vault.address, amount);
+            try {
+                await expect(this.vault.connect(this.unshieldSender).estimateGas.depositERC20(tokenContract.address, amount, this.tokenGuy.inc)).to.be.reverted;
+            } catch(e) {
+                if (hre.network.name == 'localhost') throw e; else {
+                    console.error("Skipping known issue: testnet provider does not register Transaction Revert");
+                    console.error(e);
+                }
+            }
+        });
+
+        it('should upgrade implementation & unpause', async function() {
+            let currentImpl = await getImplementation(this.proxy.address);
+            let u;
+            if (currentImpl.eq(BN.from(this.previousVaultAddress))) {
+                u = this.latestVaultAddress;
+                console.info(`upgrade to ${u}`);
+            } else {
+                u = this.previousVaultAddress;
+                console.info(`downgrade to ${u}`);
+            }
+            let myTokenAddresses = [tokenAddresses.ETH, ...this.testingTokens.map(t => t.address)];
+            await confirm(this.proxy.connect(this.vaultAdmin).upgradeTo(u));
+            await confirm(this.proxy.connect(this.vaultAdmin).unpause(), this.nConfirm);
+            currentImpl = await getImplementation(this.proxy.address);
+            await expect(currentImpl).to.equal(u);
+            const balances = await Promise.all(myTokenAddresses.map(_tokenAddr => this.vault.balanceOf(_tokenAddr)));
+            console.info('balances before upgrade', this.balancesBeforeUpgrade.map(b => b.toString()));
+            console.info('after upgrade', balances.map(b => b.toString()));
+            await expect(balances).to.deep.equal(this.balancesBeforeUpgrade);
+        });
+
+        it.skip('should shield normally again', shieldToken(amount, 'Token1'));
     });
-
-    it('should upgrade to previous safe implementation & unpause', async function() {
-        await confirm(this.proxy.connect(this.vaultAdmin).upgradeTo(this.implementation.address));
-        await confirm(this.proxy.connect(this.vaultAdmin).unpause(), this.nConfirm);
-
-        const currentImpl = await getImplementation(this.proxy.address);
-        await expect(currentImpl).to.equal(this.implementation.address);
-
-        const v = await this.vault.storageLayoutVersion();
-        expect(v).to.equal(3);
-        await expect(this.vault.upgradeVaultStorageLayout("")).to.be.reverted;
-    });
-    // shield some token & make sure it succeeds
-    it('should shield normally again', shieldToken(amount, 'Token1'));
 
 });

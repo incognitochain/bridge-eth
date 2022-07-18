@@ -26,40 +26,44 @@ let getTrieReceipt = (_r) => {
     return receipt;
 }
 
-let prove = (txh, encoder) => {
+let sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+let prove = async (txh, encoder) => {
     let trie = new Trie(db);
-    return ethers.provider.getTransaction(txh)
-    .then(tx => {
-        let bh = tx.blockHash;
-        let myIndex = tx.transactionIndex;
-        return ethers.provider.getBlock(bh)
-        .then(block => {
-            // grab all receipts in that block via web3
-            return Promise.all(block.transactions.map(ethers.provider.getTransactionReceipt))
-            .then(async receipts => {
-                // rebuild the receipt trie
-                // let gasCumulator = BN.from(0);
-                let sequence = Promise.resolve();
-                for (let i=0; i<receipts.length; i++) {
-                    // cumulating gas is totally synchronous
-                    let encoded = rlp.encode(Object.values(getTrieReceipt(receipts[i])));
-                    // console.debug(ethers.utils.hexlify(encoded));
-                    // these trie-writing promises need to be executed sequentially
-                    const tx = await ethers.provider.getTransaction(txh);
-                    if (tx.type != 0) {
-                        encoded = Buffer.concat([intToBuffer(tx.type), encoded])
-                    }
-                    sequence = sequence.then(_ => {
-                        return trie.put(rlp.encode(i), encoded)
-                    })
-                }
-                return sequence;
-            })
-        })
-        .then(_ => Trie.createProof(trie, rlp.encode(myIndex)))
-        // encode base64 to include in Incognito TX
-        .then(_proof => ({root: trie.root, key: rlp.encode(myIndex), proof: _proof, ethBlockHash: bh, txIndex: myIndex, encodedProof: encoder ? _proof.map(encoder) : []}))
-    })
+    let tx = await ethers.provider.getTransaction(txh);
+
+    let bh = tx.blockHash;
+    let myIndex = tx.transactionIndex;
+    let block = await ethers.provider.getBlock(bh)
+    // grab all receipts in that block via web3
+    let receipts = await Promise.all(block.transactions.map(ethers.provider.getTransactionReceipt));
+    let encodedReceipts = [];
+    for (let i=0; i < receipts.length; i++) {
+        const r = receipts[i];
+        const currentTxh = block.transactions[i];
+        const encoded = rlp.encode(Object.values(getTrieReceipt(r)));
+        const tx = await ethers.provider.getTransaction(currentTxh);
+        if (i == receipts.length && tx.to == '0x0000000000000000000000000000000000000000' && tx.from == '0x0000000000000000000000000000000000000000') {
+            continue;
+        }
+        if (tx.type != 0) {
+            encodedReceipts.push(Buffer.concat([intToBuffer(tx.type), encoded]));
+        } else encodedReceipts.push(encoded);
+        await sleep(500); // space out requests to avoid getting rate-limited
+    };
+  
+    const bump = encodedReceipts.length < 128 ? encodedReceipts.length : 128;
+    for (let i=1; i<bump; i++) {
+        await trie.put(rlp.encode(i), encodedReceipts[i]);
+    }
+    await trie.put(rlp.encode(0), encodedReceipts[0]);
+    for (let i=128; i<encodedReceipts.length; i++) {
+        await trie.put(rlp.encode(i), encodedReceipts[i]);
+    }
+    let proof = await Trie.createProof(trie, rlp.encode(myIndex));
+
+    // encode base64 to include in Incognito TX
+    return { root: trie.root, key: rlp.encode(myIndex), proof, ethBlockHash: bh, txIndex: myIndex, encodedProof: encoder ? proof.map(encoder) : [] }
 }
 
 // read gasUsed from rlp-encoded receipt
@@ -71,23 +75,25 @@ let prove = (txh, encoder) => {
 // }
 
 // add a '0x' prefix if it's missing. Leave non-string arguments intact
-let maybeAddPrefix = (_s) => (typeof(_s)!='string' || _s.startsWith('0x') || _s.length==0) ? _s : '0x' + _s;
+let maybeAddPrefix = (_s) => (typeof(_s) != 'string' || _s.startsWith('0x') || _s.length == 0) ? _s : '0x' + _s;
 let deepAddPrefix = (_nestedArr) => (!_nestedArr.map) ? maybeAddPrefix(_nestedArr) : _nestedArr.map(deepAddPrefix);
 
 let unpackSigs = (_sigs, _blk, _instRoot) => {
     // const msg = web3.utils.soliditySha3(web3.utils.soliditySha3(_blk, _instRoot));
-    let v = [], r = [], s = [];
+    let v = [],
+        r = [],
+        s = [];
     _sigs.forEach(sig => {
         sig = maybeAddPrefix(sig);
         // optional : can recover address here to compare with 'dev' committee when debugging
         // let acc = eth.accounts.recover(msg, sig, true)
         // debug(acc);
         let arr = ethers.utils.arrayify(sig);
-        v.push(arr[64]+27);
+        v.push(arr[64] + 27);
         r.push(ethers.utils.hexlify(arr.slice(0, 32)));
         s.push(ethers.utils.hexlify(arr.slice(32, 64)));
     })
-    return {v,r,s};
+    return { v, r, s };
 }
 
 let formatBurnProof = (obj) => {

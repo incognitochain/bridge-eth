@@ -105,7 +105,7 @@ const mainnetForkNetwork = {
     },
     committees: mainnetCommittees,
     providers: devProviders,
-    recoveryAddress: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8'
+    numShards: 2,
 }
 
 const networks = {
@@ -165,7 +165,23 @@ const networks = {
         },
         committees: testnetCommittees,
         providers: devProviders,
-        recoveryAddress: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8'
+        numShards: 2,
+    },
+    goerli: {
+        url: `https://eth-goerli.g.alchemy.com/v2/${alchemyApiKey}`,
+        accounts: {
+            mnemonic: mnemonic
+        },
+        deployed: {
+            kyber: '0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D',
+            kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+            // MKR, KNC, UNI
+            testingTokens: ['0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd', '0xdB7ec4E4784118D9733710e46F7C83fE7889596a', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984']
+        },
+        committees: devCommitteesBig,
+        providers: devProviders,
+        numShards: 2,
     },
     mainnet: {
         chainId: 1,
@@ -184,7 +200,6 @@ const networks = {
         committees: mainnetCommittees,
         // providers are only connected to inside Hardhat tests, which do NOT run on mainnet
         providers: devProviders,
-        recoveryAddress: "UNSET",
     }
 };
 
@@ -248,7 +263,8 @@ module.exports = {
             default: 4
         },
         unshieldSender: {
-            default: 5
+            default: 5,
+            goerli: 0,
         }
     },
 };

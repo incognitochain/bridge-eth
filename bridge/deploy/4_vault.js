@@ -25,18 +25,13 @@ module.exports = async({
     const vaultFactory = await ethers.getContractFactory('Vault');
     const vault = await vaultFactory.attach(vaultResult.address);
 
-    let previousVault, needMoving = false;
+    let previousVault;
     try {
         previousVault = await ethers.getContract('PrevVault');
-        let isPaused = true;
-        try {
-            isPaused = await previousVault.paused();
-        } catch {}
-        needMoving = !isPaused;
     } catch (e) {
         previousVault = {address: '0x0000000000000000000000000000000000000000'};
     }
-    
+
     const initializeData = vaultFactory.interface.encodeFunctionData('initialize', [previousVault.address]);
     log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
     let proxyResult = await deploy('TransparentUpgradeableProxy', {

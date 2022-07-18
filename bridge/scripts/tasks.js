@@ -150,3 +150,12 @@ task("unshield", "Unshield (withdraw) from Incognito")
             throw e;
         }
     });
+
+task("query-var", "Display the vault's Incognito recovery address")
+    .addOptionalParam("name", "name of public storage variable to get", "isInitialized")
+    .setAction(async taskArgs => {
+        const { getInstance } = require('./utils');
+        const vault = await getInstance('Vault', 'TransparentUpgradeableProxy');
+        const res = await vault[taskArgs.name]();
+        console.log(`Vault ${vault.address}: ${taskArgs.name} = ${res}`);
+    });

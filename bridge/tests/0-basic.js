@@ -11,13 +11,13 @@ require('dotenv').config();
 // redirect console logs
 require('console2file').default({
     filePath: 'tests/test.log',
-    fileOnly: true,
+    fileOnly: !Boolean(process.env.DEBUG),
     labels: true
 });
 
 let setupTest = () => {
     return async function() {
-        this.nConfirm = 15;
+        this.nConfirm = 16;
         this.signers = await ethers.getSigners();
         this.accounts = this.signers.map(s => s.address);
         // console.log('Signers :', this.accounts);
@@ -69,7 +69,6 @@ let shield = (ethIn) => {
         // as per Incognito specs, deposit and wait more than 15 blocks
         const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, { value: ethIn }), this.nConfirm);
         // in this test case, this call should emit only one event
-        // console.log(`Deposit : ${tx.hash} => achieved ${nConfirm + 1} confirmations`);
         await expect(tx).to.emit(this.vault, 'Deposit')
             .withArgs(tokenAddresses.ETH, this.ethGuy.inc, ethIn);
         const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);
