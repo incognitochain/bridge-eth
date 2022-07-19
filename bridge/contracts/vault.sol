@@ -118,11 +118,6 @@ contract Vault {
      */
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
-    uint8 constant public CURRENT_NETWORK_ID = 1; // Ethereum
-    uint8 constant public BURN_REQUEST_METADATA_TYPE = 241;
-    uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
-
-
     /**
      * @dev Storage variables for Vault
      * This section is APPEND-ONLY, in order to preserve upgradeability
@@ -135,11 +130,14 @@ contract Vault {
     mapping(address => mapping(address => bool)) public migration;
     mapping(address => uint) public totalDepositedToSCAmount;
     Withdrawable public prevVault;
-    bool public notEntered = true;
-    bool public isInitialized = false;
+    bool public notEntered;
+    bool public isInitialized;
     /**
     * @dev Added in Storage Layout version : 2.0
     */
+    uint8 constant public CURRENT_NETWORK_ID = 1; // Ethereum
+    uint8 constant public BURN_REQUEST_METADATA_TYPE = 241;
+    uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
     Counters.Counter private idCounter;
 
     /**
