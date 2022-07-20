@@ -42,6 +42,6 @@ module.exports = async({
     });
 }
 
-module.exports.tags = ['5', 'trade'];
+module.exports.tags = ['5', 'trade', 'testing'];
 // need more editing to run on a public network
 // module.exports.skip = env => Promise.resolve(hre.network.name == 'localhost' && !process.env.FORK);
