@@ -137,6 +137,7 @@ contract Vault {
     */
     uint8 constant public CURRENT_NETWORK_ID = 1; // Ethereum
     uint8 constant public BURN_REQUEST_METADATA_TYPE = 241;
+    uint8 constant public BURN_TO_CONTRACT_REQUEST_METADATA_TYPE = 243;
     uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
     Counters.Counter private idCounter;
 
@@ -644,7 +645,7 @@ contract Vault {
     ) public nonReentrant {
         require(inst.length >= 130, errorToString(Errors.INVALID_DATA));
         BurnInstData memory data = parseBurnInst(inst);
-        require(data.meta == 243 && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
+        require(data.meta == BURN_TO_CONTRACT_REQUEST_METADATA_TYPE && data.shard == 1, errorToString(Errors.INVALID_DATA)); // Check instruction type
 
         // Not withdrawed
         require(!isWithdrawed(data.itx), errorToString(Errors.ALREADY_USED));
