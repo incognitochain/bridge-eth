@@ -16,13 +16,16 @@ module.exports = async({
     }
     const ip = await deployments.get('IncognitoProxy');
 
-    let vaultResult = await deploy('Vault', {
+    const vaultContractName = hre.networkCfg().vaultContractName || 'Vault';
+    console.log('Deploy: ', vaultContractName);
+    let vaultResult = await deploy(vaultContractName, {
         from: deployer,
         args: [],
         skipIfAlreadyDeployed: true,
-        log: true
+        log: true,
+        // waitConfirmations: 6,
     });
-    const vaultFactory = await ethers.getContractFactory('Vault');
+    const vaultFactory = await ethers.getContract(vaultContractName);
     const vault = await vaultFactory.attach(vaultResult.address);
 
     let previousVault;

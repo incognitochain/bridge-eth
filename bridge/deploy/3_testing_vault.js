@@ -31,9 +31,11 @@ module.exports = async({
     });
     log('Deployed previous vault implementation for testing network');
 
-    // LOCAL-ONLY contract
-    if (hre.networkCfg().chainId != 31337) return;
-    let res = await deploy('TestingExchange', {from: deployer, args: []});
+    // if (hre.networkCfg().chainId != 31337) return; // for local
+    let res = await deploy('TestingExchange', {from: deployer, args: [], skipIfAlreadyDeployed: true,
+        log: true,
+        // waitConfirmations: 6,
+    });
     if (res.newlyDeployed) {
         log(`Testing Exchange deployed at ${res.address}`);
     }
@@ -41,12 +43,11 @@ module.exports = async({
     let testingExchange = kb.address;
 
     res = await deploy('VaultHelper', {from: deployer, args: []});
-    // fund testingExchange with ether
-    await rawTx({from:deployer, to: testingExchange, value: ethers.utils.parseUnits('1', 'ether')});
+    // await rawTx({from:deployer, to: testingExchange, value: ethers.utils.parseUnits('1', 'ether')}); // fund testingExchange with ether
     let tokenNames = ['Token1', 'Token2', 'Token3'];
     // deploy test ERC20 token contracts and mint them to tokenUser & testingExchange
     for (const tokenName of tokenNames) {
-        const res = await deploy(tokenName, {from: deployer, args: []});
+        const res = await deploy(tokenName, {from: deployer, args: [], skipIfAlreadyDeployed: true});
         console.log(`Token ${res.address}`);
         await execute(tokenName, {from: deployer}, 'mint', tokenUser, ethers.utils.parseUnits('10', 'ether'));
         await execute(tokenName, {from: deployer}, 'mint', testingExchange, ethers.utils.parseUnits('1', 'ether'));
@@ -57,4 +58,4 @@ module.exports = async({
 module.exports.tags = ['3', 'testing', 'local'];
 module.exports.dependencies = ['incognito-proxy'];
 // always skip for public networks
-// module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'kovan') || process.env.FORK);
+module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'kovan' || env.network.name == 'goerli') || process.env.FORK);

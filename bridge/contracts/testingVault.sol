@@ -702,6 +702,7 @@ contract PreviousVersionVault {
      */
     bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;
     address constant public ETH_TOKEN = 0x0000000000000000000000000000000000000000;
+
     /**
      * @dev Storage variables for Vault
      * This section is APPEND-ONLY, in order to preserve upgradeability
@@ -716,6 +717,10 @@ contract PreviousVersionVault {
     Withdrawable public prevVault;
     bool public notEntered = true;
     bool public isInitialized = false;
+
+    /**
+    * @dev END Storage variables
+    */
 
     struct BurnInstData {
         uint8 meta; // type of the instruction
@@ -991,8 +996,8 @@ contract PreviousVersionVault {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-            (bool success, ) =  data.to.call{value: data.amount}("");
-            require(success, errorToString(Errors.INTERNAL_TX_ERROR));
+          (bool success, ) =  data.to.call{value: data.amount}("");
+          require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));

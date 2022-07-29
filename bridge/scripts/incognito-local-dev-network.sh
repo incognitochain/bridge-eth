@@ -12,7 +12,7 @@ npx pm2 start --name highway ./run.sh -- lc1
 cd ..
 if [ ! -d incognito-chain ]
 then
-    git clone https://github.com/incognitochain/incognito-chain --branch dev/papp-new-flow-local-cfg
+    git clone https://github.com/incognitochain/incognito-chain --branch dev/papp-new-flow-local-cfg --depth 1
 fi
 cd incognito-chain
 go mod tidy

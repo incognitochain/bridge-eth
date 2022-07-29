@@ -22,15 +22,16 @@ let setupTest = () => {
         this.accounts = this.signers.map(s => s.address);
         // console.log('Signers :', this.accounts);
         // 0 is deployer, we use 1 2 3 5 for named accounts, skipping 4
-        [this.deployer, this.vaultAdmin, this.ethUser, this.tokenUser, _, this.unshieldSender] = this.signers;
+        [this.deployer, this.vaultAdmin, this.ethUser, this.tokenUser] = this.signers;
+        this.unshieldSender = this.deployer;
 
         this.ethGuy = { signer: this.ethUser, inc: '12sxXUjkMJZHz6diDB6yYnSjyYcDYiT5QygUYFsUbGUqK8PH8uhxf4LePiAE8UYoDcNkHAdJJtT1J6T8hcvpZoWLHAp8g6h1BQEfp4h5LQgEPuhMpnVMquvr1xXZZueLhTNCXc8fkVXseeVAGCt8', incPrivate: '112t8rnXoBXrThDTACHx2rbEq7nBgrzcZhVZV4fvNEcGJetQ13spZRMuW5ncvsKA1KvtkauZuK2jV8pxEZLpiuHtKX3FkKv2uC5ZeRC8L6we' };
         this.tokenGuy = { signer: this.tokenUser, inc: '12sttFKciCWyRbNsK1yD1mWEwZoeWi1JtWJZ7gKTbx5eB25U4FnrfkxgxbnZ8zDn2QNhhW44HBZJ1EnfwVBueR44D5ucWxGNpXZMawoCmv6G2cwKi4xkasuysu3WtpV5ZMSYgaJ1mwe9fqgVD9mh', incPrivate: '112t8rnZUQXxcbayAZvyyZyKDhwVJBLkHuTKMhrS51nQZcXKYXGopUTj22JtZ8KxYQcak54KUQLhimv1GLLPFk1cc8JCHZ2JwxCRXGsg4gXU' };
 
         // TestingVault is never in live deployment, so it is deployed in test setup
         const { deploy } = deployments;
-        const deployResult = await deploy('TestingVault', { from: this.deployer.address, args: [], log: true });
-        [this.implementation, this.proxy, this.upgradedImpl, this.vaultHelper] = await Promise.all(['Vault', 'TransparentUpgradeableProxy', 'TestingVault', 'VaultHelper'].map(name => getInstance(name, null)));
+        // const deployResult = await deploy('TestingVault', { from: this.deployer.address, args: [], log: true });
+        [this.implementation, this.proxy, this.vaultHelper] = await Promise.all(['Vault', 'TransparentUpgradeableProxy', 'VaultHelper'].map(name => getInstance(name, null)));
         this.vault = await getInstance('Vault', 'TransparentUpgradeableProxy');
         this.upgradedVault = await getInstance('TestingVault', 'TransparentUpgradeableProxy');
         await inc.init(null, hre.networkCfg().providers[0], hre.networkCfg().numShards || 8);

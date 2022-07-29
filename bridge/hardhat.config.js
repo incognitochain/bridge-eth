@@ -177,11 +177,44 @@ const networks = {
             kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
             uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
             // MKR, KNC, UNI
-            testingTokens: ['0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd', '0xdB7ec4E4784118D9733710e46F7C83fE7889596a', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984']
+            // testingTokens: ['0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd', '0xdB7ec4E4784118D9733710e46F7C83fE7889596a', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984']
         },
         committees: devCommitteesBig,
         providers: devProviders,
         numShards: 2,
+    },
+    bsctest: {
+        url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+        accounts: {
+            mnemonic: mnemonic
+        },
+        deployed: {},
+        committees: devCommitteesBig,
+        providers: devProviders,
+        numShards: 2,
+        vaultContractName: 'VaultBSC',
+    },
+    mumbai: {
+        url: "https://polygon-mumbai.g.alchemy.com/v2/...",
+        accounts: {
+            mnemonic: mnemonic
+        },
+        deployed: {},
+        committees: devCommitteesBig,
+        providers: devProviders,
+        numShards: 2,
+        vaultContractName: 'VaultPLG',
+    },
+    ftmtest: {
+        url: "https://rpc.testnet.fantom.network",
+        accounts: {
+            mnemonic: mnemonic
+        },
+        deployed: {},
+        committees: devCommitteesBig,
+        providers: devProviders,
+        numShards: 2,
+        vaultContractName: 'VaultFTM',
     },
     mainnet: {
         chainId: 1,
