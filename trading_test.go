@@ -94,10 +94,18 @@ type TradingTestSuite struct {
 	FTMHost   string
 	FTMClient *ethclient.Client
 
-	ChainIDETH uint
-	ChainIDBSC uint
-	ChainIDPLG uint
-	ChainIDFTM uint
+	AURORAHost   string
+	AURORAClient *ethclient.Client
+
+	AVAXHost   string
+	AVAXClient *ethclient.Client
+
+	ChainIDETH    uint
+	ChainIDBSC    uint
+	ChainIDPLG    uint
+	ChainIDFTM    uint
+	ChainIDAURORA uint
+	ChainIDAVAX   uint
 
 	VaultAddr            common.Address
 	VaultBSCAddr         common.Address
@@ -141,6 +149,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
+	tradingSuite.AVAXHost = "https://api.avax-test.network/ext/C/rpc"
+	tradingSuite.AURORAHost = "https://testnet.aurora.dev"
 
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
@@ -160,6 +170,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.ChainIDETH = 42
 	tradingSuite.ChainIDPLG = 80001
 	tradingSuite.ChainIDFTM = 4002
+	tradingSuite.ChainIDAURORA = 1313161555
+	tradingSuite.ChainIDAVAX = 43113
 
 	// generate a new keys pair for SC
 	tradingSuite.genKeysPairForSC()
@@ -228,6 +240,14 @@ func (tradingSuite *TradingTestSuite) connectToETH() {
 	client, err = ethclient.Dial(tradingSuite.FTMHost)
 	require.Equal(tradingSuite.T(), nil, err)
 	tradingSuite.FTMClient = client
+
+	client, err = ethclient.Dial(tradingSuite.AURORAHost)
+	require.Equal(tradingSuite.T(), nil, err)
+	tradingSuite.AURORAClient = client
+
+	client, err = ethclient.Dial(tradingSuite.AVAXHost)
+	require.Equal(tradingSuite.T(), nil, err)
+	tradingSuite.AVAXClient = client
 
 	tradingSuite.ETHPrivKey = privKey
 }
