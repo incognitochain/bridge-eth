@@ -45,13 +45,22 @@ func TestFixedClaimOnce(t *testing.T) {
 			p, _ := setupPauseContract(tc.admin.Address)
 
 			// Retire first
-			_, err := p.c.Retire(bind.NewKeyedTransactor(tc.admin.PrivateKey), tc.successor)
+			key, err := bind.NewKeyedTransactorWithChainID(tc.admin.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = p.c.Retire(key, tc.successor)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Claim
-			_, err = p.c.Claim(bind.NewKeyedTransactor(tc.claimer.PrivateKey))
+			keyClaimer, err := bind.NewKeyedTransactorWithChainID(tc.claimer.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = p.c.Claim(keyClaimer)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -278,7 +287,11 @@ func TestFixedUnpauseOnce(t *testing.T) {
 			p, _ := setupPauseContract(tc.admin.Address)
 
 			// Pause first
-			_, err := p.c.Pause(bind.NewKeyedTransactor(tc.admin.PrivateKey))
+			key, err := bind.NewKeyedTransactorWithChainID(tc.admin.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = p.c.Pause(key)
 			if err != nil {
 				t.Fatal(err)
 			}

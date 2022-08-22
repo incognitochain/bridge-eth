@@ -75,7 +75,8 @@ func TestFixedUpdateIncognitoProxy(t *testing.T) {
 			assert.Nil(t, err)
 
 			// Update
-			txOpt := bind.NewKeyedTransactor(tc.caller.PrivateKey)
+			txOpt, err := bind.NewKeyedTransactorWithChainID(tc.caller.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			assert.Nil(t, err)
 			_, err = p.vp.UpgradeIncognito(txOpt, acc.Address)
 			p.sim.Commit()
 

@@ -47,9 +47,16 @@ type Platform struct {
 func init() {
 	fmt.Println("Initializing genesis account...")
 	genesisAcc = loadAccount()
-	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	var err error
+	auth, err = bind.NewKeyedTransactorWithChainID(genesisAcc.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
 	genesisAcc2 = loadAccount()
-	auth2 = bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	auth2, err = bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func TestSimulatedSwapBeacon(t *testing.T) {
@@ -556,10 +563,13 @@ func getBeaconSwapProof(block int) string {
 
 func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 	initBalance := p.getBalance(p.vAddr)
-	auth := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, p.sim.Blockchain().Config().ChainID)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
 	auth.GasLimit = 0
 	auth.Value = amount
-	_, err := p.v.Deposit(auth, "")
+	_, err = p.v.Deposit(auth, "")
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}

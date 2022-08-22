@@ -36,8 +36,11 @@ func TestVaultTestSuite(t *testing.T) {
 
 func (s *VaultTestSuite) SetupTest() {
 	key, _ := crypto.GenerateKey()
-	s.auth = bind.NewKeyedTransactor(key)
-
+	var err error
+	s.auth, err = bind.NewKeyedTransactorWithChainID(key, s.sim.Blockchain().Config().ChainID)
+	if err != nil {
+		panic(err.Error())
+	}
 	s.address = s.auth.From
 	s.gAlloc = map[common.Address]core.GenesisAccount{
 		s.address: {Balance: big.NewInt(10000000000)},

@@ -8,3 +8,4 @@ genesisKey.hex
 .DS_Store
 cache
 artifacts
+node_modules
