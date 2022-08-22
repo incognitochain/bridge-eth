@@ -4,6 +4,7 @@
 package uniswap
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 
@@ -17,29 +18,37 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
-	_ = abi.U256
 	_ = bind.Bind
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
 )
 
-// IERC20ABI is the input ABI used to generate the binding from.
-const IERC20ABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-
-// IERC20FuncSigs maps the 4-byte function signature to its string representation.
-var IERC20FuncSigs = map[string]string{
-	"dd62ed3e": "allowance(address,address)",
-	"095ea7b3": "approve(address,uint256)",
-	"70a08231": "balanceOf(address)",
-	"313ce567": "decimals()",
-	"18160ddd": "totalSupply()",
-	"a9059cbb": "transfer(address,uint256)",
-	"23b872dd": "transferFrom(address,address,uint256)",
+// IERC20MetaData contains all meta data concerning the IERC20 contract.
+var IERC20MetaData = &bind.MetaData{
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Sigs: map[string]string{
+		"dd62ed3e": "allowance(address,address)",
+		"095ea7b3": "approve(address,uint256)",
+		"70a08231": "balanceOf(address)",
+		"313ce567": "decimals()",
+		"18160ddd": "totalSupply()",
+		"a9059cbb": "transfer(address,uint256)",
+		"23b872dd": "transferFrom(address,address,uint256)",
+	},
 }
+
+// IERC20ABI is the input ABI used to generate the binding from.
+// Deprecated: Use IERC20MetaData.ABI instead.
+var IERC20ABI = IERC20MetaData.ABI
+
+// Deprecated: Use IERC20MetaData.Sigs instead.
+// IERC20FuncSigs maps the 4-byte function signature to its string representation.
+var IERC20FuncSigs = IERC20MetaData.Sigs
 
 // IERC20 is an auto generated Go binding around an Ethereum contract.
 type IERC20 struct {
@@ -149,7 +158,7 @@ func bindIERC20(address common.Address, caller bind.ContractCaller, transactor b
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IERC20 *IERC20Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IERC20.Contract.IERC20Caller.contract.Call(opts, result, method, params...)
 }
 
@@ -168,7 +177,7 @@ func (_IERC20 *IERC20Raw) Transact(opts *bind.TransactOpts, method string, param
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_IERC20 *IERC20CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _IERC20.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -185,104 +194,124 @@ func (_IERC20 *IERC20TransactorRaw) Transact(opts *bind.TransactOpts, method str
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Caller) Allowance(opts *bind.CallOpts, owner common.Address, spender common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "allowance", owner, spender)
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "allowance", owner, spender)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20Session) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // Allowance is a free data retrieval call binding the contract method 0xdd62ed3e.
 //
-// Solidity: function allowance(address owner, address spender) constant returns(uint256)
+// Solidity: function allowance(address owner, address spender) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Allowance(owner common.Address, spender common.Address) (*big.Int, error) {
 	return _IERC20.Contract.Allowance(&_IERC20.CallOpts, owner, spender)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20Caller) BalanceOf(opts *bind.CallOpts, account common.Address) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "balanceOf", account)
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "balanceOf", account)
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20Session) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // BalanceOf is a free data retrieval call binding the contract method 0x70a08231.
 //
-// Solidity: function balanceOf(address account) constant returns(uint256)
+// Solidity: function balanceOf(address account) view returns(uint256)
 func (_IERC20 *IERC20CallerSession) BalanceOf(account common.Address) (*big.Int, error) {
 	return _IERC20.Contract.BalanceOf(&_IERC20.CallOpts, account)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20Caller) Decimals(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "decimals")
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "decimals")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20Session) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // Decimals is a free data retrieval call binding the contract method 0x313ce567.
 //
-// Solidity: function decimals() constant returns(uint256)
+// Solidity: function decimals() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) Decimals() (*big.Int, error) {
 	return _IERC20.Contract.Decimals(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Caller) TotalSupply(opts *bind.CallOpts) (*big.Int, error) {
-	var (
-		ret0 = new(*big.Int)
-	)
-	out := ret0
-	err := _IERC20.contract.Call(opts, out, "totalSupply")
-	return *ret0, err
+	var out []interface{}
+	err := _IERC20.contract.Call(opts, &out, "totalSupply")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20Session) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
 
 // TotalSupply is a free data retrieval call binding the contract method 0x18160ddd.
 //
-// Solidity: function totalSupply() constant returns(uint256)
+// Solidity: function totalSupply() view returns(uint256)
 func (_IERC20 *IERC20CallerSession) TotalSupply() (*big.Int, error) {
 	return _IERC20.Contract.TotalSupply(&_IERC20.CallOpts)
 }
@@ -500,6 +529,7 @@ func (_IERC20 *IERC20Filterer) ParseApproval(log types.Log) (*IERC20Approval, er
 	if err := _IERC20.contract.UnpackLog(event, "Approval", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
@@ -653,28 +683,42 @@ func (_IERC20 *IERC20Filterer) ParseTransfer(log types.Log) (*IERC20Transfer, er
 	if err := _IERC20.contract.UnpackLog(event, "Transfer", log); err != nil {
 		return nil, err
 	}
+	event.Raw = log
 	return event, nil
 }
 
-// TradeUtilsABI is the input ABI used to generate the binding from.
-const TradeUtilsABI = "[{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
-
-// TradeUtilsFuncSigs maps the 4-byte function signature to its string representation.
-var TradeUtilsFuncSigs = map[string]string{
-	"72e94bf6": "ETH_CONTRACT_ADDRESS()",
+// TradeUtilsMetaData contains all meta data concerning the TradeUtils contract.
+var TradeUtilsMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	Sigs: map[string]string{
+		"72e94bf6": "ETH_CONTRACT_ADDRESS()",
+	},
+	Bin: "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220b7777546a30e2b201149c5afb6d1db6bd399fcccbc04741c03e2ec6057762ba564736f6c634300060c0033",
 }
 
+// TradeUtilsABI is the input ABI used to generate the binding from.
+// Deprecated: Use TradeUtilsMetaData.ABI instead.
+var TradeUtilsABI = TradeUtilsMetaData.ABI
+
+// Deprecated: Use TradeUtilsMetaData.Sigs instead.
+// TradeUtilsFuncSigs maps the 4-byte function signature to its string representation.
+var TradeUtilsFuncSigs = TradeUtilsMetaData.Sigs
+
 // TradeUtilsBin is the compiled bytecode used for deploying new contracts.
-var TradeUtilsBin = "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220b7777546a30e2b201149c5afb6d1db6bd399fcccbc04741c03e2ec6057762ba564736f6c634300060c0033"
+// Deprecated: Use TradeUtilsMetaData.Bin instead.
+var TradeUtilsBin = TradeUtilsMetaData.Bin
 
 // DeployTradeUtils deploys a new Ethereum contract, binding an instance of TradeUtils to it.
 func DeployTradeUtils(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *TradeUtils, error) {
-	parsed, err := abi.JSON(strings.NewReader(TradeUtilsABI))
+	parsed, err := TradeUtilsMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(TradeUtilsBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(TradeUtilsBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -789,7 +833,7 @@ func bindTradeUtils(address common.Address, caller bind.ContractCaller, transact
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_TradeUtils *TradeUtilsRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_TradeUtils *TradeUtilsRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _TradeUtils.Contract.TradeUtilsCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -808,7 +852,7 @@ func (_TradeUtils *TradeUtilsRaw) Transact(opts *bind.TransactOpts, method strin
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_TradeUtils *TradeUtilsCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_TradeUtils *TradeUtilsCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _TradeUtils.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -825,42 +869,55 @@ func (_TradeUtils *TradeUtilsTransactorRaw) Transact(opts *bind.TransactOpts, me
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_TradeUtils *TradeUtilsCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _TradeUtils.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
-	return *ret0, err
+	var out []interface{}
+	err := _TradeUtils.contract.Call(opts, &out, "ETH_CONTRACT_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_TradeUtils *TradeUtilsSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_TradeUtils *TradeUtilsCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _TradeUtils.Contract.ETHCONTRACTADDRESS(&_TradeUtils.CallOpts)
 }
 
-// UniswapV2ABI is the input ABI used to generate the binding from.
-const UniswapV2ABI = "[{\"inputs\":[],\"name\":\"WETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"factory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactETHForTokens\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactTokensForETH\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactTokensForTokens\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-
-// UniswapV2FuncSigs maps the 4-byte function signature to its string representation.
-var UniswapV2FuncSigs = map[string]string{
-	"ad5c4648": "WETH()",
-	"c45a0155": "factory()",
-	"d06ca61f": "getAmountsOut(uint256,address[])",
-	"7ff36ab5": "swapExactETHForTokens(uint256,address[],address,uint256)",
-	"18cbafe5": "swapExactTokensForETH(uint256,uint256,address[],address,uint256)",
-	"38ed1739": "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+// UniswapV2MetaData contains all meta data concerning the UniswapV2 contract.
+var UniswapV2MetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[],\"name\":\"WETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"factory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactETHForTokens\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactTokensForETH\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"path\",\"type\":\"address[]\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"swapExactTokensForTokens\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"amounts\",\"type\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Sigs: map[string]string{
+		"ad5c4648": "WETH()",
+		"c45a0155": "factory()",
+		"d06ca61f": "getAmountsOut(uint256,address[])",
+		"7ff36ab5": "swapExactETHForTokens(uint256,address[],address,uint256)",
+		"18cbafe5": "swapExactTokensForETH(uint256,uint256,address[],address,uint256)",
+		"38ed1739": "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+	},
 }
+
+// UniswapV2ABI is the input ABI used to generate the binding from.
+// Deprecated: Use UniswapV2MetaData.ABI instead.
+var UniswapV2ABI = UniswapV2MetaData.ABI
+
+// Deprecated: Use UniswapV2MetaData.Sigs instead.
+// UniswapV2FuncSigs maps the 4-byte function signature to its string representation.
+var UniswapV2FuncSigs = UniswapV2MetaData.Sigs
 
 // UniswapV2 is an auto generated Go binding around an Ethereum contract.
 type UniswapV2 struct {
@@ -970,7 +1027,7 @@ func bindUniswapV2(address common.Address, caller bind.ContractCaller, transacto
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_UniswapV2 *UniswapV2Raw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_UniswapV2 *UniswapV2Raw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _UniswapV2.Contract.UniswapV2Caller.contract.Call(opts, result, method, params...)
 }
 
@@ -989,7 +1046,7 @@ func (_UniswapV2 *UniswapV2Raw) Transact(opts *bind.TransactOpts, method string,
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_UniswapV2 *UniswapV2CallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_UniswapV2 *UniswapV2CallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _UniswapV2.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1006,99 +1063,114 @@ func (_UniswapV2 *UniswapV2TransactorRaw) Transact(opts *bind.TransactOpts, meth
 
 // WETH is a free data retrieval call binding the contract method 0xad5c4648.
 //
-// Solidity: function WETH() constant returns(address)
+// Solidity: function WETH() pure returns(address)
 func (_UniswapV2 *UniswapV2Caller) WETH(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2.contract.Call(opts, out, "WETH")
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2.contract.Call(opts, &out, "WETH")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // WETH is a free data retrieval call binding the contract method 0xad5c4648.
 //
-// Solidity: function WETH() constant returns(address)
+// Solidity: function WETH() pure returns(address)
 func (_UniswapV2 *UniswapV2Session) WETH() (common.Address, error) {
 	return _UniswapV2.Contract.WETH(&_UniswapV2.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xad5c4648.
 //
-// Solidity: function WETH() constant returns(address)
+// Solidity: function WETH() pure returns(address)
 func (_UniswapV2 *UniswapV2CallerSession) WETH() (common.Address, error) {
 	return _UniswapV2.Contract.WETH(&_UniswapV2.CallOpts)
 }
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
-// Solidity: function factory() constant returns(address)
+// Solidity: function factory() pure returns(address)
 func (_UniswapV2 *UniswapV2Caller) Factory(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2.contract.Call(opts, out, "factory")
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2.contract.Call(opts, &out, "factory")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
-// Solidity: function factory() constant returns(address)
+// Solidity: function factory() pure returns(address)
 func (_UniswapV2 *UniswapV2Session) Factory() (common.Address, error) {
 	return _UniswapV2.Contract.Factory(&_UniswapV2.CallOpts)
 }
 
 // Factory is a free data retrieval call binding the contract method 0xc45a0155.
 //
-// Solidity: function factory() constant returns(address)
+// Solidity: function factory() pure returns(address)
 func (_UniswapV2 *UniswapV2CallerSession) Factory() (common.Address, error) {
 	return _UniswapV2.Contract.Factory(&_UniswapV2.CallOpts)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) constant returns(uint256[] amounts)
+// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Caller) GetAmountsOut(opts *bind.CallOpts, amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
-	var (
-		ret0 = new([]*big.Int)
-	)
-	out := ret0
-	err := _UniswapV2.contract.Call(opts, out, "getAmountsOut", amountIn, path)
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2.contract.Call(opts, &out, "getAmountsOut", amountIn, path)
+
+	if err != nil {
+		return *new([]*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]*big.Int)).(*[]*big.Int)
+
+	return out0, err
+
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) constant returns(uint256[] amounts)
+// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Session) GetAmountsOut(amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
 	return _UniswapV2.Contract.GetAmountsOut(&_UniswapV2.CallOpts, amountIn, path)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xd06ca61f.
 //
-// Solidity: function getAmountsOut(uint256 amountIn, address[] path) constant returns(uint256[] amounts)
+// Solidity: function getAmountsOut(uint256 amountIn, address[] path) view returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2CallerSession) GetAmountsOut(amountIn *big.Int, path []common.Address) ([]*big.Int, error) {
 	return _UniswapV2.Contract.GetAmountsOut(&_UniswapV2.CallOpts, amountIn, path)
 }
 
 // SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
 //
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
+// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Transactor) SwapExactETHForTokens(opts *bind.TransactOpts, amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
 	return _UniswapV2.contract.Transact(opts, "swapExactETHForTokens", amountOutMin, path, to, deadline)
 }
 
 // SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
 //
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
+// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2Session) SwapExactETHForTokens(amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
 	return _UniswapV2.Contract.SwapExactETHForTokens(&_UniswapV2.TransactOpts, amountOutMin, path, to, deadline)
 }
 
 // SwapExactETHForTokens is a paid mutator transaction binding the contract method 0x7ff36ab5.
 //
-// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) returns(uint256[] amounts)
+// Solidity: function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns(uint256[] amounts)
 func (_UniswapV2 *UniswapV2TransactorSession) SwapExactETHForTokens(amountOutMin *big.Int, path []common.Address, to common.Address, deadline *big.Int) (*types.Transaction, error) {
 	return _UniswapV2.Contract.SwapExactETHForTokens(&_UniswapV2.TransactOpts, amountOutMin, path, to, deadline)
 }
@@ -1145,29 +1217,42 @@ func (_UniswapV2 *UniswapV2TransactorSession) SwapExactTokensForTokens(amountIn 
 	return _UniswapV2.Contract.SwapExactTokensForTokens(&_UniswapV2.TransactOpts, amountIn, amountOutMin, path, to, deadline)
 }
 
-// UniswapV2TradeABI is the input ABI used to generate the binding from.
-const UniswapV2TradeABI = "[{\"inputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"_uniswapV2\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"destToken\",\"type\":\"address\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapV2\",\"outputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
-
-// UniswapV2TradeFuncSigs maps the 4-byte function signature to its string representation.
-var UniswapV2TradeFuncSigs = map[string]string{
-	"72e94bf6": "ETH_CONTRACT_ADDRESS()",
-	"cba7064f": "getAmountsOut(address,uint256,address)",
-	"bb39a960": "trade(address,uint256,address,uint256)",
-	"5187c091": "uniswapV2()",
-	"f2428621": "wETH()",
+// UniswapV2TradeMetaData contains all meta data concerning the UniswapV2Trade contract.
+var UniswapV2TradeMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"_uniswapV2\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"destToken\",\"type\":\"address\"}],\"name\":\"getAmountsOut\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amountOutMin\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"uniswapV2\",\"outputs\":[{\"internalType\":\"contractUniswapV2\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"wETH\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	Sigs: map[string]string{
+		"72e94bf6": "ETH_CONTRACT_ADDRESS()",
+		"cba7064f": "getAmountsOut(address,uint256,address)",
+		"bb39a960": "trade(address,uint256,address,uint256)",
+		"5187c091": "uniswapV2()",
+		"f2428621": "wETH()",
+	},
+	Bin: "0x608060405234801561001057600080fd5b50604051610bec380380610bec8339818101604052602081101561003357600080fd5b5051600080546001600160a01b0319166001600160a01b038084169190911791829055604080516315ab88c960e31b81529051929091169163ad5c464891600480820192602092909190829003018186803b15801561009157600080fd5b505afa1580156100a5573d6000803e3d6000fd5b505050506040513d60208110156100bb57600080fd5b5051600180546001600160a01b0319166001600160a01b0390921691909117905550610b00806100ec6000396000f3fe60806040526004361061004e5760003560e01c80635187c0911461005a57806372e94bf61461008b578063bb39a960146100a0578063cba7064f146100fd578063f24286211461019057610055565b3661005557005b600080fd5b34801561006657600080fd5b5061006f6101a5565b604080516001600160a01b039092168252519081900360200190f35b34801561009757600080fd5b5061006f6101b4565b6100da600480360360808110156100b657600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101b9565b604080516001600160a01b03909316835260208301919091528051918290030190f35b34801561010957600080fd5b506101406004803603606081101561012057600080fd5b506001600160a01b038135811691602081013591604090910135166103e5565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561017c578181015183820152602001610164565b505050509050019250505060405180910390f35b34801561019c57600080fd5b5061006f6105ba565b6000546001600160a01b031681565b600081565b600080846101c6876105c9565b10156101d157600080fd5b836001600160a01b0316866001600160a01b031614156101f057600080fd5b604080516002808252606080830184529260208301908036833701905050905060606001600160a01b038816156102f357878260008151811061022f57fe5b6001600160a01b039283166020918202929092010152600054610255918a91168961065a565b6001600160a01b038616156102a457858260018151811061027257fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061029d828887610766565b90506102ee565b6001805483516001600160a01b0390911691849181106102c057fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506102eb8288876108fe565b90505b61036b565b60015482516001600160a01b0390911690839060009061030f57fe5b60200260200101906001600160a01b031690816001600160a01b031681525050858260018151811061033d57fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061036882888761099a565b90505b60028151101561037a57600080fd5b848160018351038151811061038b57fe5b6020026020010151101580156103b4575086816000815181106103aa57fe5b6020026020010151145b6103bd57600080fd5b85816001835103815181106103ce57fe5b602002602001015193509350505094509492505050565b604080516002808252606080830184529283929190602083019080368337019050509050848160008151811061041757fe5b60200260200101906001600160a01b031690816001600160a01b031681525050828160018151811061044557fe5b6001600160a01b03928316602091820292909201810191909152600080546040805163d06ca61f60e01b8152600481018a815260248201928352875160448301528751939096169563d06ca61f958b958995929493606401928683019202908190849084905b838110156104c35781810151838201526020016104ab565b50505050905001935050505060006040518083038186803b1580156104e757600080fd5b505afa1580156104fb573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561052457600080fd5b810190808051604051939291908464010000000082111561054457600080fd5b90830190602082018581111561055957600080fd5b825186602082028301116401000000008211171561057657600080fd5b82525081516020918201928201910280838360005b838110156105a357818101518382015260200161058b565b505050509050016040525050509150509392505050565b6001546001600160a01b031681565b60006001600160a01b0382166105e0575047610655565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561062657600080fd5b505afa15801561063a573d6000803e3d6000fd5b505050506040513d602081101561065057600080fd5b505190505b919050565b6001600160a01b03831615610761576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156106b857600080fd5b505af11580156106cc573d6000803e3d6000fd5b505050506106d8610a96565b6106e157600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561073857600080fd5b505af115801561074c573d6000803e3d6000fd5b50505050610758610a96565b61076157600080fd5b505050565b606060008054906101000a90046001600160a01b03166001600160a01b03166338ed17398484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b838110156108035781810151838201526020016107eb565b505050509050019650505050505050600060405180830381600087803b15801561082c57600080fd5b505af1158015610840573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561086957600080fd5b810190808051604051939291908464010000000082111561088957600080fd5b90830190602082018581111561089e57600080fd5b82518660208202830111640100000000821117156108bb57600080fd5b82525081516020918201928201910280838360005b838110156108e85781810151838201526020016108d0565b5050505090500160405250505090509392505050565b606060008054906101000a90046001600160a01b03166001600160a01b03166318cbafe58484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b0316815260200183815260200182810382528581815181526020019150805190602001906020028083836000838110156108035781810151838201526020016107eb565b606060008054906101000a90046001600160a01b03166001600160a01b0316637ff36ab58484873342610258016040518663ffffffff1660e01b81526004018085815260200180602001846001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610a31578181015183820152602001610a19565b50505050905001955050505050506000604051808303818588803b158015610a5857600080fd5b505af1158015610a6c573d6000803e3d6000fd5b50505050506040513d6000823e601f3d908101601f19168201604052602081101561086957600080fd5b6000803d8015610aad5760208114610ab657610ac2565b60019150610ac2565b60206000803e60005191505b50151590509056fea2646970667358221220312842f05194bfba0d1722229c971e9265fc021924dff05da73c73479596f36c64736f6c634300060c0033",
 }
 
+// UniswapV2TradeABI is the input ABI used to generate the binding from.
+// Deprecated: Use UniswapV2TradeMetaData.ABI instead.
+var UniswapV2TradeABI = UniswapV2TradeMetaData.ABI
+
+// Deprecated: Use UniswapV2TradeMetaData.Sigs instead.
+// UniswapV2TradeFuncSigs maps the 4-byte function signature to its string representation.
+var UniswapV2TradeFuncSigs = UniswapV2TradeMetaData.Sigs
+
 // UniswapV2TradeBin is the compiled bytecode used for deploying new contracts.
-var UniswapV2TradeBin = "0x608060405234801561001057600080fd5b50604051610bec380380610bec8339818101604052602081101561003357600080fd5b5051600080546001600160a01b0319166001600160a01b038084169190911791829055604080516315ab88c960e31b81529051929091169163ad5c464891600480820192602092909190829003018186803b15801561009157600080fd5b505afa1580156100a5573d6000803e3d6000fd5b505050506040513d60208110156100bb57600080fd5b5051600180546001600160a01b0319166001600160a01b0390921691909117905550610b00806100ec6000396000f3fe60806040526004361061004e5760003560e01c80635187c0911461005a57806372e94bf61461008b578063bb39a960146100a0578063cba7064f146100fd578063f24286211461019057610055565b3661005557005b600080fd5b34801561006657600080fd5b5061006f6101a5565b604080516001600160a01b039092168252519081900360200190f35b34801561009757600080fd5b5061006f6101b4565b6100da600480360360808110156100b657600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101b9565b604080516001600160a01b03909316835260208301919091528051918290030190f35b34801561010957600080fd5b506101406004803603606081101561012057600080fd5b506001600160a01b038135811691602081013591604090910135166103e5565b60408051602080825283518183015283519192839290830191858101910280838360005b8381101561017c578181015183820152602001610164565b505050509050019250505060405180910390f35b34801561019c57600080fd5b5061006f6105ba565b6000546001600160a01b031681565b600081565b600080846101c6876105c9565b10156101d157600080fd5b836001600160a01b0316866001600160a01b031614156101f057600080fd5b604080516002808252606080830184529260208301908036833701905050905060606001600160a01b038816156102f357878260008151811061022f57fe5b6001600160a01b039283166020918202929092010152600054610255918a91168961065a565b6001600160a01b038616156102a457858260018151811061027257fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061029d828887610766565b90506102ee565b6001805483516001600160a01b0390911691849181106102c057fe5b60200260200101906001600160a01b031690816001600160a01b0316815250506102eb8288876108fe565b90505b61036b565b60015482516001600160a01b0390911690839060009061030f57fe5b60200260200101906001600160a01b031690816001600160a01b031681525050858260018151811061033d57fe5b60200260200101906001600160a01b031690816001600160a01b03168152505061036882888761099a565b90505b60028151101561037a57600080fd5b848160018351038151811061038b57fe5b6020026020010151101580156103b4575086816000815181106103aa57fe5b6020026020010151145b6103bd57600080fd5b85816001835103815181106103ce57fe5b602002602001015193509350505094509492505050565b604080516002808252606080830184529283929190602083019080368337019050509050848160008151811061041757fe5b60200260200101906001600160a01b031690816001600160a01b031681525050828160018151811061044557fe5b6001600160a01b03928316602091820292909201810191909152600080546040805163d06ca61f60e01b8152600481018a815260248201928352875160448301528751939096169563d06ca61f958b958995929493606401928683019202908190849084905b838110156104c35781810151838201526020016104ab565b50505050905001935050505060006040518083038186803b1580156104e757600080fd5b505afa1580156104fb573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561052457600080fd5b810190808051604051939291908464010000000082111561054457600080fd5b90830190602082018581111561055957600080fd5b825186602082028301116401000000008211171561057657600080fd5b82525081516020918201928201910280838360005b838110156105a357818101518382015260200161058b565b505050509050016040525050509150509392505050565b6001546001600160a01b031681565b60006001600160a01b0382166105e0575047610655565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561062657600080fd5b505afa15801561063a573d6000803e3d6000fd5b505050506040513d602081101561065057600080fd5b505190505b919050565b6001600160a01b03831615610761576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156106b857600080fd5b505af11580156106cc573d6000803e3d6000fd5b505050506106d8610a96565b6106e157600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561073857600080fd5b505af115801561074c573d6000803e3d6000fd5b50505050610758610a96565b61076157600080fd5b505050565b606060008054906101000a90046001600160a01b03166001600160a01b03166338ed17398484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b838110156108035781810151838201526020016107eb565b505050509050019650505050505050600060405180830381600087803b15801561082c57600080fd5b505af1158015610840573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561086957600080fd5b810190808051604051939291908464010000000082111561088957600080fd5b90830190602082018581111561089e57600080fd5b82518660208202830111640100000000821117156108bb57600080fd5b82525081516020918201928201910280838360005b838110156108e85781810151838201526020016108d0565b5050505090500160405250505090509392505050565b606060008054906101000a90046001600160a01b03166001600160a01b03166318cbafe58484873342610258016040518663ffffffff1660e01b81526004018086815260200185815260200180602001846001600160a01b0316815260200183815260200182810382528581815181526020019150805190602001906020028083836000838110156108035781810151838201526020016107eb565b606060008054906101000a90046001600160a01b03166001600160a01b0316637ff36ab58484873342610258016040518663ffffffff1660e01b81526004018085815260200180602001846001600160a01b03168152602001838152602001828103825285818151815260200191508051906020019060200280838360005b83811015610a31578181015183820152602001610a19565b50505050905001955050505050506000604051808303818588803b158015610a5857600080fd5b505af1158015610a6c573d6000803e3d6000fd5b50505050506040513d6000823e601f3d908101601f19168201604052602081101561086957600080fd5b6000803d8015610aad5760208114610ab657610ac2565b60019150610ac2565b60206000803e60005191505b50151590509056fea2646970667358221220312842f05194bfba0d1722229c971e9265fc021924dff05da73c73479596f36c64736f6c634300060c0033"
+// Deprecated: Use UniswapV2TradeMetaData.Bin instead.
+var UniswapV2TradeBin = UniswapV2TradeMetaData.Bin
 
 // DeployUniswapV2Trade deploys a new Ethereum contract, binding an instance of UniswapV2Trade to it.
 func DeployUniswapV2Trade(auth *bind.TransactOpts, backend bind.ContractBackend, _uniswapV2 common.Address) (common.Address, *types.Transaction, *UniswapV2Trade, error) {
-	parsed, err := abi.JSON(strings.NewReader(UniswapV2TradeABI))
+	parsed, err := UniswapV2TradeMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(UniswapV2TradeBin), backend, _uniswapV2)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(UniswapV2TradeBin), backend, _uniswapV2)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -1282,7 +1367,7 @@ func bindUniswapV2Trade(address common.Address, caller bind.ContractCaller, tran
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_UniswapV2Trade *UniswapV2TradeRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_UniswapV2Trade *UniswapV2TradeRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _UniswapV2Trade.Contract.UniswapV2TradeCaller.contract.Call(opts, result, method, params...)
 }
 
@@ -1301,7 +1386,7 @@ func (_UniswapV2Trade *UniswapV2TradeRaw) Transact(opts *bind.TransactOpts, meth
 // sets the output to result. The result type might be a single field for simple
 // returns, a slice of interfaces for anonymous returns and a struct for named
 // returns.
-func (_UniswapV2Trade *UniswapV2TradeCallerRaw) Call(opts *bind.CallOpts, result interface{}, method string, params ...interface{}) error {
+func (_UniswapV2Trade *UniswapV2TradeCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
 	return _UniswapV2Trade.Contract.contract.Call(opts, result, method, params...)
 }
 
@@ -1318,125 +1403,166 @@ func (_UniswapV2Trade *UniswapV2TradeTransactorRaw) Transact(opts *bind.Transact
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCaller) ETHCONTRACTADDRESS(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "ETH_CONTRACT_ADDRESS")
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2Trade.contract.Call(opts, &out, "ETH_CONTRACT_ADDRESS")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _UniswapV2Trade.Contract.ETHCONTRACTADDRESS(&_UniswapV2Trade.CallOpts)
 }
 
 // ETHCONTRACTADDRESS is a free data retrieval call binding the contract method 0x72e94bf6.
 //
-// Solidity: function ETH_CONTRACT_ADDRESS() constant returns(address)
+// Solidity: function ETH_CONTRACT_ADDRESS() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) ETHCONTRACTADDRESS() (common.Address, error) {
 	return _UniswapV2Trade.Contract.ETHCONTRACTADDRESS(&_UniswapV2Trade.CallOpts)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
 //
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) constant returns(uint256[])
+// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
 func (_UniswapV2Trade *UniswapV2TradeCaller) GetAmountsOut(opts *bind.CallOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
-	var (
-		ret0 = new([]*big.Int)
-	)
-	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "getAmountsOut", srcToken, srcQty, destToken)
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2Trade.contract.Call(opts, &out, "getAmountsOut", srcToken, srcQty, destToken)
+
+	if err != nil {
+		return *new([]*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]*big.Int)).(*[]*big.Int)
+
+	return out0, err
+
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
 //
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) constant returns(uint256[])
+// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
 func (_UniswapV2Trade *UniswapV2TradeSession) GetAmountsOut(srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
 	return _UniswapV2Trade.Contract.GetAmountsOut(&_UniswapV2Trade.CallOpts, srcToken, srcQty, destToken)
 }
 
 // GetAmountsOut is a free data retrieval call binding the contract method 0xcba7064f.
 //
-// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) constant returns(uint256[])
+// Solidity: function getAmountsOut(address srcToken, uint256 srcQty, address destToken) view returns(uint256[])
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) GetAmountsOut(srcToken common.Address, srcQty *big.Int, destToken common.Address) ([]*big.Int, error) {
 	return _UniswapV2Trade.Contract.GetAmountsOut(&_UniswapV2Trade.CallOpts, srcToken, srcQty, destToken)
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
-// Solidity: function uniswapV2() constant returns(address)
+// Solidity: function uniswapV2() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCaller) UniswapV2(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "uniswapV2")
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2Trade.contract.Call(opts, &out, "uniswapV2")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
-// Solidity: function uniswapV2() constant returns(address)
+// Solidity: function uniswapV2() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeSession) UniswapV2() (common.Address, error) {
 	return _UniswapV2Trade.Contract.UniswapV2(&_UniswapV2Trade.CallOpts)
 }
 
 // UniswapV2 is a free data retrieval call binding the contract method 0x5187c091.
 //
-// Solidity: function uniswapV2() constant returns(address)
+// Solidity: function uniswapV2() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) UniswapV2() (common.Address, error) {
 	return _UniswapV2Trade.Contract.UniswapV2(&_UniswapV2Trade.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
-// Solidity: function wETH() constant returns(address)
+// Solidity: function wETH() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCaller) WETH(opts *bind.CallOpts) (common.Address, error) {
-	var (
-		ret0 = new(common.Address)
-	)
-	out := ret0
-	err := _UniswapV2Trade.contract.Call(opts, out, "wETH")
-	return *ret0, err
+	var out []interface{}
+	err := _UniswapV2Trade.contract.Call(opts, &out, "wETH")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
-// Solidity: function wETH() constant returns(address)
+// Solidity: function wETH() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeSession) WETH() (common.Address, error) {
 	return _UniswapV2Trade.Contract.WETH(&_UniswapV2Trade.CallOpts)
 }
 
 // WETH is a free data retrieval call binding the contract method 0xf2428621.
 //
-// Solidity: function wETH() constant returns(address)
+// Solidity: function wETH() view returns(address)
 func (_UniswapV2Trade *UniswapV2TradeCallerSession) WETH() (common.Address, error) {
 	return _UniswapV2Trade.Contract.WETH(&_UniswapV2Trade.CallOpts)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
 func (_UniswapV2Trade *UniswapV2TradeTransactor) Trade(opts *bind.TransactOpts, srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
 	return _UniswapV2Trade.contract.Transact(opts, "trade", srcToken, srcQty, destToken, amountOutMin)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
 func (_UniswapV2Trade *UniswapV2TradeSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
 	return _UniswapV2Trade.Contract.Trade(&_UniswapV2Trade.TransactOpts, srcToken, srcQty, destToken, amountOutMin)
 }
 
 // Trade is a paid mutator transaction binding the contract method 0xbb39a960.
 //
-// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) returns(address, uint256)
+// Solidity: function trade(address srcToken, uint256 srcQty, address destToken, uint256 amountOutMin) payable returns(address, uint256)
 func (_UniswapV2Trade *UniswapV2TradeTransactorSession) Trade(srcToken common.Address, srcQty *big.Int, destToken common.Address, amountOutMin *big.Int) (*types.Transaction, error) {
 	return _UniswapV2Trade.Contract.Trade(&_UniswapV2Trade.TransactOpts, srcToken, srcQty, destToken, amountOutMin)
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_UniswapV2Trade *UniswapV2TradeTransactor) Receive(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _UniswapV2Trade.contract.RawTransact(opts, nil) // calldata is disallowed for receive function
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_UniswapV2Trade *UniswapV2TradeSession) Receive() (*types.Transaction, error) {
+	return _UniswapV2Trade.Contract.Receive(&_UniswapV2Trade.TransactOpts)
+}
+
+// Receive is a paid mutator transaction binding the contract receive function.
+//
+// Solidity: receive() payable returns()
+func (_UniswapV2Trade *UniswapV2TradeTransactorSession) Receive() (*types.Transaction, error) {
+	return _UniswapV2Trade.Contract.Receive(&_UniswapV2Trade.TransactOpts)
 }
