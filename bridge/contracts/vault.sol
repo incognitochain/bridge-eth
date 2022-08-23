@@ -127,17 +127,17 @@ contract Vault {
         MAX_UINT_REACHED,
         VALUE_OVER_FLOW,
         INTERNAL_TX_ERROR,
-        ALREADY_USED,
+        ALREADY_USED, // 5
         INVALID_DATA,
         TOKEN_NOT_ENOUGH,
         WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH,
         INVALID_RETURN_DATA,
-        NOT_EQUAL,
+        NOT_EQUAL, // 10
         NULL_VALUE,
         ONLY_PREVAULT,
         PREVAULT_NOT_PAUSED,
         SAFEMATH_EXCEPTION,
-        ALREADY_INITIALIZED,
+        ALREADY_INITIALIZED, // 15
         INVALID_SIGNATURE,
         NOT_AUTHORISED
     }
@@ -628,9 +628,9 @@ contract Vault {
     /**
      * @dev verify regulator
      */
-    function verifyRegulator(bytes32 txId, bytes memory signData) internal {
+    function verifyRegulator(bytes32 txId, bytes memory signData) internal view {
         // verify regulator signs data
-        address signer = verifySignData(abi.encode(ShieldInfo(msg.sender, txId)), signData);
+        address signer = sigToAddress(signData, keccak256(abi.encode(ShieldInfo(msg.sender, txId))));
         require(signer == regulator, errorToString(Errors.INVALID_SIGNATURE));
     }
 

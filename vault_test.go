@@ -2,6 +2,9 @@ package bridge
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"github.com/ethereum/go-ethereum/crypto"
+
 	// "context"
 	"encoding/json"
 	"fmt"
@@ -195,6 +198,113 @@ func TestFixedIsWithdrawedTrue(t *testing.T) {
 	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(150000000000))
+}
+
+func TestUpgradeAndMakeComplianceShield(t *testing.T) {
+	proof := getFixedBurnProofETH()
+
+	p, _, err := setupFixedCommittee()
+	assert.Nil(t, err)
+
+	_, _, err = deposit(p, big.NewInt(int64(5e18)))
+	assert.Nil(t, err)
+
+	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
+
+	// First withdraw, must success
+	_, err = Withdraw(p.v, auth2, proof)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bal := p.getBalance(withdrawer)
+	assert.Equal(t, bal, big.NewInt(150000000000))
+
+	// Deploy new delegator
+	vDelegatorAddr, _, _, err := vault.DeployComplianceVault(auth, p.sim)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	_, err = p.vp.Pause(auth)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	//build data set regulator
+	complianceVaultAbi, _ := abi.JSON(strings.NewReader(vault.ComplianceVaultMetaData.ABI))
+	input, err := complianceVaultAbi.Pack("setRegulator", genesisAcc2.Address)
+	assert.Nil(t, err)
+
+	// set new delegator and regulator
+	proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(p.vAddr, p.sim)
+	_, err = proxyVault.UpgradeToAndCall(auth, vDelegatorAddr, input)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	tx, err := p.vp.Unpause(auth)
+	assert.Nil(t, err)
+	p.sim.Commit()
+
+	// init compliance vault
+	cv, err := vault.NewComplianceVault(p.vAddr, p.sim)
+	assert.Nil(t, err)
+
+	//======= SHIELD ETH ======
+	// expect fail, can not deposit the old way
+	_, _, err = deposit(p, big.NewInt(int64(5e18)))
+	assert.NotNil(t, err)
+
+	// make shield request success
+	txId := toByte32(tx.Hash().Bytes())
+	signBytes, err := SignDataToShield(txId, genesisAcc2.PrivateKey, auth3.From)
+	assert.Nil(t, err)
+
+	auth3.Value = big.NewInt(int64(5e18))
+	tx, err = cv.Deposit(auth3, "", txId, signBytes)
+	assert.Nil(t, err)
+	auth3.Value = big.NewInt(0)
+	p.sim.Commit()
+	// make shield request fail -> not authorised
+	signBytes, err = SignDataToShield(txId, genesisAcc3.PrivateKey, auth3.From)
+	assert.Nil(t, err)
+
+	auth3.Value = big.NewInt(int64(5e18))
+	_, err = cv.Deposit(auth3, "", txId, signBytes)
+	assert.NotNil(t, err)
+	auth3.Value = big.NewInt(0)
+	p.sim.Commit()
+
+	//======= SHIELD TOKEN ======
+	// shield the old way must fail
+	_, _, err = lockSimERC20WithBalance(p, p.token, p.tokenAddr, big.NewInt(int64(1e9)))
+	assert.NotNil(t, err)
+	p.sim.Commit()
+
+	// shield the new way must success
+	txId = toByte32(tx.Hash().Bytes())
+	signBytes, err = SignDataToShield(txId, genesisAcc2.PrivateKey, auth2.From)
+	assert.Nil(t, err)
+	_, err = cv.DepositERC20(auth2, p.tokenAddr, big.NewInt(int64(1e9)), "", txId, signBytes)
+	assert.Nil(t, err)
+
+	// Withdraw with old proof, must fail
+	_, err = Withdraw(p.v, auth2, proof)
+	assert.NotNil(t, err)
+	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(150000000000))
+}
+
+func SignDataToShield(txId [32]byte, key *ecdsa.PrivateKey, from ec.Address) ([]byte, error) {
+	vaultHelperAbi, err := abi.JSON(strings.NewReader(vault.VaultHelperMetaData.ABI))
+	if err != nil {
+		return nil, err
+	}
+	tempData, err := vaultHelperAbi.Pack("_buildSignShield", from, txId)
+	if err != nil {
+		return nil, err
+	}
+	data := rawsha3(tempData[4:])
+	signBytes, err := crypto.Sign(data, key)
+	if err != nil {
+		return nil, err
+	}
+	return signBytes, nil
 }
 
 func TestFixedWithdrawERC20(t *testing.T) {

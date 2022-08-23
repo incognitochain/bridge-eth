@@ -36,8 +36,13 @@ var auth *bind.TransactOpts
 
 // user
 var auth2 *bind.TransactOpts
+
+// user
+var auth3 *bind.TransactOpts
+
 var genesisAcc *account
 var genesisAcc2 *account
+var genesisAcc3 *account
 
 type Platform struct {
 	*contracts
@@ -54,6 +59,11 @@ func init() {
 	}
 	genesisAcc2 = loadAccount()
 	auth2, err = bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
+	genesisAcc3 = loadAccount()
+	auth3, err = bind.NewKeyedTransactorWithChainID(genesisAcc3.PrivateKey, big.NewInt(1337))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -220,6 +230,7 @@ func setup(
 	balance, _ := big.NewInt(1).SetString("1000000000000000000000000000000", 10) // 1E30 wei
 	alloc[auth.From] = core.GenesisAccount{Balance: balance}
 	alloc[auth2.From] = core.GenesisAccount{Balance: balance}
+	alloc[auth3.From] = core.GenesisAccount{Balance: balance}
 	for _, acc := range accs {
 		alloc[acc] = core.GenesisAccount{Balance: balance}
 	}
