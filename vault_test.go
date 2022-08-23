@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"github.com/ethereum/go-ethereum/crypto"
-
 	// "context"
 	"encoding/json"
 	"fmt"
@@ -211,13 +210,6 @@ func TestUpgradeAndMakeComplianceShield(t *testing.T) {
 
 	withdrawer := ec.HexToAddress("0x65033F315F214834BD6A65Dce687Bcb0f32b0a5A")
 
-	// First withdraw, must success
-	_, err = Withdraw(p.v, auth2, proof)
-	assert.Nil(t, err)
-	p.sim.Commit()
-	bal := p.getBalance(withdrawer)
-	assert.Equal(t, bal, big.NewInt(150000000000))
-
 	// Deploy new delegator
 	vDelegatorAddr, _, _, err := vault.DeployComplianceVault(auth, p.sim)
 	assert.Nil(t, err)
@@ -284,10 +276,64 @@ func TestUpgradeAndMakeComplianceShield(t *testing.T) {
 	_, err = cv.DepositERC20(auth2, p.tokenAddr, big.NewInt(int64(1e9)), "", txId, signBytes)
 	assert.Nil(t, err)
 
+	signBytes, err = SignDataToShield(txId, genesisAcc3.PrivateKey, auth2.From)
+	assert.Nil(t, err)
+	_, err = cv.DepositERC20(auth2, p.tokenAddr, big.NewInt(int64(1e9)), "", txId, signBytes)
+	assert.NotNil(t, err)
+
+	//======= SET REGULATOR ======
+	_, err = cv.SetRegulator(auth3, auth3.From)
+	assert.NotNil(t, err)
+	tx, err = cv.SetRegulator(auth2, auth2.From)
+	assert.Nil(t, err)
+
+	//======= WITHDRAW REQUEST ======
+	// build preSignData
+	signWithdrawData, timestamp, err := SignDataToWithdraw(p.tokenAddr, genesisAcc2.PrivateKey, big.NewInt(0))
+	assert.Nil(t, err)
+	txId = toByte32(tx.Hash().Bytes())
+	signBytes, err = SignDataToShield(txId, genesisAcc2.PrivateKey, auth3.From)
+	assert.Nil(t, err)
+	// not regulator sign => must fail
+	_, err = cv.RequestWithdraw(auth2, "", p.tokenAddr, big.NewInt(0), signWithdrawData, timestamp, txId, signBytes)
+	assert.NotNil(t, err)
+	// regulator sign => success
+	txId = toByte32(tx.Hash().Bytes())
+	signBytes, err = SignDataToShield(txId, genesisAcc2.PrivateKey, auth2.From)
+	assert.Nil(t, err)
+	_, err = cv.RequestWithdraw(auth2, "", p.tokenAddr, big.NewInt(0), signWithdrawData, timestamp, txId, signBytes)
+	assert.Nil(t, err)
+
+	//======= TEST UNSHIELD ======
+	// First withdraw, must success
+	_, err = Withdraw(p.v, auth2, proof)
+	assert.Nil(t, err)
+	p.sim.Commit()
+	bal := p.getBalance(withdrawer)
+	assert.Equal(t, bal, big.NewInt(150000000000))
+
 	// Withdraw with old proof, must fail
 	_, err = Withdraw(p.v, auth2, proof)
 	assert.NotNil(t, err)
 	assert.Equal(t, p.getBalance(withdrawer), big.NewInt(150000000000))
+}
+
+func SignDataToWithdraw(token ec.Address, key *ecdsa.PrivateKey, amount *big.Int) ([]byte, []byte, error) {
+	timestamp := []byte(randomizeTimestamp())
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperMetaData.ABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix:    REQ_WITHDRAW_PREFIX,
+		Token:     token,
+		Timestamp: timestamp,
+		Amount:    amount,
+	}
+	tempData, err := vaultAbi.Pack("_buildSignRequestWithdraw", psData, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	data := rawsha3(tempData[4:])
+	signBytes, _ := crypto.Sign(data, key)
+	return signBytes, timestamp, nil
 }
 
 func SignDataToShield(txId [32]byte, key *ecdsa.PrivateKey, from ec.Address) ([]byte, error) {
