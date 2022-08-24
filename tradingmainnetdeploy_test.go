@@ -2,6 +2,7 @@ package bridge
 
 // Basic imports
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
@@ -102,7 +103,10 @@ func (tradingDeploySuite *TradingMainnetDeployTestSuite) TestDeployAllMainnetCon
 	ethPrivKey, ethClient, err := connectToETH(tradingDeploySuite.ETHRelayer, tradingDeploySuite.ETHPrivKeyHex)
 	require.Equal(tradingDeploySuite.T(), nil, err)
 
-	auth := bind.NewKeyedTransactor(ethPrivKey)
+	chainId, err := ethClient.ChainID(context.Background())
+	require.Equal(tradingDeploySuite.T(), nil, err)
+	auth, err := bind.NewKeyedTransactorWithChainID(ethPrivKey, chainId)
+	require.Equal(tradingDeploySuite.T(), nil, err)
 	auth.Value = big.NewInt(0)
 	// auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000

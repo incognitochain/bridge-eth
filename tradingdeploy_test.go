@@ -172,7 +172,9 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
-		return
+		if network != "0" {
+			return
+		}
 	}
 
 	if network == "2" || network == "0" {
@@ -239,7 +241,9 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		err = wait(tradingDeploySuite.BSCClient, tx.Hash())
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
-		return
+		if network != "0" {
+			return
+		}
 	}
 
 	if network == "3" || network == "0" {
@@ -300,7 +304,9 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		err = wait(tradingDeploySuite.PLGClient, tx.Hash())
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
-		return
+		if network != "0" {
+			return
+		}
 	}
 
 	if network == "4" || network == "0" {
@@ -362,10 +368,104 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		// err = wait(tradingDeploySuite.PLGClient, tx.Hash())
 		// require.Equal(tradingDeploySuite.T(), nil, err)
 
-		return
+		if network != "0" {
+			return
+		}
 	}
 
-	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 4 ===============")
+	if network == "5" || network == "0" {
+		fmt.Println("============== DEPLOY INCOGNITO CONTRACT ON AURORA ===============")
+
+		auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(int64(tradingDeploySuite.ChainIDAURORA)))
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// auth.GasPrice = big.NewInt(500000)
+		auth.GasLimit = uint64(5000000)
+		incAddrAURORA, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.AURORAClient, admin, beaconComm, bridgeComm)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// incAddr := common.HexToAddress(IncognitoProxyAddress)
+		fmt.Println("deployed incognito_proxy")
+		fmt.Printf("addr: %s\n", incAddrAURORA.Hex())
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.AURORAClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Deploy vault
+		vaultAddrAURORA, tx, _, err := vaultftm.DeployVaultftm(auth, tradingDeploySuite.AURORAClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed vault")
+		fmt.Printf("addr: %s\n", vaultAddrAURORA.Hex())
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.AURORAClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		prevVaultAURORA := common.Address{}
+		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+		input, _ := vaultAbi.Pack("initialize", prevVaultAURORA)
+
+		// Deploy vault proxy
+		vaultAddrAURORA, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.AURORAClient, vaultAddrAURORA, admin, incAddrAURORA, input)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed vault proxy")
+		fmt.Printf("addr: %s\n", vaultAddrAURORA.Hex())
+
+		err = wait(tradingDeploySuite.AURORAClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		if network != "0" {
+			return
+		}
+	}
+
+	if network == "6" || network == "0" {
+		fmt.Println("============== DEPLOY INCOGNITO CONTRACT ON AVAX ===============")
+
+		auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(int64(tradingDeploySuite.ChainIDAVAX)))
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// auth.GasPrice = big.NewInt(500000)
+		auth.GasLimit = uint64(5000000)
+		incAddrAVAX, tx, _, err := incognito_proxy.DeployIncognitoProxy(auth, tradingDeploySuite.AVAXClient, admin, beaconComm, bridgeComm)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// incAddr := common.HexToAddress(IncognitoProxyAddress)
+		fmt.Println("deployed incognito_proxy")
+		fmt.Printf("addr: %s\n", incAddrAVAX.Hex())
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.AVAXClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Deploy vault
+		vaultAddrAVAX, tx, _, err := vaultftm.DeployVaultftm(auth, tradingDeploySuite.AVAXClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed vault")
+		fmt.Printf("addr: %s\n", vaultAddrAVAX.Hex())
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.AVAXClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		prevVaultAVAX := common.Address{}
+		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+		input, _ := vaultAbi.Pack("initialize", prevVaultAVAX)
+
+		// Deploy vault proxy
+		vaultAddrAVAX, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.AVAXClient, vaultAddrAVAX, admin, incAddrAVAX, input)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed vault proxy")
+		fmt.Printf("addr: %s\n", vaultAddrAVAX.Hex())
+
+		err = wait(tradingDeploySuite.AVAXClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		if network != "0" {
+			return
+		}
+	}
+
+	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 6 ===============")
 }
 
 func convertCommittees(

@@ -116,7 +116,8 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDETH)))
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(50000000000)
 	// auth.GasLimit = 2000000
 	srcToken := common.HexToAddress(srcTokenIDStr)
@@ -126,10 +127,10 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: srcQty,
+		Amount:    srcQty,
 	}
 	tempData, _ := vaultAbi.Pack("_buildSignExecute", psData, destToken, tradingSuite.UniswapTradeDeployedAddr, input)
 	data := rawsha3(tempData[4:])
@@ -480,7 +481,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	time.Sleep(140 * time.Second)
 
 	tradingSuite.submitBurnProofForDepositToSC(
-		burningTxID.(string), 
+		burningTxID.(string),
 		big.NewInt(int64(tradingSuite.ChainIDETH)),
 		"getburnprooffordeposittosc",
 		tradingSuite.VaultAddr,

@@ -17,22 +17,28 @@ import (
 )
 
 func TestRetireVaultAdmin(t *testing.T) {
-	privKey, c := getVaultProxy(t)
+	privKey, c, chainId := getVaultProxy(t)
 
 	successor := common.HexToAddress(Successor)
 	fmt.Println("Successor address:", successor.Hex())
 
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Retire(auth, successor)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainId))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Retire(auth, successor)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestClaimVaultAdmin(t *testing.T) {
-	privKey, c := getVaultProxy(t)
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Claim(auth)
+	privKey, c, chainId := getVaultProxy(t)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainId))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Claim(auth)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -340,8 +346,8 @@ func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
 	return privKey, c
 }
 
-func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.TransparentUpgradeableProxy) {
-	privKey, client, _, err := connect()
+func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.TransparentUpgradeableProxy, int64) {
+	privKey, client, chainId, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -352,5 +358,5 @@ func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.TransparentUpgr
 	if err != nil {
 		t.Fatal(err)
 	}
-	return privKey, c
+	return privKey, c, chainId
 }
