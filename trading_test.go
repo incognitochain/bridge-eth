@@ -130,7 +130,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncPrivKeyStr = "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
 	tradingSuite.IncPaymentAddrStr = "12svfkP6w5UDJDSCwqH978PvqiqBxKmUnA9em9yAYWYJVRv7wuXY1qhhYpPAm4BDz2mLbFrRmdK3yRhnTqJCZXKHUmoi7NV83HCH2YFpctHNaDdkSiQshsjw2UFUuwdEvcidgaKmF3VJpY5f8RdN"
 
-	tradingSuite.IncEtherTokenIDStr = "dae027b21d8d57114da11209dce8eeb587d01adf59d4fc356a8be5eedc146859"
+	tradingSuite.IncEtherTokenIDStr = "b366fa400c36e6bbcf24ac3e99c90406ddc64346ab0b7ba21e159b83d938812d"
 	tradingSuite.IncUSDTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000096"
@@ -145,7 +145,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
-	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
+	tradingSuite.ETHHost = "https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
@@ -168,7 +168,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.PDEXBEP20Addr = common.HexToAddress("0xa43F2911dF4a560A1F687Eba359D047753Cd9BD9")
 
 	tradingSuite.ChainIDBSC = 97
-	tradingSuite.ChainIDETH = 42
+	tradingSuite.ChainIDETH = 5
 	tradingSuite.ChainIDPLG = 80001
 	tradingSuite.ChainIDFTM = 4002
 	tradingSuite.ChainIDAURORA = 1313161555
