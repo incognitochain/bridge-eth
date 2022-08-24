@@ -409,7 +409,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 		prevVaultAURORA := common.Address{}
 		vaultAbi, _ := abi.JSON(strings.NewReader(vaultaurora.VaultMetaData.ABI))
-		input, _ := vaultAbi.Pack("initialize", prevVaultAURORA, regulator)
+		input, err := vaultAbi.Pack("initialize", prevVaultAURORA, regulator)
+		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		// Deploy vault proxy
 		vaultAddrAURORA, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.AURORAClient, vaultAddrAURORA, admin, incAddrAURORA, input)
