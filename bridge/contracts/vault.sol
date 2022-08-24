@@ -95,10 +95,16 @@ contract Vault {
     Withdrawable public prevVault;
     bool public notEntered = true;
     bool public isInitialized = false;
-    address public regulator;
-
     /**
     * @dev END Storage variables
+    */
+
+    /**
+    * @dev Added in Storage Layout version : 2.0
+    */
+    address public regulator;
+    /**
+    * @dev END Storage variables version : 2.0
     */
 
     struct BurnInstData {
