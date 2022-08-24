@@ -16,6 +16,8 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/prvbsc"
 	"github.com/incognitochain/bridge-eth/bridge/prveth"
 	puniswap "github.com/incognitochain/bridge-eth/bridge/puniswapproxy" // uniswap for polygon
+	vaultaurora "github.com/incognitochain/bridge-eth/bridge/vaultaurora"
+	vaultavax "github.com/incognitochain/bridge-eth/bridge/vaultavax"
 	"github.com/incognitochain/bridge-eth/bridge/vaultbsc"
 	"github.com/incognitochain/bridge-eth/bridge/vaultftm"
 	"github.com/incognitochain/bridge-eth/bridge/vaultplg"
@@ -82,7 +84,9 @@ func TestTradingDeployTestSuite(t *testing.T) {
 
 func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	admin := common.HexToAddress(Admin)
+	regulator := common.HexToAddress(Regulator)
 	fmt.Println("Admin address:", admin.Hex())
+	fmt.Println("Regulator address:", regulator.Hex())
 
 	// Genesis committee
 	// LOCAL
@@ -92,7 +96,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// TESTNET2
 	beaconComm, bridgeComm, err := convertCommittees(
-		testnet2BeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
+		localBeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
@@ -116,6 +120,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		2 - BSC
 		3 - POLYGON
 		4 - FANTOM
+		5 - AURORA
+		6 - AVALANCHE
 	*/
 	network := os.Getenv("NETWORK")
 
@@ -392,7 +398,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		// Deploy vault
-		vaultAddrAURORA, tx, _, err := vaultftm.DeployVaultftm(auth, tradingDeploySuite.AURORAClient)
+		vaultAddrAURORA, tx, _, err := vaultaurora.DeployVault(auth, tradingDeploySuite.AURORAClient)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		fmt.Println("deployed vault")
 		fmt.Printf("addr: %s\n", vaultAddrAURORA.Hex())
@@ -402,8 +408,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		prevVaultAURORA := common.Address{}
-		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-		input, _ := vaultAbi.Pack("initialize", prevVaultAURORA)
+		vaultAbi, _ := abi.JSON(strings.NewReader(vaultaurora.VaultMetaData.ABI))
+		input, _ := vaultAbi.Pack("initialize", prevVaultAURORA, regulator)
 
 		// Deploy vault proxy
 		vaultAddrAURORA, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.AURORAClient, vaultAddrAURORA, admin, incAddrAURORA, input)
@@ -438,7 +444,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		// Deploy vault
-		vaultAddrAVAX, tx, _, err := vaultftm.DeployVaultftm(auth, tradingDeploySuite.AVAXClient)
+		vaultAddrAVAX, tx, _, err := vaultavax.DeployVault(auth, tradingDeploySuite.AVAXClient)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		fmt.Println("deployed vault")
 		fmt.Printf("addr: %s\n", vaultAddrAVAX.Hex())
@@ -448,8 +454,8 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		prevVaultAVAX := common.Address{}
-		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-		input, _ := vaultAbi.Pack("initialize", prevVaultAVAX)
+		vaultAbi, _ := abi.JSON(strings.NewReader(vaultavax.VaultMetaData.ABI))
+		input, _ := vaultAbi.Pack("initialize", prevVaultAVAX, regulator)
 
 		// Deploy vault proxy
 		vaultAddrAVAX, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.AVAXClient, vaultAddrAVAX, admin, incAddrAVAX, input)
