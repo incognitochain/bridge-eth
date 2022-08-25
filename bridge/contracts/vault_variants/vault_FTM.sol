@@ -99,6 +99,7 @@ contract VaultFTM {
     event UpdateIncognitoProxy(address newIncognitoProxy);
     event Redeposit(address token, bytes redepositIncAddress, uint256 amount, bytes32 itx);
     event DepositV2(address token, string incognitoAddress, uint amount, uint256 depositID);
+    event ExecuteFnLog(bytes32 id, uint256 phaseID, bytes errorData);
 
     /**
      * modifier for contract version
@@ -456,14 +457,16 @@ contract VaultFTM {
                 // alternatively, the received funds can be withdrawn
                 try this._transferExternal(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount) {
                     emit Withdraw(rOptions.redepositToken, rOptions.withdrawAddress, returnedAmount);
-                } catch {
+                } catch (bytes memory lowLevelData) {
                     // upon revert, emit Redeposit event
                     _redeposit(rOptions.redepositToken, rOptions.redepositIncAddress, returnedAmount, data.itx);
+                    emit ExecuteFnLog(data.itx, 1, lowLevelData);
                     return;
                 }
             }
-        } catch {
+        } catch (bytes memory lowLevelData) {
             _redeposit(data.token, rOptions.redepositIncAddress, data.amount, data.itx);
+            emit ExecuteFnLog(data.itx, 0, lowLevelData);
             return;
         }
     }
@@ -844,8 +847,13 @@ contract VaultFTM {
      * and doesn't have the function decimals()
      */
     function getDecimals(address token) public view returns (uint8) {
+        require(Address.isContract(token), "getDecimals non-contract");
         IERC20 erc20 = IERC20(token);
-        return uint8(erc20.decimals());
+        try erc20.decimals() returns (uint256 d) {
+            return uint8(d);    
+        } catch {
+            revert("get ERC20 decimal failed");
+        }
     }
 
     /**
@@ -855,7 +863,12 @@ contract VaultFTM {
         if (token == ETH_TOKEN) {
             return address(this).balance;
         }
-        return IERC20(token).balanceOf(address(this));
+        require(Address.isContract(token), "balanceOf non-contract");
+        try IERC20(token).balanceOf(address(this)) returns (uint256 b) {
+            return b;
+        } catch {
+            revert("get ERC20 balance failed");
+        }
     }
 }
 
