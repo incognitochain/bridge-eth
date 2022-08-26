@@ -146,7 +146,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
-	tradingSuite.ETHRegulatorPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
+	tradingSuite.ETHRegulatorPrivKeyStr = "98452cb9c013387c2f5806417fe198a0de014594678e2f9d3223d7e7e921b04d"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
@@ -360,13 +360,11 @@ func (tradingSuite *TradingTestSuite) depositERC20ComplianceToBridge(
 	require.Equal(tradingSuite.T(), nil, err)
 
 	erc20Token, _ := erc20.NewErc20(tokenAddr, client)
-	auth.GasPrice = big.NewInt(1e10)
 	tx2, apprErr := erc20Token.Approve(auth, vaultAddr, amt)
 	require.Equal(tradingSuite.T(), nil, apprErr)
 	tx2Hash := tx2.Hash()
 	fmt.Printf("Approve tx, txHash: %x\n", tx2Hash[:])
 	time.Sleep(15 * time.Second)
-	auth.GasPrice = big.NewInt(1e10)
 
 	fmt.Println("Starting deposit erc20 to vault contract")
 	key := make([]byte, 32)
@@ -587,7 +585,10 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForDepositToSC(
 	// Burn
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth.GasPrice = big.NewInt(1e10)
+	if chainID.Uint64() != uint64(tradingSuite.ChainIDAVAX) {
+		auth.GasPrice = big.NewInt(1e10)
+	}
+
 	// auth.GasLimit = uint64(5000000) // for FTM testnet
 	tx, err := SubmitBurnProof(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
@@ -616,8 +617,7 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForWithdrawal(
 	// Burn
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(chainID)))
 	require.Equal(tradingSuite.T(), nil, err)
-	auth.GasPrice = big.NewInt(1e9)
-	// auth.GasLimit = uint64(5000000) // for FTM testnet
+
 	tx, err := Withdraw(c, auth, proof)
 	require.Equal(tradingSuite.T(), nil, err)
 
@@ -690,6 +690,21 @@ func (tradingSuite *TradingTestSuite) getDepositedBalance(
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
 	token := common.HexToAddress(ethTokenAddrStr)
+	owner := common.HexToAddress(ownerAddrStr)
+	bal, err := c.GetDepositedBalance(nil, token, owner)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Printf("deposited balance: %d\n", bal)
+	return bal
+}
+
+func (tradingSuite *TradingTestSuite) getDepositedBalanceWithParams(
+	token common.Address,
+	ownerAddrStr string,
+	vaultAddress common.Address,
+	client *ethclient.Client,
+) *big.Int {
+	c, err := vault.NewVault(vaultAddress, client)
+	require.Equal(tradingSuite.T(), nil, err)
 	owner := common.HexToAddress(ownerAddrStr)
 	bal, err := c.GetDepositedBalance(nil, token, owner)
 	require.Equal(tradingSuite.T(), nil, err)
@@ -798,7 +813,6 @@ func (tradingSuite *TradingTestSuite) requestWithdrawCompliance(
 	tempData, _ := vaultAbi.Pack("_buildSignRequestWithdraw", psData, tradingSuite.IncPaymentAddrStr)
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
-	auth.GasPrice = big.NewInt(1e10)
 	key := make([]byte, 32)
 	_, err = rand.Read(key)
 	txId := toByte32(key)

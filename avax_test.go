@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 	"testing"
 	"time"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,8 +41,8 @@ func (tradingSuite *AvaxTestSuite) SetupSuite() {
 	// Kovan env
 	tradingSuite.IncUSDTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000062"
 	tradingSuite.DepositingEther = float64(0.0001)
-	tradingSuite.VaultAVAXAddr = common.HexToAddress("0x44E115F6F48dB492f4De89FBdfbe573b8a976d71")
-	tradingSuite.USDTTokenAddress = "0xc9052b5222cADB26c9fF6FaFdc4932029f9e958A"
+	tradingSuite.VaultAVAXAddr = common.HexToAddress("0x30fb06E97a6CD370BCE994A88C428F9F3aB6Ec28")
+	tradingSuite.USDTTokenAddress = "0x48601da98F729aE3B4d7DeD8F29777DF102a167d"
 }
 
 func (tradingSuite *AvaxTestSuite) TearDownSuite() {
@@ -87,7 +86,7 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 		tradingSuite.VaultAVAXAddr,
 		tradingSuite.AVAXClient,
 	)
-	// time.Sleep(15 * time.Second)
+
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.AVAXHost, txHash)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
@@ -124,13 +123,15 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 		tradingSuite.VaultAVAXAddr,
 		tradingSuite.AVAXClient,
 	)
-	deposited := tradingSuite.getDepositedBalance(
-		tradingSuite.EtherAddressStr,
+	deposited := tradingSuite.getDepositedBalanceWithParams(
+		common.HexToAddress(tradingSuite.EtherAddressStr),
 		pubKeyToAddrStr,
+		tradingSuite.VaultAVAXAddr,
+		tradingSuite.AVAXClient,
 	)
 	fmt.Println("deposited AVAX: ", deposited)
 
-	fmt.Println("------------ step 4: withdrawing ETH from SC to pETH on Incognito --------------")
+	fmt.Println("------------ step 3: withdrawing ETH from SC to pETH on Incognito --------------")
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdrawCompliance(
 		tradingSuite.EtherAddressStr,
 		deposited,
@@ -139,14 +140,13 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 		tradingSuite.VaultAVAXAddr,
 		REQ_WITHDRAW_PREFIX,
 	)
-	time.Sleep(15 * time.Second)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.AVAXHost, txHashByEmittingWithdrawalReq)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
+	time.Sleep(230 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncEtherTokenIDStr,
 		ethDepositProof,
@@ -157,12 +157,12 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
 
-	fmt.Println("------------ step 5: withdrawing pAVX from Incognito to AVAX --------------")
+	fmt.Println("------------ step 4: withdrawing pAVX from Incognito to AVAX --------------")
 	withdrawingPAVAX := big.NewInt(0).Div(deposited, big.NewInt(1000000000))
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncEtherTokenIDStr,
 		withdrawingPAVAX,
-		tradingSuite.ETHOwnerAddrStr,
+		tradingSuite.ETHOwnerAddrStr[2:],
 		"createandsendburningavaxrequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
@@ -198,7 +198,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
 		tradingSuite.AVAXClient,
 	)
-	fmt.Println("dai balance of owner: ", daibal)
+	fmt.Println("balance balance of owner: ", daibal)
 
 	pubKeyToAddrStr := crypto.PubkeyToAddress(tradingSuite.GeneratedPubKeyForSC).Hex()
 	fmt.Println("pubKeyToAddrStr: ", pubKeyToAddrStr)
@@ -206,7 +206,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 	fmt.Println("------------ step 1: porting USDT to pUSDT --------------")
 	txHash := tradingSuite.depositERC20ComplianceToBridge(
 		depositingUSDT,
-		common.HexToAddress(tradingSuite.DAIAddressStr),
+		common.HexToAddress(tradingSuite.USDTTokenAddress),
 		tradingSuite.IncPaymentAddrStr,
 		tradingSuite.VaultAVAXAddr,
 		tradingSuite.AVAXClient,
@@ -218,7 +218,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
+	time.Sleep(230 * time.Second)
 
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncUSDTTokenIDStr,
@@ -234,7 +234,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 
 	// make a burn tx to incognito chain as a result of deposit to SC
 	burningRes, err := tradingSuite.callBurningPToken(
-		tradingSuite.IncDAITokenIDStr,
+		tradingSuite.IncUSDTTokenIDStr,
 		burningPUSDT,
 		pubKeyToAddrStr[2:],
 		"createandsendburningavaxfordeposittoscrequest",
@@ -251,9 +251,11 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 		tradingSuite.VaultAVAXAddr,
 		tradingSuite.AVAXClient,
 	)
-	deposited := tradingSuite.getDepositedBalance(
-		tradingSuite.USDTTokenAddress,
+	deposited := tradingSuite.getDepositedBalanceWithParams(
+		common.HexToAddress(tradingSuite.USDTTokenAddress),
 		pubKeyToAddrStr,
+		tradingSuite.VaultAVAXAddr,
+		tradingSuite.AVAXClient,
 	)
 	fmt.Println("deposited dai: ", deposited)
 
@@ -266,14 +268,13 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 		tradingSuite.VaultAVAXAddr,
 		REQ_WITHDRAW_PREFIX,
 	)
-	time.Sleep(15 * time.Second)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.AVAXHost, txHashByEmittingWithdrawalReq)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
+	time.Sleep(230 * time.Second)
 
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncUSDTTokenIDStr,
@@ -290,7 +291,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncUSDTTokenIDStr,
 		withdrawingPMRK,
-		tradingSuite.ETHOwnerAddrStr,
+		tradingSuite.ETHOwnerAddrStr[2:],
 		"createandsendburningavaxrequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)

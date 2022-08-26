@@ -41,9 +41,10 @@ func (tradingSuite *AuroraTestSuite) SetupSuite() {
 	fmt.Println("Setting up the suite...")
 	// Kovan env
 	tradingSuite.IncUSDTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000061"
+	tradingSuite.IncEtherTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000063"
 	tradingSuite.DepositingEther = float64(0.0001)
-	tradingSuite.VaultAURORAAddr = common.HexToAddress("0x04Af165cDc4971E866392632290779e05E40DF55")
-	tradingSuite.USDTTokenAddress = "0x730218ef8c2cEA3eb75b4EDD9238ACd5da6f3b7F"
+	tradingSuite.VaultAURORAAddr = common.HexToAddress("0x14D0cf3bC307aA15DA40Aa4c8cc2A2a81eF96B3a")
+	tradingSuite.USDTTokenAddress = "0x30fb06E97a6CD370BCE994A88C428F9F3aB6Ec28"
 }
 
 func (tradingSuite *AuroraTestSuite) TearDownSuite() {
