@@ -78,12 +78,14 @@ type TradingTestSuite struct {
 	DAIAddressStr   string
 	SAIAddressStr   string
 
-	ETHPrivKeyStr   string
-	ETHOwnerAddrStr string
+	ETHPrivKeyStr          string
+	ETHOwnerAddrStr        string
+	ETHRegulatorPrivKeyStr string
 
-	ETHHost    string
-	ETHPrivKey *ecdsa.PrivateKey
-	ETHClient  *ethclient.Client
+	ETHHost             string
+	ETHPrivKey          *ecdsa.PrivateKey
+	ETHRegulatorPrivKey *ecdsa.PrivateKey
+	ETHClient           *ethclient.Client
 
 	BSCHost   string
 	BSCClient *ethclient.Client
@@ -144,6 +146,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 
 	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
+	tradingSuite.ETHRegulatorPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 
 	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
@@ -153,7 +156,6 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.AURORAHost = "https://testnet.aurora.dev"
 
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
-	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
 	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
@@ -250,6 +252,9 @@ func (tradingSuite *TradingTestSuite) connectToETH() {
 	tradingSuite.AVAXClient = client
 
 	tradingSuite.ETHPrivKey = privKey
+	privKey, err = crypto.HexToECDSA(tradingSuite.ETHRegulatorPrivKeyStr)
+	require.Equal(tradingSuite.T(), nil, err)
+	tradingSuite.ETHRegulatorPrivKey = privKey
 }
 
 func (tradingSuite *TradingTestSuite) depositETH(
@@ -266,6 +271,36 @@ func (tradingSuite *TradingTestSuite) depositETH(
 	require.Equal(tradingSuite.T(), nil, err)
 	auth.Value = new(big.Int).SetUint64(uint64(amt * params.Ether))
 	tx, err := c.Deposit(auth, incPaymentAddrStr)
+	require.Equal(tradingSuite.T(), nil, err)
+	txHash := tx.Hash()
+
+	if err := wait(client, txHash); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Printf("deposited, txHash: %x\n", txHash[:])
+	return txHash
+}
+
+func (tradingSuite *TradingTestSuite) depositETHCompliance(
+	amt float64,
+	incPaymentAddrStr string,
+	vaultAddr common.Address,
+	client *ethclient.Client,
+) common.Hash {
+	c, err := vault.NewComplianceVault(vaultAddr, client)
+	require.Equal(tradingSuite.T(), nil, err)
+	chainID, err := client.ChainID(auth.Context)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth.Value = new(big.Int).SetUint64(uint64(amt * params.Ether))
+	key := make([]byte, 32)
+	_, err = rand.Read(key)
+	txId := toByte32(key)
+	require.Equal(tradingSuite.T(), nil, err)
+	signBytes, err := SignDataToShield(txId, tradingSuite.ETHRegulatorPrivKey, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+	tx, err := c.Deposit(auth, incPaymentAddrStr, txId, signBytes)
 	require.Equal(tradingSuite.T(), nil, err)
 	txHash := tx.Hash()
 
@@ -311,6 +346,47 @@ func (tradingSuite *TradingTestSuite) depositERC20ToBridge(
 	return txHash
 }
 
+func (tradingSuite *TradingTestSuite) depositERC20ComplianceToBridge(
+	amt *big.Int,
+	tokenAddr common.Address,
+	incPaymentAddrStr string,
+	vaultAddr common.Address,
+	client *ethclient.Client,
+	chainID uint,
+) common.Hash {
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(chainID)))
+	require.Equal(tradingSuite.T(), nil, err)
+	c, err := vault.NewComplianceVault(vaultAddr, client)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	erc20Token, _ := erc20.NewErc20(tokenAddr, client)
+	auth.GasPrice = big.NewInt(1e10)
+	tx2, apprErr := erc20Token.Approve(auth, vaultAddr, amt)
+	require.Equal(tradingSuite.T(), nil, apprErr)
+	tx2Hash := tx2.Hash()
+	fmt.Printf("Approve tx, txHash: %x\n", tx2Hash[:])
+	time.Sleep(15 * time.Second)
+	auth.GasPrice = big.NewInt(1e10)
+
+	fmt.Println("Starting deposit erc20 to vault contract")
+	key := make([]byte, 32)
+	_, err = rand.Read(key)
+	txId := toByte32(key)
+	require.Equal(tradingSuite.T(), nil, err)
+	signBytes, err := SignDataToShield(txId, tradingSuite.ETHRegulatorPrivKey, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+	tx, err := c.DepositERC20(auth, tokenAddr, amt, incPaymentAddrStr, txId, signBytes)
+	require.Equal(tradingSuite.T(), nil, err)
+	fmt.Println("Finished deposit erc20 to vault contract")
+	txHash := tx.Hash()
+
+	if err := wait(client, txHash); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Printf("deposited erc20 token to bridge, txHash: %x\n", txHash[:])
+	return txHash
+}
+
 func (tradingSuite *TradingTestSuite) callIssuingETHReq(
 	incTokenIDStr string,
 	ethDepositProof []string,
@@ -324,6 +400,45 @@ func (tradingSuite *TradingTestSuite) callIssuingETHReq(
 		"BlockHash":  ethBlockHash,
 		"ProofStrs":  ethDepositProof,
 		"TxIndex":    ethTxIdx,
+	}
+	params := []interface{}{
+		tradingSuite.IncPrivKeyStr,
+		nil,
+		5,
+		-1,
+		meta,
+	}
+	var res IssuingETHRes
+	err := rpcClient.RPCCall(
+		"",
+		tradingSuite.IncRPCHost,
+		"",
+		method,
+		params,
+		&res,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	response, _ := json.Marshal(res)
+	fmt.Println("get response", string(response))
+
+	if res.RPCError != nil {
+		return nil, errors.New(res.RPCError.Message)
+	}
+	return res.Result.(map[string]interface{}), nil
+}
+
+func (tradingSuite *TradingTestSuite) callIssuingAURORAReq(
+	incTokenIDStr string,
+	txHash string,
+	method string,
+) (map[string]interface{}, error) {
+	rpcClient := rpccaller.NewRPCClient()
+	meta := map[string]interface{}{
+		"IncTokenID": incTokenIDStr,
+		"TxHash":     txHash,
 	}
 	params := []interface{}{
 		tradingSuite.IncPrivKeyStr,
@@ -649,6 +764,49 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	// auth.GasLimit = uint64(5000000) // for FTM testnet
 
 	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	txHash := tx.Hash()
+	if err := wait(client, txHash); err != nil {
+		require.Equal(tradingSuite.T(), nil, err)
+	}
+	fmt.Printf("request withdrawal, txHash: %x\n", txHash[:])
+	return txHash
+}
+
+func (tradingSuite *TradingTestSuite) requestWithdrawCompliance(
+	withdrawalETHTokenIDStr string,
+	amount *big.Int,
+	client *ethclient.Client,
+	chainID *big.Int,
+	vaultAddrr common.Address,
+	signaturePrefix uint8,
+) common.Hash {
+	c, err := vault.NewComplianceVault(vaultAddrr, client)
+	require.Equal(tradingSuite.T(), nil, err)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
+	require.Equal(tradingSuite.T(), nil, err)
+	token := common.HexToAddress(withdrawalETHTokenIDStr)
+	timestamp := []byte(randomizeTimestamp())
+	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
+	psData := vault.VaultHelperPreSignData{
+		Prefix:    signaturePrefix,
+		Token:     token,
+		Timestamp: timestamp,
+		Amount:    amount,
+	}
+	tempData, _ := vaultAbi.Pack("_buildSignRequestWithdraw", psData, tradingSuite.IncPaymentAddrStr)
+	data := rawsha3(tempData[4:])
+	signBytes, _ := crypto.Sign(data, &tradingSuite.GeneratedPrivKeyForSC)
+	auth.GasPrice = big.NewInt(1e10)
+	key := make([]byte, 32)
+	_, err = rand.Read(key)
+	txId := toByte32(key)
+	require.Equal(tradingSuite.T(), nil, err)
+	signBytesRegulator, err := SignDataToShield(txId, tradingSuite.ETHRegulatorPrivKey, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+
+	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp, txId, signBytesRegulator)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	txHash := tx.Hash()
