@@ -94,14 +94,14 @@ func (tradingSuite *AuroraTestSuite) Test1Aurora() {
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(230 * time.Second)
+	//time.Sleep(230 * time.Second)
 	_, err = tradingSuite.callIssuingAURORAReq(
 		tradingSuite.IncEtherTokenIDStr,
 		txHash.String()[2:],
 		"createandsendtxwithissuingaurorareq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	//time.Sleep(120 * time.Second)
 
 	fmt.Println("------------ STEP 2: burning pETH to deposit ETH to SC --------------")
 	// make a burn tx to incognito chain as a result of deposit to SC
@@ -109,7 +109,7 @@ func (tradingSuite *AuroraTestSuite) Test1Aurora() {
 		tradingSuite.IncEtherTokenIDStr,
 		burningPETH,
 		pubKeyToAddrStr[2:],
-		"createandsendburningfordeposittoscrequest",
+		"createandsendburningaurorafordeposittoscrequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	burningTxID, found := burningRes["TxID"]
@@ -159,7 +159,7 @@ func (tradingSuite *AuroraTestSuite) Test1Aurora() {
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncEtherTokenIDStr,
 		withdrawingPAVAX,
-		tradingSuite.ETHOwnerAddrStr,
+		tradingSuite.ETHOwnerAddrStr[2:],
 		"createandsendburningaurorarequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
@@ -203,7 +203,7 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 	fmt.Println("------------ step 1: porting USDT to pUSDT --------------")
 	txHash := tradingSuite.depositERC20ComplianceToBridge(
 		depositingUSDT,
-		common.HexToAddress(tradingSuite.DAIAddressStr),
+		common.HexToAddress(tradingSuite.USDTTokenAddress),
 		tradingSuite.IncPaymentAddrStr,
 		tradingSuite.VaultAURORAAddr,
 		tradingSuite.AURORAClient,
@@ -229,7 +229,7 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 
 	// make a burn tx to incognito chain as a result of deposit to SC
 	burningRes, err := tradingSuite.callBurningPToken(
-		tradingSuite.IncDAITokenIDStr,
+		tradingSuite.IncUSDTTokenIDStr,
 		burningPUSDT,
 		pubKeyToAddrStr[2:],
 		"createandsendburningaurorafordeposittoscrequest",
@@ -246,11 +246,13 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 		tradingSuite.VaultAURORAAddr,
 		tradingSuite.AURORAClient,
 	)
-	deposited := tradingSuite.getDepositedBalance(
-		tradingSuite.USDTTokenAddress,
+	deposited := tradingSuite.getDepositedBalanceWithParams(
+		common.HexToAddress("tradingSuite.USDTTokenAddress"),
 		pubKeyToAddrStr,
+		tradingSuite.VaultAURORAAddr,
+		tradingSuite.AURORAClient,
 	)
-	fmt.Println("deposited dai: ", deposited)
+	fmt.Println("deposited usdt: ", deposited)
 
 	fmt.Println("------------ step 3: withdrawing USDT from SC to pUSDT on Incognito --------------")
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdrawCompliance(
@@ -283,7 +285,7 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncUSDTTokenIDStr,
 		withdrawingPMRK,
-		tradingSuite.ETHOwnerAddrStr,
+		tradingSuite.ETHOwnerAddrStr[2:],
 		"createandsendburningaurorarequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
