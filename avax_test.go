@@ -162,7 +162,7 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncEtherTokenIDStr,
 		withdrawingPAVAX,
-		tradingSuite.ETHOwnerAddrStr[2:],
+		tradingSuite.ETHOwnerAddrStr,
 		"createandsendburningavaxrequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
@@ -291,7 +291,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 	burningRes, err = tradingSuite.callBurningPToken(
 		tradingSuite.IncUSDTTokenIDStr,
 		withdrawingPMRK,
-		tradingSuite.ETHOwnerAddrStr[2:],
+		tradingSuite.ETHOwnerAddrStr,
 		"createandsendburningavaxrequest",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
