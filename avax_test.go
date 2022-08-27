@@ -92,7 +92,7 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(230 * time.Second)
+	time.Sleep(100 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncEtherTokenIDStr,
 		ethDepositProof,
@@ -101,7 +101,7 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 		"createandsendtxwithissuingavaxreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ STEP 2: burning pETH to deposit ETH to SC --------------")
 	// make a burn tx to incognito chain as a result of deposit to SC
@@ -146,7 +146,7 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(230 * time.Second)
+	time.Sleep(100 * time.Second)
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncEtherTokenIDStr,
 		ethDepositProof,
@@ -155,7 +155,7 @@ func (tradingSuite *AvaxTestSuite) Test1Avax() {
 		"createandsendtxwithissuingavaxreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ step 4: withdrawing pAVX from Incognito to AVAX --------------")
 	withdrawingPAVAX := big.NewInt(0).Div(deposited, big.NewInt(1000000000))
@@ -218,7 +218,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(230 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncUSDTTokenIDStr,
@@ -228,7 +228,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 		"createandsendtxwithissuingavaxreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ step 2: burning pUSDT to deposit USDT to SC --------------")
 
@@ -274,7 +274,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
 
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(230 * time.Second)
+	time.Sleep(100 * time.Second)
 
 	_, err = tradingSuite.callIssuingETHReq(
 		tradingSuite.IncUSDTTokenIDStr,
@@ -284,7 +284,7 @@ func (tradingSuite *AvaxTestSuite) Test2AvaxTokeb() {
 		"createandsendtxwithissuingavaxreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ step 4: withdrawing pUSDT from Incognito to USDT --------------")
 	withdrawingPMRK := deposited

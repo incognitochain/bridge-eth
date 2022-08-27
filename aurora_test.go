@@ -88,20 +88,16 @@ func (tradingSuite *AuroraTestSuite) Test1Aurora() {
 		tradingSuite.VaultAURORAAddr,
 		tradingSuite.AURORAClient,
 	)
-	// time.Sleep(15 * time.Second)
-	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.AURORAHost, txHash)
-	require.Equal(tradingSuite.T(), nil, err)
-	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 
-	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(230 * time.Second)
-	_, err = tradingSuite.callIssuingAURORAReq(
+	fmt.Println("Waiting 50s for 5 blocks confirmation")
+	time.Sleep(50 * time.Second)
+	_, err := tradingSuite.callIssuingAURORAReq(
 		tradingSuite.IncEtherTokenIDStr,
 		txHash.String()[2:],
 		"createandsendtxwithissuingaurorareq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ STEP 2: burning pETH to deposit ETH to SC --------------")
 	// make a burn tx to incognito chain as a result of deposit to SC
@@ -132,7 +128,7 @@ func (tradingSuite *AuroraTestSuite) Test1Aurora() {
 	fmt.Println("deposited AURORA: ", deposited)
 
 	fmt.Println("------------ step 3: withdrawing ETH from SC to pETH on Incognito --------------")
-	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdrawCompliance(
+	txHash = tradingSuite.requestWithdrawCompliance(
 		tradingSuite.EtherAddressStr,
 		deposited,
 		tradingSuite.AURORAClient,
@@ -140,21 +136,16 @@ func (tradingSuite *AuroraTestSuite) Test1Aurora() {
 		tradingSuite.VaultAURORAAddr,
 		REQ_WITHDRAW_PREFIX,
 	)
-	time.Sleep(15 * time.Second)
 
-	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.AURORAHost, txHashByEmittingWithdrawalReq)
-	require.Equal(tradingSuite.T(), nil, err)
-	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
-
-	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
+	fmt.Println("Waiting 50s for 5 blocks confirmation")
+	time.Sleep(50 * time.Second)
 	_, err = tradingSuite.callIssuingAURORAReq(
 		tradingSuite.IncEtherTokenIDStr,
 		txHash.String()[2:],
 		"createandsendtxwithissuingaurorareq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ step 4: withdrawing pAVX from Incognito to AVAX --------------")
 	withdrawingPAVAX := big.NewInt(0).Div(deposited, big.NewInt(1000000000))
@@ -212,20 +203,16 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 		tradingSuite.ChainIDAURORA,
 	)
 
-	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.AURORAHost, txHash)
-	require.Equal(tradingSuite.T(), nil, err)
-	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
+	fmt.Println("Waiting 50s for 5 blocks confirmation")
+	time.Sleep(50 * time.Second)
 
-	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
-
-	_, err = tradingSuite.callIssuingAURORAReq(
+	_, err := tradingSuite.callIssuingAURORAReq(
 		tradingSuite.IncUSDTTokenIDStr,
 		txHash.String()[2:],
 		"createandsendtxwithissuingaurorareq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ step 2: burning pUSDT to deposit USDT to SC --------------")
 
@@ -257,7 +244,7 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 	fmt.Println("deposited usdt: ", deposited)
 
 	fmt.Println("------------ step 3: withdrawing USDT from SC to pUSDT on Incognito --------------")
-	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdrawCompliance(
+	txHash = tradingSuite.requestWithdrawCompliance(
 		tradingSuite.USDTTokenAddress,
 		deposited,
 		tradingSuite.AURORAClient,
@@ -265,14 +252,9 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 		tradingSuite.VaultAURORAAddr,
 		REQ_WITHDRAW_PREFIX,
 	)
-	time.Sleep(15 * time.Second)
 
-	_, ethBlockHash, ethTxIdx, ethDepositProof, err = getETHDepositProof(tradingSuite.AURORAHost, txHashByEmittingWithdrawalReq)
-	require.Equal(tradingSuite.T(), nil, err)
-	fmt.Println("depositProof by emitting withdarawal req: ", ethBlockHash, ethTxIdx, ethDepositProof)
-
-	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(90 * time.Second)
+	fmt.Println("Waiting 50s for 5 blocks confirmation")
+	time.Sleep(50 * time.Second)
 
 	_, err = tradingSuite.callIssuingAURORAReq(
 		tradingSuite.IncUSDTTokenIDStr,
@@ -280,7 +262,7 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 		"createandsendtxwithissuingaurorareq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
-	time.Sleep(120 * time.Second)
+	time.Sleep(150 * time.Second)
 
 	fmt.Println("------------ step 4: withdrawing pUSDT from Incognito to USDT --------------")
 	withdrawingPMRK := deposited
