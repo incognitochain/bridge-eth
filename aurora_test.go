@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 	"testing"
 	"time"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/params"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -236,7 +235,7 @@ func (tradingSuite *AuroraTestSuite) Test2AuroraToken() {
 		tradingSuite.AURORAClient,
 	)
 	deposited := tradingSuite.getDepositedBalanceWithParams(
-		common.HexToAddress("tradingSuite.USDTTokenAddress"),
+		common.HexToAddress(tradingSuite.USDTTokenAddress),
 		pubKeyToAddrStr,
 		tradingSuite.VaultAURORAAddr,
 		tradingSuite.AURORAClient,
