@@ -122,7 +122,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncPrivKeyStr = "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
 	tradingSuite.IncPaymentAddrStr = "12svfkP6w5UDJDSCwqH978PvqiqBxKmUnA9em9yAYWYJVRv7wuXY1qhhYpPAm4BDz2mLbFrRmdK3yRhnTqJCZXKHUmoi7NV83HCH2YFpctHNaDdkSiQshsjw2UFUuwdEvcidgaKmF3VJpY5f8RdN"
 
-	tradingSuite.IncEtherTokenIDStr = "dae027b21d8d57114da11209dce8eeb587d01adf59d4fc356a8be5eedc146859"
+	tradingSuite.IncEtherTokenIDStr = "ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854"
 	tradingSuite.IncUSDTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000096"
@@ -134,19 +134,22 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
-	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
+	tradingSuite.ETHPrivKeyStr = "1431f45a46549519790c8d65ec39dd49f778eb090437c57578a2218345f562d0"
+	tradingSuite.ETHOwnerAddrStr = "F91cEe2DE943733e338891Ef602c962eF4D7Eb81"
 
-	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
+	tradingSuite.ETHHost = "https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
 
-	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
-	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
-	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
+	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
+	// // tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
+	// tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
-	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
+	tradingSuite.IncRPCHost = "https://testnet.incognito.org/fullnode"
+	tradingSuite.IncBridgeHost = "https://testnet.incognito.org/fullnode"
+
+	tradingSuite.VaultAddr = common.HexToAddress("0x9cb4baf1b60DaBB6B22BcFf07cc0e10395423aed")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
 	tradingSuite.VaultPLGAddr = common.HexToAddress("0x493b80D988916a4E712b4d8fb9e123b5a477de1E")
 	tradingSuite.VaultFTMAddr = common.HexToAddress("0x2B0ef11745b726f9FdBE571b3F83AEa4248891A7")
@@ -157,7 +160,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.PDEXBEP20Addr = common.HexToAddress("0xa43F2911dF4a560A1F687Eba359D047753Cd9BD9")
 
 	tradingSuite.ChainIDBSC = 97
-	tradingSuite.ChainIDETH = 42
+	tradingSuite.ChainIDETH = 5
 	tradingSuite.ChainIDPLG = 80001
 	tradingSuite.ChainIDFTM = 4002
 
@@ -361,7 +364,6 @@ func (tradingSuite *TradingTestSuite) callBurningPToken(
 		0,
 		meta,
 		"",
-		0,
 	}
 	var res BurningForDepositToSCRes
 	err := rpcClient.RPCCall(
