@@ -36,8 +36,13 @@ var auth *bind.TransactOpts
 
 // user
 var auth2 *bind.TransactOpts
+
+// user
+var auth3 *bind.TransactOpts
+
 var genesisAcc *account
 var genesisAcc2 *account
+var genesisAcc3 *account
 
 type Platform struct {
 	*contracts
@@ -47,9 +52,21 @@ type Platform struct {
 func init() {
 	fmt.Println("Initializing genesis account...")
 	genesisAcc = loadAccount()
-	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	var err error
+	auth, err = bind.NewKeyedTransactorWithChainID(genesisAcc.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
 	genesisAcc2 = loadAccount()
-	auth2 = bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	auth2, err = bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
+	genesisAcc3 = loadAccount()
+	auth3, err = bind.NewKeyedTransactorWithChainID(genesisAcc3.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func TestSimulatedSwapBeacon(t *testing.T) {
@@ -213,6 +230,7 @@ func setup(
 	balance, _ := big.NewInt(1).SetString("1000000000000000000000000000000", 10) // 1E30 wei
 	alloc[auth.From] = core.GenesisAccount{Balance: balance}
 	alloc[auth2.From] = core.GenesisAccount{Balance: balance}
+	alloc[auth3.From] = core.GenesisAccount{Balance: balance}
 	for _, acc := range accs {
 		alloc[acc] = core.GenesisAccount{Balance: balance}
 	}
@@ -556,10 +574,13 @@ func getBeaconSwapProof(block int) string {
 
 func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 	initBalance := p.getBalance(p.vAddr)
-	auth := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, p.sim.Blockchain().Config().ChainID)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
 	auth.GasLimit = 0
 	auth.Value = amount
-	_, err := p.v.Deposit(auth, "")
+	_, err = p.v.Deposit(auth, "")
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}

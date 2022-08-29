@@ -131,7 +131,8 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDETH)))
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(50000000000)
 	// auth.GasLimit = 2000000
 	srcToken := common.HexToAddress(srcTokenIDStr)
@@ -141,13 +142,13 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: srcQty,
+		Amount:    srcQty,
 	}
 	tempData, err := vaultAbi.Pack("_buildSignExecute", psData, destToken, tradingSuite.KyberTradeDeployedAddr, input)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	data := rawsha3(tempData[4:])
@@ -499,7 +500,7 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 	time.Sleep(140 * time.Second)
 
 	tradingSuite.submitBurnProofForDepositToSC(
-		burningTxID.(string), 
+		burningTxID.(string),
 		big.NewInt(int64(tradingSuite.ChainIDETH)),
 		"getburnprooffordeposittosc",
 		tradingSuite.VaultAddr,

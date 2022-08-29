@@ -67,7 +67,10 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
 	v2.connectToETH()
 	v2.c = getFixedCommittee()
-	v2.auth = bind.NewKeyedTransactor(v2.ETHPrivKey)
+	chainId, err := v2.ETHClient.ChainID(context.Background())
+	require.Equal(v2.T(), nil, err)
+	v2.auth, err = bind.NewKeyedTransactorWithChainID(v2.ETHPrivKey, chainId)
+	require.Equal(v2.T(), nil, err)
 	v2.v, err = vault.NewVault(v2.VaultAddress, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 
@@ -271,7 +274,7 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 	}
 }
 
-func buildWithdrawTestcaseV2Uniswap(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) *DecodedProof {
+func buildWithdrawTestcaseV2Uniswap(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2Uniswap(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
 	return &DecodedProof{
