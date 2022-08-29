@@ -688,10 +688,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	require.Equal(v2.T(), false, isUsed)
 }
 
-func buildWithdrawTestcaseV2(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
+func buildWithdrawTestcaseV2(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer common.Address) *DecodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	return &decodedProof{
+	return &DecodedProof{
 		Instruction: inst,
 		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
 

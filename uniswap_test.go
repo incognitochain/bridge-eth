@@ -277,7 +277,7 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 func buildWithdrawTestcaseV2Uniswap(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2Uniswap(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	return &decodedProof{
+	return &DecodedProof{
 		Instruction: inst,
 		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
 
