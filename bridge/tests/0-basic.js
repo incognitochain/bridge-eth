@@ -43,16 +43,16 @@ let setupTest = () => {
             // unless it's a forked network, we assume all tx senders have Ether, and token actor is funded with Token1 (MKR)
             this.testingTokens = await Promise.all(hre.networkCfg().deployed.testingTokens.map(t =>
                 getInstance('contracts/IERC20.sol:IERC20', null, t)))
-            if (hre.networkCfg().deployed.tokenFunder) {
-                let b = await this.testingTokens[0].balanceOf(this.tokenGuy.signer.address);
-                if (b.lt(ethers.utils.parseUnits('1', 'ether'))) {
-                    // when in forked network, fund token 1 using impersonated address
-                    const tokenFunder = await ethers.getSigner(hre.networkCfg().deployed.tokenFunder);
-                    await confirm(this.testingTokens[0].connect(tokenFunder).transfer(this.tokenGuy.signer.address, ethers.utils.parseUnits('10', 'ether')));
-                    b = await this.testingTokens[0].balanceOf(this.tokenGuy.signer.address);
-                    console.log(`Got ${b.toString()} of token ${this.testingTokens[0].address} funded to ${this.tokenGuy.signer.address}`);
-                }
-            }
+            // if (hre.networkCfg().deployed.tokenFunder) {
+                // let b = await this.testingTokens[0].balanceOf(this.tokenGuy.signer.address);
+                // if (b.lt(ethers.utils.parseUnits('1', 'ether'))) {
+                //     // when in forked network, fund token 1 using impersonated address
+                //     const tokenFunder = await ethers.getSigner(hre.networkCfg().deployed.tokenFunder);
+                //     await confirm(this.testingTokens[0].connect(tokenFunder).transfer(this.tokenGuy.signer.address, ethers.utils.parseUnits('10', 'ether')));
+                //     b = await this.testingTokens[0].balanceOf(this.tokenGuy.signer.address);
+                //     console.log(`Got ${b.toString()} of token ${this.testingTokens[0].address} funded to ${this.tokenGuy.signer.address}`);
+                // }
+            // }
         } else {
             this.testingTokens = await Promise.all(names.map(n => getInstance(n)));
         }
