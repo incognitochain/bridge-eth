@@ -156,11 +156,11 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
-	// testnet vaults
-	tradingSuite.VaultAddr = common.HexToAddress("0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7")
+	// testnet 2 vaults
+	tradingSuite.VaultAddr = common.HexToAddress("0x9cb4baf1b60dabb6b22bcff07cc0e10395423aed")
 	tradingSuite.VaultBSCAddr = common.HexToAddress("0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7")
 	tradingSuite.VaultPLGAddr = common.HexToAddress("0x4fF5c88cD1FD773436C2aBcFE175fe4ba6a2eB68")
-	tradingSuite.VaultFTMAddr = common.HexToAddress("0x9cb4baf1b60DaBB6B22BcFf07cc0e10395423aed")
+	tradingSuite.VaultFTMAddr = common.HexToAddress("0xDdF0C1B9f513a8D0a26732B18478CC295d204320")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
