@@ -38,23 +38,13 @@ type VaultHelperPreSignData struct {
 
 // VaultHelperMetaData contains all meta data concerning the VaultHelper contract.
 var VaultHelperMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"_buildPreSignData\",\"outputs\":[],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"internalType\":\"structVaultHelper.PreSignData\",\"name\":\"psd\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"recipientToken\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"exchangeAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"callData\",\"type\":\"bytes\"}],\"name\":\"_buildSignExecute\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"internalType\":\"structVaultHelper.PreSignData\",\"name\":\"psd\",\"type\":\"tuple\"},{\"internalType\":\"string\",\"name\":\"incognitoAddress\",\"type\":\"string\"}],\"name\":\"_buildSignRequestWithdraw\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"newPreSignData\",\"outputs\":[{\"components\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"internalType\":\"structVaultHelper.PreSignData\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
-	Sigs: map[string]string{
-		"741d7a50": "_buildPreSignData(uint8,address,bytes,uint256)",
-		"41f59b6f": "_buildSignExecute((uint8,address,bytes,uint256),address,address,bytes)",
-		"3cf6e1ca": "_buildSignRequestWithdraw((uint8,address,bytes,uint256),string)",
-		"b95494e3": "newPreSignData(uint8,address,bytes,uint256)",
-	},
-	Bin: "0x608060405234801561001057600080fd5b5061068d806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80633cf6e1ca1461005157806341f59b6f1461007a578063741d7a501461008d578063b95494e3146100a2575b600080fd5b61006461005f366004610464565b6100c2565b604051610071919061057c565b60405180910390f35b6100646100883660046103d3565b610115565b6100a061009b36600461036a565b61016d565b005b6100b56100b036600461036a565b610174565b6040516100719190610585565b60006001845160018111156100d357fe5b146100dd57600080fd5b60008484846040516020016100f4939291906105e8565b60408051808303601f19018152919052805160209091012095945050505050565b6000808651600181111561012557fe5b1461012f57600080fd5b6000868686868660405160200161014a95949392919061059f565b60408051808303601f190181529190528051602090910120979650505050505050565b5050505050565b61017c6101fa565b6101846101fa565b604051806080016040528088600181111561019b57fe5b8152602001876001600160a01b0316815260200186868080601f01602080910402602001604051908101604052809392919081815260200183838082843760009201919091525050509082525060200184905291505095945050505050565b6040805160808101909152806000815260200160006001600160a01b0316815260200160608152602001600081525090565b80356001600160a01b038116811461024357600080fd5b92915050565b60008083601f84011261025a578182fd5b50813567ffffffffffffffff811115610271578182fd5b60208301915083602082850101111561028957600080fd5b9250929050565b80356002811061024357600080fd5b6000608082840312156102b0578081fd5b6102ba6080610618565b90506102c68383610290565b815260206102d68482850161022c565b81830152604083013567ffffffffffffffff808211156102f557600080fd5b818501915085601f83011261030957600080fd5b81358181111561031857600080fd5b61032a601f8201601f19168501610618565b9150808252868482850101111561034057600080fd5b80848401858401376000848284010152508060408501525050506060820135606082015292915050565b600080600080600060808688031215610381578081fd5b61038b8787610290565b945061039a876020880161022c565b9350604086013567ffffffffffffffff8111156103b5578182fd5b6103c188828901610249565b96999598509660600135949350505050565b6000806000806000608086880312156103ea578081fd5b853567ffffffffffffffff80821115610401578283fd5b61040d89838a0161029f565b96506020880135915061041f8261063f565b9094506040870135906104318261063f565b90935060608701359080821115610446578283fd5b5061045388828901610249565b969995985093965092949392505050565b600080600060408486031215610478578283fd5b833567ffffffffffffffff8082111561048f578485fd5b61049b8783880161029f565b945060208601359150808211156104b0578384fd5b506104bd86828701610249565b9497909650939450505050565b60008284528282602086013780602084860101526020601f19601f85011685010190509392505050565b600081516002811061050257fe5b83526020828101516001600160a01b0316818501526040808401516080918601829052805191860182905290835b8181101561054c5782810184015187820160a001528301610530565b8181111561055d578460a083890101525b5060609485015194860194909452505050601f01601f19160160a00190565b90815260200190565b60006020825261059860208301846104f4565b9392505050565b6000608082526105b260808301886104f4565b6001600160a01b0387811660208501528616604084015282810360608401526105dc8185876104ca565b98975050505050505050565b6000604082526105fb60408301866104f4565b828103602084015261060e8185876104ca565b9695505050505050565b60405181810167ffffffffffffffff8111828210171561063757600080fd5b604052919050565b6001600160a01b038116811461065457600080fd5b5056fea26469706673582212204984ec2f7cee86d1cffa0cd0d4ec4f015cb7f73ca00c5f036461c97e3d363d4064736f6c634300060c0033",
+	ABI: "[{\"inputs\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"_buildPreSignData\",\"outputs\":[],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"internalType\":\"structVaultHelper.PreSignData\",\"name\":\"psd\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"recipientToken\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"exchangeAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"callData\",\"type\":\"bytes\"}],\"name\":\"_buildSignExecute\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"enumVaultHelper.Prefix\",\"name\":\"prefix\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"timestamp\",\"type\":\"bytes\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"internalType\":\"structVaultHelper.PreSignData\",\"name\":\"psd\",\"type\":\"tuple\"},{\"internalType\":\"string\",\"name\":\"incognitoAddress\",\"type\":\"string\"}],\"name\":\"_buildSignRequestWithdraw\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_senser\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_txId\",\"type\":\"bytes32\"}],\"name\":\"_buildSignShield\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}]",
+	Bin: "0x608060405234801561001057600080fd5b506109b8806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80633cf6e1ca1461005157806341f59b6f14610081578063741d7a50146100b1578063e24ef4bd146100cd575b600080fd5b61006b600480360381019061006691906104e7565b6100fd565b6040516100789190610700565b60405180910390f35b61009b6004803603810190610096919061044f565b610131565b6040516100a89190610700565b60405180910390f35b6100cb60048036038101906100c691906103cf565b61016b565b005b6100e760048036038101906100e29190610393565b610172565b6040516100f49190610700565b60405180910390f35b60608084848460405160200161011593929190610777565b6040516020818303038152906040529050809150509392505050565b606080868686868660405160200161014d959493929190610722565b60405160208183030381529060405290508091505095945050505050565b5050505050565b60608060405180604001604052808573ffffffffffffffffffffffffffffffffffffffff168152602001848152506040516020016101b091906107b0565b60405160208183030381529060405290508091505092915050565b6000813590506101da8161092d565b92915050565b6000813590506101ef81610944565b92915050565b60008083601f84011261020757600080fd5b8235905067ffffffffffffffff81111561022057600080fd5b60208301915083600182028301111561023857600080fd5b9250929050565b600082601f83011261025057600080fd5b813561026361025e826107f8565b6107cb565b9150808252602083016020830185838301111561027f57600080fd5b61028a8382846108cd565b50505092915050565b6000813590506102a28161095b565b92915050565b60008083601f8401126102ba57600080fd5b8235905067ffffffffffffffff8111156102d357600080fd5b6020830191508360018202830111156102eb57600080fd5b9250929050565b60006080828403121561030457600080fd5b61030e60806107cb565b9050600061031e84828501610293565b6000830152506020610332848285016101cb565b602083015250604082013567ffffffffffffffff81111561035257600080fd5b61035e8482850161023f565b60408301525060606103728482850161037e565b60608301525092915050565b60008135905061038d8161096b565b92915050565b600080604083850312156103a657600080fd5b60006103b4858286016101cb565b92505060206103c5858286016101e0565b9150509250929050565b6000806000806000608086880312156103e757600080fd5b60006103f588828901610293565b9550506020610406888289016101cb565b945050604086013567ffffffffffffffff81111561042357600080fd5b61042f888289016101f5565b935093505060606104428882890161037e565b9150509295509295909350565b60008060008060006080868803121561046757600080fd5b600086013567ffffffffffffffff81111561048157600080fd5b61048d888289016102f2565b955050602061049e888289016101cb565b94505060406104af888289016101cb565b935050606086013567ffffffffffffffff8111156104cc57600080fd5b6104d8888289016101f5565b92509250509295509295909350565b6000806000604084860312156104fc57600080fd5b600084013567ffffffffffffffff81111561051657600080fd5b610522868287016102f2565b935050602084013567ffffffffffffffff81111561053f57600080fd5b61054b868287016102a8565b92509250509250925092565b61056081610862565b82525050565b61056f81610862565b82525050565b61057e81610874565b82525050565b60006105908385610840565b935061059d8385846108cd565b6105a68361090f565b840190509392505050565b60006105bc82610824565b6105c6818561082f565b93506105d68185602086016108dc565b6105df8161090f565b840191505092915050565b60006105f582610824565b6105ff8185610840565b935061060f8185602086016108dc565b6106188161090f565b840191505092915050565b61062c816108bb565b82525050565b600061063e8385610851565b935061064b8385846108cd565b6106548361090f565b840190509392505050565b60006080830160008301516106776000860182610623565b50602083015161068a6020860182610557565b50604083015184820360408601526106a282826105b1565b91505060608301516106b760608601826106f1565b508091505092915050565b6040820160008201516106d86000850182610557565b5060208201516106eb6020850182610575565b50505050565b6106fa816108b1565b82525050565b6000602082019050818103600083015261071a81846105ea565b905092915050565b6000608082019050818103600083015261073c818861065f565b905061074b6020830187610566565b6107586040830186610566565b818103606083015261076b818486610584565b90509695505050505050565b60006040820190508181036000830152610791818661065f565b905081810360208301526107a6818486610632565b9050949350505050565b60006040820190506107c560008301846106c2565b92915050565b6000604051905081810181811067ffffffffffffffff821117156107ee57600080fd5b8060405250919050565b600067ffffffffffffffff82111561080f57600080fd5b601f19601f8301169050602081019050919050565b600081519050919050565b600082825260208201905092915050565b600082825260208201905092915050565b600082825260208201905092915050565b600061086d82610891565b9050919050565b6000819050919050565b600081905061088c82610920565b919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000819050919050565b60006108c68261087e565b9050919050565b82818337600083830152505050565b60005b838110156108fa5780820151818401526020810190506108df565b83811115610909576000848401525b50505050565b6000601f19601f8301169050919050565b6002811061092a57fe5b50565b61093681610862565b811461094157600080fd5b50565b61094d81610874565b811461095857600080fd5b50565b6002811061096857600080fd5b50565b610974816108b1565b811461097f57600080fd5b5056fea264697066735822122020b592d9f97c24bd806d1717bf1e687a827df2dfe5b51cf7a2e268bf41760a5464736f6c634300060c0033",
 }
 
 // VaultHelperABI is the input ABI used to generate the binding from.
 // Deprecated: Use VaultHelperMetaData.ABI instead.
 var VaultHelperABI = VaultHelperMetaData.ABI
-
-// Deprecated: Use VaultHelperMetaData.Sigs instead.
-// VaultHelperFuncSigs maps the 4-byte function signature to its string representation.
-var VaultHelperFuncSigs = VaultHelperMetaData.Sigs
 
 // VaultHelperBin is the compiled bytecode used for deploying new contracts.
 // Deprecated: Use VaultHelperMetaData.Bin instead.
@@ -250,16 +240,16 @@ func (_VaultHelper *VaultHelperCallerSession) BuildPreSignData(prefix uint8, tok
 
 // BuildSignExecute is a free data retrieval call binding the contract method 0x41f59b6f.
 //
-// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes32)
-func (_VaultHelper *VaultHelperCaller) BuildSignExecute(opts *bind.CallOpts, psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([32]byte, error) {
+// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes)
+func (_VaultHelper *VaultHelperCaller) BuildSignExecute(opts *bind.CallOpts, psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([]byte, error) {
 	var out []interface{}
 	err := _VaultHelper.contract.Call(opts, &out, "_buildSignExecute", psd, recipientToken, exchangeAddress, callData)
 
 	if err != nil {
-		return *new([32]byte), err
+		return *new([]byte), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
 
 	return out0, err
 
@@ -267,30 +257,30 @@ func (_VaultHelper *VaultHelperCaller) BuildSignExecute(opts *bind.CallOpts, psd
 
 // BuildSignExecute is a free data retrieval call binding the contract method 0x41f59b6f.
 //
-// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes32)
-func (_VaultHelper *VaultHelperSession) BuildSignExecute(psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([32]byte, error) {
+// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes)
+func (_VaultHelper *VaultHelperSession) BuildSignExecute(psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignExecute(&_VaultHelper.CallOpts, psd, recipientToken, exchangeAddress, callData)
 }
 
 // BuildSignExecute is a free data retrieval call binding the contract method 0x41f59b6f.
 //
-// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes32)
-func (_VaultHelper *VaultHelperCallerSession) BuildSignExecute(psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([32]byte, error) {
+// Solidity: function _buildSignExecute((uint8,address,bytes,uint256) psd, address recipientToken, address exchangeAddress, bytes callData) pure returns(bytes)
+func (_VaultHelper *VaultHelperCallerSession) BuildSignExecute(psd VaultHelperPreSignData, recipientToken common.Address, exchangeAddress common.Address, callData []byte) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignExecute(&_VaultHelper.CallOpts, psd, recipientToken, exchangeAddress, callData)
 }
 
 // BuildSignRequestWithdraw is a free data retrieval call binding the contract method 0x3cf6e1ca.
 //
-// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes32)
-func (_VaultHelper *VaultHelperCaller) BuildSignRequestWithdraw(opts *bind.CallOpts, psd VaultHelperPreSignData, incognitoAddress string) ([32]byte, error) {
+// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes)
+func (_VaultHelper *VaultHelperCaller) BuildSignRequestWithdraw(opts *bind.CallOpts, psd VaultHelperPreSignData, incognitoAddress string) ([]byte, error) {
 	var out []interface{}
 	err := _VaultHelper.contract.Call(opts, &out, "_buildSignRequestWithdraw", psd, incognitoAddress)
 
 	if err != nil {
-		return *new([32]byte), err
+		return *new([]byte), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
 
 	return out0, err
 
@@ -298,45 +288,45 @@ func (_VaultHelper *VaultHelperCaller) BuildSignRequestWithdraw(opts *bind.CallO
 
 // BuildSignRequestWithdraw is a free data retrieval call binding the contract method 0x3cf6e1ca.
 //
-// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes32)
-func (_VaultHelper *VaultHelperSession) BuildSignRequestWithdraw(psd VaultHelperPreSignData, incognitoAddress string) ([32]byte, error) {
+// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes)
+func (_VaultHelper *VaultHelperSession) BuildSignRequestWithdraw(psd VaultHelperPreSignData, incognitoAddress string) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignRequestWithdraw(&_VaultHelper.CallOpts, psd, incognitoAddress)
 }
 
 // BuildSignRequestWithdraw is a free data retrieval call binding the contract method 0x3cf6e1ca.
 //
-// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes32)
-func (_VaultHelper *VaultHelperCallerSession) BuildSignRequestWithdraw(psd VaultHelperPreSignData, incognitoAddress string) ([32]byte, error) {
+// Solidity: function _buildSignRequestWithdraw((uint8,address,bytes,uint256) psd, string incognitoAddress) pure returns(bytes)
+func (_VaultHelper *VaultHelperCallerSession) BuildSignRequestWithdraw(psd VaultHelperPreSignData, incognitoAddress string) ([]byte, error) {
 	return _VaultHelper.Contract.BuildSignRequestWithdraw(&_VaultHelper.CallOpts, psd, incognitoAddress)
 }
 
-// NewPreSignData is a free data retrieval call binding the contract method 0xb95494e3.
+// BuildSignShield is a free data retrieval call binding the contract method 0xe24ef4bd.
 //
-// Solidity: function newPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) pure returns((uint8,address,bytes,uint256))
-func (_VaultHelper *VaultHelperCaller) NewPreSignData(opts *bind.CallOpts, prefix uint8, token common.Address, timestamp []byte, amount *big.Int) (VaultHelperPreSignData, error) {
+// Solidity: function _buildSignShield(address _senser, bytes32 _txId) pure returns(bytes)
+func (_VaultHelper *VaultHelperCaller) BuildSignShield(opts *bind.CallOpts, _senser common.Address, _txId [32]byte) ([]byte, error) {
 	var out []interface{}
-	err := _VaultHelper.contract.Call(opts, &out, "newPreSignData", prefix, token, timestamp, amount)
+	err := _VaultHelper.contract.Call(opts, &out, "_buildSignShield", _senser, _txId)
 
 	if err != nil {
-		return *new(VaultHelperPreSignData), err
+		return *new([]byte), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(VaultHelperPreSignData)).(*VaultHelperPreSignData)
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
 
 	return out0, err
 
 }
 
-// NewPreSignData is a free data retrieval call binding the contract method 0xb95494e3.
+// BuildSignShield is a free data retrieval call binding the contract method 0xe24ef4bd.
 //
-// Solidity: function newPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) pure returns((uint8,address,bytes,uint256))
-func (_VaultHelper *VaultHelperSession) NewPreSignData(prefix uint8, token common.Address, timestamp []byte, amount *big.Int) (VaultHelperPreSignData, error) {
-	return _VaultHelper.Contract.NewPreSignData(&_VaultHelper.CallOpts, prefix, token, timestamp, amount)
+// Solidity: function _buildSignShield(address _senser, bytes32 _txId) pure returns(bytes)
+func (_VaultHelper *VaultHelperSession) BuildSignShield(_senser common.Address, _txId [32]byte) ([]byte, error) {
+	return _VaultHelper.Contract.BuildSignShield(&_VaultHelper.CallOpts, _senser, _txId)
 }
 
-// NewPreSignData is a free data retrieval call binding the contract method 0xb95494e3.
+// BuildSignShield is a free data retrieval call binding the contract method 0xe24ef4bd.
 //
-// Solidity: function newPreSignData(uint8 prefix, address token, bytes timestamp, uint256 amount) pure returns((uint8,address,bytes,uint256))
-func (_VaultHelper *VaultHelperCallerSession) NewPreSignData(prefix uint8, token common.Address, timestamp []byte, amount *big.Int) (VaultHelperPreSignData, error) {
-	return _VaultHelper.Contract.NewPreSignData(&_VaultHelper.CallOpts, prefix, token, timestamp, amount)
+// Solidity: function _buildSignShield(address _senser, bytes32 _txId) pure returns(bytes)
+func (_VaultHelper *VaultHelperCallerSession) BuildSignShield(_senser common.Address, _txId [32]byte) ([]byte, error) {
+	return _VaultHelper.Contract.BuildSignShield(&_VaultHelper.CallOpts, _senser, _txId)
 }

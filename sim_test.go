@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"context"
@@ -33,10 +33,16 @@ import (
 
 // admin
 var auth *bind.TransactOpts
+
 // user
 var auth2 *bind.TransactOpts
+
+// user
+var auth3 *bind.TransactOpts
+
 var genesisAcc *account
 var genesisAcc2 *account
+var genesisAcc3 *account
 
 type Platform struct {
 	*contracts
@@ -46,9 +52,21 @@ type Platform struct {
 func init() {
 	fmt.Println("Initializing genesis account...")
 	genesisAcc = loadAccount()
-	auth = bind.NewKeyedTransactor(genesisAcc.PrivateKey)
+	var err error
+	auth, err = bind.NewKeyedTransactorWithChainID(genesisAcc.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
 	genesisAcc2 = loadAccount()
-	auth2 = bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	auth2, err = bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
+	genesisAcc3 = loadAccount()
+	auth3, err = bind.NewKeyedTransactorWithChainID(genesisAcc3.PrivateKey, big.NewInt(1337))
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func TestSimulatedSwapBeacon(t *testing.T) {
@@ -160,13 +178,13 @@ func lockSimERC20WithTxs(
 	tokenAddr common.Address,
 	amount *big.Int,
 ) (*types.Transaction, *types.Transaction, error) {
-	txApprove, err := approveERC20(genesisAcc2.PrivateKey, p.vAddr, token, amount)
+	txApprove, err := approveERC20(genesisAcc2.PrivateKey, p.vAddr, token, amount, p.sim.Blockchain().Config().ChainID.Int64())
 	if err != nil {
 		return nil, nil, err
 	}
 	p.sim.Commit()
 
-	txDeposit, err := depositERC20(genesisAcc2.PrivateKey, p.v, tokenAddr, amount)
+	txDeposit, err := depositERC20(genesisAcc2.PrivateKey, p.v, tokenAddr, amount, p.sim.Blockchain().Config().ChainID.Int64())
 	if err != nil {
 		return txApprove, nil, err
 	}
@@ -212,6 +230,7 @@ func setup(
 	balance, _ := big.NewInt(1).SetString("1000000000000000000000000000000", 10) // 1E30 wei
 	alloc[auth.From] = core.GenesisAccount{Balance: balance}
 	alloc[auth2.From] = core.GenesisAccount{Balance: balance}
+	alloc[auth3.From] = core.GenesisAccount{Balance: balance}
 	for _, acc := range accs {
 		alloc[acc] = core.GenesisAccount{Balance: balance}
 	}
@@ -273,7 +292,7 @@ func setup(
 	}
 	p.vAddr = addr
 	p.v = v
-	vp, _ := vaultproxy.NewVaultproxy(addr, sim)
+	vp, _ := vaultproxy.NewTransparentUpgradeableProxy(addr, sim)
 	p.vp = vp
 	// fmt.Printf("deployed vault, addr: %x ", p.vAddr)
 	// printReceipt(sim, tx)
@@ -293,9 +312,9 @@ func setupVault(
 	backend.Commit()
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", prevVault)	
+	input, _ := vaultAbi.Pack("initialize", prevVault)
 
-	proxyAddr, tx, _, err := vaultproxy.DeployVaultproxy(auth, backend, addr, admin, incAddr, input)
+	proxyAddr, tx, _, err := vaultproxy.DeployTransparentUpgradeableProxy(auth, backend, addr, admin, incAddr, input)
 	if err != nil {
 		return common.Address{}, nil, nil, fmt.Errorf("failed to deploy Vault Proxy contract: %v", err)
 	}
@@ -366,7 +385,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy FAIL token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, fail, err := fail.DeployFAIL(auth2, p.sim, bal, "FAIL", 6, "FAIL")
+	addr, _, fail, err := fail.DeployFail(auth2, p.sim, bal, "FAIL", 6, "FAIL")
 	if err != nil {
 		return errors.Errorf("failed to deploy FAIL contract: %v", err)
 	}
@@ -375,7 +394,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy DLESS token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, dless, err := dless.DeployDLESS(auth2, p.sim, bal, "DLESS", "DLESS")
+	addr, _, dless, err := dless.DeployDless(auth2, p.sim, bal, "DLESS", "DLESS")
 	if err != nil {
 		return errors.Errorf("failed to deploy DLESS contract: %v", err)
 	}
@@ -555,10 +574,13 @@ func getBeaconSwapProof(block int) string {
 
 func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 	initBalance := p.getBalance(p.vAddr)
-	auth := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, p.sim.Blockchain().Config().ChainID)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
 	auth.GasLimit = 0
 	auth.Value = amount
-	_, err := p.v.Deposit(auth, "")
+	_, err = p.v.Deposit(auth, "")
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}

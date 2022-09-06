@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"encoding/hex"
@@ -26,7 +26,7 @@ import (
 
 type contracts struct {
 	v         *vault.Vault
-	vp		  *vaultproxy.Vaultproxy
+	vp        *vaultproxy.TransparentUpgradeableProxy
 	vAddr     common.Address
 	inc       *incognito_proxy.IncognitoProxy
 	incAddr   common.Address
@@ -92,6 +92,27 @@ func getAndDecodeBurnProof(txID string) (*decodedProof, error) {
 }
 
 func getAndDecodeBurnProofV2(
+	incBridgeHost string,
+	txID string,
+	rpcMethod string,
+) (*decodedProof, error) {
+	body, err := getBurnProofV2(incBridgeHost, txID, rpcMethod)
+	if err != nil {
+		return nil, err
+	}
+	if len(body) < 1 {
+		return nil, fmt.Errorf("burn proof for deposit to SC not found")
+	}
+
+	r := getProofResult{}
+	err = json.Unmarshal([]byte(body), &r)
+	if err != nil {
+		return nil, err
+	}
+	return decodeProof(&r)
+}
+
+func GetAndDecodeBurnProofV2(
 	incBridgeHost string,
 	txID string,
 	rpcMethod string,

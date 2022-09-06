@@ -1,11 +1,11 @@
-package main
+package bridge
 
 import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -17,47 +17,82 @@ import (
 )
 
 func TestRetireVaultAdmin(t *testing.T) {
-	privKey, c := getVaultProxy(t)
+	privKey, c, chainId := getVaultProxy(t)
 
 	successor := common.HexToAddress(Successor)
 	fmt.Println("Successor address:", successor.Hex())
 
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Retire(auth, successor)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainId))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Retire(auth, successor)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestClaimVaultAdmin(t *testing.T) {
-	privKey, c := getVaultProxy(t)
-	auth := bind.NewKeyedTransactor(privKey)
-	_, err := c.Claim(auth)
+	privKey, c, chainId := getVaultProxy(t)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainId))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = c.Claim(auth)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestClaimAllVaultAdmin(t *testing.T) {
-	privKey, client, err := connect()
+func TestUpdateImplementation(t *testing.T) {
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Get vault instance
-	c, err := vaultproxy.NewVaultproxy(common.HexToAddress(VaultAddress), client)
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(BSCVaultAddress), client)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	auth.GasPrice = big.NewInt(5e9)
+
+	tx, err := c.UpgradeTo(auth, common.HexToAddress(BSCNewImplementation))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Printf("Created transaction: %s\n", tx.Hash().String())
+}
+
+func TestClaimAllVaultAdmin(t *testing.T) {
+	privKey, client, chainID, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Get vault instance
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(VaultAddress), client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := c.Claim(auth)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Get prev vault instance
-	c, err = vaultproxy.NewVaultproxy(common.HexToAddress(PrevVault), client)
+	c, err = vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(PrevVault), client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +105,7 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 }
 
 func TestDeployNewVaultToMigrate(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +119,10 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	fmt.Println("PrevVault address:", prevVaultAddr.Hex())
 
 	// Deploy vault
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	auth.GasPrice = big.NewInt(int64(25000000000))
 	vaultDelegatorAddr, _, _, err := vault.DeployVault(auth, client)
 	if err != nil {
@@ -92,9 +130,9 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", common.Address{})	
+	input, _ := vaultAbi.Pack("initialize", common.Address{})
 
-	vaultProxy, _, _, err := vaultproxy.DeployVaultproxy(auth, client, vaultDelegatorAddr, admin, incAddr, input)
+	vaultProxy, _, _, err := vaultproxy.DeployTransparentUpgradeableProxy(auth, client, vaultDelegatorAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +141,7 @@ func TestDeployNewVaultToMigrate(t *testing.T) {
 }
 
 func TestDeployKBNTrade(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +158,10 @@ func TestDeployKBNTrade(t *testing.T) {
 	fmt.Println("New vault address:", newVault.Hex())
 
 	// Deploy KBNTrade
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	auth.GasPrice = big.NewInt(int64(23000000000))
 	kbnTradeAddr, _, _, err := kbntrade.DeployKBNTrade(auth, client, kbnProxy)
 	if err != nil {
@@ -291,7 +332,7 @@ func TestMoveAssetsVault(t *testing.T) {
 }
 
 func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,17 +346,17 @@ func getVault(t *testing.T) (*ecdsa.PrivateKey, *vault.Vault) {
 	return privKey, c
 }
 
-func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.Vaultproxy) {
-	privKey, client, err := connect()
+func getVaultProxy(t *testing.T) (*ecdsa.PrivateKey, *vaultproxy.TransparentUpgradeableProxy, int64) {
+	privKey, client, chainId, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Get vault instance
 	vaultAddr := common.HexToAddress(VaultAddress)
-	c, err := vaultproxy.NewVaultproxy(vaultAddr, client)
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(vaultAddr, client)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return privKey, c
+	return privKey, c, chainId
 }

@@ -9,3 +9,4 @@ genesisKey.hex
 cache
 artifacts
 */scripts/src/*
+node_modules

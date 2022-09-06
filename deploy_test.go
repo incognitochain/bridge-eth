@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 	"testing"
 	"time"
-	"strings"
+	"encoding/json"
 
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -22,10 +22,18 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
 	"github.com/pkg/errors"
+	"github.com/incognitochain/bridge-eth/rpccaller"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
+type EstimateRes struct {
+	rpccaller.RPCBaseRes
+	Result interface{} `json:"Result"`
+}
+
 func TestGetNonceOfPendingTx(t *testing.T) {
-	_, client, err := connect()
+	_, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +50,7 @@ func TestGetNonceOfPendingTx(t *testing.T) {
 }
 
 func TestGetTxStatus(t *testing.T) {
-	_, client, err := connect()
+	_, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +87,7 @@ func TestSwapBeacon(t *testing.T) {
 	proof := getFixedSwapBeaconProof()
 
 	// Connect to ETH
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +101,10 @@ func TestSwapBeacon(t *testing.T) {
 	}
 
 	// Swap
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := SwapBeacon(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -103,7 +114,7 @@ func TestSwapBeacon(t *testing.T) {
 }
 
 func TestResendETH(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +148,7 @@ func TestReburn(t *testing.T) {
 	}
 
 	// Connect to ETH
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,11 +168,41 @@ func TestReburn(t *testing.T) {
 	}
 
 	// Burn
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	auth.GasPrice = gasPrice
 	if nonce > 0 {
 		auth.Nonce = big.NewInt(int64(nonce))
 	}
+
+	vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultABI))
+	if err != nil {
+		t.Fatal(err)
+	}
+	input, err := vaultAbi.Pack(
+		"withdraw", 
+		proof.Instruction,
+		proof.Heights[0],
+		proof.InstPaths[0],
+		proof.InstPathIsLefts[0],
+		proof.InstRoots[0],
+		proof.BlkData[0],
+		proof.SigIdxs[0],
+		proof.SigVs[0],
+		proof.SigRs[0],
+		proof.SigSs[0],
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gasLimit, err := EstimateGas(ethereum.CallMsg{From: auth.From, To: &vaultAddr, GasPrice: auth.GasPrice, Value: auth.Value, Data: input})
+	if err != nil {
+		t.Fatal(err)
+	}
+	auth.GasLimit = gasLimit
 	tx, err := Withdraw(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -178,7 +219,7 @@ func TestMassSend(t *testing.T) {
 		"0x7A279AEe9cc310B64F0F159904271c0a68014082",
 	}
 
-	privKey, client, err := connect()
+	privKey, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,7 +279,7 @@ func TestInstructionUsed(t *testing.T) {
 	instHash := crypto.Keccak256(proof.Instruction)
 
 	// Connect to ETH
-	_, client, err := connect()
+	_, client, _, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +306,7 @@ func TestBurn(t *testing.T) {
 	// return
 
 	// Connect to ETH
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +320,10 @@ func TestBurn(t *testing.T) {
 	}
 
 	// Burn
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx, err := Withdraw(c, auth, proof)
 	if err != nil {
 		t.Fatal(err)
@@ -289,7 +333,7 @@ func TestBurn(t *testing.T) {
 }
 
 func TestDeposit(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,6 +355,7 @@ func TestDeposit(t *testing.T) {
 		0,
 		0,
 		nil,
+		chainID,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -319,7 +364,7 @@ func TestDeposit(t *testing.T) {
 
 func TestRedeposit(t *testing.T) {
 	// Set up client
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -353,6 +398,7 @@ func TestRedeposit(t *testing.T) {
 		nonce,
 		0,
 		gasPrice,
+		chainID,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -367,8 +413,13 @@ func depositDetail(
 	nonce uint64,
 	gasLimit uint64,
 	gasPrice *big.Int,
+	chainID int64,
 ) (*types.Transaction, error) {
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		return nil, err
+	}
+	
 	auth.Value = amount
 	if gasLimit > 0 {
 		auth.GasLimit = gasLimit
@@ -433,7 +484,7 @@ func depositDetail(
 // }
 
 func TestDeployProxyAndVault(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,7 +502,11 @@ func TestDeployProxyAndVault(t *testing.T) {
 	// }
 
 	// Deploy incognito_proxy
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	auth.Value = big.NewInt(0)
 	// auth.GasPrice = big.NewInt(10000000000)
 	// auth.GasLimit = 4000000
@@ -476,8 +531,8 @@ func TestDeployProxyAndVault(t *testing.T) {
 	}
 
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	input, _ := vaultAbi.Pack("initialize", prevVault)	
-	vaultProxyAddr, _, _, err:= vaultproxy.DeployVaultproxy(auth, client, vaultAddr, admin, incAddr, input)
+	input, _ := vaultAbi.Pack("initialize", prevVault)
+	vaultProxyAddr, _, _, err := vaultproxy.DeployTransparentUpgradeableProxy(auth, client, vaultAddr, admin, incAddr, input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -500,20 +555,80 @@ func wait(client *ethclient.Client, tx common.Hash) error {
 	return nil
 }
 
-func connect() (*ecdsa.PrivateKey, *ethclient.Client, error) {
+func connect() (*ecdsa.PrivateKey, *ethclient.Client, int64, error) {
 	privKeyHex := os.Getenv("PRIVKEY")
 	privKey, err := crypto.HexToECDSA(privKeyHex)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
 	}
 	fmt.Printf("Sign Txs with address: %s\n", crypto.PubkeyToAddress(privKey.PublicKey).Hex())
 
-	network := "mainnet"
-	fmt.Printf("Connecting to network %s\n", network)
-	client, err := ethclient.Dial(fmt.Sprintf("https://%s.infura.io/v3/29fead42346b4bfa88dd5fd7e56b6406", network))
+	ethNodeEndpoint := os.Getenv("ETHNODE")
+	if len(ethNodeEndpoint) == 0 {
+		return nil, nil, 0, errors.New("os env value of ETHNODE not set yet")
+	}
+	client, err := ethclient.Dial(ethNodeEndpoint)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, 0, err
+	}
+	chainID, err := client.ChainID(context.Background())
+	if err != nil {
+		return nil, nil, 0, err
 	}
 
-	return privKey, client, nil
+	return privKey, client, chainID.Int64(), nil
+}
+
+
+func ToCallArg(msg ethereum.CallMsg) interface{} {
+	arg := map[string]interface{}{
+		"from": msg.From,
+		"to":   msg.To,
+	}
+	if len(msg.Data) > 0 {
+		arg["data"] = hexutil.Bytes(msg.Data)
+	}
+	if msg.Value != nil {
+		arg["value"] = (*hexutil.Big)(msg.Value)
+	}
+	if msg.Gas != 0 {
+		arg["gas"] = hexutil.Uint64(msg.Gas)
+	}
+	if msg.GasPrice != nil {
+		arg["gasPrice"] = (*hexutil.Big)(msg.GasPrice)
+	}
+	return arg
+}
+
+func EstimateGas(msg ethereum.CallMsg) (uint64, error) {
+	var resp EstimateRes
+	rpcClient := rpccaller.NewRPCClient()
+	params := []interface{}{
+		ToCallArg(msg),
+		"latest",
+	}
+	err := rpcClient.RPCCall(
+		"",
+		os.Getenv("ETHNODE"),
+		"",
+		"eth_estimateGas",
+		params,
+		&resp,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	bb, _ := json.Marshal(resp)
+	fmt.Println("Estimate gas res: ", string(bb))
+	if resp.RPCError != nil {
+		return 0, errors.New(resp.RPCError.Message)
+	}
+	hexString := resp.Result.(string)
+	n := new(big.Int)
+	n.SetString(hexString, 16)
+	if n.Cmp(big.NewInt(0)) != 0 {
+		return 0, errors.New("Call estimate gas got error")
+	}
+	return n.Uint64(), nil
 }

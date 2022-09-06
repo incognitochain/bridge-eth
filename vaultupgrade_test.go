@@ -1,6 +1,7 @@
-package main
+package bridge
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"strings"
@@ -108,7 +109,10 @@ func (tradingSuite *VaultUpgradeTestSuite) executeWithKyber(
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	chainID, err := tradingSuite.ETHClient.ChainID(context.Background())
+	require.Equal(tradingSuite.T(), nil, err)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(50000000000)
 	auth.GasLimit = 2000000
 	srcToken := common.HexToAddress(srcTokenIDStr)
@@ -168,7 +172,7 @@ func (tradingSuite *VaultUpgradeTestSuite) moveAssetsToNewVault() {
 	// }
 	// fmt.Println("deployed new vault delegator: ", vaultDelegatorAddr.Hex())
 	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	// input, _ := vaultAbi.Pack("initialize", tradingSuite.IncProxyAddress, prevVault)	
+	// input, _ := vaultAbi.Pack("initialize", tradingSuite.IncProxyAddress, prevVault)
 	// vaultAddr, _, _, err := vaultproxy.DeployVaultproxy(auth, tradingSuite.ETHClient, vaultDelegatorAddr, admin, input)
 	// require.Equal(tradingSuite.T(), nil, err)
 	// if err := wait(tradingSuite.ETHClient, tx.Hash()); err != nil {
@@ -246,12 +250,16 @@ func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {
 	txHash := tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
 	)
 	time.Sleep(10 * time.Second)
 
 	txHash = tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
 	)
 	time.Sleep(10 * time.Second)
 
@@ -266,6 +274,7 @@ func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -283,7 +292,13 @@ func (tradingSuite *VaultUpgradeTestSuite) Test1TradeEthForOMGWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.EtherAddressStr,
 		pubKeyToAddrStr,

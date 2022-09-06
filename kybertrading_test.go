@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -131,7 +131,8 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDETH)))
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(50000000000)
 	// auth.GasLimit = 2000000
 	srcToken := common.HexToAddress(srcTokenIDStr)
@@ -141,13 +142,13 @@ func (tradingSuite *KyberTradingTestSuite) executeWithKyber(
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: srcQty,
+		Amount:    srcQty,
 	}
 	tempData, err := vaultAbi.Pack("_buildSignExecute", psData, destToken, tradingSuite.KyberTradeDeployedAddr, input)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	data := rawsha3(tempData[4:])
@@ -182,6 +183,8 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 	txHash := tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
 	)
 	// time.Sleep(15 * time.Second)
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -195,6 +198,7 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -212,7 +216,13 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.EtherAddressStr,
 		pubKeyToAddrStr,
@@ -237,6 +247,10 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.KBNAddressStr,
 		kbnTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -251,6 +265,7 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -269,11 +284,18 @@ func (tradingSuite *KyberTradingTestSuite) Test1TradeEthForKBNWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.KBNAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.KBNBalanceAfterStep1 = bal
 	fmt.Println("KBN balance after step 1: ", tradingSuite.KBNBalanceAfterStep1)
@@ -290,6 +312,7 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	kbnbal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.KBNAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("kbn balance of owner: ", kbnbal)
 
@@ -301,6 +324,9 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 		depositingKBN,
 		common.HexToAddress(tradingSuite.KBNAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -315,6 +341,7 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -334,7 +361,13 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.KBNAddressStr,
 		pubKeyToAddrStr,
@@ -359,6 +392,10 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.OMGAddressStr,
 		saltTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -374,6 +411,7 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -391,11 +429,18 @@ func (tradingSuite *KyberTradingTestSuite) Test2TradeKBNForSALTWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.OMGAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.SALTBalanceAfterStep2 = bal
 	fmt.Println("SALT balance after step 2: ", tradingSuite.SALTBalanceAfterStep2)
@@ -418,6 +463,9 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 		depositingOMG,
 		common.HexToAddress(tradingSuite.OMGAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -432,6 +480,7 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("issuingRes: ", issuingRes)
@@ -450,7 +499,13 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.OMGAddressStr,
 		pubKeyToAddrStr,
@@ -474,6 +529,10 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.EtherAddressStr,
 		etherTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -489,6 +548,7 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(140 * time.Second)
@@ -506,11 +566,18 @@ func (tradingSuite *KyberTradingTestSuite) Test3TradeSALTForEthWithKyber() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.EtherAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("Ether balance after step 3: ", bal)
 	// require.Equal(tradingSuite.T(), withdrawingPETH.Uint64(), bal.Div(bal, big.NewInt(1000000000)).Uint64())

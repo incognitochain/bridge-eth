@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -47,6 +47,8 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositEther() {
 	txHash := ethDepositSuite.depositETH(
 		depositingEther,
 		ethDepositSuite.IncPaymentAddrStr,
+		ethDepositSuite.VaultAddr,
+		ethDepositSuite.ETHClient,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(ethDepositSuite.ETHHost, txHash)
@@ -58,6 +60,7 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositEther() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	// expected an error is returned due to not meet 15 block confirmations
 	require.NotEqual(ethDepositSuite.T(), nil, err)
@@ -71,6 +74,7 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositEther() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(ethDepositSuite.T(), nil, err)
 }
@@ -83,6 +87,9 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositERC20() {
 		depositingDAI,
 		common.HexToAddress(ethDepositSuite.DAIAddressStr),
 		ethDepositSuite.IncPaymentAddrStr,
+		ethDepositSuite.VaultAddr,
+		ethDepositSuite.ETHClient,
+		ethDepositSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(ethDepositSuite.ETHHost, txHash)
@@ -94,6 +101,7 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositERC20() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	// expected an error is returned due to not meet 15 block confirmations
 	require.NotEqual(ethDepositSuite.T(), nil, err)
@@ -107,6 +115,7 @@ func (ethDepositSuite *ETHDepositTestSuite) TestDepositERC20() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(ethDepositSuite.T(), nil, err)
 }

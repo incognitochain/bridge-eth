@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"context"
@@ -44,10 +44,10 @@ type UniswapTestSuite struct {
 	VaultAddress  common.Address
 	IncAddr       common.Address
 
-	WETH              common.Address
-	DAIAddress        common.Address
+	WETH                    common.Address
+	DAIAddress              common.Address
 	ETHUniswapRouterAddress common.Address
-	MRKAddressStr     common.Address
+	MRKAddressStr           common.Address
 }
 
 // Make sure that VariableThatShouldStartAtFive is set to five
@@ -67,7 +67,10 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	v2.IncAddr = common.HexToAddress("0xf295681641c170359E04Bbe2EA3985BaA4CF0baf")
 	v2.connectToETH()
 	v2.c = getFixedCommittee()
-	v2.auth = bind.NewKeyedTransactor(v2.ETHPrivKey)
+	chainId, err := v2.ETHClient.ChainID(context.Background())
+	require.Equal(v2.T(), nil, err)
+	v2.auth, err = bind.NewKeyedTransactorWithChainID(v2.ETHPrivKey, chainId)
+	require.Equal(v2.T(), nil, err)
 	v2.v, err = vault.NewVault(v2.VaultAddress, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 
@@ -87,7 +90,7 @@ func (v2 *UniswapTestSuite) SetupSuite() {
 	// fmt.Printf("delegatorAddr address: %s\n", delegatorAddr.Hex())
 
 	// vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
-	// input, _ := vaultAbi.Pack("initialize", common.Address{})	
+	// input, _ := vaultAbi.Pack("initialize", common.Address{})
 
 	// v2.VaultAddress, tx, _, err = vaultproxy.DeployVaultproxy(v2.auth, v2.ETHClient, delegatorAddr, common.HexToAddress("0x0000000000000000000000000000000000000001"), v2.IncAddr, input)
 	// require.Equal(v2.T(), nil, err)
@@ -200,7 +203,7 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 }
 
 func (v2 *UniswapTestSuite) TestUniswapProxyBadcases() {
-	// anyone can call kyberproxy to trade directly 
+	// anyone can call kyberproxy to trade directly
 	deposit := big.NewInt(int64(8e9))
 	v2.auth.Value = deposit
 	expectedRate := v2.getExpectedRate(v2.EtherAddress, v2.DAIAddress, deposit)
@@ -271,7 +274,6 @@ func (v2 *UniswapTestSuite) executeWithUniswap(
 	}
 }
 
-
 func buildWithdrawTestcaseV2Uniswap(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2Uniswap(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
@@ -317,6 +319,6 @@ func buildDecodedWithdrawInstUniswap(meta, shard int, tokenID, withdrawer common
 	txId := make([]byte, 32)
 	crand.Read(txId)
 	decoded = append(decoded, toBytes32BigEndian(txId)...) // txID
-	decoded = append(decoded, make([]byte, 16)...)                     // incTokenID, variable length
+	decoded = append(decoded, make([]byte, 16)...)         // incTokenID, variable length
 	return decoded
 }

@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -45,13 +45,22 @@ func TestFixedClaimOnce(t *testing.T) {
 			p, _ := setupPauseContract(tc.admin.Address)
 
 			// Retire first
-			_, err := p.c.Retire(bind.NewKeyedTransactor(tc.admin.PrivateKey), tc.successor)
+			key, err := bind.NewKeyedTransactorWithChainID(tc.admin.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = p.c.Retire(key, tc.successor)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Claim
-			_, err = p.c.Claim(bind.NewKeyedTransactor(tc.claimer.PrivateKey))
+			keyClaimer, err := bind.NewKeyedTransactorWithChainID(tc.claimer.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = p.c.Claim(keyClaimer)
 			isErr := err != nil
 			if isErr != tc.err {
 				t.Fatal(errors.Errorf("expect error = %t, got %v", tc.err, err))
@@ -196,12 +205,14 @@ func TestFixedExtendOnce(t *testing.T) {
 
 func TestFixedUnpauseExpired(t *testing.T) {
 	p, _ := setupPauseContract(genesisAcc.Address)
+	var err error
 
 	// Pause first
-	_, err := p.c.Pause(auth)
+	_, err = p.c.Pause(auth)
 	if err != nil {
 		t.Fatal(err)
 	}
+	p.sim.Commit()
 
 	// Advance time till expired
 	err = p.sim.AdjustTime(3 * 366 * 24 * time.Hour)
@@ -276,7 +287,11 @@ func TestFixedUnpauseOnce(t *testing.T) {
 			p, _ := setupPauseContract(tc.admin.Address)
 
 			// Pause first
-			_, err := p.c.Pause(bind.NewKeyedTransactor(tc.admin.PrivateKey))
+			key, err := bind.NewKeyedTransactorWithChainID(tc.admin.PrivateKey, p.sim.Blockchain().Config().ChainID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = p.c.Pause(key)
 			if err != nil {
 				t.Fatal(err)
 			}

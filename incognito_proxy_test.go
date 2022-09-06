@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"crypto/rand"
@@ -28,7 +28,7 @@ func TestCompareCommittee(t *testing.T) {
 
 	// Committee on contract
 	committeeIdx := big.NewInt(0)
-	_, c := connectAndInstantiate(t)
+	_, c, _ := connectAndInstantiate(t)
 	comm, err := c.inc.GetBeaconCommittee(nil, committeeIdx)
 	if err != nil {
 		t.Fatal(err)
@@ -312,7 +312,6 @@ func TestFixedSwapBridgeCommittee(t *testing.T) {
 			in:   buildSwapBridgeTestcase(c, 0, 789, 71, 1),
 			out:  789,
 		},
-
 	}
 
 	for _, tc := range testCases {
@@ -415,7 +414,6 @@ func TestFixedSwapBeaconCommittee(t *testing.T) {
 			in:   buildSwapBeaconTestcase(c, 0, 789, 70, 1),
 			out:  789,
 		},
-
 	}
 
 	for _, tc := range testCases {
@@ -1131,6 +1129,7 @@ func getFixedSwapBridgeProof() *decodedProof {
 	json.Unmarshal([]byte(proofMarshalled), proof)
 	return proof
 }
+
 //deprecated
 func getFixedSwapBeaconProof() *decodedProof {
 	proofMarshalled := `{"Instruction":"RgEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAm8D657tDKCh1m245HgzJmZUFd5EAAAAAAAAAAAAAAABsvCk3/uR3u9o2CoQu7r+Swvq2EwAAAAAAAAAAAAAAAMq/Pbk+tIph1BSGrMkoG2JAQRQDAAAAAAAAAAAAAAAAKb005R6rovCvV/lqt8gJ+RD/iLQ=","BeaconHeight":null,"BridgeHeight":null,"InstPaths":[[[190,127,252,151,179,86,125,52,148,38,88,71,42,122,97,139,203,231,174,68,80,117,88,56,239,128,172,245,206,95,53,178],[162,228,131,39,165,165,2,156,136,240,223,91,73,46,190,153,146,202,26,238,236,18,158,126,177,82,79,156,212,10,53,210]],[]],"InstPathIsLefts":[[true,true],[]],"InstRoots":[[249,163,147,109,61,102,214,159,153,210,254,167,250,0,106,47,239,2,166,192,182,187,8,184,238,217,70,60,130,211,61,59],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"BlkData":[[10,7,159,166,138,29,232,54,106,83,29,231,41,186,189,17,178,237,217,254,243,137,208,33,50,61,20,187,191,149,70,231],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],"SigIdxs":[[0,1,2,3],[]],"SigVs":["GxsbHA==",""],"SigRs":[[[165,220,162,117,239,247,151,155,228,191,90,68,192,6,196,77,198,36,121,66,99,137,213,29,38,37,157,36,124,206,194,247],[36,68,143,168,167,222,194,213,53,167,221,217,46,130,92,182,182,202,148,83,193,157,119,206,248,168,61,177,215,228,79,180],[189,188,89,137,208,221,155,133,233,186,109,105,240,42,87,56,94,213,128,242,157,110,147,69,203,139,70,238,166,130,168,98],[6,116,33,87,1,135,160,111,69,195,162,75,72,156,177,129,167,180,20,219,197,192,83,135,121,80,116,164,240,63,214,94]],[]],"SigSs":[[[60,52,159,94,158,253,102,75,1,176,21,223,186,241,110,246,36,174,167,155,202,221,109,152,104,223,34,191,173,116,189,149],[63,171,88,18,252,67,227,4,95,243,181,130,226,53,225,227,220,209,31,72,139,127,35,237,164,214,248,105,22,231,118,134],[13,203,155,190,14,195,49,223,120,18,255,159,32,52,195,35,136,77,222,27,85,179,41,183,126,55,52,223,50,195,85,106],[85,192,199,155,76,34,126,82,252,53,138,243,213,220,183,150,27,70,88,199,90,192,56,200,25,201,112,71,87,207,216,171]],[]]}`

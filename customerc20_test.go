@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -11,14 +11,17 @@ import (
 )
 
 func TestUSDTDeploy(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Error(err)
 	}
 	defer client.Close()
 
 	// Deploy USDT
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	bal, _ := big.NewInt(1).SetString("100000000000", 10)
 	addr, _, _, err := usdt.DeployUsdt(auth, client, bal, "Tether USD", "USDT", big.NewInt(6))
 	if err != nil {
@@ -29,14 +32,17 @@ func TestUSDTDeploy(t *testing.T) {
 }
 
 func TestDAIDeploy(t *testing.T) {
-	privKey, client, err := connect()
+	privKey, client, chainID, err := connect()
 	if err != nil {
 		t.Error(err)
 	}
 	defer client.Close()
 
 	// Deploy DAI
-	auth := bind.NewKeyedTransactor(privKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
 	symbol := [32]byte{'D', 'A', 'I'}
 	addr, tx, d, err := dai.DeployDai(auth, client, symbol)
 	if err != nil {

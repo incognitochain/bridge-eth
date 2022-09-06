@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -116,7 +116,8 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	// Get contract instance
 	c, err := vault.NewVault(tradingSuite.VaultAddr, tradingSuite.ETHClient)
 	require.Equal(tradingSuite.T(), nil, err)
-	auth := bind.NewKeyedTransactor(tradingSuite.ETHPrivKey)
+	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, big.NewInt(int64(tradingSuite.ChainIDETH)))
+	require.Equal(tradingSuite.T(), nil, err)
 	auth.GasPrice = big.NewInt(50000000000)
 	// auth.GasLimit = 2000000
 	srcToken := common.HexToAddress(srcTokenIDStr)
@@ -126,10 +127,10 @@ func (tradingSuite *UniswapTradingTestSuite) executeWithUniswap(
 	timestamp := []byte(randomizeTimestamp())
 	vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultHelperABI))
 	psData := vault.VaultHelperPreSignData{
-		Prefix: EXECUTE_PREFIX,
-		Token: srcToken,
+		Prefix:    EXECUTE_PREFIX,
+		Token:     srcToken,
 		Timestamp: timestamp,
-		Amount: srcQty,
+		Amount:    srcQty,
 	}
 	tempData, _ := vaultAbi.Pack("_buildSignExecute", psData, destToken, tradingSuite.UniswapTradeDeployedAddr, input)
 	data := rawsha3(tempData[4:])
@@ -164,6 +165,8 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	txHash := tradingSuite.depositETH(
 		tradingSuite.DepositingEther,
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultBSCAddr,
+		tradingSuite.BSCClient,
 	)
 	// time.Sleep(15 * time.Second)
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -177,6 +180,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -194,7 +198,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.EtherAddressStr,
 		pubKeyToAddrStr,
@@ -219,6 +229,10 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.DAIAddressStr,
 		daiTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -233,6 +247,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -250,11 +265,18 @@ func (tradingSuite *UniswapTradingTestSuite) Test1TradeEthForDAIWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.DAIAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.DAIBalanceAfterStep1 = bal
 	fmt.Println("DAI balance after step 1: ", tradingSuite.DAIBalanceAfterStep1)
@@ -271,6 +293,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	daibal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.DAIAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("dai balance of owner: ", daibal)
 
@@ -282,6 +305,9 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 		depositingDAI,
 		common.HexToAddress(tradingSuite.DAIAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -296,6 +322,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -315,7 +342,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.DAIAddressStr,
 		pubKeyToAddrStr,
@@ -340,6 +373,10 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.MRKAddressStr,
 		mrkTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -355,6 +392,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(120 * time.Second)
@@ -372,11 +410,18 @@ func (tradingSuite *UniswapTradingTestSuite) Test2TradeDAIForMRKWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(120 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.MRKAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	tradingSuite.MRKBalanceAfterStep2 = bal
 	fmt.Println("MRK balance after step 2: ", tradingSuite.MRKBalanceAfterStep2)
@@ -399,6 +444,9 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 		depositingMRK,
 		common.HexToAddress(tradingSuite.MRKAddressStr),
 		tradingSuite.IncPaymentAddrStr,
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
 	)
 
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(tradingSuite.ETHHost, txHash)
@@ -413,6 +461,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("issuingRes: ", issuingRes)
@@ -431,7 +480,13 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForDepositToSC(burningTxID.(string))
+	tradingSuite.submitBurnProofForDepositToSC(
+		burningTxID.(string),
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		"getburnprooffordeposittosc",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+	)
 	deposited := tradingSuite.getDepositedBalance(
 		tradingSuite.MRKAddressStr,
 		pubKeyToAddrStr,
@@ -455,6 +510,10 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	txHashByEmittingWithdrawalReq := tradingSuite.requestWithdraw(
 		tradingSuite.EtherAddressStr,
 		etherTraded,
+		tradingSuite.BSCClient,
+		big.NewInt(int64(tradingSuite.ChainIDETH)),
+		tradingSuite.VaultAddr,
+		REQ_WITHDRAW_PREFIX,
 	)
 	time.Sleep(15 * time.Second)
 
@@ -470,6 +529,7 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
+		"createandsendtxwithissuingethreq",
 	)
 	require.Equal(tradingSuite.T(), nil, err)
 	time.Sleep(140 * time.Second)
@@ -487,11 +547,18 @@ func (tradingSuite *UniswapTradingTestSuite) Test3TradeMRKForEthWithUniswap() {
 	require.Equal(tradingSuite.T(), true, found)
 	time.Sleep(140 * time.Second)
 
-	tradingSuite.submitBurnProofForWithdrawal(burningTxID.(string))
+	tradingSuite.submitBurnProofForWithdrawal(
+		burningTxID.(string),
+		"getburnproof",
+		tradingSuite.VaultAddr,
+		tradingSuite.ETHClient,
+		tradingSuite.ChainIDETH,
+	)
 
 	bal := tradingSuite.getBalanceOnETHNet(
 		common.HexToAddress(tradingSuite.EtherAddressStr),
 		common.HexToAddress(fmt.Sprintf("0x%s", tradingSuite.ETHOwnerAddrStr)),
+		tradingSuite.ETHClient,
 	)
 	fmt.Println("Ether balance after step 3: ", bal)
 	// require.Equal(tradingSuite.T(), withdrawingPETH.Uint64(), bal.Div(bal, big.NewInt(1000000000)).Uint64())

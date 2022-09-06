@@ -1,10 +1,17 @@
-package main
+package bridge
 
 import (
 	"encoding/hex"
 
 	ec "github.com/ethereum/go-ethereum/common"
 )
+
+type committees struct {
+	beacons     []ec.Address
+	bridges     []ec.Address
+	beaconPrivs [][]byte
+	bridgePrivs [][]byte
+}
 
 // getCommitteeHardcoded is for deploying scripts
 func getCommitteeHardcoded() *committees {

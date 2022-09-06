@@ -1,4 +1,4 @@
-package main
+package bridge
 
 import (
 	"fmt"
@@ -58,7 +58,10 @@ func depositErc20(
 	initBalance := getBalanceErc20(token, vAddr)
 
 	// Approve
-	authTemp := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
+	authTemp, err := bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, sim.Blockchain().Config().ChainID)
+	if err != nil {
+		return nil, nil, err
+	}
 	value := big.NewInt(int64(1e9))
 	tx, err := token.Approve(authTemp, vAddr, value)
 	if err != nil {
@@ -86,8 +89,11 @@ func transferErc20(
 	amount int64,
 ) (*big.Int, *big.Int, error) {
 	initBalance := getBalanceErc20(token, to)
-	authTemp := bind.NewKeyedTransactor(genesisAcc2.PrivateKey)
-	_, err := token.Transfer(authTemp, to, big.NewInt(amount))
+	authTemp, err := bind.NewKeyedTransactorWithChainID(genesisAcc2.PrivateKey, sim.Blockchain().Config().ChainID)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = token.Transfer(authTemp, to, big.NewInt(amount))
 	if err != nil {
 		return nil, nil, err
 	}
