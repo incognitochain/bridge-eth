@@ -29,9 +29,9 @@ task("list-contracts", "Exports & prints the list of deployed contracts")
 
 task("unshield-status", "Asks if the contract has processed an unshield")
     .addOptionalParam("id", "The unshield id", "", types.string)
-    .setAction(async taskArgs => {
+    .setAction(async (taskArgs, hre) => {
         const incTxHash = taskArgs.id;
-        const vault = await ethers.getContract('Vault');
+        const vault = await ethers.getContractAt('Vault', await hre.deployments.get('Vault'));
         const res = await vault.isWithdrawed(incTxHash);
         console.log(res);
     });
@@ -159,3 +159,48 @@ task("query-var", "Display the vault's Incognito recovery address")
         const res = await vault[taskArgs.name]();
         console.log(`Vault ${vault.address}: ${taskArgs.name} = ${res}`);
     });
+
+task("testing-balance", "Display the testing accounts' token balances")
+    .setAction(async taskArgs => {
+        const { getInstance } = require('./utils');
+        const signers = await ethers.getSigners();
+        const { testingTokenNames, deployed } = hre.networkCfg();
+        const { tokenFunders, testingTokens } = deployed || {};  
+        console.log(tokenFunders, testingTokens)      
+        for (let i=0; i < testingTokens.length; i++) {
+            console.log(testingTokenNames[i], '\t', testingTokens[i], 'balances');
+            const token = await getInstance('contracts/IERC20.sol:IERC20', null, testingTokens[i]);
+            for (const s of signers) {
+                const b = await token.balanceOf(s.address);
+                console.log('...', s.address, ':', b.toString());
+            }
+        }
+    });
+
+task("vault-evid", "Display the a vault's event ID (topic)")
+    .addOptionalParam("name", "event name", "Deposit", types.string)
+    .setAction(async taskArgs => {
+        const { getInstance } = require('./utils');
+        const vault = await getInstance('Vault', 'TransparentUpgradeableProxy');
+        const res = await vault.interface.getEventTopic(taskArgs.name);
+        console.log(res);
+        // console.log(vault.interface.getEvent('0x00b45d95b5117447e2fafe7f34def913ff3ba220e4b8688acf37ae2328af7a3d'));
+    });
+
+task("decode-event", "Decode event data by name")
+    .addOptionalParam("name", "name", "Redeposit", types.string)
+    .addOptionalParam("data", "data", "", types.string)
+    .setAction(async (taskArgs, hre) => {
+        const [signer, vaultAdmin] = await ethers.getSigners();
+        const { getInstance, getImplementation, confirm } = require('./utils');
+        const vault = await getInstance('Vault', 'TransparentUpgradeableProxy');
+        const evdata = taskArgs.data; //'0x000000000000000000000000a6fa4fb5f76172d178d61b04b0ecd319c5d1c0aa000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000065763765a5767657bb9980d18a2f831bbcc90a877b4430119997951ddc7609d110000000000000000000000000000000000000000000000000000000000000065047ebadb13237d189484924e972a7f1b8f8e617773f909c69d4d6b19fc39c82e8455e85136c664f53d6c70a032fec17d6bb17ea344f8dc7f57173b2f42d77e468400000012ac36e69aa6c5403aa610702c5f986edbc5da92fd18c69fbd9ae96ebc6c13c0dc000000000000000000000000000000000000000000000000000000';
+        res = vault.interface.decodeEventLog(taskArgs.name, evdata, [vault.interface.getEventTopic(taskArgs.name)]);
+        console.log('decoded', taskArgs.name)
+        console.dir(res);
+        if (res.errorData) {
+            // when errorData is available, parse it as string
+            const s = '0x' + res.errorData.slice(10);
+            console.log('error', ethers.utils.defaultAbiCoder.decode(['string'], s));
+        }
+    })

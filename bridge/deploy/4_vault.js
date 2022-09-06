@@ -25,17 +25,17 @@ module.exports = async({
         log: true,
         // waitConfirmations: 6,
     });
-    const vaultFactory = await ethers.getContract(vaultContractName);
+    const vaultFactory = await ethers.getContractFactory(vaultContractName);
     const vault = await vaultFactory.attach(vaultResult.address);
 
     let previousVault;
     try {
-        previousVault = await ethers.getContract('PrevVault');
+        previousVault = await getInstance('PrevVault');
     } catch (e) {
         previousVault = {address: '0x0000000000000000000000000000000000000000'};
     }
 
-    const initializeData = vaultFactory.interface.encodeFunctionData('initialize', [previousVault.address]);
+    const initializeData = vault.interface.encodeFunctionData('initialize', [previousVault.address]);
     log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
     let proxyResult = await deploy('TransparentUpgradeableProxy', {
         from: deployer,
@@ -44,11 +44,11 @@ module.exports = async({
         log: true,
     });
 
-    const proxy = await ethers.getContract('TransparentUpgradeableProxy');
+    const proxy = await getInstance('TransparentUpgradeableProxy');
     let borrowedPermissionFrom = null;
     try {
         // when in fork environment, simulate the real prev admin yielding permission
-        if (process.env.FORK) {
+        if (process.env.FORK && hre.networkCfg().deployed.adminToBorrowFrom) {
             log(`FORK-ENV: "Borrowing" Admin permission and money`);
             const realAdm = await ethers.provider.getSigner(hre.networkCfg().deployed.adminToBorrowFrom);
             const moneyAcc = await ethers.getSigner(deployer);
