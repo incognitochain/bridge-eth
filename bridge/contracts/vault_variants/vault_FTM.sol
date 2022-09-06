@@ -43,6 +43,14 @@ contract VaultFTM {
     * @dev END Storage variables
     */
 
+    /**
+    * @dev Added in Storage Layout version : 2.0
+    */
+    address public regulator;
+    /**
+    * @dev END Storage variables version : 2.0
+    */
+
     struct BurnInstData {
         uint8 meta; // type of the instruction
         uint8 shard; // ID of the Incognito shard containing the instruction, must be 1
@@ -56,6 +64,11 @@ contract VaultFTM {
         address redepositToken;
         bytes redepositIncAddress;
         address payable withdrawAddress;
+    }
+
+    struct ShieldInfo {
+        address sender; // the guy shield request
+        bytes32 tx; // txid which sent fund to core team's addresses
     }
 
     enum Prefix {
@@ -76,18 +89,19 @@ contract VaultFTM {
         MAX_UINT_REACHED,
         VALUE_OVER_FLOW,
         INTERNAL_TX_ERROR,
-        ALREADY_USED,
+        ALREADY_USED, // 5
         INVALID_DATA,
         TOKEN_NOT_ENOUGH,
         WITHDRAW_REQUEST_TOKEN_NOT_ENOUGH,
         INVALID_RETURN_DATA,
-        NOT_EQUAL,
+        NOT_EQUAL, // 10
         NULL_VALUE,
         ONLY_PREVAULT,
         PREVAULT_NOT_PAUSED,
         SAFEMATH_EXCEPTION,
-        ALREADY_INITIALIZED,
+        ALREADY_INITIALIZED, // 15
         INVALID_SIGNATURE,
+        NOT_AUTHORISED,
         ALREADY_UPGRADED,
         INVALID_DATA_BURN_CALL_INST,
         ONLY_SELF_CALL
@@ -104,10 +118,10 @@ contract VaultFTM {
     /**
      * modifier for contract version
      */
-     modifier onlyPreVault(){
+    modifier onlyPreVault(){
         require(address(prevVault) != address(0x0) && msg.sender == address(prevVault), errorToString(Errors.ONLY_PREVAULT));
         _;
-     }
+    }
 
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -159,9 +173,13 @@ contract VaultFTM {
      * @notice This only works when the contract is not Paused
      * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
      * @param incognitoAddress: Incognito Address to receive pETH
+     * @param txId: move fund transaction hash
+     * @param signData: regulator signature
      */
-    function deposit(string calldata incognitoAddress) external payable nonReentrant {
+    function deposit(string calldata incognitoAddress, bytes32 txId, bytes calldata signData) external payable nonReentrant {
         require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
+        verifyRegulator(txId, signData);
+
         emit Deposit(ETH_TOKEN, incognitoAddress, msg.value);
     }
 
@@ -174,8 +192,12 @@ contract VaultFTM {
      * @param token: address of the ERC20 token
      * @param amount: to deposit to the vault and mint on Incognito Chain
      * @param incognitoAddress: Incognito Address to receive pERC20
+     * @param txId: move fund transaction hash
+     * @param signData: regulator signature
      */
-    function depositERC20(address token, uint amount, string calldata incognitoAddress) external nonReentrant {
+    function depositERC20(address token, uint amount, string calldata incognitoAddress, bytes32 txId, bytes calldata signData) external nonReentrant {
+        verifyRegulator(txId, signData);
+
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
@@ -264,7 +286,7 @@ contract VaultFTM {
         uint amount;
         bytes32 itx;
         assembly {
-            // skip first 0x20 bytes (stored length of inst)
+        // skip first 0x20 bytes (stored length of inst)
             token := mload(add(inst, 0x22)) // [3:34]
             to := mload(add(inst, 0x42)) // [34:66]
             amount := mload(add(inst, 0x62)) // [66:98]
@@ -323,18 +345,18 @@ contract VaultFTM {
 
         // Verify instruction on beacon
         require(Incognito(_incognito()).instructionApproved(
-            true, // Only check instruction on beacon
-            beaconInstHash,
-            heights,
-            instPaths,
-            instPathIsLefts,
-            instRoots,
-            blkData,
-            sigIdxs,
-            sigVs,
-            sigRs,
-            sigSs
-        ), errorToString(Errors.INVALID_DATA));
+                true, // Only check instruction on beacon
+                beaconInstHash,
+                heights,
+                instPaths,
+                instPathIsLefts,
+                instRoots,
+                blkData,
+                sigIdxs,
+                sigVs,
+                sigRs,
+                sigSs
+            ), errorToString(Errors.INVALID_DATA));
     }
 
     /**
@@ -399,7 +421,7 @@ contract VaultFTM {
 
         // Send and notify
         if (data.token == ETH_TOKEN) {
-            (bool success, ) =  data.to.call{value: data.amount}("");        
+            (bool success, ) =  data.to.call{value: data.amount}("");
             require(success, errorToString(Errors.INTERNAL_TX_ERROR));
         } else {
             IERC20(data.token).transfer(data.to, data.amount);
@@ -632,14 +654,20 @@ contract VaultFTM {
      * @param amount: amount of the token in ethereum's denomination
      * @param signData: signature of an unique data that is signed by an account which is generated from user's incognito privkey
      * @param timestamp: unique data generated from client (timestamp for example)
+     * @param txId: move fund transaction hash
+     * @param signData: regulator signature
      */
     function requestWithdraw(
         string calldata incognitoAddress,
         address token,
         uint amount,
         bytes calldata signData,
-        bytes calldata timestamp
+        bytes calldata timestamp,
+        bytes32 txId,
+        bytes calldata regulatorSig
     ) external nonReentrant {
+        verifyRegulator(txId, regulatorSig);
+
         // verify owner signs data
         address verifier = verifySignData(abi.encode(newPreSignData(Prefix.FTM_REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
 
@@ -713,7 +741,7 @@ contract VaultFTM {
      * @dev single trade
      */
     function callExtFunc(address recipientToken, uint ethAmount, bytes memory callData, address exchangeAddress) internal returns (uint) {
-         // get balance of recipient token before trade to compare after trade.
+        // get balance of recipient token before trade to compare after trade.
         uint balanceBeforeTrade = balanceOf(recipientToken);
         if (recipientToken == ETH_TOKEN) {
             balanceBeforeTrade = balanceBeforeTrade.safeSub(msg.value);
@@ -729,9 +757,26 @@ contract VaultFTM {
     }
 
     /**
+     * @dev set regulator
+     */
+    function setRegulator(address _regulator) external {
+        require((regulator == address(0x0) || msg.sender == regulator) && _regulator != address(0x0), errorToString(Errors.NOT_AUTHORISED));
+        regulator = _regulator;
+    }
+
+    /**
+     * @dev verify regulator
+     */
+    function verifyRegulator(bytes32 txId, bytes memory signData) internal view {
+        // verify regulator signs data
+        address signer = sigToAddress(signData, keccak256(abi.encode(ShieldInfo(msg.sender, txId))));
+        require(signer == regulator, errorToString(Errors.INVALID_SIGNATURE));
+    }
+
+    /**
      * @dev verify sign data
      */
-     function verifySignData(bytes memory data, bytes memory signData) internal returns(address){
+    function verifySignData(bytes memory data, bytes memory signData) internal returns(address){
         bytes32 hash = keccak256(data);
         require(!isSigDataUsed(hash), errorToString(Errors.ALREADY_USED));
         address verifier = sigToAddress(signData, hash);
@@ -741,7 +786,7 @@ contract VaultFTM {
         sigDataUsed[hash] = true;
 
         return verifier;
-     }
+    }
 
     /**
       * @dev migrate balance from previous vault
@@ -751,7 +796,7 @@ contract VaultFTM {
         if (address(prevVault) != address(0x0) && !migration[owner][token]) {
             withdrawRequests[owner][token] = withdrawRequests[owner][token].safeAdd(prevVault.getDepositedBalance(token, owner));
             migration[owner][token] = true;
-       }
+        }
     }
 
     /**
@@ -798,7 +843,7 @@ contract VaultFTM {
     function checkSuccess() private pure returns (bool) {
         uint256 returnValue = 0;
         assembly {
-            // check number of bytes returned from last function call
+        // check number of bytes returned from last function call
             switch returndatasize()
 
             // no bytes returned: assume success
@@ -808,10 +853,10 @@ contract VaultFTM {
 
             // 32 bytes returned: check if non-zero
             case 0x20 {
-                // copy 32 bytes into scratch space
+            // copy 32 bytes into scratch space
                 returndatacopy(0x0, 0x0, 0x20)
 
-                // load those bytes into returnValue
+            // load those bytes into returnValue
                 returnValue := mload(0x0)
             }
 
@@ -824,7 +869,7 @@ contract VaultFTM {
     /**
      * @dev convert enum to string value
      */
-     function errorToString(Errors error) internal pure returns(string memory) {
+    function errorToString(Errors error) internal pure returns(string memory) {
         uint8 erroNum = uint8(error);
         uint maxlength = 10;
         bytes memory reversed = new bytes(maxlength);

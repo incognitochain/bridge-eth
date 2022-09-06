@@ -3,7 +3,7 @@
 
 pragma solidity ^0.6.12;
 
-import './IERC20.sol';
+import '../IERC20.sol';
 
 interface IPancakeRouter01 {
     function factory() external pure returns (address);

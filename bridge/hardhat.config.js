@@ -229,9 +229,9 @@ const networks = {
             // MKR, KNC, UNI
             // testingTokens: ['0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd', '0xdB7ec4E4784118D9733710e46F7C83fE7889596a', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984']
         },
-        committees: devCommitteesBig,
+        committees: testnetCommittees,
         providers: devProviders,
-        numShards: 2,
+        // numShards: 2,
     },
     bsctest: {
         url: "https://data-seed-prebsc-1-s1.binance.org:8545",
@@ -239,9 +239,9 @@ const networks = {
             mnemonic: mnemonic
         },
         deployed: {},
-        committees: devCommitteesBig,
+        committees: testnetCommittees,
         providers: devProviders,
-        numShards: 2,
+        // numShards: 2,
         vaultContractName: 'VaultBSC',
     },
     mumbai: {
@@ -253,9 +253,9 @@ const networks = {
             uniswap: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
             kyber: '0xddff'
         },
-        committees: devCommitteesBig,
+        committees: testnetCommittees,
         providers: devProviders,
-        numShards: 2,
+        // numShards: 2,
         vaultContractName: 'VaultPLG',
     },
     ftmtest: {
@@ -264,9 +264,9 @@ const networks = {
             mnemonic: mnemonic
         },
         deployed: {},
-        committees: devCommitteesBig,
+        committees: testnetCommittees,
         providers: devProviders,
-        numShards: 2,
+        // numShards: 2,
         vaultContractName: 'VaultFTM',
     },
     mainnet: {
