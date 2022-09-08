@@ -223,11 +223,16 @@ const networks = {
         accounts: {
             mnemonic: mnemonic
         },
-        deployed: {},
+        deployed: {
+            routers: {
+                PancakeProxy: '0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3'
+            }
+        },
         committees: testnetCommittees,
         providers: devProviders,
         // numShards: 2,
         vaultContractName: 'VaultBSC',
+        executorContractName: 'PancakeProxy'
     },
     mumbai: {
         url: "https://polygon-mumbai.g.alchemy.com/v2/...",
@@ -243,6 +248,7 @@ const networks = {
         providers: devProviders,
         // numShards: 2,
         vaultContractName: 'VaultPLG',
+        executorContractName: 'UniswapProxy'
     },
     ftmtest: {
         url: "https://rpc.testnet.fantom.network",

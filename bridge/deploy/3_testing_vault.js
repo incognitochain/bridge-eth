@@ -75,4 +75,4 @@ module.exports = async({
 module.exports.tags = ['3', 'testing'];
 module.exports.dependencies = ['incognito-proxy'];
 // always skip for public networks
-module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'kovan' || env.network.name == 'goerli') || process.env.FORK);
+module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'mumbai' || env.network.name == 'bsctest' || env.network.name == 'ftmtest' || env.network.name == 'goerli') || process.env.FORK);

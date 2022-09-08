@@ -18,10 +18,10 @@ interface ISwapRouter2 {
 	/// @param previousBlockhash The expected parent blockHash
 	/// @param data The encoded function data for each of the calls to make to this contract
 	/// @return results The results from each of the calls passed in via data
-	function multicall(bytes32 previousBlockhash, bytes[] calldata data)
-	external
-	payable
-	returns (bytes[] memory results);
+	// function multicall(bytes32 previousBlockhash, bytes[] calldata data)
+	// external
+	// payable
+	// returns (bytes[] memory results);
 	struct ExactInputSingleParams {
 		address tokenIn;
 		address tokenOut;
@@ -120,26 +120,26 @@ contract UniswapProxy is Executor {
 	}
 
 	function _inspectTradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative) external view returns (bytes memory, CallSummary memory) {
-		bytes memory rdata = abi.encodeWithSignature("tradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative)", params, isNative);
+		bytes memory rdata = abi.encodeWithSelector(0x421f4388, params, isNative);
 		CallSummary memory cs = CallSummary(address(swaprouter02), params.tokenIn, params.amountIn,
-			abi.encodeWithSignature("exactInputSingle(ExactInputSingleParams calldata params)", params)
+			abi.encodeWithSelector(0x04e45aaf, params)
 		);
 		return (rdata, cs);
 	}
 
 	function _inspectTradeInput(ISwapRouter2.ExactInputParams calldata params, bool isNative) external view returns(bytes memory, CallSummary memory) {
 		(address tokenIn,,) = params.path.decodeFirstPool();
-		bytes memory rdata = abi.encodeWithSignature("tradeInput(ISwapRouter2.ExactInputParams calldata params, bool isNative)", params, isNative);
+		bytes memory rdata = abi.encodeWithSelector(0xc8dc75e6, params, isNative);
 		CallSummary memory cs = CallSummary(address(swaprouter02), tokenIn, params.amountIn,
-			abi.encodeWithSignature("exactInput(ExactInputParams calldata params)", params)
+			abi.encodeWithSelector(0xb858183f, params)
 		);
 		return (rdata, cs);
 	}
 
 	function _inspectMultiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint256 sellAmount, bool isNative) external view returns (bytes memory, CallSummary memory) {
-		bytes memory rdata = abi.encodeWithSignature("multiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint256 sellAmount, bool isNative)", deadline, data, sellToken, buyToken, sellAmount, isNative);
+		bytes memory rdata = abi.encodeWithSelector(0x92171fd8, block.timestamp + 1000000000, data, sellToken, buyToken, sellAmount, isNative);
 		CallSummary memory cs = CallSummary(address(swaprouter02), address(sellToken), sellAmount,
-			abi.encodeWithSignature("multicall(bytes32 previousBlockhash, bytes[] calldata data)", deadline, data)
+			abi.encodeWithSelector(0x5ae401dc, block.timestamp + 1000000000, data)
 		);
 		return (rdata, cs);
 	}
