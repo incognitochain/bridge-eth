@@ -1410,6 +1410,7 @@ contract TestingExchange {
     // uniswap interface
     function factory() external pure returns (address) { return address(0x0); }
     function WETH() external pure returns (address) { return address(0x0); }
+    function WETH9() external pure returns (address) { return address(0x0); }
 
     // path length of 2 only
     function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts) {

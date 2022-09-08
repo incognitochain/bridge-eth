@@ -187,35 +187,20 @@ const networks = {
         providers: devProviders,
         chainId: 31337,
         numShards: 2,
+        deployed: {
+            routers: {
+                UniswapV2Trade: 1,
+                UniswapProxy: 1,
+                KBNTrade: 1,
+            }
+        }
     }, process.env.FORK ? forkcfg[process.env.FORK] : {}),
     localhost: process.env.FORK ? forkcfg[process.env.FORK] : {
         committees: devCommitteesBig,
         providers: devProviders,
         chainId: 31337,
         numShards: 2,
-        deployed: {
-        }
-    },
-    kovan: {
-        chainId: 42,
-        url: `https://kovan.infura.io/v3/${infuraApiKey}`,
-        accounts: [deployerPrivateKey, vaultAdminPrivateKey],
-        // {
-        //     mnemonic: mnemonic
-        // },
-        geth_name_conf: `kovan.infura.io/v3/${infuraApiKey}`,
-        geth_port_conf: '',
-        geth_protocol_conf: 'HTTPS',
-        deployed: {
-            kyber: '0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D',
-            kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-            uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-            // MKR, KNC, UNI
-            testingTokens: ['0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd', '0xdB7ec4E4784118D9733710e46F7C83fE7889596a', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984']
-        },
-        committees: testnetCommittees,
-        providers: devProviders,
-        numShards: 2,
+        deployed: {}
     },
     goerli: {
         url: `https://eth-goerli.g.alchemy.com/v2/${alchemyApiKey}`,
@@ -250,8 +235,9 @@ const networks = {
             mnemonic: mnemonic
         },
         deployed: {
-            uniswap: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
-            kyber: '0xddff'
+            routers: {
+                UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
+            }
         },
         committees: testnetCommittees,
         providers: devProviders,

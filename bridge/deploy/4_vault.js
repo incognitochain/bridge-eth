@@ -17,7 +17,7 @@ module.exports = async({
     const ip = await deployments.get('IncognitoProxy');
 
     const vaultContractName = hre.networkCfg().vaultContractName || 'Vault';
-    console.log('Deploy: ', vaultContractName);
+    // console.log('Deploy:', vaultContractName);
     let vaultResult = await deploy(vaultContractName, {
         from: deployer,
         args: [],
@@ -26,7 +26,7 @@ module.exports = async({
         // waitConfirmations: 6,
     });
     const vaultFactory = await ethers.getContractFactory(vaultContractName);
-    const vault = await vaultFactory.attach(vaultResult.address);
+    let vault = await vaultFactory.attach(vaultResult.address);
 
     let previousVault;
     try {
@@ -35,8 +35,12 @@ module.exports = async({
         previousVault = {address: '0x0000000000000000000000000000000000000000'};
     }
 
-    const initializeData = vault.interface.encodeFunctionData('initialize', [previousVault.address]);
-    log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
+    // '0xdbeCBd9F55922e6487b24B4Fed572D5BF4982562'
+    const regAddr = '0x0000000000000000000000000000000000000000'; // regulator address TBD
+    const executorContractName = hre.networkCfg().executorContractName || 'UniswapV2Trade';
+    const ex = await deployments.get(executorContractName);
+    const initializeData = vault.interface.encodeFunctionData('initialize', [previousVault.address, regAddr, ex.address]);
+    
     let proxyResult = await deploy('TransparentUpgradeableProxy', {
         from: deployer,
         args: [vault.address, vaultAdmin, ip.address, initializeData],
@@ -67,11 +71,15 @@ module.exports = async({
         throw e;
     }
 
-    if (!proxyResult.newlyDeployed) {
-        // const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorageLayout', [hre.networkCfg().recoveryAddress]);
-        log('will upgrade proxy to new implementation with params', vault.address, vaultAdmin);
-        await proxy.connect(vaultAdminSigner).upgradeTo(vault.address);
-        // await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
+    if (proxyResult.newlyDeployed) {
+        log('deployed new proxy & initialized with params', vault.address, vaultAdmin, ip.address, initializeData);
+    } else {
+        
+        // await proxy.connect(vaultAdminSigner).upgradeTo(vault.address);
+        // await proxy.connect(vaultAdminSigner).upgradeIncognito(ip.address);
+        const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorage', [regAddr, ex.address]);
+        await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
+        log('upgraded existing proxy to new implementation with params', vault.address, vaultAdmin, regAddr, ex.address);
     }
     log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);
 
@@ -84,4 +92,4 @@ module.exports = async({
 };
 
 module.exports.tags = ['4', 'vault', 'proxy'];
-module.exports.dependencies = ['fork', 'incognito-proxy'];
+module.exports.dependencies = ['incognito-proxy', 'testing'];

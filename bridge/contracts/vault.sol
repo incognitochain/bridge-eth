@@ -143,6 +143,7 @@ contract Vault {
     Counters.Counter private idCounter;
 
     address public regulator;
+    uint256 public storageLayoutVersion;
     address public executor;
     /**
     * @dev END Storage variables version : 2.0
@@ -248,14 +249,34 @@ contract Vault {
     /**
      * @dev Creates new Vault to hold assets for Incognito Chain
      * @param _prevVault: previous version of the Vault to refer back if necessary
+     * @param _regulator: ...
+     * @param _executor: helper contract to perform external call from
      * After migrating all assets to a new Vault, we still need to refer
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
-    function initialize(address _prevVault) external {
+    function initialize(address _prevVault, address _regulator, address _executor) external {
         require(!isInitialized, errorToString(Errors.ALREADY_INITIALIZED));
         prevVault = Withdrawable(_prevVault);
         isInitialized = true;
         notEntered = true;
+        require(regulator == address(0x0), errorToString(Errors.NOT_AUTHORISED));
+        regulator = _regulator;
+        executor = _executor;
+    }
+
+    /**
+     * @dev upgrade helper for storage layout version 2
+     * @param _regulator: ...
+     * @param _executor: helper contract to perform external call from
+     */
+    function upgradeVaultStorage(address _regulator, address _executor) external {
+        // storageLayoutVersion is a new variable introduced in this storage layout version, then set to 2 to match the storage layout version itself
+        require(storageLayoutVersion == 0, errorToString(Errors.ALREADY_UPGRADED));
+        // make sure the version increase can only happen once
+        storageLayoutVersion = 2;
+        require(regulator == address(0x0), errorToString(Errors.NOT_AUTHORISED));
+        regulator = _regulator;
+        executor = _executor;
     }
 
     /**
@@ -624,7 +645,7 @@ contract Vault {
         if (token == ETH_TOKEN) {
             msgval = amount;
         } else {
-            IERC20(token).transfer(to, amount);
+            IERC20(token).transfer(executor, amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         }
         result = Executor(executor).execute{value: msgval}(to, externalCalldata);

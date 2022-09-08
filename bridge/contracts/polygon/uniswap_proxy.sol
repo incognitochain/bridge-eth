@@ -63,6 +63,13 @@ contract UniswapProxy is Executor {
 	ISwapRouter2 public swaprouter02;
 	Wmatic public wmatic;
 
+	struct CallSummary {
+		address to;
+		address token;
+		uint256 amount;
+		bytes data;
+	}
+
 	/**
      * @dev Contract constructor
      * @param _swaproute02 uniswap routes contract address
@@ -110,6 +117,31 @@ contract UniswapProxy is Executor {
 		address returnToken = withdrawMatic(buyToken, amountOut, isNative);
 
 		return (returnToken, amountOut);
+	}
+
+	function _inspectTradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative) external view returns (bytes memory, CallSummary memory) {
+		bytes memory rdata = abi.encodeWithSignature("tradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative)", params, isNative);
+		CallSummary memory cs = CallSummary(address(swaprouter02), params.tokenIn, params.amountIn,
+			abi.encodeWithSignature("exactInputSingle(ExactInputSingleParams calldata params)", params)
+		);
+		return (rdata, cs);
+	}
+
+	function _inspectTradeInput(ISwapRouter2.ExactInputParams calldata params, bool isNative) external view returns(bytes memory, CallSummary memory) {
+		(address tokenIn,,) = params.path.decodeFirstPool();
+		bytes memory rdata = abi.encodeWithSignature("tradeInput(ISwapRouter2.ExactInputParams calldata params, bool isNative)", params, isNative);
+		CallSummary memory cs = CallSummary(address(swaprouter02), tokenIn, params.amountIn,
+			abi.encodeWithSignature("exactInput(ExactInputParams calldata params)", params)
+		);
+		return (rdata, cs);
+	}
+
+	function _inspectMultiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint256 sellAmount, bool isNative) external view returns (bytes memory, CallSummary memory) {
+		bytes memory rdata = abi.encodeWithSignature("multiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint256 sellAmount, bool isNative)", deadline, data, sellToken, buyToken, sellAmount, isNative);
+		CallSummary memory cs = CallSummary(address(swaprouter02), address(sellToken), sellAmount,
+			abi.encodeWithSignature("multicall(bytes32 previousBlockhash, bytes[] calldata data)", deadline, data)
+		);
+		return (rdata, cs);
 	}
 
 	function checkApproved(IERC20 srcToken, uint256 amount) internal {

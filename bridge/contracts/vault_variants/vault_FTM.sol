@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "../IERC20.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { SafeMath, Counters, Incognito, Withdrawable } from "../vault.sol";
+import "../trade_utils.sol";
 
 contract VaultFTM {
     using SafeMath for uint;
@@ -39,16 +40,15 @@ contract VaultFTM {
     uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
     Counters.Counter private idCounter;
 
+    address public regulator;
+    uint256 public storageLayoutVersion;
+    address public executor;
     /**
-    * @dev END Storage variables
+    * @dev END Storage variables version : 2.0
     */
 
     /**
-    * @dev Added in Storage Layout version : 2.0
-    */
-    address public regulator;
-    /**
-    * @dev END Storage variables version : 2.0
+    * @dev END Storage variables
     */
 
     struct BurnInstData {
@@ -147,14 +147,34 @@ contract VaultFTM {
     /**
      * @dev Creates new Vault to hold assets for Incognito Chain
      * @param _prevVault: previous version of the Vault to refer back if necessary
+     * @param _regulator: ...
+     * @param _executor: helper contract to perform external call from
      * After migrating all assets to a new Vault, we still need to refer
      * back to previous Vault to make sure old withdrawals aren't being reused
      */
-    function initialize(address _prevVault) external {
+    function initialize(address _prevVault, address _regulator, address _executor) external {
         require(!isInitialized, errorToString(Errors.ALREADY_INITIALIZED));
         prevVault = Withdrawable(_prevVault);
         isInitialized = true;
         notEntered = true;
+        require(regulator == address(0x0), errorToString(Errors.NOT_AUTHORISED));
+        regulator = _regulator;
+        executor = _executor;
+    }
+
+    /**
+     * @dev upgrade helper for storage layout version 2
+     * @param _regulator: ...
+     * @param _executor: helper contract to perform external call from
+     */
+    function upgradeVaultStorage(address _regulator, address _executor) external {
+        // storageLayoutVersion is a new variable introduced in this storage layout version, then set to 2 to match the storage layout version itself
+        require(storageLayoutVersion == 0, errorToString(Errors.ALREADY_UPGRADED));
+        // make sure the version increase can only happen once
+        storageLayoutVersion = 2;
+        require(regulator == address(0x0), errorToString(Errors.NOT_AUTHORISED));
+        regulator = _regulator;
+        executor = _executor;
     }
 
     /**
@@ -519,13 +539,14 @@ contract VaultFTM {
     function _callExternal(address token, address to, uint256 amount, bytes memory externalCalldata, address redepositToken) external onlySelf() returns (uint256) {
         uint balanceBeforeTrade = balanceOf(redepositToken);
         bytes memory result;
+        uint256 msgval = 0;
         if (token == ETH_TOKEN) {
-            result = Address.functionCallWithValue(to, externalCalldata, amount);
+            msgval = amount;
         } else {
-            IERC20(token).transfer(to, amount);
+            IERC20(token).transfer(executor, amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-            result = Address.functionCall(to, externalCalldata);
         }
+        result = Executor(executor).execute{value: msgval}(to, externalCalldata);
         require(result.length == 64, errorToString(Errors.INVALID_RETURN_DATA));
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
         require(returnedTokenAddress == redepositToken && balanceOf(redepositToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
