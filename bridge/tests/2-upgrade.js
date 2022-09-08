@@ -67,7 +67,7 @@ describe('Vault - Upgrade & Pausing', async function(){
             await expect(appr).to.emit(tokenContract, 'Approval')
             .withArgs(this.tokenGuy.signer.address, this.vault.address, amount);
             try {
-                await expect(this.vault.connect(this.unshieldSender).estimateGas.depositERC20(tokenContract.address, amount, this.tokenGuy.inc)).to.be.reverted;
+                await expect(this.vault.connect(this.unshieldSender).estimateGas.depositERC20(tokenContract.address, amount, this.tokenGuy.inc, "0x0000000000000000000000000000000000000000000000000000000000000000", "0x00")).to.be.reverted;
             } catch(e) {
                 if (hre.network.name == 'localhost') throw e; else {
                     console.error("Skipping known issue: testnet provider does not register Transaction Revert");

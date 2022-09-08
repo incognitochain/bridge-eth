@@ -35,7 +35,7 @@ contract VaultBSC {
     */
     uint8 constant public CURRENT_NETWORK_ID = 2; // BSC
     uint8 constant public BURN_REQUEST_METADATA_TYPE = 253;
-    uint8 constant public BURN_TO_CONTRACT_REQUEST_METADATA_TYPE = 255;
+    uint8 constant public BURN_TO_CONTRACT_REQUEST_METADATA_TYPE = 152;
     uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
     Counters.Counter private idCounter;
 

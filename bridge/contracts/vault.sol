@@ -6,6 +6,7 @@ pragma experimental ABIEncoderV2;
 import "./IERC20.sol";
 // import "hardhat/console.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import "./trade_utils.sol";
 
 /**
  * Math operations with safety checks
@@ -141,16 +142,14 @@ contract Vault {
     uint8 constant public BURN_CALL_REQUEST_METADATA_TYPE = 158;
     Counters.Counter private idCounter;
 
+    address public regulator;
+    address public executor;
     /**
-    * @dev END Storage variables
+    * @dev END Storage variables version : 2.0
     */
 
     /**
-    * @dev Added in Storage Layout version : 2.0
-    */
-    address public regulator;
-    /**
-    * @dev END Storage variables version : 2.0
+    * @dev END Storage variables
     */
 
     struct BurnInstData {
@@ -621,13 +620,14 @@ contract Vault {
     function _callExternal(address token, address to, uint256 amount, bytes memory externalCalldata, address redepositToken) external onlySelf() returns (uint256) {
         uint balanceBeforeTrade = balanceOf(redepositToken);
         bytes memory result;
+        uint256 msgval = 0;
         if (token == ETH_TOKEN) {
-            result = Address.functionCallWithValue(to, externalCalldata, amount);
+            msgval = amount;
         } else {
             IERC20(token).transfer(to, amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
-            result = Address.functionCall(to, externalCalldata);
         }
+        result = Executor(executor).execute{value: msgval}(to, externalCalldata);
         require(result.length == 64, errorToString(Errors.INVALID_RETURN_DATA));
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
         require(returnedTokenAddress == redepositToken && balanceOf(redepositToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));

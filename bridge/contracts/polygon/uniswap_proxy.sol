@@ -3,6 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 import "../IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
+import "../trade_utils.sol";
 
 interface ISwapRouter2 {
 	/// @notice Call multiple functions in the current contract and return the data from all of them if they all succeed
@@ -54,7 +55,7 @@ interface Wmatic is IERC20 {
 	function withdraw(uint256 amount) external;
 }
 
-contract UniswapProxy {
+contract UniswapProxy is Executor {
 	using Path for bytes;
 	// Variables
 	address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
@@ -131,12 +132,12 @@ contract UniswapProxy {
 
 	function transfer(address token, uint amount) internal {
 		if (token == ETH_CONTRACT_ADDRESS) {
-			require(address(this).balance >= amount);
+			require(address(this).balance >= amount, "IUP: transfer amount exceeds balance");
 			(bool success, ) = msg.sender.call{value: amount}("");
-			require(success);
+			require(success, "IUP: transfer failed");
 		} else {
 			IERC20(token).transfer(msg.sender, amount);
-			require(checkSuccess());
+			require(checkSuccess(), "IUP: transfer token failed");
 		}
 	}
 

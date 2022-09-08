@@ -1,4 +1,4 @@
-pragma solidity ^0.6.12;
+pragma solidity >=0.6.12 <=0.8.9;
 
 import './IERC20.sol';
 
@@ -63,4 +63,19 @@ contract TradeUtils {
 		}
 		return returnValue != 0;
 	}
+}
+
+abstract contract Executor {
+    function execute(address fns, bytes calldata data) external payable returns (bytes memory) {
+        (bool success, bytes memory result) = fns.delegatecall(data);
+        if (!success) {
+        	// Next 5 lines from https://ethereum.stackexchange.com/a/83577
+            if (result.length < 68) revert();
+            assembly {
+                result := add(result, 0x04)
+            }
+            revert(abi.decode(result, (string)));
+        }
+        return result;
+    }
 }
