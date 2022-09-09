@@ -48,7 +48,7 @@ interface IPancakeRouter02 is IPancakeRouter01 {
     ) external;
 }
 
-contract PancakeProxy {
+contract PancakeProxy is Executor {
     // Variables
     address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
     uint constant public MAX = uint(-1);

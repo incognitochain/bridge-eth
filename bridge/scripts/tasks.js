@@ -207,14 +207,14 @@ task("decode-event", "Decode event data by name")
 
 task("decode-submit", "Decode proof submission call")
     .addOptionalParam("name", "name", "executeWithBurnProof", types.string)
-    .addOptionalParam("inspector", "inspector function name", "_previewExecuteWithBurnProof", types.string)
+    .addOptionalParam("inspector", "inspector function name", "parseCalldataFromBurnInst", types.string)
     .addOptionalParam("data", "data", "", types.string)
     .setAction(async (taskArgs, hre) => {
         const [signer, vaultAdmin] = await ethers.getSigners();
         const { getInstance, getImplementation, confirm } = require('./utils');
-        const vault = await getInstance(hre.networkCfg().executorContractName || 'Vault');
+        const vault = await getInstance(hre.networkCfg().vaultContractName || 'Vault');
         const params = vault.interface.decodeFunctionData(taskArgs.name, taskArgs.data);
-        const res = await vault.functions[taskArgs.inspector](...params);
+        const res = await vault.functions[taskArgs.inspector](params.inst);
         console.log(taskArgs.name)
         console.dir(res);
     })    
