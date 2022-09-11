@@ -17,16 +17,16 @@ module.exports = async({
     const ip = await deployments.get('IncognitoProxy');
 
     const vaultContractName = hre.networkCfg().vaultContractName || 'Vault';
-    // console.log('Deploy:', vaultContractName);
+    console.log('Deploy:', vaultContractName);
     let vaultResult = await deploy(vaultContractName, {
         from: deployer,
         args: [],
-        skipIfAlreadyDeployed: true,
+        // skipIfAlreadyDeployed: true,
         log: true,
         // waitConfirmations: 6,
     });
     const vaultFactory = await ethers.getContractFactory(vaultContractName);
-    let vault = await vaultFactory.attach(vaultResult.address);
+    const vaultImpl = await vaultFactory.attach(vaultResult.address);
 
     let previousVault;
     try {
@@ -36,34 +36,37 @@ module.exports = async({
     }
 
     // '0xdbeCBd9F55922e6487b24B4Fed572D5BF4982562'
-    const regAddr = '0x0000000000000000000000000000000000000000'; // regulator address TBD
+    const regAddr = '0xdbeCBd9F55922e6487b24B4Fed572D5BF4982562'; // regulator address TBD
     const executorContractName = hre.networkCfg().executorContractName || 'UniswapV2Trade';
     const ex = await deployments.get(executorContractName);
-    const initializeData = vault.interface.encodeFunctionData('initialize', [previousVault.address, regAddr, ex.address]);
+    const initializeData = vaultImpl.interface.encodeFunctionData('initialize', [previousVault.address, regAddr, ex.address]);
     
     let proxyResult = await deploy('TransparentUpgradeableProxy', {
         from: deployer,
-        args: [vault.address, vaultAdmin, ip.address, initializeData],
+        args: [vaultImpl.address, vaultAdmin, ip.address, initializeData],
         skipIfAlreadyDeployed: true,
         log: true,
     });
 
     const proxy = await getInstance('TransparentUpgradeableProxy');
+    const vault = await vaultFactory.attach(proxyResult.address);
     let borrowedPermissionFrom = null;
+    const prevVaultAdmin = hre.networkCfg().deployed.adminToBorrowFrom;
     try {
         // when in fork environment, simulate the real prev admin yielding permission
-        if (process.env.FORK && hre.networkCfg().deployed.adminToBorrowFrom) {
-            log(`FORK-ENV: "Borrowing" Admin permission and money`);
-            const realAdm = await ethers.provider.getSigner(hre.networkCfg().deployed.adminToBorrowFrom);
-            const moneyAcc = await ethers.getSigner(deployer);
-            await confirm(moneyAcc.sendTransaction({to: prevVaultAdmin, value: ethers.utils.parseUnits('1', 'ether')}));
-            await confirm(vault.connect(realAdm).retire(prevVaultAdmin));
+        if (process.env.FORK && prevVaultAdmin) {
+            log(`FORK-ENV: "Borrowing" Admin permission`);
+            const prevAdm = await ethers.getImpersonatedSigner(prevVaultAdmin);
+            // const moneyAcc = await ethers.getSigner(deployer);
+            // await confirm(moneyAcc.sendTransaction({to: prevVaultAdmin, value: ethers.utils.parseUnits('1', 'ether')}));
+            await confirm(proxy.connect(prevAdm).retire(vaultAdmin));
         }
-        const adm = await getAdmin(vault);
-        if (BN.from(vaultAdmin).eq(BN.from(adm))) {
-            console.log(vaultAdmin);
-            console.log(adm)
-            throw 'Need admin permission to upgrade';
+        const adm = await getAdmin(proxy);
+        if (!BN.from(vaultAdmin).eq(BN.from(adm))) {
+            console.log(BN.from(vaultAdmin).toHexString());
+            console.log(BN.from(adm).toHexString())
+            console.log('Claim()-ing admin permission to upgrade');
+            await confirm(proxy.connect(vaultAdminSigner).claim());
         } else {
             log('Proceeding with Admin role');
         }
@@ -74,14 +77,15 @@ module.exports = async({
     if (proxyResult.newlyDeployed) {
         log('deployed new proxy & initialized with params', vault.address, vaultAdmin, ip.address, initializeData);
     } else {
-        
         // await proxy.connect(vaultAdminSigner).upgradeTo(vault.address);
         // await proxy.connect(vaultAdminSigner).upgradeIncognito(ip.address);
         const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorage', [regAddr, ex.address]);
-        await proxy.connect(vaultAdminSigner).upgradeToAndCall(vault.address, upgradeData);
-        log('upgraded existing proxy to new implementation with params', vault.address, vaultAdmin, regAddr, ex.address);
+
+        await proxy.connect(vaultAdminSigner).upgradeToAndCall(vaultImpl.address, upgradeData);
+        log('upgraded existing proxy to new implementation with params', vaultImpl.address, vaultAdmin, regAddr, ex.address);
     }
     log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);
+    // await confirm(vault.setRegulator(regAddr));
 
     if (borrowedPermissionFrom) {
         const theVaultProxy = await getInstance('TransparentUpgradeableProxy');

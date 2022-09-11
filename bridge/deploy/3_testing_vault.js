@@ -11,7 +11,7 @@ module.exports = async({
     const addresses = hre.networkCfg().deployed || {};
     let testingExchange = null;
 
-    if (hre.networkCfg().chainId == 31337) { // for local
+    if (!process.env.FORK && hre.networkCfg().chainId == 31337) { // for local
         const ip = await deployments.get('IncognitoProxy');
         // deploy previous implementation of Vault to local network
         let vaultResult = await deploy('PreviousVersionVault', {
@@ -62,10 +62,11 @@ module.exports = async({
     log("Using trade router addresses", routers);
     for (const pname in routers) {
         const extRouterAddr = routers[pname] == 1 ? testingExchange : routers[pname];
+        console.log('executor points to', extRouterAddr)
         await deploy(pname, {
             from: deployer,
             args: [extRouterAddr],
-            skipIfAlreadyDeployed: true,
+            // skipIfAlreadyDeployed: true,
             log: true
         });
     }
@@ -75,4 +76,4 @@ module.exports = async({
 module.exports.tags = ['3', 'testing'];
 module.exports.dependencies = ['incognito-proxy'];
 // always skip for public networks
-module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'mumbai' || env.network.name == 'bsctest' || env.network.name == 'ftmtest' || env.network.name == 'goerli') || process.env.FORK);
+// module.exports.skip = env => Promise.resolve(!(env.network.name == 'localhost' || env.network.name == 'hardhat' || env.network.name == 'mumbai' || env.network.name == 'bsctest' || env.network.name == 'ftmtest' || env.network.name == 'goerli') || process.env.FORK);
