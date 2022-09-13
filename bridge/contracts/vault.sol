@@ -851,7 +851,7 @@ contract Vault {
         } else {
             // transfer token to exchangeAddress.
             require(IERC20(token).balanceOf(address(this)) >= amount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-            IERC20(token).transfer(exchangeAddress, amount);
+            IERC20(token).transfer(executor, amount);
             require(checkSuccess(), errorToString(Errors.INTERNAL_TX_ERROR));
         }
         uint returnedAmount = callExtFunc(recipientToken, ethAmount, callData, exchangeAddress);
