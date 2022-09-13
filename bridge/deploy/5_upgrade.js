@@ -44,6 +44,8 @@ module.exports = async({
         log('upgraded existing proxy to new implementation with params', vaultImpl.address, vaultAdminSigner.address, regAddr, ex.address);
         const { gasUsed } = await tx.wait();
         log('gas used for upgrade:', gasUsed.toString());
+    } else {
+        throw `Unable to upgrade. Your signer ${vaultAdminSigner.address} does not match Vault Admin`;
     }
     // await confirm(vault.setRegulator(regAddr));
 };
