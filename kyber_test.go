@@ -124,7 +124,11 @@ func (v2 *KyberTestSuite) TestKyberTrade() {
 	deposit := big.NewInt(int64(1e18))
 	v2.auth.Value = deposit
 	address := crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey)
-	_, err := v2.v.Deposit(v2.auth, "")
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.Deposit(v2.auth, "", txId, sign)
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
 	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, deposit, address)
@@ -165,7 +169,11 @@ func (v2 *KyberTestSuite) TestKyberProxyBadcases() {
 	tradeamount := big.NewInt(int64(1e18))
 	v2.auth.Value = deposit
 	address := crypto.PubkeyToAddress(v2.ETHPrivKey.PublicKey)
-	_, err := v2.v.Deposit(v2.auth, "")
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.v.Deposit(v2.auth, "", txId, sign)
 	require.Equal(v2.T(), nil, err)
 	v2.auth.Value = big.NewInt(0)
 	proof := buildWithdrawTestcaseV2(v2.c, 243, 1, v2.EtherAddress, deposit, address)

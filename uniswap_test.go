@@ -147,7 +147,11 @@ func (v2 *UniswapTestSuite) TestUniswapTrade() {
 	rand.Seed(time.Now().UnixNano())
 	deposit := big.NewInt(int64(1e12))
 	v2.auth.Value = deposit
-	tx, err := v2.v.Deposit(v2.auth, "")
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	require.Equal(v2.T(), nil, err)
+	tx, err := v2.v.Deposit(v2.auth, "", txId, sign)
 	require.Equal(v2.T(), nil, err)
 	err = wait(v2.ETHClient, tx.Hash())
 	require.Equal(v2.T(), nil, err)

@@ -3,7 +3,9 @@ package bridge
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 
@@ -169,6 +171,120 @@ func TestDeployKBNTrade(t *testing.T) {
 	}
 	fmt.Println("deployed kbnTrade")
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
+}
+
+type Network struct {
+	Endpoint       string
+	GasPrice       *big.Int
+	VaultAddress   common.Address
+	Implementation common.Address
+}
+
+var NetworksTestNet = []Network{
+	// eth
+	{
+		Endpoint:       "https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress("0xc157CC3077ddfa425bae12d2F3002668971A4e3d"),
+		Implementation: common.HexToAddress(""),
+	},
+	// bsc
+	{
+		Endpoint:       "https://data-seed-prebsc-2-s2.binance.org:8545",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress("0x3534C0a523b3A862c06C8CAF61de230f9b408f51"),
+		Implementation: common.HexToAddress(""),
+	},
+	// polygon
+	{
+		Endpoint:       "https://polygon-mumbai.g.alchemy.com/v2/CBQ1SQRLf3eQGbTXd_aA3LU7hvmwR33K",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress("0x76318093c374e39B260120EBFCe6aBF7f75c8D28"),
+		Implementation: common.HexToAddress(""),
+	},
+	// fantom
+	{
+		Endpoint:       "https://rpc.testnet.fantom.network",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress("0x76318093c374e39B260120EBFCe6aBF7f75c8D28"),
+		Implementation: common.HexToAddress(""),
+	},
+}
+
+var NetworksMainnet = []Network{
+	// eth
+	{
+		Endpoint:       "https://eth-fullnode.incognito.org",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress(VaultAddress),
+		Implementation: common.HexToAddress(""),
+	},
+	// bsc
+	{
+		Endpoint:       "https://bsc-dataseed.binance.org",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress(VaultAddress),
+		Implementation: common.HexToAddress(""),
+	},
+	// polygon
+	{
+		Endpoint:       "https://polygon-mainnet.infura.io/v3/9bc873177cf74a03a35739e45755a9ac",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress(VaultAddress),
+		Implementation: common.HexToAddress(""),
+	},
+	// fantom
+	{
+		Endpoint:       "https://rpcapi.fantom.network",
+		GasPrice:       big.NewInt(0),
+		VaultAddress:   common.HexToAddress(VaultAddress),
+		Implementation: common.HexToAddress(""),
+	},
+}
+
+func TestUpgradeToAndCall(t *testing.T) {
+	// init network
+	networks := NetworksMainnet
+	networkParam := os.Getenv("TESTNET")
+	if networkParam == "true" {
+		networks = NetworksTestNet
+	}
+	var client *ethclient.Client
+	defer client.Close()
+	var privKey *ecdsa.PrivateKey
+	var chainID int64
+	var err error
+	privKeyHex := os.Getenv("PRIVKEY")
+
+	for _, network := range networks {
+		privKey, client, chainID, err = connect2(privKeyHex, network.Endpoint)
+		if err != nil {
+			t.Fatal(err)
+		}
+		auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+		if err != nil {
+			t.Fatal(err)
+		}
+		//build data set regulator
+		vaultAbi, err := abi.JSON(strings.NewReader(vault.VaultMetaData.ABI))
+		if err != nil {
+			t.Fatal(err)
+		}
+		input, err := vaultAbi.Pack("upgradeVaultStorage", Regulator, Executor)
+		if err != nil {
+			t.Fatal(err)
+		}
+		auth.GasPrice = network.GasPrice
+		// set new delegator and regulator
+		proxyVault, err := vaultproxy.NewTransparentUpgradeableProxy(network.VaultAddress, client)
+		tx, err := proxyVault.UpgradeToAndCall(auth, network.Implementation, input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Printf("upgrade vault on network id %d with tx hash %s", chainID, tx.Hash().String())
+	}
+
+	fmt.Println("Deploy successfully")
 }
 
 // func TestPauseVault(t *testing.T) {

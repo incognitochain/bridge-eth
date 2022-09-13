@@ -247,7 +247,13 @@ func depositERC20Detail(
 		auth.Nonce = big.NewInt(int64(nonce))
 	}
 
-	tx, err := v.DepositERC20(auth, tokenAddr, amount, incPaymentAddr)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	if err != nil {
+		return nil, err
+	}
+	tx, err := v.DepositERC20(auth, tokenAddr, amount, incPaymentAddr, txId, sign)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

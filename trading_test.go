@@ -266,7 +266,11 @@ func (tradingSuite *TradingTestSuite) depositETH(
 	auth, err := bind.NewKeyedTransactorWithChainID(tradingSuite.ETHPrivKey, chainID)
 	require.Equal(tradingSuite.T(), nil, err)
 	auth.Value = new(big.Int).SetUint64(uint64(amt * params.Ether))
-	tx, err := c.Deposit(auth, incPaymentAddrStr)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+	tx, err := c.Deposit(auth, incPaymentAddrStr, txId, sign)
 	require.Equal(tradingSuite.T(), nil, err)
 	txHash := tx.Hash()
 
@@ -300,7 +304,11 @@ func (tradingSuite *TradingTestSuite) depositERC20ToBridge(
 	auth.GasPrice = big.NewInt(1e10)
 
 	fmt.Println("Starting deposit erc20 to vault contract")
-	tx, err := c.DepositERC20(auth, tokenAddr, amt, incPaymentAddrStr)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+	tx, err := c.DepositERC20(auth, tokenAddr, amt, incPaymentAddrStr, txId, sign)
 	require.Equal(tradingSuite.T(), nil, err)
 	fmt.Println("Finished deposit erc20 to vault contract")
 	txHash := tx.Hash()
@@ -649,7 +657,11 @@ func (tradingSuite *TradingTestSuite) requestWithdraw(
 	auth.GasPrice = big.NewInt(1e10)
 	// auth.GasLimit = uint64(5000000) // for FTM testnet
 
-	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, auth.From)
+	require.Equal(tradingSuite.T(), nil, err)
+	tx, err := c.RequestWithdraw(auth, tradingSuite.IncPaymentAddrStr, token, amount, signBytes, timestamp, txId, sign)
 	require.Equal(tradingSuite.T(), nil, err)
 
 	txHash := tx.Hash()

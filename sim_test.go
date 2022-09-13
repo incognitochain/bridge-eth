@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/big"
 	"net/http"
@@ -385,7 +386,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy FAIL token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, fail, err := fail.DeployFail(auth2, p.sim, bal, "FAIL", 6, "FAIL")
+	addr, _, fail, err := fail.DeployFAIL(auth2, p.sim, bal, "FAIL", 6, "FAIL")
 	if err != nil {
 		return errors.Errorf("failed to deploy FAIL contract: %v", err)
 	}
@@ -394,7 +395,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy DLESS token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, dless, err := dless.DeployDless(auth2, p.sim, bal, "DLESS", "DLESS")
+	addr, _, dless, err := dless.DeployDLESS(auth2, p.sim, bal, "DLESS", "DLESS")
 	if err != nil {
 		return errors.Errorf("failed to deploy DLESS contract: %v", err)
 	}
@@ -538,7 +539,7 @@ func getBridgeSwapProof(url string, block int) string {
 	}
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
 	//fmt.Println(string(body))
 	return string(body)
@@ -580,7 +581,12 @@ func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 	}
 	auth.GasLimit = 0
 	auth.Value = amount
-	_, err = p.v.Deposit(auth, "")
+	txId := [32]byte{}
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
+	_, err = p.v.Deposit(auth, "", txId, sign)
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}
