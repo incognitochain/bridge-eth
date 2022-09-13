@@ -871,12 +871,9 @@ contract Vault {
             balanceBeforeTrade = balanceBeforeTrade.safeSub(msg.value);
         }
         require(address(this).balance >= ethAmount, errorToString(Errors.TOKEN_NOT_ENOUGH));
-        (bool success, bytes memory result) = exchangeAddress.call{value: ethAmount}(callData);
-        require(success, errorToString(Errors.INTERNAL_TX_ERROR));
-
+        bytes memory result = Executor(executor).execute{value: ethAmount}(exchangeAddress, callData);
         (address returnedTokenAddress, uint returnedAmount) = abi.decode(result, (address, uint));
         require(returnedTokenAddress == recipientToken && balanceOf(recipientToken).safeSub(balanceBeforeTrade) == returnedAmount, errorToString(Errors.INVALID_RETURN_DATA));
-
         return returnedAmount;
     }
 
