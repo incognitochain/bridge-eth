@@ -262,6 +262,7 @@ contract Vault {
         require(regulator == address(0x0), errorToString(Errors.NOT_AUTHORISED));
         regulator = _regulator;
         executor = _executor;
+        storageLayoutVersion = 2;
     }
 
     /**
