@@ -86,7 +86,7 @@ const testnetTokenList = [];
 const forkcfg = {
     plg: {
         forking: {
-            url: `https://polygon-mainnet.g.alchemy.com/v2/...`,
+            url: `https://polygon-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
             // blockNumber: 22619386,
         },
         accounts: [deployerPrivateKey, vaultAdminPrivateKey],

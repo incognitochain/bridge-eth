@@ -1,0 +1,664 @@
+{
+  "address": "0xd190620159d82731f9951326bafdc873a16cb2b1",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "admin",
+          "type": "address"
+        },
+        {
+          "internalType": "address[]",
+          "name": "beaconCommittee",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "bridgeCommittee",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "BeaconCommitteeSwapped",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "BridgeCommitteeSwapped",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        }
+      ],
+      "name": "Claim",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "ndays",
+          "type": "uint256"
+        }
+      ],
+      "name": "Extend",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "pauser",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "pauser",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "beaconCommittees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "bridgeCommittees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "expire",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "n",
+          "type": "uint256"
+        }
+      ],
+      "name": "extend",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        }
+      ],
+      "name": "extractCommitteeFromInstruction",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint8",
+          "name": "expectedMeta",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "expectedShard",
+          "type": "uint8"
+        }
+      ],
+      "name": "extractMetaFromInstruction",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "blkHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "findBeaconCommitteeFromHeight",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "blkHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "findBridgeCommitteeFromHeight",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "i",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBeaconCommittee",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address[]",
+              "name": "pubkeys",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startBlock",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IncognitoProxy.Committee",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "i",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBridgeCommittee",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address[]",
+              "name": "pubkeys",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startBlock",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IncognitoProxy.Committee",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "isBeacon",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "blkHeight",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "instPath",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "instPathIsLeft",
+          "type": "bool[]"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instRoot",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "blkData",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "sigIdx",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "sigV",
+          "type": "uint8[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigR",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigS",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "instructionApproved",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "leaf",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "root",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "path",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "left",
+          "type": "bool[]"
+        }
+      ],
+      "name": "instructionInMerkleTree",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_successor",
+          "type": "address"
+        }
+      ],
+      "name": "retire",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "successor",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "instPath",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "instPathIsLeft",
+          "type": "bool[]"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instRoot",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "blkData",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "sigIdx",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "sigV",
+          "type": "uint8[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigR",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigS",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "swapBeaconCommittee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32[][2]",
+          "name": "instPaths",
+          "type": "bytes32[][2]"
+        },
+        {
+          "internalType": "bool[][2]",
+          "name": "instPathIsLefts",
+          "type": "bool[][2]"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "instRoots",
+          "type": "bytes32[2]"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "blkData",
+          "type": "bytes32[2]"
+        },
+        {
+          "internalType": "uint256[][2]",
+          "name": "sigIdxs",
+          "type": "uint256[][2]"
+        },
+        {
+          "internalType": "uint8[][2]",
+          "name": "sigVs",
+          "type": "uint8[][2]"
+        },
+        {
+          "internalType": "bytes32[][2]",
+          "name": "sigRs",
+          "type": "bytes32[][2]"
+        },
+        {
+          "internalType": "bytes32[][2]",
+          "name": "sigSs",
+          "type": "bytes32[][2]"
+        }
+      ],
+      "name": "swapBridgeCommittee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "committee",
+          "type": "address[]"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "msgHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "v",
+          "type": "uint8[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "r",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "s",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "verifySig",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ]
+}

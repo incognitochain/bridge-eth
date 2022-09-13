@@ -40,8 +40,10 @@ module.exports = async({
         const vaultImpl = await deployments.get(vaultContractName);
         const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorage', [regAddr, ex.address]);
 
-        await proxy.connect(vaultAdminSigner).upgradeToAndCall(vaultImpl.address, upgradeData);
+        const tx = await proxy.connect(vaultAdminSigner).upgradeToAndCall(vaultImpl.address, upgradeData);
         log('upgraded existing proxy to new implementation with params', vaultImpl.address, vaultAdminSigner.address, regAddr, ex.address);
+        const { gasUsed } = await tx.wait();
+        log('gas used for upgrade:', gasUsed.toString());
     }
     // await confirm(vault.setRegulator(regAddr));
 };

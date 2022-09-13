@@ -6,8 +6,16 @@ npm install
 
 ## Live deployment
 ```bash
-npx hardhat deploy --network <network> --tags vault >> deploy-out.log
-# network can be localhost, kovan or mainnet
+PRIVATE_KEY=<your_deployer_key> npx hardhat deploy --network <network> --tags vault >> deploy-out.log
+# live networks: mainnet, plgmainnet, bscmainnet, ftmmainnet
+```
+
+## Upgrade Vault contract
+```bash
+PRIVATE_KEY=<your_admin_key> npx hardhat deploy --network mainnet --tags upgrade
+PRIVATE_KEY=<your_admin_key> npx hardhat deploy --network plgmainnet --tags upgrade
+PRIVATE_KEY=<your_admin_key> npx hardhat deploy --network bscmainnet --tags upgrade
+PRIVATE_KEY=<your_admin_key> npx hardhat deploy --network ftmmainnet --tags upgrade
 ```
 
 ## Fork-mainnet Deployment

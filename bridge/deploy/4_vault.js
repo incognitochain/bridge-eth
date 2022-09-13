@@ -44,7 +44,7 @@ module.exports = async({
         log: true,
     });
     if (proxyResult.newlyDeployed) {
-        log('deployed new proxy & initialized with params', vault.address, vaultAdminSigner.address, ip.address, initializeData);
+        log('deployed new proxy & initialized with params', vaultImpl.address, vaultAdminSigner.address, ip.address, initializeData);
     }
 
     const proxy = await getInstance('TransparentUpgradeableProxy');
