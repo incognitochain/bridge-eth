@@ -23,7 +23,6 @@ module.exports = async({
             method: "hardhat_impersonateAccount",
             params: [_addr]
         });
-        await signers[0].sendTransaction({value: ethers.utils.parseUnits('5', 'ether'), to: _addr}).catch(_ => {});
     }));
 
     if (Boolean(testingTokens)) {

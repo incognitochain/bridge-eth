@@ -76,8 +76,8 @@ let readKey = (filename, defaultValue = '') => {
 let mnemonic = readKey('.mnemonic', devMnemonic);
 let infuraApiKey = readKey('.infuraKey');
 let alchemyApiKey = readKey('.alchemyKey');
-let deployerPrivateKey = readKey('.deployerPrivateKey', '0x00');
-let vaultAdminPrivateKey = readKey('.vaultAdminPrivateKey', '0x00');
+let deployerPrivateKey = process.env.PRIVATE_KEY || readKey('.deployerPrivateKey', '0x0000000000000000000000000000000000000000000000000000000000000000');
+let vaultAdminPrivateKey = process.env.PRIVATE_KEY || readKey('.vaultAdminPrivateKey', '0x0000000000000000000000000000000000000000000000000000000000000000');
 
 const mainnetTokenList = [];
 
@@ -87,11 +87,9 @@ const forkcfg = {
     plg: {
         forking: {
             url: `https://polygon-mainnet.g.alchemy.com/v2/...`,
+            // blockNumber: 22619386,
         },
-        accounts: {
-            mnemonic: mnemonic,
-            count: 4
-        },
+        accounts: [deployerPrivateKey, vaultAdminPrivateKey],
         deployed: {
             adminToBorrowFrom: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
             routers: {
@@ -129,13 +127,10 @@ const forkcfg = {
     },
     bsc: {
         forking: {
-            url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
-            blockNumber: 22619386,
+            url: `https://bsc-dataseed.binance.org`,
+            // blockNumber: 22619386,
         },
-        accounts: {
-            mnemonic: mnemonic,
-            count: 4
-        },
+        accounts: [deployerPrivateKey, vaultAdminPrivateKey],
         deployed: {
             adminToBorrowFrom: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
             routers: {
@@ -151,6 +146,21 @@ const forkcfg = {
         providers: devProviders,
         numShards: 2,
         vaultContractName: 'VaultBSC',
+        executorContractName: 'PancakeProxy',
+    },
+    ftm: {
+        forking: {
+            url: `https://rpcapi.fantom.network`,
+        },
+        accounts: [deployerPrivateKey, vaultAdminPrivateKey],
+        deployed: {
+            adminToBorrowFrom: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
+            routers: {
+                PancakeProxy: '0xF491e7B69E4244ad4002BC14e878a34207E38c29'
+            },
+        },
+        committees: mainnetCommittees,
+        vaultContractName: 'VaultFTM',
         executorContractName: 'PancakeProxy',
     }
 }
@@ -203,15 +213,19 @@ const networks = {
             mnemonic: mnemonic
         },
         deployed: {
-            kyber: '0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D',
-            kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-            uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+            routers: {
+                UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
+            }
+            // kyber: '0x692f391bCc85cefCe8C237C01e1f636BbD70EA4D',
+            // kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            // uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
             // MKR, KNC, UNI
             // testingTokens: ['0xaaf64bfcc32d0f15873a02163e7e500671a4ffcd', '0xdB7ec4E4784118D9733710e46F7C83fE7889596a', '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984']
         },
         committees: testnetCommittees,
         providers: devProviders,
         // numShards: 2,
+        executorContractName: 'UniswapProxy'
     },
     bsctest: {
         url: "https://data-seed-prebsc-1-s1.binance.org:8545",
@@ -239,7 +253,7 @@ const networks = {
                 UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
             }
         },
-        committees: devCommitteesBig,
+        committees: testnetCommittees,
         providers: devProviders,
         // numShards: 2,
         vaultContractName: 'VaultPLG',
@@ -250,16 +264,21 @@ const networks = {
         accounts: {
             mnemonic: mnemonic
         },
-        deployed: {},
+        deployed: {
+            routers: {
+                PancakeProxy: '0xa6AD18C2aC47803E193F75c3677b14BF19B94883'
+            }      
+        },
         committees: testnetCommittees,
         providers: devProviders,
         // numShards: 2,
         vaultContractName: 'VaultFTM',
+        executorContractName: 'PancakeProxy'
     },
     mainnet: {
         chainId: 1,
         accounts: [deployerPrivateKey, vaultAdminPrivateKey],
-        url: `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+        url: `https://eth-fullnode.incognito.org`,
         deployed: {
             // make sure this matches vaultAdminPrivateKey
             // previousVaultAdmin: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
@@ -272,7 +291,7 @@ const networks = {
     plgmainnet: {
         chainId: 137,
         accounts: [deployerPrivateKey, vaultAdminPrivateKey],
-        url: `https://polygon-mainnet.g.alchemy.com/v2/${infuraApiKey}`,
+        url: `https://polygon-mainnet.infura.io/v3/9bc873177cf74a03a35739e45755a9ac`,
         deployed: {
             routers: {
                 UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'
@@ -285,7 +304,7 @@ const networks = {
     bscmainnet: {
         chainId: 56,
         accounts: [deployerPrivateKey, vaultAdminPrivateKey],
-        url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
+        url: `https://bsc-dataseed.binance.org`,
         deployed: {
             routers: {
                 PancakeProxy: '0x10ED43C718714eb63d5aA57B78B54704E256024E'
@@ -296,9 +315,9 @@ const networks = {
         executorContractName: 'PancakeProxy',
     },
     ftmmainnet: {
-        chainId: 56,
+        chainId: 250,
         accounts: [deployerPrivateKey, vaultAdminPrivateKey],
-        url: `https://rpc.testnet.fantom.network`,
+        url: `https://rpcapi.fantom.network`,
         deployed: {
             routers: {
                 PancakeProxy: '0xF491e7B69E4244ad4002BC14e878a34207E38c29'

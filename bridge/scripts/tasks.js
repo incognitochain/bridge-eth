@@ -232,6 +232,21 @@ task("inspect-call", "Decode (swap) calldata by name")
         console.log(replayResult);
     })
 
+task("decode-fn-v2", "Decode function data by name")
+    .addOptionalParam("name", "name", "trade", types.string)
+    .addOptionalParam("data", "data", "", types.string)
+    .setAction(async (taskArgs, hre) => {
+        const [signer, vaultAdmin] = await ethers.getSigners();
+        const { getInstance, getImplementation, confirm } = require('./utils');
+        const abi = require('../artifacts/contracts/bsc/pancake_proxy.sol/PancakeProxy.json').abi;
+        const iface = new ethers.utils.Interface(abi);
+        const fdata = taskArgs.data;
+        res = iface.decodeFunctionData(taskArgs.name, fdata);
+        console.log('decoded func', taskArgs.name)
+        console.dir(res);
+        // console.log(Object.keys(res.params))
+    })
+
 task("decode-fn", "Decode function data by name")
     .addOptionalParam("name", "name", "exactInputSingle", types.string)
     .addOptionalParam("data", "data", "", types.string)
