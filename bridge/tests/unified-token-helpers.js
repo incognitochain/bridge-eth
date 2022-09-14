@@ -10,7 +10,7 @@ const { inc } = require('../scripts/external');
 const unified_shield = (ethIn) => {
     return async function() {
         // as per Incognito specs, deposit and wait more than 15 blocks
-        const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, { value: ethIn }), this.nConfirm);
+        const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, "0x0000000000000000000000000000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", { value: ethIn }), this.nConfirm);
         // in this test case, this call should emit only one event
         // console.log(`Deposit : ${tx.hash} => achieved ${nConfirm + 1} confirmations`);
         await expect(tx).to.emit(this.vault, 'Deposit')
@@ -67,7 +67,7 @@ let unified_shieldToken = (_amount, _tokenName) => {
         // as per Incognito specs, deposit and wait more than 15 blocks
         const incAmount = await toIncDecimals(_amount, tokenContract.address, true);
         const emitAmount = await toIncDecimals(_amount, tokenContract.address, false);
-        const tx = await confirm(this.vault.connect(this.tokenGuy.signer).depositERC20(tokenContract.address, _amount, this.tokenGuy.inc), this.nConfirm);
+        const tx = await confirm(this.vault.connect(this.tokenGuy.signer).depositERC20(tokenContract.address, _amount, this.tokenGuy.inc, "0x0000000000000000000000000000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"), this.nConfirm);
         await expect(tx).to.emit(this.vault, 'Deposit')
             .withArgs(ethers.utils.getAddress(tokenContract.address), this.tokenGuy.inc, emitAmount);
         const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);

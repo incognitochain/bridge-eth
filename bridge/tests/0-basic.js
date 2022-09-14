@@ -68,7 +68,7 @@ let setupTest = () => {
 let shield = (ethIn) => {
     return async function() {
         // as per Incognito specs, deposit and wait more than 15 blocks
-        const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, { value: ethIn }), this.nConfirm);
+        const tx = await confirm(this.vault.connect(this.ethGuy.signer).deposit(this.ethGuy.inc, "0x0000000000000000000000000000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", { value: ethIn }), this.nConfirm);
         // in this test case, this call should emit only one event
         await expect(tx).to.emit(this.vault, 'Deposit')
             .withArgs(tokenAddresses.ETH, this.ethGuy.inc, ethIn);
@@ -116,7 +116,7 @@ let shieldToken = (_amount, _tokenName) => {
             .withArgs(this.tokenGuy.signer.address, this.vault.address, _amount);
         // as per Incognito specs, deposit and wait more than 15 blocks
         const incAmount = await toIncDecimals(_amount, tokenContract.address);
-        const tx = await confirm(this.vault.connect(this.tokenGuy.signer).depositERC20(tokenContract.address, _amount, this.tokenGuy.inc), this.nConfirm);
+        const tx = await confirm(this.vault.connect(this.tokenGuy.signer).depositERC20(tokenContract.address, _amount, this.tokenGuy.inc, "0x0000000000000000000000000000000000000000000000000000000000000000", "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"), this.nConfirm);
         await expect(tx).to.emit(this.vault, 'Deposit')
             .withArgs(ethers.utils.getAddress(tokenContract.address), this.tokenGuy.inc, incAmount);
         const proveResult = await proveEth(tx.hash, inc.utils.base64Encode);

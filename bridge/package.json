@@ -16,7 +16,6 @@
         "ethers": "^5.5.4",
         "hardhat": "^2.10.2",
         "hardhat-deploy": "^0.11.11",
-        "hardhat-deploy-ethers": "^0.3.0-beta.13",
         "incognito": "github:incognitochain/incognito-chain-web-js#feature/papp-new-flow",
         "merkle-patricia-tree": "^4.2.4",
         "util": "^0.12.3"

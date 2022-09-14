@@ -24,7 +24,7 @@ interface UniswapV2 {
   function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
-contract UniswapV2Trade is TradeUtils {
+contract UniswapV2Trade is TradeUtils, Executor {
     // Variables
     UniswapV2 public uniswapV2;
     address public wETH;

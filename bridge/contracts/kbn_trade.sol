@@ -11,7 +11,7 @@ interface KyberNetwork {
     function getExpectedRate(IERC20 src, IERC20 dest, uint srcQty) external view returns(uint expectedRate, uint slippageRate);
 }
 
-contract KBNTrade is TradeUtils {
+contract KBNTrade is TradeUtils, Executor {
     // Variables
     KyberNetwork public kyberNetworkProxyContract;
     IERC20 constant KYBER_ETH_TOKEN_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
