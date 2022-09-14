@@ -242,8 +242,9 @@ contract VaultPLG {
      * @notice The maximum amount to deposit is capped since Incognito balance is stored as uint64
      * @param incognitoAddress: Incognito Address to receive pETH
      */
-    function deposit_V2(string calldata incognitoAddress) external payable nonReentrant {
+    function deposit_V2(string calldata incognitoAddress, bytes32 txId, bytes calldata signData) external payable nonReentrant {
         require(address(this).balance <= 10 ** 27, errorToString(Errors.MAX_UINT_REACHED));
+        verifyRegulator(txId, signData);
         emit DepositV2(ETH_TOKEN, incognitoAddress, msg.value, idCounter.current());
         idCounter.increment();
     }
@@ -258,7 +259,8 @@ contract VaultPLG {
      * @param amount: to deposit to the vault and mint on Incognito Chain
      * @param incognitoAddress: Incognito Address to receive pERC20
      */
-    function depositERC20_V2(address token, uint amount, string calldata incognitoAddress) external nonReentrant {
+    function depositERC20_V2(address token, uint amount, string calldata incognitoAddress, bytes32 txId, bytes calldata signData) external nonReentrant {
+        verifyRegulator(txId, signData);
         IERC20 erc20Interface = IERC20(token);
         uint8 decimals = getDecimals(address(token));
         uint tokenBalance = erc20Interface.balanceOf(address(this));
