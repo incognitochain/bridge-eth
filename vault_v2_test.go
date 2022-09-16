@@ -177,7 +177,11 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	// tempData, _ := vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, deposit)
 	data := rawsha3(tempData[4:])
 	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
-	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, deposit, signBytes, timestamp)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, auth2.From)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, deposit, signBytes, timestamp, txId, sign)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
@@ -192,12 +196,12 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))))
 	data = rawsha3(tempData[4:])
 	signBytes, _ = crypto.Sign(data, genesisAcc.PrivateKey)
-	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
+	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp, txId, sign)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
 	// use signature twice
-	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
+	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp, txId, sign)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
@@ -218,7 +222,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	// tempData, _ = vaultAbi.Pack("withdrawBuildData", IncPaymentAddr, tinfo.addr, timestamp, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))))
 	data = rawsha3(tempData[4:])
 	signBytes, _ = crypto.Sign(data, genesisAcc.PrivateKey)
-	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))), signBytes, timestamp)
+	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(withdraw, big.NewInt(int64(1e9))), signBytes, timestamp, txId, sign)
 	require.NotEqual(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
@@ -258,7 +262,7 @@ func (v2 *VaulV2TestSuite) TestVaultV2RequestWithdraw() {
 	data = rawsha3(tempData[4:])
 	signBytes, err = crypto.Sign(data, genesisAcc.PrivateKey)
 	require.Equal(v2.T(), nil, err)
-	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp)
+	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, big.NewInt(0).Mul(redeposit, big.NewInt(int64(1e9))), signBytes, timestamp, txId, sign)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
@@ -652,7 +656,11 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 
 	copy(data32[:], data)
 	signBytes, _ := crypto.Sign(data, genesisAcc.PrivateKey)
-	_, err := v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, testAmount, signBytes, timestamp)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, auth2.From)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.p.v.RequestWithdraw(auth2, IncPaymentAddr, tinfo.addr, testAmount, signBytes, timestamp, txId, sign)
 	require.Equal(v2.T(), nil, err)
 	v2.p.sim.Commit()
 
@@ -688,10 +696,10 @@ func (v2 *VaulV2TestSuite) TestVaultV2isSigDataUsed() {
 	require.Equal(v2.T(), false, isUsed)
 }
 
-func buildWithdrawTestcaseV2(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer common.Address) *decodedProof {
+func buildWithdrawTestcaseV2(c *committees, meta, shard int, tokenID ec.Address, amount *big.Int, withdrawer common.Address) *DecodedProof {
 	inst, mp, blkData, blkHash := buildWithdrawDataV2(meta, shard, tokenID, amount, withdrawer)
 	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
-	return &decodedProof{
+	return &DecodedProof{
 		Instruction: inst,
 		Heights:     [2]*big.Int{big.NewInt(1), big.NewInt(1)},
 

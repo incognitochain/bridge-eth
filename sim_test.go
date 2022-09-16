@@ -385,7 +385,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy FAIL token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, fail, err := fail.DeployFail(auth2, p.sim, bal, "FAIL", 6, "FAIL")
+	addr, _, fail, err := fail.DeployFAIL(auth2, p.sim, bal, "FAIL", 6, "FAIL")
 	if err != nil {
 		return errors.Errorf("failed to deploy FAIL contract: %v", err)
 	}
@@ -394,7 +394,7 @@ func setupCustomTokens(p *Platform) error {
 
 	// Deploy DLESS token
 	bal, _ = big.NewInt(1).SetString("1000000000000000000", 10)
-	addr, _, dless, err := dless.DeployDless(auth2, p.sim, bal, "DLESS", "DLESS")
+	addr, _, dless, err := dless.DeployDLESS(auth2, p.sim, bal, "DLESS", "DLESS")
 	if err != nil {
 		return errors.Errorf("failed to deploy DLESS contract: %v", err)
 	}
@@ -499,7 +499,7 @@ func printReceipt(sim *backends.SimulatedBackend, tx *types.Transaction) {
 	}
 }
 
-func getAndDecodeBridgeSwapProof(url string, block int) (*decodedProof, error) {
+func getAndDecodeBridgeSwapProof(url string, block int) (*DecodedProof, error) {
 	body := getBridgeSwapProof(url, block)
 	if len(body) < 1 {
 		return nil, fmt.Errorf("no bridge swap proof found")
@@ -580,7 +580,12 @@ func deposit(p *Platform, amount *big.Int) (*big.Int, *big.Int, error) {
 	}
 	auth.GasLimit = 0
 	auth.Value = amount
-	_, err = p.v.Deposit(auth, "")
+	txId := [32]byte{}
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	if err != nil {
+		return nil, nil, errors.WithStack(err)
+	}
+	_, err = p.v.Deposit(auth, "", txId, sign)
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}

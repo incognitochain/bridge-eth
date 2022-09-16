@@ -63,7 +63,7 @@ type getProofResult struct {
 	}
 }
 
-type decodedProof struct {
+type DecodedProof struct {
 	Instruction []byte
 	Heights     [2]*big.Int
 
@@ -77,7 +77,7 @@ type decodedProof struct {
 	SigSs           [2][][32]byte
 }
 
-func getAndDecodeBurnProof(txID string) (*decodedProof, error) {
+func getAndDecodeBurnProof(txID string) (*DecodedProof, error) {
 	body := getBurnProof(txID)
 	if len(body) < 1 {
 		return nil, fmt.Errorf("burn proof not found")
@@ -95,7 +95,7 @@ func getAndDecodeBurnProofV2(
 	incBridgeHost string,
 	txID string,
 	rpcMethod string,
-) (*decodedProof, error) {
+) (*DecodedProof, error) {
 	body, err := getBurnProofV2(incBridgeHost, txID, rpcMethod)
 	if err != nil {
 		return nil, err
@@ -116,8 +116,30 @@ func GetAndDecodeBurnProofV2(
 	incBridgeHost string,
 	txID string,
 	rpcMethod string,
-) (*decodedProof, error) {
+) (*DecodedProof, error) {
 	body, err := getBurnProofV2(incBridgeHost, txID, rpcMethod)
+	if err != nil {
+		return nil, err
+	}
+	if len(body) < 1 {
+		return nil, fmt.Errorf("burn proof for deposit to SC not found")
+	}
+
+	r := getProofResult{}
+	err = json.Unmarshal([]byte(body), &r)
+	if err != nil {
+		return nil, err
+	}
+	return decodeProof(&r)
+}
+
+func GetAndDecodeBurnProofUnifiedToken(
+	incBridgeHost string,
+	txID string,
+	dataIndex int,
+	networkID uint,
+) (*DecodedProof, error) {
+	body, err := getBurnProofUnifiedToken(incBridgeHost, txID, dataIndex, networkID)
 	if err != nil {
 		return nil, err
 	}
@@ -239,8 +261,45 @@ func getBurnProofV2(
 	}
 	return string(body), nil
 }
+func getBurnProofUnifiedToken(
+	incBridgeHost string,
+	txID string,
+	dataIndex int,
+	networkID uint,
+) (string, error) {
+	if len(txID) == 0 {
+		return "", errors.New("the tx invalid!")
+	}
+	payload := strings.NewReader(fmt.Sprintf(`
+	{
+		"id": 1,
+		"jsonrpc": "1.0",
+		"method": "bridgeaggGetBurnProof",
+		"params": [
+			{
+				"TxReqID": "%v",
+				"DataIndex": %v,
+				"NetworkID": %v
+			}
+		]
+	}
+	`, txID, dataIndex, networkID))
 
-func decodeProof(r *getProofResult) (*decodedProof, error) {
+	req, _ := http.NewRequest("POST", incBridgeHost, payload)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func decodeProof(r *getProofResult) (*DecodedProof, error) {
 	inst := decode(r.Result.Instruction)
 	fmt.Printf("inst: %d %x\n", len(inst), inst)
 	fmt.Printf("instHash (isWithdrawed, without height): %x\n", keccak256(inst))
@@ -307,7 +366,7 @@ func decodeProof(r *getProofResult) (*decodedProof, error) {
 	sigRs := [2][][32]byte{beaconSigRs, bridgeSigRs}
 	sigSs := [2][][32]byte{beaconSigSs, bridgeSigSs}
 
-	return &decodedProof{
+	return &DecodedProof{
 		Instruction:     inst,
 		Heights:         heights,
 		InstPaths:       instPaths,

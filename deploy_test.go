@@ -3,17 +3,19 @@ package bridge
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"os"
 	"strings"
 	"testing"
 	"time"
-	"encoding/json"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -21,10 +23,8 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/incognito_proxy"
 	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/incognitochain/bridge-eth/bridge/vaultproxy"
-	"github.com/pkg/errors"
 	"github.com/incognitochain/bridge-eth/rpccaller"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/pkg/errors"
 )
 
 type EstimateRes struct {
@@ -182,7 +182,7 @@ func TestReburn(t *testing.T) {
 		t.Fatal(err)
 	}
 	input, err := vaultAbi.Pack(
-		"withdraw", 
+		"withdraw",
 		proof.Instruction,
 		proof.Heights[0],
 		proof.InstPaths[0],
@@ -419,7 +419,7 @@ func depositDetail(
 	if err != nil {
 		return nil, err
 	}
-	
+
 	auth.Value = amount
 	if gasLimit > 0 {
 		auth.GasLimit = gasLimit
@@ -432,7 +432,12 @@ func depositDetail(
 	}
 
 	// Deposit
-	tx, err := v.Deposit(auth, incPaymentAddr)
+	txId := [32]byte{}
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	if err != nil {
+		return nil, err
+	}
+	tx, err := v.Deposit(auth, incPaymentAddr, txId, sign)
 	if err != nil {
 		return nil, err
 	}
@@ -579,6 +584,29 @@ func connect() (*ecdsa.PrivateKey, *ethclient.Client, int64, error) {
 	return privKey, client, chainID.Int64(), nil
 }
 
+func connect2(privateKeyHex, node string) (*ecdsa.PrivateKey, *ethclient.Client, int64, error) {
+	privKeyHex := privateKeyHex
+	privKey, err := crypto.HexToECDSA(privKeyHex)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	fmt.Printf("Sign Txs with address: %s\n", crypto.PubkeyToAddress(privKey.PublicKey).Hex())
+
+	ethNodeEndpoint := node
+	if len(ethNodeEndpoint) == 0 {
+		return nil, nil, 0, errors.New("os env value of ETHNODE not set yet")
+	}
+	client, err := ethclient.Dial(ethNodeEndpoint)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	chainID, err := client.ChainID(context.Background())
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	return privKey, client, chainID.Int64(), nil
+}
 
 func ToCallArg(msg ethereum.CallMsg) interface{} {
 	arg := map[string]interface{}{

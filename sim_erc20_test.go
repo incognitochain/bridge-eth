@@ -72,7 +72,13 @@ func depositErc20(
 
 	// Deposit
 	incAddr := "1Uv46Pu4pqBvxCcPw7MXhHfiAD5Rmi2xgEE7XB6eQurFAt4vSYvfyGn3uMMB1xnXDq9nRTPeiAZv5gRFCBDroRNsXJF1sxPSjNQtivuHk"
-	tx, err = v.DepositERC20(authTemp, tokenAddr, value, incAddr)
+	txId := [32]byte{}
+	// todo: update genesisAcc2.PrivateKey to real regulator
+	sign, err := SignDataToShield(txId, genesisAcc2.PrivateKey, genesisAcc2.Address)
+	if err != nil {
+		return nil, nil, err
+	}
+	tx, err = v.DepositERC20(authTemp, tokenAddr, value, incAddr, txId, sign)
 	if err != nil {
 		return nil, nil, err
 	}
