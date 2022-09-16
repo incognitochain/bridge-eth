@@ -85,6 +85,7 @@ func TestTradingDeployTestSuite(t *testing.T) {
 func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	admin := common.HexToAddress(Admin)
 	regulator := common.HexToAddress(Regulator)
+	executor := common.HexToAddress(Executor)
 	fmt.Println("Admin address:", admin.Hex())
 	fmt.Println("Regulator address:", regulator.Hex())
 
@@ -344,7 +345,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		prevVaultFTM := common.Address{}
-		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultABI))
+		vaultAbi, _ := abi.JSON(strings.NewReader(vault.VaultMetaData.ABI))
 		input, _ := vaultAbi.Pack("initialize", prevVaultFTM)
 
 		// Deploy vault proxy
@@ -409,7 +410,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 		prevVaultAURORA := common.Address{}
 		vaultAbi, _ := abi.JSON(strings.NewReader(vaultaurora.VaultMetaData.ABI))
-		input, err := vaultAbi.Pack("initialize", prevVaultAURORA, regulator)
+		input, err := vaultAbi.Pack("initialize", prevVaultAURORA, regulator, executor)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 
 		// Deploy vault proxy
@@ -456,7 +457,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 		prevVaultAVAX := common.Address{}
 		vaultAbi, _ := abi.JSON(strings.NewReader(vaultavax.VaultMetaData.ABI))
-		input, _ := vaultAbi.Pack("initialize", prevVaultAVAX, regulator)
+		input, _ := vaultAbi.Pack("initialize", prevVaultAVAX, regulator, executor)
 
 		// Deploy vault proxy
 		vaultAddrAVAX, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.AVAXClient, vaultAddrAVAX, admin, incAddrAVAX, input)
