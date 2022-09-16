@@ -1,0 +1,950 @@
+{
+  "address": "0xfAb5ab70500d1fab1e736829b4bf85e8bAC5fff2",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "admin",
+          "type": "address"
+        },
+        {
+          "internalType": "address[]",
+          "name": "beaconCommittee",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address[]",
+          "name": "bridgeCommittee",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "BeaconCommitteeSwapped",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "BridgeCommitteeSwapped",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        }
+      ],
+      "name": "Claim",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "ndays",
+          "type": "uint256"
+        }
+      ],
+      "name": "Extend",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "pauser",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "pauser",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "beaconCommittees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "bridgeCommittees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "expire",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "n",
+          "type": "uint256"
+        }
+      ],
+      "name": "extend",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        }
+      ],
+      "name": "extractCommitteeFromInstruction",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint8",
+          "name": "expectedMeta",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint8",
+          "name": "expectedShard",
+          "type": "uint8"
+        }
+      ],
+      "name": "extractMetaFromInstruction",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "blkHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "findBeaconCommitteeFromHeight",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "blkHeight",
+          "type": "uint256"
+        }
+      ],
+      "name": "findBridgeCommitteeFromHeight",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "i",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBeaconCommittee",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address[]",
+              "name": "pubkeys",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startBlock",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IncognitoProxy.Committee",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "i",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBridgeCommittee",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address[]",
+              "name": "pubkeys",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startBlock",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IncognitoProxy.Committee",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "isBeacon",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "blkHeight",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "instPath",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "instPathIsLeft",
+          "type": "bool[]"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instRoot",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "blkData",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "sigIdx",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "sigV",
+          "type": "uint8[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigR",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigS",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "instructionApproved",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "leaf",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "root",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "path",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "left",
+          "type": "bool[]"
+        }
+      ],
+      "name": "instructionInMerkleTree",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_successor",
+          "type": "address"
+        }
+      ],
+      "name": "retire",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "successor",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "instPath",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool[]",
+          "name": "instPathIsLeft",
+          "type": "bool[]"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "instRoot",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "blkData",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "sigIdx",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "sigV",
+          "type": "uint8[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigR",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "sigS",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "swapBeaconCommittee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "inst",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32[][2]",
+          "name": "instPaths",
+          "type": "bytes32[][2]"
+        },
+        {
+          "internalType": "bool[][2]",
+          "name": "instPathIsLefts",
+          "type": "bool[][2]"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "instRoots",
+          "type": "bytes32[2]"
+        },
+        {
+          "internalType": "bytes32[2]",
+          "name": "blkData",
+          "type": "bytes32[2]"
+        },
+        {
+          "internalType": "uint256[][2]",
+          "name": "sigIdxs",
+          "type": "uint256[][2]"
+        },
+        {
+          "internalType": "uint8[][2]",
+          "name": "sigVs",
+          "type": "uint8[][2]"
+        },
+        {
+          "internalType": "bytes32[][2]",
+          "name": "sigRs",
+          "type": "bytes32[][2]"
+        },
+        {
+          "internalType": "bytes32[][2]",
+          "name": "sigSs",
+          "type": "bytes32[][2]"
+        }
+      ],
+      "name": "swapBridgeCommittee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "committee",
+          "type": "address[]"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "msgHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint8[]",
+          "name": "v",
+          "type": "uint8[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "r",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "s",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "verifySig",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x5d2afab899bde7221031e67d830393442410e3561cf570d517814958d8c3f47d",
+  "receipt": {
+    "to": null,
+    "from": "0xE2516f0F38d9400a8ceCe5672884De72FBD01cE1",
+    "contractAddress": "0xfAb5ab70500d1fab1e736829b4bf85e8bAC5fff2",
+    "transactionIndex": 160,
+    "gasUsed": "3451447",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x28a2af00b510f8bcc20c98dd8dfa3987efee12812409f6f1d40b0dfecb0525cc",
+    "transactionHash": "0x5d2afab899bde7221031e67d830393442410e3561cf570d517814958d8c3f47d",
+    "logs": [],
+    "blockNumber": 12332911,
+    "cumulativeGasUsed": "13288201",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xE2516f0F38d9400a8ceCe5672884De72FBD01cE1",
+    [
+      "0xe1fe6bdb4FB5f80801D242480c5467c1de94719c",
+      "0xD57Dc32f9753a20Af166F9Dc48dE22355A9F7c83",
+      "0x44b39171D742C2CdFdA0EBb6226f8584CAfc57FC",
+      "0x4c8b59d24f07192B9095DA1EAE9af5c890413A71",
+      "0x6d678311c5DAf5F8c8c48223C7Aea2A49D8d8B12",
+      "0x93114859F53F98dC2a1FA6be9340Ce3B1D74722B",
+      "0x0c7d24b75bEc5E94924e8e5d6c793609e48e7FF6"
+    ],
+    []
+  ],
+  "solcInputHash": "41ab1ad11db6b86fa47959e6916f2304",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.12+commit.27d51765\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"admin\",\"type\":\"address\"},{\"internalType\":\"address[]\",\"name\":\"beaconCommittee\",\"type\":\"address[]\"},{\"internalType\":\"address[]\",\"name\":\"bridgeCommittee\",\"type\":\"address[]\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"startHeight\",\"type\":\"uint256\"}],\"name\":\"BeaconCommitteeSwapped\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"startHeight\",\"type\":\"uint256\"}],\"name\":\"BridgeCommitteeSwapped\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"claimer\",\"type\":\"address\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"ndays\",\"type\":\"uint256\"}],\"name\":\"Extend\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"pauser\",\"type\":\"address\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"pauser\",\"type\":\"address\"}],\"name\":\"Unpaused\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"beaconCommittees\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"bridgeCommittees\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"expire\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"n\",\"type\":\"uint256\"}],\"name\":\"extend\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"inst\",\"type\":\"bytes\"}],\"name\":\"extractCommitteeFromInstruction\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"inst\",\"type\":\"bytes\"},{\"internalType\":\"uint8\",\"name\":\"expectedMeta\",\"type\":\"uint8\"},{\"internalType\":\"uint8\",\"name\":\"expectedShard\",\"type\":\"uint8\"}],\"name\":\"extractMetaFromInstruction\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"blkHeight\",\"type\":\"uint256\"}],\"name\":\"findBeaconCommitteeFromHeight\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"blkHeight\",\"type\":\"uint256\"}],\"name\":\"findBridgeCommitteeFromHeight\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"i\",\"type\":\"uint256\"}],\"name\":\"getBeaconCommittee\",\"outputs\":[{\"components\":[{\"internalType\":\"address[]\",\"name\":\"pubkeys\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"}],\"internalType\":\"struct IncognitoProxy.Committee\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"i\",\"type\":\"uint256\"}],\"name\":\"getBridgeCommittee\",\"outputs\":[{\"components\":[{\"internalType\":\"address[]\",\"name\":\"pubkeys\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"}],\"internalType\":\"struct IncognitoProxy.Committee\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"isBeacon\",\"type\":\"bool\"},{\"internalType\":\"bytes32\",\"name\":\"instHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"blkHeight\",\"type\":\"uint256\"},{\"internalType\":\"bytes32[]\",\"name\":\"instPath\",\"type\":\"bytes32[]\"},{\"internalType\":\"bool[]\",\"name\":\"instPathIsLeft\",\"type\":\"bool[]\"},{\"internalType\":\"bytes32\",\"name\":\"instRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"blkData\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"sigIdx\",\"type\":\"uint256[]\"},{\"internalType\":\"uint8[]\",\"name\":\"sigV\",\"type\":\"uint8[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"sigR\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"sigS\",\"type\":\"bytes32[]\"}],\"name\":\"instructionApproved\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"leaf\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"path\",\"type\":\"bytes32[]\"},{\"internalType\":\"bool[]\",\"name\":\"left\",\"type\":\"bool[]\"}],\"name\":\"instructionInMerkleTree\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_successor\",\"type\":\"address\"}],\"name\":\"retire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"successor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"inst\",\"type\":\"bytes\"},{\"internalType\":\"bytes32[]\",\"name\":\"instPath\",\"type\":\"bytes32[]\"},{\"internalType\":\"bool[]\",\"name\":\"instPathIsLeft\",\"type\":\"bool[]\"},{\"internalType\":\"bytes32\",\"name\":\"instRoot\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"blkData\",\"type\":\"bytes32\"},{\"internalType\":\"uint256[]\",\"name\":\"sigIdx\",\"type\":\"uint256[]\"},{\"internalType\":\"uint8[]\",\"name\":\"sigV\",\"type\":\"uint8[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"sigR\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"sigS\",\"type\":\"bytes32[]\"}],\"name\":\"swapBeaconCommittee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"inst\",\"type\":\"bytes\"},{\"internalType\":\"bytes32[][2]\",\"name\":\"instPaths\",\"type\":\"bytes32[][2]\"},{\"internalType\":\"bool[][2]\",\"name\":\"instPathIsLefts\",\"type\":\"bool[][2]\"},{\"internalType\":\"bytes32[2]\",\"name\":\"instRoots\",\"type\":\"bytes32[2]\"},{\"internalType\":\"bytes32[2]\",\"name\":\"blkData\",\"type\":\"bytes32[2]\"},{\"internalType\":\"uint256[][2]\",\"name\":\"sigIdxs\",\"type\":\"uint256[][2]\"},{\"internalType\":\"uint8[][2]\",\"name\":\"sigVs\",\"type\":\"uint8[][2]\"},{\"internalType\":\"bytes32[][2]\",\"name\":\"sigRs\",\"type\":\"bytes32[][2]\"},{\"internalType\":\"bytes32[][2]\",\"name\":\"sigSs\",\"type\":\"bytes32[][2]\"}],\"name\":\"swapBridgeCommittee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"committee\",\"type\":\"address[]\"},{\"internalType\":\"bytes32\",\"name\":\"msgHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint8[]\",\"name\":\"v\",\"type\":\"uint8[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"r\",\"type\":\"bytes32[]\"},{\"internalType\":\"bytes32[]\",\"name\":\"s\",\"type\":\"bytes32[]\"}],\"name\":\"verifySig\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Stores beacon and bridge committee members of Incognito Chain. Other contracts can query this contract to check if an instruction is confimed on Incognito\",\"kind\":\"dev\",\"methods\":{\"constructor\":{\"details\":\"Sets the genesis committees and the address of admin\",\"params\":{\"admin\":\": ETH address\",\"beaconCommittee\":\": genesis committee members of beacon chain\",\"bridgeCommittee\":\": genesis committee members of bridge\"}},\"extractCommitteeFromInstruction(bytes)\":{\"details\":\"Extracts the committee (body) from a swap instruction\",\"params\":{\"inst\":\": the full instruction, containing both metadata and body\"},\"returns\":{\"_0\":\"committee: address of the committee members\"}},\"extractMetaFromInstruction(bytes,uint8,uint8)\":{\"details\":\"Extracts the metadata of a swap instruction\",\"params\":{\"expectedMeta\":\": required type of the instruction, 70 for swapping beacon and 71 for bridge\",\"expectedShard\":\": required ID of the Incognito shard containing the instruction, must be 1\",\"inst\":\": the full instruction, containing both metadata and body\"},\"returns\":{\"_0\":\"height: the starting block that the committee is responsible for\",\"_1\":\"prevHeight: the starting block of the signing committee for this instruction\"}},\"findBeaconCommitteeFromHeight(uint256)\":{\"details\":\"Finds the beacon committee in charge of signing a block height\",\"params\":{\"blkHeight\":\": to search for\"},\"returns\":{\"_0\":\"committee: address of the committee members\",\"_1\":\"id: index of the committee\"}},\"findBridgeCommitteeFromHeight(uint256)\":{\"details\":\"Finds the bridge committee in charge of signing a block height\"},\"getBeaconCommittee(uint256)\":{\"details\":\"Gets a beacon committee in the past\",\"params\":{\"i\":\"index of the committee to get\"},\"returns\":{\"_0\":\"the committee and their startBlock\"}},\"getBridgeCommittee(uint256)\":{\"details\":\"Gets a bridge committee in the past\"},\"instructionApproved(bool,bytes32,uint256,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])\":{\"details\":\"Checks if an instruction is confirmed on chain (beacon or bridge)\",\"params\":{\"blkData\":\": merkle has of the block body\",\"blkHeight\":\": height of the block containing the instruction\",\"instHash\":\": keccak256 hash of the instruction's content\",\"instPath\":\": merkle path of the instruction\",\"instPathIsLeft\":\": whether each node on the path is the left or right child\",\"instRoot\":\": root of the merkle tree contains all instructions\",\"isBeacon\":\": check on beacon or bridge\",\"sigIdx\":\": indices of the validators who signed this block\",\"sigR\":\": part of the signatures of the validators\",\"sigS\":\": part of the signatures of the validators\",\"sigV\":\": part of the signatures of the validators\"},\"returns\":{\"_0\":\"bool: whether the instruction is valid and confirmed\"}},\"instructionInMerkleTree(bytes32,bytes32,bytes32[],bool[])\":{\"details\":\"Checks if a value is in a merkle tree\",\"params\":{\"leaf\":\": the value to check\",\"left\":\": whether each node on the path is the left or right child\",\"path\":\": merkle path of the value to check\",\"root\":\": of the merkle tree\"},\"returns\":{\"_0\":\"bool: whether the value is in the merkle tree\"}},\"swapBeaconCommittee(bytes,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])\":{\"details\":\"Updates the latest committee of the beacon chain\"},\"swapBridgeCommittee(bytes,bytes32[][2],bool[][2],bytes32[2],bytes32[2],uint256[][2],uint8[][2],bytes32[][2],bytes32[][2])\":{\"details\":\"Updates the latest committee of the bridge\",\"params\":{\"blkData\":\": merkle has of the block body\",\"inst\":\": the decoded instruction as a list of bytes\",\"instPathIsLefts\":\": whether each node on the path is the left or right child\",\"instPaths\":\": merkle path of the instruction\",\"instRoots\":\": root of the merkle tree contains all instructions\",\"sigIdxs\":\": indices of the validators who signed this block\",\"sigRs\":\": part of the signatures of the validators\",\"sigSs\":\": part of the signatures of the validators\",\"sigVs\":\": part of the signatures of the validators\"}},\"verifySig(address[],bytes32,uint8[],bytes32[],bytes32[])\":{\"details\":\"Verifies that the signatures for a message are correct\",\"params\":{\"msgHash\":\": the message to be verify\",\"r\":\": part of the signatures\",\"s\":\": part of the signatures\",\"v\":\": part of the signatures\"},\"returns\":{\"_0\":\"bool: whether all signatures are correct\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"constructor\":\"Admin is the one responsible for the contract in case of emergency Here, they are authorized to Pause the contract, stopping new committees from being added to the contract Admin is authorized to Pause the contract at anytime for 1 year starting from the moment the contract is deployed Admin is also authorized to increase the expiration time if they need more time to implement a more decentralized failsafe mechanismAdmin can also be a smart contract implementing a DAO and making decisions through a voting system\",\"findBeaconCommitteeFromHeight(uint256)\":{\"notice\":\"This functions does a binary search of all committees (since genesis block)\"},\"findBridgeCommitteeFromHeight(uint256)\":{\"notice\":\"The same as findBeaconCommitteeFromHeight but for bridge chain\"},\"getBeaconCommittee(uint256)\":{\"notice\":\"We need to implement this because the autogenerated getter returns only the startBlock\"},\"getBridgeCommittee(uint256)\":{\"notice\":\"the same as getBeaconCommittee but for bridge\"},\"instructionApproved(bool,bytes32,uint256,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])\":{\"notice\":\"A confirmation means that the instruction is included in a block that has enough validators' signatures\"},\"swapBeaconCommittee(bytes,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])\":{\"notice\":\"This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committeeThis only works when the contract is not PausedSwapping beacon committee doesn't require that the instruction is included in the bridge chainAll params are the same as swapBridgeCommittee\"},\"swapBridgeCommittee(bytes,bytes32[][2],bool[][2],bytes32[2],bytes32[2],uint256[][2],uint8[][2],bytes32[][2],bytes32[][2])\":{\"notice\":\"This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committeeThis only works when the contract is not PausedAll params except inst are the list of 2 elements corresponding to the proof on beacon and bridge\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/incognito_proxy.sol\":\"IncognitoProxy\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/incognito_proxy.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.6.12;\\npragma experimental ABIEncoderV2;\\n\\nimport \\\"./pause.sol\\\";\\n\\n/**\\n * @dev Stores beacon and bridge committee members of Incognito Chain. Other\\n * contracts can query this contract to check if an instruction is confimed on\\n * Incognito\\n */\\ncontract IncognitoProxy is AdminPausable {\\n    struct Committee {\\n        address[] pubkeys; // ETH address of all members\\n        uint startBlock; // The block that the committee starts to work on\\n    }\\n\\n    Committee[] public beaconCommittees; // All beacon committees from genesis block\\n    Committee[] public bridgeCommittees; // All bridge committees from genesis block\\n\\n    event BeaconCommitteeSwapped(uint id, uint startHeight);\\n    event BridgeCommitteeSwapped(uint id, uint startHeight);\\n\\n    // error code\\n    enum Errors {\\n        SIGNATURE_DIMENSION_MISMATCH,\\n        INSTRUCTION_NOT_APPROVED,\\n        INSTRUCTION_INVALID,\\n        COMMITTEE_HEIGHT_MISMATCH,\\n        PREV_COMMITTEE_HEIGHT_MISMATCH,\\n        SIGNATURE_INVALID,\\n        MERKLE_PROOF_INVALID,\\n        UNEXPECTED_ERROR\\n    }\\n\\n    /**\\n     * @dev Sets the genesis committees and the address of admin\\n     * @notice Admin is the one responsible for the contract in case of emergency\\n     * Here, they are authorized to Pause the contract, stopping new committees\\n     * from being added to the contract\\n     * Admin is authorized to Pause the contract at anytime for 1 year starting\\n     * from the moment the contract is deployed\\n     * Admin is also authorized to increase the expiration time if they need more\\n     * time to implement a more decentralized failsafe mechanism\\n     * @notice Admin can also be a smart contract implementing a DAO and making decisions through a voting system\\n     * @param admin: ETH address\\n     * @param beaconCommittee: genesis committee members of beacon chain\\n     * @param bridgeCommittee: genesis committee members of bridge\\n     */\\n    constructor(\\n        address admin,\\n        address[] memory beaconCommittee,\\n        address[] memory bridgeCommittee\\n    ) public AdminPausable(admin) {\\n        beaconCommittees.push(Committee({\\n            pubkeys: beaconCommittee,\\n            startBlock: 0\\n        }));\\n\\n        bridgeCommittees.push(Committee({\\n            pubkeys: bridgeCommittee,\\n            startBlock: 0\\n        }));\\n    }\\n\\n    /**\\n     * @dev Gets a beacon committee in the past\\n     * @notice We need to implement this because the autogenerated getter returns only the startBlock\\n     * @param i index of the committee to get\\n     * @return the committee and their startBlock\\n     */\\n    function getBeaconCommittee(uint i) public view returns(Committee memory) {\\n        return beaconCommittees[i];\\n    }\\n\\n    /**\\n     * @dev Gets a bridge committee in the past\\n     * @notice the same as getBeaconCommittee but for bridge\\n     */\\n    function getBridgeCommittee(uint i) public view returns(Committee memory) {\\n        return bridgeCommittees[i];\\n    }\\n\\n    /**\\n     * @dev Updates the latest committee of the bridge\\n     * @notice This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committee\\n     * @notice This only works when the contract is not Paused\\n     * @notice All params except inst are the list of 2 elements corresponding to the proof on beacon and bridge\\n     * @param inst: the decoded instruction as a list of bytes\\n     * @param instPaths: merkle path of the instruction\\n     * @param instPathIsLefts: whether each node on the path is the left or right child\\n     * @param instRoots: root of the merkle tree contains all instructions\\n     * @param blkData: merkle has of the block body\\n     * @param sigIdxs: indices of the validators who signed this block\\n     * @param sigVs: part of the signatures of the validators\\n     * @param sigRs: part of the signatures of the validators\\n     * @param sigSs: part of the signatures of the validators\\n     */\\n    function swapBridgeCommittee(\\n        bytes memory inst,\\n        bytes32[][2] memory instPaths,\\n        bool[][2] memory instPathIsLefts,\\n        bytes32[2] memory instRoots,\\n        bytes32[2] memory blkData,\\n        uint[][2] memory sigIdxs,\\n        uint8[][2] memory sigVs,\\n        bytes32[][2] memory sigRs,\\n        bytes32[][2] memory sigSs\\n    ) public isNotPaused {\\n        bytes32 instHash = keccak256(inst);\\n\\n        // Verify instruction on beacon\\n        require(instructionApproved(\\n            true,\\n            instHash,\\n            beaconCommittees[beaconCommittees.length-1].startBlock,\\n            instPaths[0],\\n            instPathIsLefts[0],\\n            instRoots[0],\\n            blkData[0],\\n            sigIdxs[0],\\n            sigVs[0],\\n            sigRs[0],\\n            sigSs[0]\\n        ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));\\n\\n        // Verify instruction on bridge\\n        require(instructionApproved(\\n            false,\\n            instHash,\\n            bridgeCommittees[bridgeCommittees.length-1].startBlock,\\n            instPaths[1],\\n            instPathIsLefts[1],\\n            instRoots[1],\\n            blkData[1],\\n            sigIdxs[1],\\n            sigVs[1],\\n            sigRs[1],\\n            sigSs[1]\\n        ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));\\n\\n        // Parse instruction and check metadata\\n        (uint prevCommitteeStartHeight, uint startHeight) = extractMetaFromInstruction(inst, 71, 1);\\n        // require(meta == 71 && shard == 1, errorToString(Errors.INSTRUCTION_INVALID));\\n\\n        uint myLatestCommitteeHeight = bridgeCommittees[bridgeCommittees.length-1].startBlock;\\n        // Make sure 1 instruction can't be used twice (using startHeight)\\n        require(prevCommitteeStartHeight == myLatestCommitteeHeight, errorToString(Errors.PREV_COMMITTEE_HEIGHT_MISMATCH));\\n        require(startHeight > myLatestCommitteeHeight, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));\\n\\n        // Swap committee\\n        address[] memory pubkeys = extractCommitteeFromInstruction(inst);\\n        bridgeCommittees.push(Committee({\\n            pubkeys: pubkeys,\\n            startBlock: startHeight\\n        }));\\n\\n        emit BridgeCommitteeSwapped(bridgeCommittees.length, startHeight);\\n    }\\n\\n    /**\\n     * @dev Updates the latest committee of the beacon chain\\n     * @notice This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committee\\n     * @notice This only works when the contract is not Paused\\n     * @notice Swapping beacon committee doesn't require that the instruction is included in the bridge chain\\n     * @notice All params are the same as swapBridgeCommittee\\n     */\\n    function swapBeaconCommittee(\\n        bytes memory inst,\\n        bytes32[] memory instPath,\\n        bool[] memory instPathIsLeft,\\n        bytes32 instRoot,\\n        bytes32 blkData,\\n        uint[] memory sigIdx,\\n        uint8[] memory sigV,\\n        bytes32[] memory sigR,\\n        bytes32[] memory sigS\\n    ) public isNotPaused {\\n        bytes32 instHash = keccak256(inst);\\n\\n        // Verify instruction on beacon\\n        require(instructionApproved(\\n            true,\\n            instHash,\\n            beaconCommittees[beaconCommittees.length-1].startBlock,\\n            instPath,\\n            instPathIsLeft,\\n            instRoot,\\n            blkData,\\n            sigIdx,\\n            sigV,\\n            sigR,\\n            sigS\\n        ), errorToString(Errors.INSTRUCTION_NOT_APPROVED));\\n\\n        // Parse instruction and check metadata and shardID\\n        (uint prevCommitteeStartHeight, uint startHeight) = extractMetaFromInstruction(inst, 70, 1);\\n        // require(meta == 70 && shard == 1 && numVals > 0, errorToString(Errors.INSTRUCTION_INVALID));\\n\\n        uint myLatestCommitteeHeight = beaconCommittees[beaconCommittees.length-1].startBlock;\\n        // Make sure 1 instruction can't be used twice (using startHeight)\\n        require(prevCommitteeStartHeight == myLatestCommitteeHeight, errorToString(Errors.PREV_COMMITTEE_HEIGHT_MISMATCH));\\n        require(startHeight > myLatestCommitteeHeight, errorToString(Errors.COMMITTEE_HEIGHT_MISMATCH));\\n\\n        // Swap committee\\n        address[] memory pubkeys = extractCommitteeFromInstruction(inst);\\n        beaconCommittees.push(Committee({\\n            pubkeys: pubkeys,\\n            startBlock: startHeight\\n        }));\\n\\n        emit BeaconCommitteeSwapped(beaconCommittees.length, startHeight);\\n    }\\n\\n    /**\\n     * @dev Checks if an instruction is confirmed on chain (beacon or bridge)\\n     * @notice A confirmation means that the instruction is included in a block\\n     * that has enough validators' signatures\\n     * @param isBeacon: check on beacon or bridge\\n     * @param instHash: keccak256 hash of the instruction's content\\n     * @param blkHeight: height of the block containing the instruction\\n     * @param instPath: merkle path of the instruction\\n     * @param instPathIsLeft: whether each node on the path is the left or right child\\n     * @param instRoot: root of the merkle tree contains all instructions\\n     * @param blkData: merkle has of the block body\\n     * @param sigIdx: indices of the validators who signed this block\\n     * @param sigV: part of the signatures of the validators\\n     * @param sigR: part of the signatures of the validators\\n     * @param sigS: part of the signatures of the validators\\n     * @return bool: whether the instruction is valid and confirmed\\n     */\\n    function instructionApproved(\\n        bool isBeacon,\\n        bytes32 instHash,\\n        uint blkHeight,\\n        bytes32[] memory instPath,\\n        bool[] memory instPathIsLeft,\\n        bytes32 instRoot,\\n        bytes32 blkData,\\n        uint[] memory sigIdx,\\n        uint8[] memory sigV,\\n        bytes32[] memory sigR,\\n        bytes32[] memory sigS\\n    ) public view returns (bool) {\\n        // Find committee in charge of this block\\n        address[] memory signers;\\n        uint _;\\n        if (isBeacon) {\\n            (signers, _) = findBeaconCommitteeFromHeight(blkHeight);\\n        } else {\\n            (signers, _) = findBridgeCommitteeFromHeight(blkHeight);\\n        }\\n\\n        // Extract signers that signed this block (require sigIdx to be strictly increasing)\\n        require(sigV.length == sigIdx.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));\\n        require(sigV.length == sigR.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));\\n        require(sigV.length == sigS.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));\\n        for (uint i = 0; i < sigIdx.length; i++) {\\n            if ((i > 0 && sigIdx[i] <= sigIdx[i-1]) || sigIdx[i] >= signers.length) {\\n                return false;\\n            }\\n            signers[i] = signers[sigIdx[i]];\\n        }\\n\\n        // Get double block hash from instRoot and other data\\n        bytes32 blk = keccak256(abi.encodePacked(keccak256(abi.encodePacked(blkData, instRoot))));\\n\\n        // Check if enough validators signed this block\\n        if (sigIdx.length <= signers.length * 2 / 3) {\\n            return false;\\n        }\\n\\n        // Check that signature is correct\\n        require(verifySig(signers, blk, sigV, sigR, sigS), errorToString(Errors.SIGNATURE_INVALID));\\n\\n        // Check that inst is in block\\n        require(instructionInMerkleTree(\\n            instHash,\\n            instRoot,\\n            instPath,\\n            instPathIsLeft\\n        ), errorToString(Errors.MERKLE_PROOF_INVALID));\\n\\n        return true;\\n    }\\n\\n    /**\\n     * @dev Finds the beacon committee in charge of signing a block height\\n     * @notice This functions does a binary search of all committees (since genesis block)\\n     * @param blkHeight: to search for\\n     * @return committee: address of the committee members\\n     * @return id: index of the committee\\n     */\\n    function findBeaconCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {\\n        uint l = 0;\\n        uint r = beaconCommittees.length;\\n        require(r > 0, errorToString(Errors.UNEXPECTED_ERROR));\\n        r = r - 1;\\n        while (l != r) {\\n            uint m = (l + r + 1) / 2;\\n            if (beaconCommittees[m].startBlock <= blkHeight) {\\n                l = m;\\n            } else {\\n                r = m - 1;\\n            }\\n        }\\n        return (beaconCommittees[l].pubkeys, l);\\n    }\\n\\n    /**\\n     * @dev Finds the bridge committee in charge of signing a block height\\n     * @notice The same as findBeaconCommitteeFromHeight but for bridge chain\\n     */\\n    function findBridgeCommitteeFromHeight(uint blkHeight) public view returns (address[] memory, uint) {\\n        uint l = 0;\\n        uint r = bridgeCommittees.length;\\n        require(r > 0, errorToString(Errors.UNEXPECTED_ERROR));\\n        r = r - 1;\\n        while (l != r) {\\n            uint m = (l + r + 1) / 2;\\n            if (bridgeCommittees[m].startBlock <= blkHeight) {\\n                l = m;\\n            } else {\\n                r = m - 1;\\n            }\\n        }\\n        return (bridgeCommittees[l].pubkeys, l);\\n    }\\n\\n    /**\\n     * @dev Checks if a value is in a merkle tree\\n     * @param leaf: the value to check\\n     * @param root: of the merkle tree\\n     * @param path: merkle path of the value to check\\n     * @param left: whether each node on the path is the left or right child\\n     * @return bool: whether the value is in the merkle tree\\n     */\\n    function instructionInMerkleTree(\\n        bytes32 leaf,\\n        bytes32 root,\\n        bytes32[] memory path,\\n        bool[] memory left\\n    ) public pure returns (bool) {\\n        require(left.length == path.length, errorToString(Errors.MERKLE_PROOF_INVALID));\\n        bytes32 hash = leaf;\\n        for (uint i = 0; i < path.length; i++) {\\n            if (left[i]) {\\n                hash = keccak256(abi.encodePacked(path[i], hash));\\n            } else if (path[i] == 0x0) {\\n                hash = keccak256(abi.encodePacked(hash, hash));\\n            } else {\\n                hash = keccak256(abi.encodePacked(hash, path[i]));\\n            }\\n        }\\n        return hash == root;\\n    }\\n\\n    /**\\n     * @dev Extracts the metadata of a swap instruction\\n     * @param inst: the full instruction, containing both metadata and body\\n     * @param expectedMeta: required type of the instruction, 70 for swapping beacon and 71 for bridge\\n     * @param expectedShard: required ID of the Incognito shard containing the instruction, must be 1\\n     * @return height: the starting block that the committee is responsible for\\n     * @return prevHeight: the starting block of the signing committee for this instruction\\n     */\\n    function extractMetaFromInstruction(bytes memory inst, uint8 expectedMeta, uint8 expectedShard) public pure returns (uint, uint) {\\n        require(inst.length >= 0x62, errorToString(Errors.INSTRUCTION_INVALID)); // 0x02 bytes for meta and shard, 0x20 each for height and numVals\\n        uint8 meta = uint8(inst[0]);\\n        uint8 shard = uint8(inst[1]);\\n        uint height;\\n        uint prevHeight;\\n        assembly {\\n            // skip first 0x20 bytes (stored length of inst)\\n            prevHeight := mload(add(inst, 0x22)) // [2:34]\\n            height := mload(add(inst, 0x42)) // [34:66]\\n        }\\n        require(meta == expectedMeta && shard == expectedShard, errorToString(Errors.INSTRUCTION_INVALID));\\n        return (prevHeight, height);\\n    }\\n\\n    /**\\n     * @dev Extracts the committee (body) from a swap instruction\\n     * @param inst: the full instruction, containing both metadata and body\\n     * @return committee: address of the committee members\\n     */\\n    function extractCommitteeFromInstruction(bytes memory inst) public pure returns (address[] memory) {\\n        uint numVals;\\n        assembly {\\n            numVals := mload(add(inst, 0x62))\\n        }\\n\\n        require(numVals > 0, errorToString(Errors.INSTRUCTION_INVALID));\\n        require(inst.length == 0x62 + numVals * 0x20, errorToString(Errors.INSTRUCTION_INVALID));\\n        address[] memory addr = new address[](numVals);\\n        address tmp;\\n        for (uint i = 0; i < numVals; i++) {\\n            assembly {\\n                // skip first 0x20 bytes (stored length of inst)\\n                // also, skip the next 0x62 bytes (stored metadata)\\n                tmp := mload(add(add(inst, 0x82), mul(i, 0x20))) // 67+i*32\\n            }\\n            addr[i] = tmp;\\n        }\\n        return addr;\\n    }\\n\\n    /**\\n     * @dev Verifies that the signatures for a message are correct\\n     * @param msgHash: the message to be verify\\n     * @param v: part of the signatures\\n     * @param r: part of the signatures\\n     * @param s: part of the signatures\\n     * @return bool: whether all signatures are correct\\n     */\\n    function verifySig(\\n        address[] memory committee,\\n        bytes32 msgHash,\\n        uint8[] memory v,\\n        bytes32[] memory r,\\n        bytes32[] memory s\\n    ) public pure returns (bool) {\\n        require(v.length == r.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));\\n        require(v.length == s.length, errorToString(Errors.SIGNATURE_DIMENSION_MISMATCH));\\n        for (uint i = 0; i < v.length; i++){\\n            address recoveredAddress = ecrecover(msgHash, v[i], r[i], s[i]);\\n            if (recoveredAddress == address(0x0) || recoveredAddress != committee[i]) {\\n                return false;\\n            }\\n        }\\n        return true;\\n    }\\n\\n    /**\\n     * @dev convert enum to string value\\n     */\\n     function errorToString(Errors error) internal pure returns(string memory) {\\n        uint8 erroNum = uint8(error);\\n        uint maxlength = 10;\\n        bytes memory reversed = new bytes(maxlength);\\n        uint i = 0;\\n        while (erroNum != 0) {\\n            uint8 remainder = erroNum % 10;\\n            erroNum = erroNum / 10;\\n            reversed[i++] = byte(48 + remainder);\\n        }\\n        bytes memory s = new bytes(i + 1);\\n        for (uint j = 0; j <= i; j++) {\\n            s[j] = reversed[i - j];\\n        }\\n        return string(s);\\n    }\\n}\\n\",\"keccak256\":\"0xc2046ea45edeebac1a96f7339572f8333c6645a8f6244f0014f604fbdb6fa19c\",\"license\":\"MIT\"},\"contracts/pause.sol\":{\"content\":\"pragma solidity ^0.6.12;\\n\\ncontract AdminPausable {\\n    address public admin;\\n    address public successor;\\n    bool public paused;\\n    uint public expire;\\n\\n    constructor(address _admin) public {\\n        admin = _admin;\\n        paused = false;\\n        expire = block.timestamp + 365 * 1 days;\\n    }\\n\\n    event Paused(address pauser);\\n    event Unpaused(address pauser);\\n    event Extend(uint ndays);\\n    event Claim(address claimer);\\n\\n    modifier onlyAdmin() {\\n        require(msg.sender == admin, \\\"not admin\\\");\\n        _;\\n    }\\n\\n    modifier isPaused() {\\n        require(paused, \\\"not paused right now\\\");\\n        _;\\n    }\\n\\n    modifier isNotPaused() {\\n        require(!paused, \\\"paused right now\\\");\\n        _;\\n    }\\n\\n    modifier isNotExpired() {\\n        require(block.timestamp < expire, \\\"expired\\\");\\n        _;\\n    }\\n\\n    function retire(address _successor) public onlyAdmin isNotExpired {\\n        successor = _successor;\\n    }\\n\\n    function claim() public isNotExpired {\\n        require(msg.sender == successor, \\\"unauthorized\\\");\\n        admin = successor;\\n        emit Claim(admin);\\n    }\\n\\n    function extend(uint n) public onlyAdmin isNotExpired {\\n        require(n < 366, \\\"cannot extend for too long\\\"); // To prevent overflow\\n        expire = expire + n * 1 days;\\n        emit Extend(n);\\n    }\\n\\n    function pause() public onlyAdmin isNotPaused isNotExpired {\\n        paused = true;\\n        emit Paused(msg.sender);\\n    }\\n\\n    function unpause() public onlyAdmin isPaused {\\n        paused = false;\\n        emit Unpaused(msg.sender);\\n    }\\n}\",\"keccak256\":\"0xaa93221220677ff98f62a43340b4e779c1dc881c5111bb0ec24882b6e436263d\"}},\"version\":1}",
+  "bytecode": "0x60806040523480156200001157600080fd5b5060405162003c8138038062003c818339818101604052810190620000379190620002f2565b82806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000600160146101000a81548160ff0219169083151502179055506301e13380420160028190555050600360405180604001604052808481526020016000815250908060018154018082558091505060019003906000526020600020906002020160009091909190915060008201518160000190805190602001906200010092919062000182565b50602082015181600101555050600460405180604001604052808381526020016000815250908060018154018082558091505060019003906000526020600020906002020160009091909190915060008201518160000190805190602001906200016c92919062000182565b506020820151816001015550505050506200041f565b828054828255906000526020600020908101928215620001fe579160200282015b82811115620001fd5782518260006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555091602001919060010190620001a3565b5b5090506200020d919062000211565b5090565b5b808211156200024a57600081816101000a81549073ffffffffffffffffffffffffffffffffffffffff02191690555060010162000212565b5090565b6000815190506200025f8162000405565b92915050565b600082601f8301126200027757600080fd5b81516200028e6200028882620003a8565b6200037a565b91508181835260208401935060208101905083856020840282011115620002b457600080fd5b60005b83811015620002e85781620002cd88826200024e565b845260208401935060208301925050600181019050620002b7565b5050505092915050565b6000806000606084860312156200030857600080fd5b600062000318868287016200024e565b935050602084015167ffffffffffffffff8111156200033657600080fd5b620003448682870162000265565b925050604084015167ffffffffffffffff8111156200036257600080fd5b620003708682870162000265565b9150509250925092565b6000604051905081810181811067ffffffffffffffff821117156200039e57600080fd5b8060405250919050565b600067ffffffffffffffff821115620003c057600080fd5b602082029050602081019050919050565b6000620003de82620003e5565b9050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6200041081620003d1565b81146200041c57600080fd5b50565b613852806200042f6000396000f3fe608060405234801561001057600080fd5b50600436106101425760003560e01c80639714378c116100b8578063e41be7751161007c578063e41be77514610365578063f203a5ed14610381578063f5205fde146103b1578063f65d2116146103e2578063f851a44014610412578063faea31671461043057610142565b80639714378c1461029b5780639b30b637146102b75780639e6371ba146102e7578063a05c100114610303578063b600ffdb1461033457610142565b80634e71d92d1161010a5780634e71d92d146101fd5780635c975abb146102075780636ff968c31461022557806379599f96146102435780638456cb59146102615780638ceb69c31461026b57610142565b806323b50e9114610147578063262f7220146101775780633aacfdad146101935780633f4ba83a146101c357806347c4b328146101cd575b600080fd5b610161600480360381019061015c9190612b07565b610460565b60405161016e919061328c565b60405180910390f35b610191600480360381019061018c9190612b48565b6105d8565b005b6101ad60048036038101906101a8919061281d565b6109f1565b6040516101ba91906132de565b60405180910390f35b6101cb610bd4565b005b6101e760048036038101906101e29190612a74565b610d05565b6040516101f491906132de565b60405180910390f35b610205610e6f565b005b61020f610ffe565b60405161021c91906132de565b60405180910390f35b61022d611011565b60405161023a9190613256565b60405180910390f35b61024b611037565b6040516102589190613442565b60405180910390f35b61026961103d565b005b61028560048036038101906102809190612e8d565b6111b2565b6040516102929190613420565b60405180910390f35b6102b560048036038101906102b09190612e8d565b61127f565b005b6102d160048036038101906102cc9190612e8d565b6113df565b6040516102de9190613442565b60405180910390f35b61030160048036038101906102fc91906127f4565b61140a565b005b61031d60048036038101906103189190612e26565b611520565b60405161032b92919061345d565b60405180910390f35b61034e60048036038101906103499190612e8d565b61163c565b60405161035c9291906132ae565b60405180910390f35b61037f600480360381019061037a9190612cb8565b6117ad565b005b61039b60048036038101906103969190612e8d565b611a30565b6040516103a89190613442565b60405180910390f35b6103cb60048036038101906103c69190612e8d565b611a5b565b6040516103d99291906132ae565b60405180910390f35b6103fc60048036038101906103f791906128f4565b611bcc565b60405161040991906132de565b60405180910390f35b61041a611f20565b6040516104279190613256565b60405180910390f35b61044a60048036038101906104459190612e8d565b611f44565b6040516104579190613420565b60405180910390f35b6060600060628301519050600081116104796002612011565b906104ba576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016104b1919061333e565b60405180910390fd5b50602081026062018351146104cf6002612011565b90610510576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610507919061333e565b60405180910390fd5b5060608167ffffffffffffffff8111801561052a57600080fd5b506040519080825280602002602001820160405280156105595781602001602082028036833780820191505090505b509050600080600090505b838110156105cc576020810260828701015191508183828151811061058557fe5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff16815250508080600101915050610564565b50819350505050919050565b600160149054906101000a900460ff1615610628576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161061f906133e0565b60405180910390fd5b6000898051906020012090506106f660018260036001600380549050038154811061064f57fe5b9060005260206000209060020201600101548c60006002811061066e57fe5b60200201518c60006002811061068057fe5b60200201518c60006002811061069257fe5b60200201518c6000600281106106a457fe5b60200201518c6000600281106106b657fe5b60200201518c6000600281106106c857fe5b60200201518c6000600281106106da57fe5b60200201518c6000600281106106ec57fe5b6020020151611bcc565b6107006001612011565b90610741576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610738919061333e565b60405180910390fd5b5061080460008260046001600480549050038154811061075d57fe5b9060005260206000209060020201600101548c60016002811061077c57fe5b60200201518c60016002811061078e57fe5b60200201518c6001600281106107a057fe5b60200201518c6001600281106107b257fe5b60200201518c6001600281106107c457fe5b60200201518c6001600281106107d657fe5b60200201518c6001600281106107e857fe5b60200201518c6001600281106107fa57fe5b6020020151611bcc565b61080e6001612011565b9061084f576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610846919061333e565b60405180910390fd5b506000806108608c60476001611520565b91509150600060046001600480549050038154811061087b57fe5b906000526020600020906002020160010154905080831461089c6004612011565b906108dd576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016108d4919061333e565b60405180910390fd5b508082116108eb6003612011565b9061092c576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610923919061333e565b60405180910390fd5b5060606109388e610460565b90506004604051806040016040528083815260200185815250908060018154018082558091505060019003906000526020600020906002020160009091909190915060008201518160000190805190602001906109969291906121c1565b506020820151816001015550507ffd354f8fe3f6f03db5436879221c99b65c610515bb33434539060150d61f8a44600480549050846040516109d992919061345d565b60405180910390a15050505050505050505050505050565b60008251845114610a026000612011565b90610a43576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610a3a919061333e565b60405180910390fd5b508151845114610a536000612011565b90610a94576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610a8b919061333e565b60405180910390fd5b5060005b8451811015610bc5576000600187878481518110610ab257fe5b6020026020010151878581518110610ac657fe5b6020026020010151878681518110610ada57fe5b602002602001015160405160008152602001604052604051610aff94939291906132f9565b6020604051602081039080840390855afa158015610b21573d6000803e3d6000fd5b505050602060405103519050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161480610ba75750878281518110610b6f57fe5b602002602001015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614155b15610bb757600092505050610bcb565b508080600101915050610a98565b50600190505b95945050505050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610c62576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610c5990613400565b60405180910390fd5b600160149054906101000a900460ff16610cb1576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610ca890613360565b60405180910390fd5b6000600160146101000a81548160ff0219169083151502179055507f5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa33604051610cfb9190613271565b60405180910390a1565b60008251825114610d166006612011565b90610d57576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610d4e919061333e565b60405180910390fd5b50600085905060005b8451811015610e6057838181518110610d7557fe5b602002602001015115610dc557848181518110610d8e57fe5b602002602001015182604051602001610da892919061322a565b604051602081830303815290604052805190602001209150610e53565b6000801b858281518110610dd557fe5b60200260200101511415610e13578182604051602001610df692919061322a565b604051602081830303815290604052805190602001209150610e52565b81858281518110610e2057fe5b6020026020010151604051602001610e3992919061322a565b6040516020818303038152906040528051906020012091505b5b8080600101915050610d60565b50848114915050949350505050565b6002544210610eb3576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610eaa90613380565b60405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610f43576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610f3a906133c0565b60405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff166000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055507f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff16604051610ff49190613256565b60405180910390a1565b600160149054906101000a900460ff1681565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60025481565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146110cb576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016110c290613400565b60405180910390fd5b600160149054906101000a900460ff161561111b576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611112906133e0565b60405180910390fd5b600254421061115f576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161115690613380565b60405180910390fd5b60018060146101000a81548160ff0219169083151502179055507f62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258336040516111a89190613271565b60405180910390a1565b6111ba61224b565b600482815481106111c757fe5b90600052602060002090600202016040518060400160405290816000820180548060200260200160405190810160405280929190818152602001828054801561126557602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001906001019080831161121b575b505050505081526020016001820154815250509050919050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461130d576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161130490613400565b60405180910390fd5b6002544210611351576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161134890613380565b60405180910390fd5b61016e8110611395576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161138c906133a0565b60405180910390fd5b620151808102600254016002819055507f02ef6561d311451dadc920679eb21192a61d96ee8ead94241b8ff073029ca6e8816040516113d49190613442565b60405180910390a150565b600481815481106113ec57fe5b90600052602060002090600202016000915090508060010154905081565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614611498576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161148f90613400565b60405180910390fd5b60025442106114dc576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016114d390613380565b60405180910390fd5b80600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b6000806062855110156115336002612011565b90611574576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161156b919061333e565b60405180910390fd5b5060008560008151811061158457fe5b602001015160f81c60f81b60f81c90506000866001815181106115a357fe5b602001015160f81c60f81b60f81c905060008060228901519050604289015191508760ff168460ff161480156115de57508660ff168360ff16145b6115e86002612011565b90611629576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611620919061333e565b60405180910390fd5b5080829550955050505050935093915050565b606060008060009050600060038054905090506000811161165d6007612011565b9061169e576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611695919061333e565b60405180910390fd5b506001810390505b8082146116fb5760006002600183850101816116be57fe5b04905085600382815481106116cf57fe5b906000526020600020906002020160010154116116ee578092506116f5565b6001810391505b506116a6565b6003828154811061170857fe5b9060005260206000209060020201600001828180548060200260200160405190810160405280929190818152602001828054801561179b57602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019060010190808311611751575b50505050509150935093505050915091565b600160149054906101000a900460ff16156117fd576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016117f4906133e0565b60405180910390fd5b60008980519060200120905061184360018260036001600380549050038154811061182457fe5b9060005260206000209060020201600101548c8c8c8c8c8c8c8c611bcc565b61184d6001612011565b9061188e576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611885919061333e565b60405180910390fd5b5060008061189f8c60466001611520565b9150915060006003600160038054905003815481106118ba57fe5b90600052602060002090600202016001015490508083146118db6004612011565b9061191c576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611913919061333e565b60405180910390fd5b5080821161192a6003612011565b9061196b576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611962919061333e565b60405180910390fd5b5060606119778e610460565b90506003604051806040016040528083815260200185815250908060018154018082558091505060019003906000526020600020906002020160009091909190915060008201518160000190805190602001906119d59291906121c1565b506020820151816001015550507fe15e1a9dec6ad906dd5985b062bfa5ee8bc5d5738e46e4deb8a2df2fbbbb59d160038054905084604051611a1892919061345d565b60405180910390a15050505050505050505050505050565b60038181548110611a3d57fe5b90600052602060002090600202016000915090508060010154905081565b6060600080600090506000600480549050905060008111611a7c6007612011565b90611abd576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611ab4919061333e565b60405180910390fd5b506001810390505b808214611b1a576000600260018385010181611add57fe5b0490508560048281548110611aee57fe5b90600052602060002090600202016001015411611b0d57809250611b14565b6001810391505b50611ac5565b60048281548110611b2757fe5b90600052602060002090600202016000018281805480602002602001604051908101604052809291908181526020018280548015611bba57602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019060010190808311611b70575b50505050509150935093505050915091565b6000606060008d15611bee57611be18c61163c565b8092508193505050611c00565b611bf78c611a5b565b80925081935050505b8651865114611c0f6000612011565b90611c50576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611c47919061333e565b60405180910390fd5b508451865114611c606000612011565b90611ca1576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611c98919061333e565b60405180910390fd5b508351865114611cb16000612011565b90611cf2576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611ce9919061333e565b60405180910390fd5b5060005b8751811015611de257600081118015611d385750876001820381518110611d1957fe5b6020026020010151888281518110611d2d57fe5b602002602001015111155b80611d5757508251888281518110611d4c57fe5b602002602001015110155b15611d685760009350505050611f11565b82888281518110611d7557fe5b602002602001015181518110611d8757fe5b6020026020010151838281518110611d9b57fe5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff16815250508080600101915050611cf6565b506000888a604051602001611df892919061322a565b60405160208183030381529060405280519060200120604051602001611e1e919061320f565b6040516020818303038152906040528051906020012090506003600284510281611e4457fe5b04885111611e585760009350505050611f11565b611e6583828989896109f1565b611e6f6005612011565b90611eb0576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611ea7919061333e565b60405180910390fd5b50611ebd8e8b8e8e610d05565b611ec76006612011565b90611f08576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611eff919061333e565b60405180910390fd5b50600193505050505b9b9a5050505050505050505050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b611f4c61224b565b60038281548110611f5957fe5b906000526020600020906002020160405180604001604052908160008201805480602002602001604051908101604052809291908181526020018280548015611ff757602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019060010190808311611fad575b505050505081526020016001820154815250509050919050565b6060600082600781111561202157fe5b90506000600a905060608167ffffffffffffffff8111801561204257600080fd5b506040519080825280601f01601f1916602001820160405280156120755781602001600182028036833780820191505090505b50905060005b60008460ff16146120f6576000600a8560ff168161209557fe5b069050600a8560ff16816120a557fe5b0494508060300160f81b8383806001019450815181106120c157fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a9053505061207b565b60606001820167ffffffffffffffff8111801561211257600080fd5b506040519080825280601f01601f1916602001820160405280156121455781602001600182028036833780820191505090505b50905060005b8281116121b357838184038151811061216057fe5b602001015160f81c60f81b82828151811061217757fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a905350808060010191505061214b565b508095505050505050919050565b82805482825590600052602060002090810192821561223a579160200282015b828111156122395782518260006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550916020019190600101906121e1565b5b5090506122479190612265565b5090565b604051806040016040528060608152602001600081525090565b5b8082111561229c57600081816101000a81549073ffffffffffffffffffffffffffffffffffffffff021916905550600101612266565b5090565b6000813590506122af816137a9565b92915050565b600082601f8301126122c657600080fd5b81356122d96122d4826134b3565b613486565b915081818352602084019350602081019050838560208402820111156122fe57600080fd5b60005b8381101561232e578161231488826122a0565b845260208401935060208301925050600181019050612301565b5050505092915050565b600082601f83011261234957600080fd5b600261235c612357826134db565b613486565b9150818360005b83811015612393578135860161237988826124cc565b845260208401935060208301925050600181019050612363565b5050505092915050565b600082601f8301126123ae57600080fd5b60026123c16123bc826134fd565b613486565b9150818360005b838110156123f857813586016123de88826125c3565b8452602084019350602083019250506001810190506123c8565b5050505092915050565b600082601f83011261241357600080fd5b60026124266124218261351f565b613486565b9150818360005b8381101561245d57813586016124438882612646565b84526020840193506020830192505060018101905061242d565b5050505092915050565b600082601f83011261247857600080fd5b600261248b61248682613541565b613486565b9150818360005b838110156124c257813586016124a888826126c9565b845260208401935060208301925050600181019050612492565b5050505092915050565b600082601f8301126124dd57600080fd5b81356124f06124eb82613563565b613486565b9150818183526020840193506020810190508385602084028201111561251557600080fd5b60005b83811015612545578161252b888261274c565b845260208401935060208301925050600181019050612518565b5050505092915050565b600082601f83011261256057600080fd5b600261257361256e8261358b565b613486565b9150818385602084028201111561258957600080fd5b60005b838110156125b9578161259f8882612761565b84526020840193506020830192505060018101905061258c565b5050505092915050565b600082601f8301126125d457600080fd5b81356125e76125e2826135ad565b613486565b9150818183526020840193506020810190508385602084028201111561260c57600080fd5b60005b8381101561263c57816126228882612761565b84526020840193506020830192505060018101905061260f565b5050505092915050565b600082601f83011261265757600080fd5b813561266a612665826135d5565b613486565b9150818183526020840193506020810190508385602084028201111561268f57600080fd5b60005b838110156126bf57816126a588826127ca565b845260208401935060208301925050600181019050612692565b5050505092915050565b600082601f8301126126da57600080fd5b81356126ed6126e8826135fd565b613486565b9150818183526020840193506020810190508385602084028201111561271257600080fd5b60005b83811015612742578161272888826127df565b845260208401935060208301925050600181019050612715565b5050505092915050565b60008135905061275b816137c0565b92915050565b600081359050612770816137d7565b92915050565b600082601f83011261278757600080fd5b813561279a61279582613625565b613486565b915080825260208301602083018583830111156127b657600080fd5b6127c183828461374c565b50505092915050565b6000813590506127d9816137ee565b92915050565b6000813590506127ee81613805565b92915050565b60006020828403121561280657600080fd5b6000612814848285016122a0565b91505092915050565b600080600080600060a0868803121561283557600080fd5b600086013567ffffffffffffffff81111561284f57600080fd5b61285b888289016122b5565b955050602061286c88828901612761565b945050604086013567ffffffffffffffff81111561288957600080fd5b612895888289016126c9565b935050606086013567ffffffffffffffff8111156128b257600080fd5b6128be888289016125c3565b925050608086013567ffffffffffffffff8111156128db57600080fd5b6128e7888289016125c3565b9150509295509295909350565b60008060008060008060008060008060006101608c8e03121561291657600080fd5b60006129248e828f0161274c565b9b505060206129358e828f01612761565b9a505060406129468e828f016127ca565b99505060608c013567ffffffffffffffff81111561296357600080fd5b61296f8e828f016125c3565b98505060808c013567ffffffffffffffff81111561298c57600080fd5b6129988e828f016124cc565b97505060a06129a98e828f01612761565b96505060c06129ba8e828f01612761565b95505060e08c013567ffffffffffffffff8111156129d757600080fd5b6129e38e828f01612646565b9450506101008c013567ffffffffffffffff811115612a0157600080fd5b612a0d8e828f016126c9565b9350506101208c013567ffffffffffffffff811115612a2b57600080fd5b612a378e828f016125c3565b9250506101408c013567ffffffffffffffff811115612a5557600080fd5b612a618e828f016125c3565b9150509295989b509295989b9093969950565b60008060008060808587031215612a8a57600080fd5b6000612a9887828801612761565b9450506020612aa987828801612761565b935050604085013567ffffffffffffffff811115612ac657600080fd5b612ad2878288016125c3565b925050606085013567ffffffffffffffff811115612aef57600080fd5b612afb878288016124cc565b91505092959194509250565b600060208284031215612b1957600080fd5b600082013567ffffffffffffffff811115612b3357600080fd5b612b3f84828501612776565b91505092915050565b60008060008060008060008060006101608a8c031215612b6757600080fd5b60008a013567ffffffffffffffff811115612b8157600080fd5b612b8d8c828d01612776565b99505060208a013567ffffffffffffffff811115612baa57600080fd5b612bb68c828d0161239d565b98505060408a013567ffffffffffffffff811115612bd357600080fd5b612bdf8c828d01612338565b9750506060612bf08c828d0161254f565b96505060a0612c018c828d0161254f565b95505060e08a013567ffffffffffffffff811115612c1e57600080fd5b612c2a8c828d01612402565b9450506101008a013567ffffffffffffffff811115612c4857600080fd5b612c548c828d01612467565b9350506101208a013567ffffffffffffffff811115612c7257600080fd5b612c7e8c828d0161239d565b9250506101408a013567ffffffffffffffff811115612c9c57600080fd5b612ca88c828d0161239d565b9150509295985092959850929598565b60008060008060008060008060006101208a8c031215612cd757600080fd5b60008a013567ffffffffffffffff811115612cf157600080fd5b612cfd8c828d01612776565b99505060208a013567ffffffffffffffff811115612d1a57600080fd5b612d268c828d016125c3565b98505060408a013567ffffffffffffffff811115612d4357600080fd5b612d4f8c828d016124cc565b9750506060612d608c828d01612761565b9650506080612d718c828d01612761565b95505060a08a013567ffffffffffffffff811115612d8e57600080fd5b612d9a8c828d01612646565b94505060c08a013567ffffffffffffffff811115612db757600080fd5b612dc38c828d016126c9565b93505060e08a013567ffffffffffffffff811115612de057600080fd5b612dec8c828d016125c3565b9250506101008a013567ffffffffffffffff811115612e0a57600080fd5b612e168c828d016125c3565b9150509295985092959850929598565b600080600060608486031215612e3b57600080fd5b600084013567ffffffffffffffff811115612e5557600080fd5b612e6186828701612776565b9350506020612e72868287016127df565b9250506040612e83868287016127df565b9150509250925092565b600060208284031215612e9f57600080fd5b6000612ead848285016127ca565b91505092915050565b6000612ec28383612edd565b60208301905092915050565b612ed781613716565b82525050565b612ee6816136b7565b82525050565b612ef5816136b7565b82525050565b6000612f0682613661565b612f108185613684565b9350612f1b83613651565b8060005b83811015612f4c578151612f338882612eb6565b9750612f3e83613677565b925050600181019050612f1f565b5085935050505092915050565b6000612f6482613661565b612f6e8185613695565b9350612f7983613651565b8060005b83811015612faa578151612f918882612eb6565b9750612f9c83613677565b925050600181019050612f7d565b5085935050505092915050565b612fc0816136c9565b82525050565b612fcf816136d5565b82525050565b612fe6612fe1826136d5565b61378e565b82525050565b6000612ff78261366c565b61300181856136a6565b935061301181856020860161375b565b61301a81613798565b840191505092915050565b60006130326014836136a6565b91507f6e6f7420706175736564207269676874206e6f770000000000000000000000006000830152602082019050919050565b60006130726007836136a6565b91507f65787069726564000000000000000000000000000000000000000000000000006000830152602082019050919050565b60006130b2601a836136a6565b91507f63616e6e6f7420657874656e6420666f7220746f6f206c6f6e670000000000006000830152602082019050919050565b60006130f2600c836136a6565b91507f756e617574686f72697a656400000000000000000000000000000000000000006000830152602082019050919050565b60006131326010836136a6565b91507f706175736564207269676874206e6f77000000000000000000000000000000006000830152602082019050919050565b60006131726009836136a6565b91507f6e6f742061646d696e00000000000000000000000000000000000000000000006000830152602082019050919050565b600060408301600083015184820360008601526131c28282612efb565b91505060208301516131d760208601826131e2565b508091505092915050565b6131eb816136ff565b82525050565b6131fa816136ff565b82525050565b61320981613709565b82525050565b600061321b8284612fd5565b60208201915081905092915050565b60006132368285612fd5565b6020820191506132468284612fd5565b6020820191508190509392505050565b600060208201905061326b6000830184612eec565b92915050565b60006020820190506132866000830184612ece565b92915050565b600060208201905081810360008301526132a68184612f59565b905092915050565b600060408201905081810360008301526132c88185612f59565b90506132d760208301846131f1565b9392505050565b60006020820190506132f36000830184612fb7565b92915050565b600060808201905061330e6000830187612fc6565b61331b6020830186613200565b6133286040830185612fc6565b6133356060830184612fc6565b95945050505050565b600060208201905081810360008301526133588184612fec565b905092915050565b6000602082019050818103600083015261337981613025565b9050919050565b6000602082019050818103600083015261339981613065565b9050919050565b600060208201905081810360008301526133b9816130a5565b9050919050565b600060208201905081810360008301526133d9816130e5565b9050919050565b600060208201905081810360008301526133f981613125565b9050919050565b6000602082019050818103600083015261341981613165565b9050919050565b6000602082019050818103600083015261343a81846131a5565b905092915050565b600060208201905061345760008301846131f1565b92915050565b600060408201905061347260008301856131f1565b61347f60208301846131f1565b9392505050565b6000604051905081810181811067ffffffffffffffff821117156134a957600080fd5b8060405250919050565b600067ffffffffffffffff8211156134ca57600080fd5b602082029050602081019050919050565b600067ffffffffffffffff8211156134f257600080fd5b602082029050919050565b600067ffffffffffffffff82111561351457600080fd5b602082029050919050565b600067ffffffffffffffff82111561353657600080fd5b602082029050919050565b600067ffffffffffffffff82111561355857600080fd5b602082029050919050565b600067ffffffffffffffff82111561357a57600080fd5b602082029050602081019050919050565b600067ffffffffffffffff8211156135a257600080fd5b602082029050919050565b600067ffffffffffffffff8211156135c457600080fd5b602082029050602081019050919050565b600067ffffffffffffffff8211156135ec57600080fd5b602082029050602081019050919050565b600067ffffffffffffffff82111561361457600080fd5b602082029050602081019050919050565b600067ffffffffffffffff82111561363c57600080fd5b601f19601f8301169050602081019050919050565b6000819050602082019050919050565b600081519050919050565b600081519050919050565b6000602082019050919050565b600082825260208201905092915050565b600082825260208201905092915050565b600082825260208201905092915050565b60006136c2826136df565b9050919050565b60008115159050919050565b6000819050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000819050919050565b600060ff82169050919050565b600061372182613728565b9050919050565b60006137338261373a565b9050919050565b6000613745826136df565b9050919050565b82818337600083830152505050565b60005b8381101561377957808201518184015260208101905061375e565b83811115613788576000848401525b50505050565b6000819050919050565b6000601f19601f8301169050919050565b6137b2816136b7565b81146137bd57600080fd5b50565b6137c9816136c9565b81146137d457600080fd5b50565b6137e0816136d5565b81146137eb57600080fd5b50565b6137f7816136ff565b811461380257600080fd5b50565b61380e81613709565b811461381957600080fd5b5056fea264697066735822122087da2247898c5511f8fc2cdf585c84c8d38d85c618f05fc4a29ba1529402718764736f6c634300060c0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106101425760003560e01c80639714378c116100b8578063e41be7751161007c578063e41be77514610365578063f203a5ed14610381578063f5205fde146103b1578063f65d2116146103e2578063f851a44014610412578063faea31671461043057610142565b80639714378c1461029b5780639b30b637146102b75780639e6371ba146102e7578063a05c100114610303578063b600ffdb1461033457610142565b80634e71d92d1161010a5780634e71d92d146101fd5780635c975abb146102075780636ff968c31461022557806379599f96146102435780638456cb59146102615780638ceb69c31461026b57610142565b806323b50e9114610147578063262f7220146101775780633aacfdad146101935780633f4ba83a146101c357806347c4b328146101cd575b600080fd5b610161600480360381019061015c9190612b07565b610460565b60405161016e919061328c565b60405180910390f35b610191600480360381019061018c9190612b48565b6105d8565b005b6101ad60048036038101906101a8919061281d565b6109f1565b6040516101ba91906132de565b60405180910390f35b6101cb610bd4565b005b6101e760048036038101906101e29190612a74565b610d05565b6040516101f491906132de565b60405180910390f35b610205610e6f565b005b61020f610ffe565b60405161021c91906132de565b60405180910390f35b61022d611011565b60405161023a9190613256565b60405180910390f35b61024b611037565b6040516102589190613442565b60405180910390f35b61026961103d565b005b61028560048036038101906102809190612e8d565b6111b2565b6040516102929190613420565b60405180910390f35b6102b560048036038101906102b09190612e8d565b61127f565b005b6102d160048036038101906102cc9190612e8d565b6113df565b6040516102de9190613442565b60405180910390f35b61030160048036038101906102fc91906127f4565b61140a565b005b61031d60048036038101906103189190612e26565b611520565b60405161032b92919061345d565b60405180910390f35b61034e60048036038101906103499190612e8d565b61163c565b60405161035c9291906132ae565b60405180910390f35b61037f600480360381019061037a9190612cb8565b6117ad565b005b61039b60048036038101906103969190612e8d565b611a30565b6040516103a89190613442565b60405180910390f35b6103cb60048036038101906103c69190612e8d565b611a5b565b6040516103d99291906132ae565b60405180910390f35b6103fc60048036038101906103f791906128f4565b611bcc565b60405161040991906132de565b60405180910390f35b61041a611f20565b6040516104279190613256565b60405180910390f35b61044a60048036038101906104459190612e8d565b611f44565b6040516104579190613420565b60405180910390f35b6060600060628301519050600081116104796002612011565b906104ba576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016104b1919061333e565b60405180910390fd5b50602081026062018351146104cf6002612011565b90610510576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610507919061333e565b60405180910390fd5b5060608167ffffffffffffffff8111801561052a57600080fd5b506040519080825280602002602001820160405280156105595781602001602082028036833780820191505090505b509050600080600090505b838110156105cc576020810260828701015191508183828151811061058557fe5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff16815250508080600101915050610564565b50819350505050919050565b600160149054906101000a900460ff1615610628576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161061f906133e0565b60405180910390fd5b6000898051906020012090506106f660018260036001600380549050038154811061064f57fe5b9060005260206000209060020201600101548c60006002811061066e57fe5b60200201518c60006002811061068057fe5b60200201518c60006002811061069257fe5b60200201518c6000600281106106a457fe5b60200201518c6000600281106106b657fe5b60200201518c6000600281106106c857fe5b60200201518c6000600281106106da57fe5b60200201518c6000600281106106ec57fe5b6020020151611bcc565b6107006001612011565b90610741576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610738919061333e565b60405180910390fd5b5061080460008260046001600480549050038154811061075d57fe5b9060005260206000209060020201600101548c60016002811061077c57fe5b60200201518c60016002811061078e57fe5b60200201518c6001600281106107a057fe5b60200201518c6001600281106107b257fe5b60200201518c6001600281106107c457fe5b60200201518c6001600281106107d657fe5b60200201518c6001600281106107e857fe5b60200201518c6001600281106107fa57fe5b6020020151611bcc565b61080e6001612011565b9061084f576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610846919061333e565b60405180910390fd5b506000806108608c60476001611520565b91509150600060046001600480549050038154811061087b57fe5b906000526020600020906002020160010154905080831461089c6004612011565b906108dd576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016108d4919061333e565b60405180910390fd5b508082116108eb6003612011565b9061092c576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610923919061333e565b60405180910390fd5b5060606109388e610460565b90506004604051806040016040528083815260200185815250908060018154018082558091505060019003906000526020600020906002020160009091909190915060008201518160000190805190602001906109969291906121c1565b506020820151816001015550507ffd354f8fe3f6f03db5436879221c99b65c610515bb33434539060150d61f8a44600480549050846040516109d992919061345d565b60405180910390a15050505050505050505050505050565b60008251845114610a026000612011565b90610a43576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610a3a919061333e565b60405180910390fd5b508151845114610a536000612011565b90610a94576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610a8b919061333e565b60405180910390fd5b5060005b8451811015610bc5576000600187878481518110610ab257fe5b6020026020010151878581518110610ac657fe5b6020026020010151878681518110610ada57fe5b602002602001015160405160008152602001604052604051610aff94939291906132f9565b6020604051602081039080840390855afa158015610b21573d6000803e3d6000fd5b505050602060405103519050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161480610ba75750878281518110610b6f57fe5b602002602001015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614155b15610bb757600092505050610bcb565b508080600101915050610a98565b50600190505b95945050505050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610c62576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610c5990613400565b60405180910390fd5b600160149054906101000a900460ff16610cb1576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610ca890613360565b60405180910390fd5b6000600160146101000a81548160ff0219169083151502179055507f5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa33604051610cfb9190613271565b60405180910390a1565b60008251825114610d166006612011565b90610d57576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610d4e919061333e565b60405180910390fd5b50600085905060005b8451811015610e6057838181518110610d7557fe5b602002602001015115610dc557848181518110610d8e57fe5b602002602001015182604051602001610da892919061322a565b604051602081830303815290604052805190602001209150610e53565b6000801b858281518110610dd557fe5b60200260200101511415610e13578182604051602001610df692919061322a565b604051602081830303815290604052805190602001209150610e52565b81858281518110610e2057fe5b6020026020010151604051602001610e3992919061322a565b6040516020818303038152906040528051906020012091505b5b8080600101915050610d60565b50848114915050949350505050565b6002544210610eb3576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610eaa90613380565b60405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610f43576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610f3a906133c0565b60405180910390fd5b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff166000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055507f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff16604051610ff49190613256565b60405180910390a1565b600160149054906101000a900460ff1681565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60025481565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146110cb576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016110c290613400565b60405180910390fd5b600160149054906101000a900460ff161561111b576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611112906133e0565b60405180910390fd5b600254421061115f576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161115690613380565b60405180910390fd5b60018060146101000a81548160ff0219169083151502179055507f62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258336040516111a89190613271565b60405180910390a1565b6111ba61224b565b600482815481106111c757fe5b90600052602060002090600202016040518060400160405290816000820180548060200260200160405190810160405280929190818152602001828054801561126557602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001906001019080831161121b575b505050505081526020016001820154815250509050919050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461130d576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161130490613400565b60405180910390fd5b6002544210611351576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161134890613380565b60405180910390fd5b61016e8110611395576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161138c906133a0565b60405180910390fd5b620151808102600254016002819055507f02ef6561d311451dadc920679eb21192a61d96ee8ead94241b8ff073029ca6e8816040516113d49190613442565b60405180910390a150565b600481815481106113ec57fe5b90600052602060002090600202016000915090508060010154905081565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614611498576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161148f90613400565b60405180910390fd5b60025442106114dc576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016114d390613380565b60405180910390fd5b80600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555050565b6000806062855110156115336002612011565b90611574576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161156b919061333e565b60405180910390fd5b5060008560008151811061158457fe5b602001015160f81c60f81b60f81c90506000866001815181106115a357fe5b602001015160f81c60f81b60f81c905060008060228901519050604289015191508760ff168460ff161480156115de57508660ff168360ff16145b6115e86002612011565b90611629576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611620919061333e565b60405180910390fd5b5080829550955050505050935093915050565b606060008060009050600060038054905090506000811161165d6007612011565b9061169e576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611695919061333e565b60405180910390fd5b506001810390505b8082146116fb5760006002600183850101816116be57fe5b04905085600382815481106116cf57fe5b906000526020600020906002020160010154116116ee578092506116f5565b6001810391505b506116a6565b6003828154811061170857fe5b9060005260206000209060020201600001828180548060200260200160405190810160405280929190818152602001828054801561179b57602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019060010190808311611751575b50505050509150935093505050915091565b600160149054906101000a900460ff16156117fd576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016117f4906133e0565b60405180910390fd5b60008980519060200120905061184360018260036001600380549050038154811061182457fe5b9060005260206000209060020201600101548c8c8c8c8c8c8c8c611bcc565b61184d6001612011565b9061188e576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611885919061333e565b60405180910390fd5b5060008061189f8c60466001611520565b9150915060006003600160038054905003815481106118ba57fe5b90600052602060002090600202016001015490508083146118db6004612011565b9061191c576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611913919061333e565b60405180910390fd5b5080821161192a6003612011565b9061196b576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611962919061333e565b60405180910390fd5b5060606119778e610460565b90506003604051806040016040528083815260200185815250908060018154018082558091505060019003906000526020600020906002020160009091909190915060008201518160000190805190602001906119d59291906121c1565b506020820151816001015550507fe15e1a9dec6ad906dd5985b062bfa5ee8bc5d5738e46e4deb8a2df2fbbbb59d160038054905084604051611a1892919061345d565b60405180910390a15050505050505050505050505050565b60038181548110611a3d57fe5b90600052602060002090600202016000915090508060010154905081565b6060600080600090506000600480549050905060008111611a7c6007612011565b90611abd576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611ab4919061333e565b60405180910390fd5b506001810390505b808214611b1a576000600260018385010181611add57fe5b0490508560048281548110611aee57fe5b90600052602060002090600202016001015411611b0d57809250611b14565b6001810391505b50611ac5565b60048281548110611b2757fe5b90600052602060002090600202016000018281805480602002602001604051908101604052809291908181526020018280548015611bba57602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019060010190808311611b70575b50505050509150935093505050915091565b6000606060008d15611bee57611be18c61163c565b8092508193505050611c00565b611bf78c611a5b565b80925081935050505b8651865114611c0f6000612011565b90611c50576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611c47919061333e565b60405180910390fd5b508451865114611c606000612011565b90611ca1576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611c98919061333e565b60405180910390fd5b508351865114611cb16000612011565b90611cf2576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611ce9919061333e565b60405180910390fd5b5060005b8751811015611de257600081118015611d385750876001820381518110611d1957fe5b6020026020010151888281518110611d2d57fe5b602002602001015111155b80611d5757508251888281518110611d4c57fe5b602002602001015110155b15611d685760009350505050611f11565b82888281518110611d7557fe5b602002602001015181518110611d8757fe5b6020026020010151838281518110611d9b57fe5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff16815250508080600101915050611cf6565b506000888a604051602001611df892919061322a565b60405160208183030381529060405280519060200120604051602001611e1e919061320f565b6040516020818303038152906040528051906020012090506003600284510281611e4457fe5b04885111611e585760009350505050611f11565b611e6583828989896109f1565b611e6f6005612011565b90611eb0576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611ea7919061333e565b60405180910390fd5b50611ebd8e8b8e8e610d05565b611ec76006612011565b90611f08576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401611eff919061333e565b60405180910390fd5b50600193505050505b9b9a5050505050505050505050565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b611f4c61224b565b60038281548110611f5957fe5b906000526020600020906002020160405180604001604052908160008201805480602002602001604051908101604052809291908181526020018280548015611ff757602002820191906000526020600020905b8160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019060010190808311611fad575b505050505081526020016001820154815250509050919050565b6060600082600781111561202157fe5b90506000600a905060608167ffffffffffffffff8111801561204257600080fd5b506040519080825280601f01601f1916602001820160405280156120755781602001600182028036833780820191505090505b50905060005b60008460ff16146120f6576000600a8560ff168161209557fe5b069050600a8560ff16816120a557fe5b0494508060300160f81b8383806001019450815181106120c157fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a9053505061207b565b60606001820167ffffffffffffffff8111801561211257600080fd5b506040519080825280601f01601f1916602001820160405280156121455781602001600182028036833780820191505090505b50905060005b8281116121b357838184038151811061216057fe5b602001015160f81c60f81b82828151811061217757fe5b60200101907effffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916908160001a905350808060010191505061214b565b508095505050505050919050565b82805482825590600052602060002090810192821561223a579160200282015b828111156122395782518260006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550916020019190600101906121e1565b5b5090506122479190612265565b5090565b604051806040016040528060608152602001600081525090565b5b8082111561229c57600081816101000a81549073ffffffffffffffffffffffffffffffffffffffff021916905550600101612266565b5090565b6000813590506122af816137a9565b92915050565b600082601f8301126122c657600080fd5b81356122d96122d4826134b3565b613486565b915081818352602084019350602081019050838560208402820111156122fe57600080fd5b60005b8381101561232e578161231488826122a0565b845260208401935060208301925050600181019050612301565b5050505092915050565b600082601f83011261234957600080fd5b600261235c612357826134db565b613486565b9150818360005b83811015612393578135860161237988826124cc565b845260208401935060208301925050600181019050612363565b5050505092915050565b600082601f8301126123ae57600080fd5b60026123c16123bc826134fd565b613486565b9150818360005b838110156123f857813586016123de88826125c3565b8452602084019350602083019250506001810190506123c8565b5050505092915050565b600082601f83011261241357600080fd5b60026124266124218261351f565b613486565b9150818360005b8381101561245d57813586016124438882612646565b84526020840193506020830192505060018101905061242d565b5050505092915050565b600082601f83011261247857600080fd5b600261248b61248682613541565b613486565b9150818360005b838110156124c257813586016124a888826126c9565b845260208401935060208301925050600181019050612492565b5050505092915050565b600082601f8301126124dd57600080fd5b81356124f06124eb82613563565b613486565b9150818183526020840193506020810190508385602084028201111561251557600080fd5b60005b83811015612545578161252b888261274c565b845260208401935060208301925050600181019050612518565b5050505092915050565b600082601f83011261256057600080fd5b600261257361256e8261358b565b613486565b9150818385602084028201111561258957600080fd5b60005b838110156125b9578161259f8882612761565b84526020840193506020830192505060018101905061258c565b5050505092915050565b600082601f8301126125d457600080fd5b81356125e76125e2826135ad565b613486565b9150818183526020840193506020810190508385602084028201111561260c57600080fd5b60005b8381101561263c57816126228882612761565b84526020840193506020830192505060018101905061260f565b5050505092915050565b600082601f83011261265757600080fd5b813561266a612665826135d5565b613486565b9150818183526020840193506020810190508385602084028201111561268f57600080fd5b60005b838110156126bf57816126a588826127ca565b845260208401935060208301925050600181019050612692565b5050505092915050565b600082601f8301126126da57600080fd5b81356126ed6126e8826135fd565b613486565b9150818183526020840193506020810190508385602084028201111561271257600080fd5b60005b83811015612742578161272888826127df565b845260208401935060208301925050600181019050612715565b5050505092915050565b60008135905061275b816137c0565b92915050565b600081359050612770816137d7565b92915050565b600082601f83011261278757600080fd5b813561279a61279582613625565b613486565b915080825260208301602083018583830111156127b657600080fd5b6127c183828461374c565b50505092915050565b6000813590506127d9816137ee565b92915050565b6000813590506127ee81613805565b92915050565b60006020828403121561280657600080fd5b6000612814848285016122a0565b91505092915050565b600080600080600060a0868803121561283557600080fd5b600086013567ffffffffffffffff81111561284f57600080fd5b61285b888289016122b5565b955050602061286c88828901612761565b945050604086013567ffffffffffffffff81111561288957600080fd5b612895888289016126c9565b935050606086013567ffffffffffffffff8111156128b257600080fd5b6128be888289016125c3565b925050608086013567ffffffffffffffff8111156128db57600080fd5b6128e7888289016125c3565b9150509295509295909350565b60008060008060008060008060008060006101608c8e03121561291657600080fd5b60006129248e828f0161274c565b9b505060206129358e828f01612761565b9a505060406129468e828f016127ca565b99505060608c013567ffffffffffffffff81111561296357600080fd5b61296f8e828f016125c3565b98505060808c013567ffffffffffffffff81111561298c57600080fd5b6129988e828f016124cc565b97505060a06129a98e828f01612761565b96505060c06129ba8e828f01612761565b95505060e08c013567ffffffffffffffff8111156129d757600080fd5b6129e38e828f01612646565b9450506101008c013567ffffffffffffffff811115612a0157600080fd5b612a0d8e828f016126c9565b9350506101208c013567ffffffffffffffff811115612a2b57600080fd5b612a378e828f016125c3565b9250506101408c013567ffffffffffffffff811115612a5557600080fd5b612a618e828f016125c3565b9150509295989b509295989b9093969950565b60008060008060808587031215612a8a57600080fd5b6000612a9887828801612761565b9450506020612aa987828801612761565b935050604085013567ffffffffffffffff811115612ac657600080fd5b612ad2878288016125c3565b925050606085013567ffffffffffffffff811115612aef57600080fd5b612afb878288016124cc565b91505092959194509250565b600060208284031215612b1957600080fd5b600082013567ffffffffffffffff811115612b3357600080fd5b612b3f84828501612776565b91505092915050565b60008060008060008060008060006101608a8c031215612b6757600080fd5b60008a013567ffffffffffffffff811115612b8157600080fd5b612b8d8c828d01612776565b99505060208a013567ffffffffffffffff811115612baa57600080fd5b612bb68c828d0161239d565b98505060408a013567ffffffffffffffff811115612bd357600080fd5b612bdf8c828d01612338565b9750506060612bf08c828d0161254f565b96505060a0612c018c828d0161254f565b95505060e08a013567ffffffffffffffff811115612c1e57600080fd5b612c2a8c828d01612402565b9450506101008a013567ffffffffffffffff811115612c4857600080fd5b612c548c828d01612467565b9350506101208a013567ffffffffffffffff811115612c7257600080fd5b612c7e8c828d0161239d565b9250506101408a013567ffffffffffffffff811115612c9c57600080fd5b612ca88c828d0161239d565b9150509295985092959850929598565b60008060008060008060008060006101208a8c031215612cd757600080fd5b60008a013567ffffffffffffffff811115612cf157600080fd5b612cfd8c828d01612776565b99505060208a013567ffffffffffffffff811115612d1a57600080fd5b612d268c828d016125c3565b98505060408a013567ffffffffffffffff811115612d4357600080fd5b612d4f8c828d016124cc565b9750506060612d608c828d01612761565b9650506080612d718c828d01612761565b95505060a08a013567ffffffffffffffff811115612d8e57600080fd5b612d9a8c828d01612646565b94505060c08a013567ffffffffffffffff811115612db757600080fd5b612dc38c828d016126c9565b93505060e08a013567ffffffffffffffff811115612de057600080fd5b612dec8c828d016125c3565b9250506101008a013567ffffffffffffffff811115612e0a57600080fd5b612e168c828d016125c3565b9150509295985092959850929598565b600080600060608486031215612e3b57600080fd5b600084013567ffffffffffffffff811115612e5557600080fd5b612e6186828701612776565b9350506020612e72868287016127df565b9250506040612e83868287016127df565b9150509250925092565b600060208284031215612e9f57600080fd5b6000612ead848285016127ca565b91505092915050565b6000612ec28383612edd565b60208301905092915050565b612ed781613716565b82525050565b612ee6816136b7565b82525050565b612ef5816136b7565b82525050565b6000612f0682613661565b612f108185613684565b9350612f1b83613651565b8060005b83811015612f4c578151612f338882612eb6565b9750612f3e83613677565b925050600181019050612f1f565b5085935050505092915050565b6000612f6482613661565b612f6e8185613695565b9350612f7983613651565b8060005b83811015612faa578151612f918882612eb6565b9750612f9c83613677565b925050600181019050612f7d565b5085935050505092915050565b612fc0816136c9565b82525050565b612fcf816136d5565b82525050565b612fe6612fe1826136d5565b61378e565b82525050565b6000612ff78261366c565b61300181856136a6565b935061301181856020860161375b565b61301a81613798565b840191505092915050565b60006130326014836136a6565b91507f6e6f7420706175736564207269676874206e6f770000000000000000000000006000830152602082019050919050565b60006130726007836136a6565b91507f65787069726564000000000000000000000000000000000000000000000000006000830152602082019050919050565b60006130b2601a836136a6565b91507f63616e6e6f7420657874656e6420666f7220746f6f206c6f6e670000000000006000830152602082019050919050565b60006130f2600c836136a6565b91507f756e617574686f72697a656400000000000000000000000000000000000000006000830152602082019050919050565b60006131326010836136a6565b91507f706175736564207269676874206e6f77000000000000000000000000000000006000830152602082019050919050565b60006131726009836136a6565b91507f6e6f742061646d696e00000000000000000000000000000000000000000000006000830152602082019050919050565b600060408301600083015184820360008601526131c28282612efb565b91505060208301516131d760208601826131e2565b508091505092915050565b6131eb816136ff565b82525050565b6131fa816136ff565b82525050565b61320981613709565b82525050565b600061321b8284612fd5565b60208201915081905092915050565b60006132368285612fd5565b6020820191506132468284612fd5565b6020820191508190509392505050565b600060208201905061326b6000830184612eec565b92915050565b60006020820190506132866000830184612ece565b92915050565b600060208201905081810360008301526132a68184612f59565b905092915050565b600060408201905081810360008301526132c88185612f59565b90506132d760208301846131f1565b9392505050565b60006020820190506132f36000830184612fb7565b92915050565b600060808201905061330e6000830187612fc6565b61331b6020830186613200565b6133286040830185612fc6565b6133356060830184612fc6565b95945050505050565b600060208201905081810360008301526133588184612fec565b905092915050565b6000602082019050818103600083015261337981613025565b9050919050565b6000602082019050818103600083015261339981613065565b9050919050565b600060208201905081810360008301526133b9816130a5565b9050919050565b600060208201905081810360008301526133d9816130e5565b9050919050565b600060208201905081810360008301526133f981613125565b9050919050565b6000602082019050818103600083015261341981613165565b9050919050565b6000602082019050818103600083015261343a81846131a5565b905092915050565b600060208201905061345760008301846131f1565b92915050565b600060408201905061347260008301856131f1565b61347f60208301846131f1565b9392505050565b6000604051905081810181811067ffffffffffffffff821117156134a957600080fd5b8060405250919050565b600067ffffffffffffffff8211156134ca57600080fd5b602082029050602081019050919050565b600067ffffffffffffffff8211156134f257600080fd5b602082029050919050565b600067ffffffffffffffff82111561351457600080fd5b602082029050919050565b600067ffffffffffffffff82111561353657600080fd5b602082029050919050565b600067ffffffffffffffff82111561355857600080fd5b602082029050919050565b600067ffffffffffffffff82111561357a57600080fd5b602082029050602081019050919050565b600067ffffffffffffffff8211156135a257600080fd5b602082029050919050565b600067ffffffffffffffff8211156135c457600080fd5b602082029050602081019050919050565b600067ffffffffffffffff8211156135ec57600080fd5b602082029050602081019050919050565b600067ffffffffffffffff82111561361457600080fd5b602082029050602081019050919050565b600067ffffffffffffffff82111561363c57600080fd5b601f19601f8301169050602081019050919050565b6000819050602082019050919050565b600081519050919050565b600081519050919050565b6000602082019050919050565b600082825260208201905092915050565b600082825260208201905092915050565b600082825260208201905092915050565b60006136c2826136df565b9050919050565b60008115159050919050565b6000819050919050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000819050919050565b600060ff82169050919050565b600061372182613728565b9050919050565b60006137338261373a565b9050919050565b6000613745826136df565b9050919050565b82818337600083830152505050565b60005b8381101561377957808201518184015260208101905061375e565b83811115613788576000848401525b50505050565b6000819050919050565b6000601f19601f8301169050919050565b6137b2816136b7565b81146137bd57600080fd5b50565b6137c9816136c9565b81146137d457600080fd5b50565b6137e0816136d5565b81146137eb57600080fd5b50565b6137f7816136ff565b811461380257600080fd5b50565b61380e81613709565b811461381957600080fd5b5056fea264697066735822122087da2247898c5511f8fc2cdf585c84c8d38d85c618f05fc4a29ba1529402718764736f6c634300060c0033",
+  "devdoc": {
+    "details": "Stores beacon and bridge committee members of Incognito Chain. Other contracts can query this contract to check if an instruction is confimed on Incognito",
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "details": "Sets the genesis committees and the address of admin",
+        "params": {
+          "admin": ": ETH address",
+          "beaconCommittee": ": genesis committee members of beacon chain",
+          "bridgeCommittee": ": genesis committee members of bridge"
+        }
+      },
+      "extractCommitteeFromInstruction(bytes)": {
+        "details": "Extracts the committee (body) from a swap instruction",
+        "params": {
+          "inst": ": the full instruction, containing both metadata and body"
+        },
+        "returns": {
+          "_0": "committee: address of the committee members"
+        }
+      },
+      "extractMetaFromInstruction(bytes,uint8,uint8)": {
+        "details": "Extracts the metadata of a swap instruction",
+        "params": {
+          "expectedMeta": ": required type of the instruction, 70 for swapping beacon and 71 for bridge",
+          "expectedShard": ": required ID of the Incognito shard containing the instruction, must be 1",
+          "inst": ": the full instruction, containing both metadata and body"
+        },
+        "returns": {
+          "_0": "height: the starting block that the committee is responsible for",
+          "_1": "prevHeight: the starting block of the signing committee for this instruction"
+        }
+      },
+      "findBeaconCommitteeFromHeight(uint256)": {
+        "details": "Finds the beacon committee in charge of signing a block height",
+        "params": {
+          "blkHeight": ": to search for"
+        },
+        "returns": {
+          "_0": "committee: address of the committee members",
+          "_1": "id: index of the committee"
+        }
+      },
+      "findBridgeCommitteeFromHeight(uint256)": {
+        "details": "Finds the bridge committee in charge of signing a block height"
+      },
+      "getBeaconCommittee(uint256)": {
+        "details": "Gets a beacon committee in the past",
+        "params": {
+          "i": "index of the committee to get"
+        },
+        "returns": {
+          "_0": "the committee and their startBlock"
+        }
+      },
+      "getBridgeCommittee(uint256)": {
+        "details": "Gets a bridge committee in the past"
+      },
+      "instructionApproved(bool,bytes32,uint256,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])": {
+        "details": "Checks if an instruction is confirmed on chain (beacon or bridge)",
+        "params": {
+          "blkData": ": merkle has of the block body",
+          "blkHeight": ": height of the block containing the instruction",
+          "instHash": ": keccak256 hash of the instruction's content",
+          "instPath": ": merkle path of the instruction",
+          "instPathIsLeft": ": whether each node on the path is the left or right child",
+          "instRoot": ": root of the merkle tree contains all instructions",
+          "isBeacon": ": check on beacon or bridge",
+          "sigIdx": ": indices of the validators who signed this block",
+          "sigR": ": part of the signatures of the validators",
+          "sigS": ": part of the signatures of the validators",
+          "sigV": ": part of the signatures of the validators"
+        },
+        "returns": {
+          "_0": "bool: whether the instruction is valid and confirmed"
+        }
+      },
+      "instructionInMerkleTree(bytes32,bytes32,bytes32[],bool[])": {
+        "details": "Checks if a value is in a merkle tree",
+        "params": {
+          "leaf": ": the value to check",
+          "left": ": whether each node on the path is the left or right child",
+          "path": ": merkle path of the value to check",
+          "root": ": of the merkle tree"
+        },
+        "returns": {
+          "_0": "bool: whether the value is in the merkle tree"
+        }
+      },
+      "swapBeaconCommittee(bytes,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])": {
+        "details": "Updates the latest committee of the beacon chain"
+      },
+      "swapBridgeCommittee(bytes,bytes32[][2],bool[][2],bytes32[2],bytes32[2],uint256[][2],uint8[][2],bytes32[][2],bytes32[][2])": {
+        "details": "Updates the latest committee of the bridge",
+        "params": {
+          "blkData": ": merkle has of the block body",
+          "inst": ": the decoded instruction as a list of bytes",
+          "instPathIsLefts": ": whether each node on the path is the left or right child",
+          "instPaths": ": merkle path of the instruction",
+          "instRoots": ": root of the merkle tree contains all instructions",
+          "sigIdxs": ": indices of the validators who signed this block",
+          "sigRs": ": part of the signatures of the validators",
+          "sigSs": ": part of the signatures of the validators",
+          "sigVs": ": part of the signatures of the validators"
+        }
+      },
+      "verifySig(address[],bytes32,uint8[],bytes32[],bytes32[])": {
+        "details": "Verifies that the signatures for a message are correct",
+        "params": {
+          "msgHash": ": the message to be verify",
+          "r": ": part of the signatures",
+          "s": ": part of the signatures",
+          "v": ": part of the signatures"
+        },
+        "returns": {
+          "_0": "bool: whether all signatures are correct"
+        }
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "constructor": "Admin is the one responsible for the contract in case of emergency Here, they are authorized to Pause the contract, stopping new committees from being added to the contract Admin is authorized to Pause the contract at anytime for 1 year starting from the moment the contract is deployed Admin is also authorized to increase the expiration time if they need more time to implement a more decentralized failsafe mechanismAdmin can also be a smart contract implementing a DAO and making decisions through a voting system",
+      "findBeaconCommitteeFromHeight(uint256)": {
+        "notice": "This functions does a binary search of all committees (since genesis block)"
+      },
+      "findBridgeCommitteeFromHeight(uint256)": {
+        "notice": "The same as findBeaconCommitteeFromHeight but for bridge chain"
+      },
+      "getBeaconCommittee(uint256)": {
+        "notice": "We need to implement this because the autogenerated getter returns only the startBlock"
+      },
+      "getBridgeCommittee(uint256)": {
+        "notice": "the same as getBeaconCommittee but for bridge"
+      },
+      "instructionApproved(bool,bytes32,uint256,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])": {
+        "notice": "A confirmation means that the instruction is included in a block that has enough validators' signatures"
+      },
+      "swapBeaconCommittee(bytes,bytes32[],bool[],bytes32,bytes32,uint256[],uint8[],bytes32[],bytes32[])": {
+        "notice": "This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committeeThis only works when the contract is not PausedSwapping beacon committee doesn't require that the instruction is included in the bridge chainAll params are the same as swapBridgeCommittee"
+      },
+      "swapBridgeCommittee(bytes,bytes32[][2],bool[][2],bytes32[2],bytes32[2],uint256[][2],uint8[][2],bytes32[][2],bytes32[][2])": {
+        "notice": "This function takes a swap instruction on Incognito Chain, checks for its validity and stores the latest committeeThis only works when the contract is not PausedAll params except inst are the list of 2 elements corresponding to the proof on beacon and bridge"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 1592,
+        "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+        "label": "admin",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 1594,
+        "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+        "label": "successor",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 1596,
+        "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+        "label": "paused",
+        "offset": 20,
+        "slot": "1",
+        "type": "t_bool"
+      },
+      {
+        "astId": 1598,
+        "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+        "label": "expire",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 93,
+        "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+        "label": "beaconCommittees",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_array(t_struct(Committee)90_storage)dyn_storage"
+      },
+      {
+        "astId": 96,
+        "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+        "label": "bridgeCommittees",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_array(t_struct(Committee)90_storage)dyn_storage"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_struct(Committee)90_storage)dyn_storage": {
+        "base": "t_struct(Committee)90_storage",
+        "encoding": "dynamic_array",
+        "label": "struct IncognitoProxy.Committee[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_struct(Committee)90_storage": {
+        "encoding": "inplace",
+        "label": "struct IncognitoProxy.Committee",
+        "members": [
+          {
+            "astId": 87,
+            "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+            "label": "pubkeys",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_address)dyn_storage"
+          },
+          {
+            "astId": 89,
+            "contract": "contracts/incognito_proxy.sol:IncognitoProxy",
+            "label": "startBlock",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/vaultHelper.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.6.12;\npragma experimental ABIEncoderV2;\n\ncontract VaultHelper {\n    enum Prefix {\n        EXECUTE_SIGNATURE,\n        REQUEST_WITHDRAW_SIGNATURE\n    }\n    \n    struct PreSignData {\n        Prefix prefix;\n        address token;\n        bytes timestamp;\n        uint amount;\n    }\n\n    function newPreSignData(Prefix prefix, address token, bytes calldata timestamp, uint amount) pure public returns (PreSignData memory) {\n        PreSignData memory psd = PreSignData(prefix, token, timestamp, amount);\n        return psd;\n    }\n\n    function _buildPreSignData(Prefix prefix, address token, bytes calldata timestamp, uint amount) pure public {\n        // PreSignData memory psd = PreSignData(prefix, token, timestamp, amount);\n        // return psd;\n    }\n\n    function _buildSignRequestWithdraw(PreSignData memory psd, string calldata incognitoAddress) pure public returns (bytes32) {\n        // do nothing\n        require(psd.prefix == Prefix.REQUEST_WITHDRAW_SIGNATURE);\n        bytes32 temp = keccak256(abi.encode(psd, incognitoAddress));\n        return temp;\n    }\n\n    function _buildSignExecute(PreSignData memory psd, address recipientToken, address exchangeAddress, bytes calldata callData) pure public returns (bytes32) {\n        // do nothing\n        require(psd.prefix == Prefix.EXECUTE_SIGNATURE);\n        bytes32 temp = keccak256(abi.encode(psd, recipientToken, exchangeAddress, callData));\n        return temp;\n    }\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 1000
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

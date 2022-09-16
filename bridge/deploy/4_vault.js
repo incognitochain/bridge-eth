@@ -8,83 +8,49 @@ module.exports = async({
     getUnnamedAccounts,
 }) => {
     const { deploy, log } = deployments;
-    let { deployer, vaultAdmin , previousVaultAdmin: prevVaultAdmin } = await getNamedAccounts();
-    // vaultAdmin is a named account in Hardhat config
-    let prevVaultAdminSigner;
-    // prevVaultAdmin is specified in the "deployed" contracts object in config. It can fallback to vaultAdmin if not found, in case we choose the same EOA as admin
-    if (hre.networkCfg().deployed.previousVaultAdmin) {
-        // fork network config
-        prevVaultAdmin = hre.networkCfg().deployed.previousVaultAdmin;
-        prevVaultAdminSigner = await ethers.provider.getSigner(prevVaultAdmin);
-    } else if (prevVaultAdmin) {
-        // separate admins between Vault versions
-        prevVaultAdminSigner = await ethers.getSigner(prevVaultAdmin);
-    } else {
-        prevVaultAdmin = vaultAdmin;
-        prevVaultAdminSigner = await ethers.getSigner(prevVaultAdmin);
-    }
-
+    let { deployer, vaultAdmin } = await getNamedAccounts();
+    let vaultAdminSigner = await ethers.getSigner(vaultAdmin);
     const ip = await deployments.get('IncognitoProxy');
-    let vaultResult = await deploy('Vault', {
+
+    const vaultContractName = hre.networkCfg().vaultContractName || 'Vault';
+    log('Deploy:', vaultContractName);
+    let vaultResult = await deploy(vaultContractName, {
         from: deployer,
         args: [],
-        skipIfAlreadyDeployed: true,
-        log: true
+        // skipIfAlreadyDeployed: true,
+        log: true,
+        // waitConfirmations: 6,
     });
+    const vaultFactory = await ethers.getContractFactory(vaultContractName);
+    const vaultImpl = await vaultFactory.attach(vaultResult.address);
 
-    const vaultFactory = await ethers.getContractFactory('Vault');
-    const vault = await vaultFactory.attach(vaultResult.address);
-    let previousVault, needMoving = false;
+    let previousVault;
     try {
-        previousVault = await ethers.getContract('PrevVault');
-        let isPaused = true;
-        try {
-            isPaused = await previousVault.paused();
-        } catch {}
-        needMoving = !isPaused;
+        previousVault = await getInstance('PrevVault');
     } catch (e) {
         previousVault = {address: '0x0000000000000000000000000000000000000000'};
     }
-    const initializeData = vaultFactory.interface.encodeFunctionData('initialize', [previousVault.address]);
-    log('will deploy proxy & upgrade with params', vault.address, vaultAdmin, ip.address, initializeData);
+
+    const regAddr = '0xdbeCBd9F55922e6487b24B4Fed572D5BF4982562'; // regulator address TBD
+    const executorContractName = hre.networkCfg().executorContractName || 'UniswapV2Trade';
+    const ex = await deployments.get(executorContractName);
+    const initializeData = vaultImpl.interface.encodeFunctionData('initialize', [previousVault.address, regAddr, ex.address]);
+    
+    // NOTE: on mainnet, we will be upgrading via proxy instead of deploying & initializing
     let proxyResult = await deploy('TransparentUpgradeableProxy', {
         from: deployer,
-        args: [vault.address, vaultAdmin, ip.address, initializeData],
+        args: [vaultImpl.address, vaultAdminSigner.address, ip.address, initializeData],
         skipIfAlreadyDeployed: true,
         log: true,
     });
-    log(`DEV : Incognito nodes should use ${proxyResult.address} as EthVaultContract`);
-    if (needMoving) {
-        let tokenList = hre.networkCfg().tokenList;
-        let depositsBeforeMigrate = await Promise.all(tokenList.map(_tokenAddr => previousVault.totalDepositedToSCAmount(_tokenAddr)));
-        depositsBeforeMigrate = depositsBeforeMigrate.map(d => d.toString());
-        let balancesBeforeMigrate = await Promise.all(tokenList.map(_tokenAddr => previousVault.balanceOf(_tokenAddr)));
-        balancesBeforeMigrate = balancesBeforeMigrate.map(b => b.toString());
-        log(`admin ${prevVaultAdmin} will upgrade ${previousVault.address} to ${proxyResult.address}`);
-        let tx = await confirm(previousVault.connect(prevVaultAdminSigner).pause());
-        let rc = await tx.wait();
-        log(`Gas used: ${rc.gasUsed.toString()}`);
-        tx = await confirm(previousVault.connect(prevVaultAdminSigner).migrate(proxyResult.address));
-        rc = await tx.wait();
-        log(`Gas used: ${rc.gasUsed.toString()}`);
-        tx = await confirm(previousVault.connect(prevVaultAdminSigner).moveAssets(tokenList));
-        rc = await tx.wait();
-        log(`Gas used: ${rc.gasUsed.toString()}`);
-
-        const theNewVault = await getInstance('Vault', 'TransparentUpgradeableProxy');
-        let deposits = await Promise.all(tokenList.map(_tokenAddr => theNewVault.totalDepositedToSCAmount(_tokenAddr)));
-        deposits = deposits.map(d => d.toString());
-        let balances = await Promise.all(tokenList.map(_tokenAddr => theNewVault.balanceOf(_tokenAddr)));
-        balances = balances.map(b => b.toString());
-        const compare = (arr1, arr2, keys) => {
-            let obj = {};
-            keys.forEach((k, i) => obj[k] = [arr1[i], arr2[i]]);
-            return obj;
-        }
-        console.log({"Balance Comparison" : compare(balancesBeforeMigrate, balances, tokenList)});
-        console.log({"Deposit Comparison" : compare(depositsBeforeMigrate, deposits, tokenList)});
+    if (proxyResult.newlyDeployed) {
+        log('deployed new proxy & initialized with params', vaultImpl.address, vaultAdminSigner.address, ip.address, initializeData);
     }
+
+    const proxy = await getInstance('TransparentUpgradeableProxy');
+    log(`DEV : Incognito nodes should use ${proxy.address} as EthVaultContract`);
+    // await confirm(vault.setRegulator(regAddr));
 };
 
-module.exports.tags = ['3', 'vault', 'proxy'];
-module.exports.dependencies = ['fork', 'incognito-proxy'];
+module.exports.tags = ['4', 'vault', 'proxy'];
+module.exports.dependencies = ['incognito-proxy', 'testing'];

@@ -1,6 +1,7 @@
-pragma solidity ^0.6.12;
+pragma solidity >=0.6.12 <=0.8.9;
 
 import './IERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract TradeUtils {
 	IERC20 constant public ETH_CONTRACT_ADDRESS = IERC20(0x0000000000000000000000000000000000000000);
@@ -63,4 +64,40 @@ contract TradeUtils {
 		}
 		return returnValue != 0;
 	}
+}
+
+abstract contract Executor is Ownable {
+	mapping (address => bool) public dappAddresses;
+
+	constructor() internal {
+		dappAddresses[address(this)] = true;
+	}
+
+	function addDappAddress(address addr) external onlyOwner {
+		require(addr != address(0x0), "Executor:A0"); // address is zero
+		dappAddresses[addr] = true;
+	}
+
+	function removeDappAddress(address addr) external onlyOwner {
+		require(addr != address(0x0), "Executor:A0"); // address is zero
+		dappAddresses[addr] = false;
+	}
+
+	function dappExists(address addr) public view returns (bool) {
+		return dappAddresses[addr];
+	}
+
+    function execute(address fns, bytes calldata data) external payable returns (bytes memory) {
+    	require(dappExists(fns), "Executor:DNE"); // dapp does not exist
+        (bool success, bytes memory result) = fns.delegatecall(data);
+        if (!success) {
+        	// Next 5 lines from https://ethereum.stackexchange.com/a/83577
+            if (result.length < 68) revert();
+            assembly {
+                result := add(result, 0x04)
+            }
+            revert(abi.decode(result, (string)));
+        }
+        return result;
+    }
 }

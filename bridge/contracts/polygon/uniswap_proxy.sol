@@ -3,6 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 import "../IERC20.sol";
 import "@uniswap/v3-periphery/contracts/libraries/Path.sol";
+import "../trade_utils.sol";
 
 interface ISwapRouter2 {
 	/// @notice Call multiple functions in the current contract and return the data from all of them if they all succeed
@@ -17,10 +18,10 @@ interface ISwapRouter2 {
 	/// @param previousBlockhash The expected parent blockHash
 	/// @param data The encoded function data for each of the calls to make to this contract
 	/// @return results The results from each of the calls passed in via data
-	function multicall(bytes32 previousBlockhash, bytes[] calldata data)
-	external
-	payable
-	returns (bytes[] memory results);
+	// function multicall(bytes32 previousBlockhash, bytes[] calldata data)
+	// external
+	// payable
+	// returns (bytes[] memory results);
 	struct ExactInputSingleParams {
 		address tokenIn;
 		address tokenOut;
@@ -54,13 +55,20 @@ interface Wmatic is IERC20 {
 	function withdraw(uint256 amount) external;
 }
 
-contract UniswapProxy {
+contract UniswapProxy is Executor {
 	using Path for bytes;
 	// Variables
 	address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
 	uint constant public MAX = uint(-1);
 	ISwapRouter2 public swaprouter02;
 	Wmatic public wmatic;
+
+	struct CallSummary {
+		address to;
+		address token;
+		uint256 amount;
+		bytes data;
+	}
 
 	/**
      * @dev Contract constructor
@@ -111,6 +119,31 @@ contract UniswapProxy {
 		return (returnToken, amountOut);
 	}
 
+	function _inspectTradeInputSingle(ISwapRouter2.ExactInputSingleParams calldata params, bool isNative) external view returns (bytes memory, CallSummary memory) {
+		bytes memory rdata = abi.encodeWithSelector(0x421f4388, params, isNative);
+		CallSummary memory cs = CallSummary(address(swaprouter02), params.tokenIn, params.amountIn,
+			abi.encodeWithSelector(0x04e45aaf, params)
+		);
+		return (rdata, cs);
+	}
+
+	function _inspectTradeInput(ISwapRouter2.ExactInputParams calldata params, bool isNative) external view returns(bytes memory, CallSummary memory) {
+		(address tokenIn,,) = params.path.decodeFirstPool();
+		bytes memory rdata = abi.encodeWithSelector(0xc8dc75e6, params, isNative);
+		CallSummary memory cs = CallSummary(address(swaprouter02), tokenIn, params.amountIn,
+			abi.encodeWithSelector(0xb858183f, params)
+		);
+		return (rdata, cs);
+	}
+
+	function _inspectMultiTrades(uint256 deadline, bytes[] calldata data, IERC20 sellToken, address buyToken, uint256 sellAmount, bool isNative) external view returns (bytes memory, CallSummary memory) {
+		bytes memory rdata = abi.encodeWithSelector(0x92171fd8, block.timestamp + 1000000000, data, sellToken, buyToken, sellAmount, isNative);
+		CallSummary memory cs = CallSummary(address(swaprouter02), address(sellToken), sellAmount,
+			abi.encodeWithSelector(0x5ae401dc, block.timestamp + 1000000000, data)
+		);
+		return (rdata, cs);
+	}
+
 	function checkApproved(IERC20 srcToken, uint256 amount) internal {
 		if (msg.value == 0 && srcToken.allowance(address(this), address(swaprouter02)) < amount) {
 			srcToken.approve(address(swaprouter02), MAX);
@@ -131,12 +164,12 @@ contract UniswapProxy {
 
 	function transfer(address token, uint amount) internal {
 		if (token == ETH_CONTRACT_ADDRESS) {
-			require(address(this).balance >= amount);
+			require(address(this).balance >= amount, "IUP: transfer amount exceeds balance");
 			(bool success, ) = msg.sender.call{value: amount}("");
-			require(success);
+			require(success, "IUP: transfer failed");
 		} else {
 			IERC20(token).transfer(msg.sender, amount);
-			require(checkSuccess());
+			require(checkSuccess(), "IUP: transfer token failed");
 		}
 	}
 

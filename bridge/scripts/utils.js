@@ -42,24 +42,24 @@ let confirm = async (txp, target = 2, network = 'development') => {
 
 let getDecimals = (_addr) =>
     // amounts of ETH will not have their decimals changed when shielded to Incognito, so we pretend ETH's decimal is 9 here
-    (!_addr || _addr==tokenAddresses.ETH) ? Promise.resolve(BN.from(9)) : ethers.getContractAt('contracts/IERC20.sol:IERC20', _addr).then(_c => _c.decimals())
+    (!_addr || _addr==tokenAddresses.ETH) ? Promise.resolve(BN.from(18)) : ethers.getContractAt('contracts/IERC20.sol:IERC20', _addr).then(_c => _c.decimals())
 
-let toIncDecimals = (_amount, _addr) => getDecimals(_addr)
+let toIncDecimals = (_amount, _addr,  _useUnified = false) => getDecimals(_addr)
     .then(_d => {
         let result = BN.from(_amount);
-        if (_d.lte(9)) return result;
+        if (!_useUnified && _d.lte(9)) return result;
         const ten = BN.from(10);
         // console.log(`${result} * ${ten.pow(_d.subn(9))}`);
-        return result.div(ten.pow(_d.sub(9)));
+        return result.mul(ten.pow(9)).div(ten.pow(_d));
     })
 
-let fromIncDecimals = (_amount, _addr) => getDecimals(_addr)
+let fromIncDecimals = (_amount, _addr, _useUnified = false) => getDecimals(_addr)
     .then(_d => {
         let result = BN.from(_amount);
-        if (_d.lte(9)) return result;
+        if (!_useUnified && _d.lte(9)) return result;
         const ten = BN.from(10);
         // console.log(`${result} / ${ten.pow(_d.subn(9))}`);
-        return result.mul(ten.pow(_d.sub(9)));
+        return result.mul(ten.pow(_d)).div(ten.pow(9));
     })
 
 // useful for binding Vault ABI to proxy address, or get an IERC20 token contract instance...
@@ -94,20 +94,35 @@ let getInstance = async (abiname, deployedName = null, deployedAddress = null) =
     return await fac.attach(c.address);
 }
 
-let generateTestIncTokenID = (tokenAddress) => ethers.utils.keccak256(tokenAddress).slice(2);
+let generateTestIncTokenID = (tokenAddress) => {
+    return tokenAddresses.pTokens[tokenAddress] || ethers.utils.keccak256(tokenAddress).slice(2);
+}
 
 // return useful information for testing : deterministic Incognito Bridged Token ID, current test sender
 let getBridgedIncTokenInfo = (dict, tokenName) => {
     if (dict.tokens && dict.tokens[tokenName]) {
         const addr = dict.tokens[tokenName].address;
         const inc = generateTestIncTokenID(addr);
-        return Object.assign(dict.tokens[tokenName], {inc, sender: dict.tokenGuy});
+        return Object.assign(dict.tokens[tokenName], {inc, sender: dict.tokenGuy, unify: tokenAddresses.unify[addr]});
     }
-    return {address: tokenAddresses.ETH, inc: tokenAddresses.pETH, sender: dict.ethGuy};
+    return {address: tokenAddresses.ETH, inc: tokenAddresses.pETH, sender: dict.ethGuy, unify: tokenAddresses.unify[tokenAddresses.ETH]};
+}
+
+let getEmittedDepositNumber = async (dict, tokenName, amountForContract) => {
+    if (dict.tokens && dict.tokens[tokenName]) {
+        const addr = dict.tokens[tokenName].address;
+        return await toIncDecimals(amountForContract, addr);
+    }
+    return amountForContract;
 }
 
 let getImplementation = async (contractAddress) => {
     const slot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'; //'eip1967.proxy.implementation';
+    const result = await ethers.provider.getStorageAt(contractAddress, BN.from(slot));
+    return BN.from(result);
+}
+
+let getCodeSlot = async (contractAddress, slot) => {
     const result = await ethers.provider.getStorageAt(contractAddress, BN.from(slot));
     return BN.from(result);
 }
@@ -148,7 +163,7 @@ let prepareExternalCallByVault = async (ctx, exchangeName, srcToken, dstToken, t
         const tokensToKyber = [srcToken, dstToken].map(getTokenAddressForKyber);
         let [ expectedRate, worstRate ] = await exchange.getConversionRates(tokensToKyber[0], amount, tokensToKyber[1]);
         let chosenRate = useWorstRate ? worstRate : expectedRate;
-        console.log(`Kyber pair ${tokensToKyber} -> rate ${expectedRate.toString()} / ${worstRate.toString()}\nChoose ${chosenRate.toString()}`);
+        // console.log(`Kyber pair ${tokensToKyber} -> rate ${expectedRate.toString()} / ${worstRate.toString()}\nChoose ${chosenRate.toString()}`);
         tradeReturn = amount.mul(chosenRate).div("1000000000000000000");
         console.log(`via Kyber, trade ${ethers.utils.formatUnits(amount, 'gwei')} of ${srcToken} for ${ethers.utils.formatUnits(tradeReturn, 'gwei')} of ${dstToken}`);
         const encodedTradeCall = exchange.interface.encodeFunctionData('trade', [srcToken, amount, dstToken, chosenRate]);
@@ -183,8 +198,10 @@ module.exports = {
     fromIncDecimals,
     getInstance,
     getImplementation,
+    getCodeSlot,
     generateTestIncTokenID,
     getBridgedIncTokenInfo,
+    getEmittedDepositNumber,
     getReqWithdrawSignMessage,
     getExecuteSignMessage,
     prepareExternalCallByVault,

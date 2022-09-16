@@ -3,7 +3,8 @@
 
 pragma solidity ^0.6.12;
 
-import './IERC20.sol';
+import '../IERC20.sol';
+import '../trade_utils.sol';
 
 interface IPancakeRouter01 {
     function factory() external pure returns (address);
@@ -48,7 +49,7 @@ interface IPancakeRouter02 is IPancakeRouter01 {
     ) external;
 }
 
-contract PancakeProxy {
+contract PancakeProxy is Executor {
     // Variables
     address constant public ETH_CONTRACT_ADDRESS = 0x0000000000000000000000000000000000000000;
     uint constant public MAX = uint(-1);

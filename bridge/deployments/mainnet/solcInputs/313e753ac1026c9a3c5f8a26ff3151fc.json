@@ -1,0 +1,44 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/restoringVault.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.6.12;\nimport \"@openzeppelin/contracts/access/Ownable.sol\";\n\n/**\n * @dev Responsible for holding the assets and issue minting instruction to\n * Incognito Chain. Also, when presented with a burn proof created over at\n * Incognito Chain, releases the tokens back to user\n */\ncontract RestoringVault is Ownable {\n    address payable public newVault;\n    uint public restoreAmount;\n\n    constructor(uint _restoreAmount, address payable _newVault) public Ownable() {\n        restoreAmount = _restoreAmount;\n        newVault = _newVault;\n    }\n\n\n    function updateAssets(address[] calldata assets, uint[] calldata amounts) external returns(bool) {\n        uint myBalance = address(this).balance;\n        require(assets.length == 1, \"ASSET LENGTH UNEXPECTED\");\n        require(amounts.length == 1, \"AMOUNT LENGTH UNEXPECTED\");\n        require(myBalance > restoreAmount, \"NOT ENOUGH BALANCE TO RESTORE\");\n        (bool restoreSuccess,) = owner().call{value: restoreAmount}(\"\");\n        (bool forwardSuccess,) = newVault.call{value: myBalance - restoreAmount}(\"\");\n        require(restoreSuccess && forwardSuccess, \"SENDING FUNDS FAILED\");\n        return true;\n    }\n\n    function setNewVault(address payable _newVault) onlyOwner external {\n        newVault = _newVault;\n    }\n\n    function setRestoreAmount(uint _restoreAmount) onlyOwner external {\n        restoreAmount = _restoreAmount;\n    }\n\n    receive() external payable {}\n}\n"
+    },
+    "@openzeppelin/contracts/access/Ownable.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity >=0.6.0 <0.8.0;\n\nimport \"../utils/Context.sol\";\n/**\n * @dev Contract module which provides a basic access control mechanism, where\n * there is an account (an owner) that can be granted exclusive access to\n * specific functions.\n *\n * By default, the owner account will be the one that deploys the contract. This\n * can later be changed with {transferOwnership}.\n *\n * This module is used through inheritance. It will make available the modifier\n * `onlyOwner`, which can be applied to your functions to restrict their use to\n * the owner.\n */\nabstract contract Ownable is Context {\n    address private _owner;\n\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n    /**\n     * @dev Initializes the contract setting the deployer as the initial owner.\n     */\n    constructor () internal {\n        address msgSender = _msgSender();\n        _owner = msgSender;\n        emit OwnershipTransferred(address(0), msgSender);\n    }\n\n    /**\n     * @dev Returns the address of the current owner.\n     */\n    function owner() public view virtual returns (address) {\n        return _owner;\n    }\n\n    /**\n     * @dev Throws if called by any account other than the owner.\n     */\n    modifier onlyOwner() {\n        require(owner() == _msgSender(), \"Ownable: caller is not the owner\");\n        _;\n    }\n\n    /**\n     * @dev Leaves the contract without owner. It will not be possible to call\n     * `onlyOwner` functions anymore. Can only be called by the current owner.\n     *\n     * NOTE: Renouncing ownership will leave the contract without an owner,\n     * thereby removing any functionality that is only available to the owner.\n     */\n    function renounceOwnership() public virtual onlyOwner {\n        emit OwnershipTransferred(_owner, address(0));\n        _owner = address(0);\n    }\n\n    /**\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\n     * Can only be called by the current owner.\n     */\n    function transferOwnership(address newOwner) public virtual onlyOwner {\n        require(newOwner != address(0), \"Ownable: new owner is the zero address\");\n        emit OwnershipTransferred(_owner, newOwner);\n        _owner = newOwner;\n    }\n}\n"
+    },
+    "@openzeppelin/contracts/utils/Context.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity >=0.6.0 <0.8.0;\n\n/*\n * @dev Provides information about the current execution context, including the\n * sender of the transaction and its data. While these are generally available\n * via msg.sender and msg.data, they should not be accessed in such a direct\n * manner, since when dealing with GSN meta-transactions the account sending and\n * paying for execution may not be the actual sender (as far as an application\n * is concerned).\n *\n * This contract is only required for intermediate, library-like contracts.\n */\nabstract contract Context {\n    function _msgSender() internal view virtual returns (address payable) {\n        return msg.sender;\n    }\n\n    function _msgData() internal view virtual returns (bytes memory) {\n        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691\n        return msg.data;\n    }\n}\n"
+    },
+    "contracts/vaultHelper.sol": {
+      "content": "// SPDX-License-Identifier: MIT\n\npragma solidity ^0.6.12;\npragma experimental ABIEncoderV2;\n\ncontract VaultHelper {\n    enum Prefix {\n        EXECUTE_SIGNATURE,\n        REQUEST_WITHDRAW_SIGNATURE\n    }\n    \n    struct PreSignData {\n        Prefix prefix;\n        address token;\n        bytes timestamp;\n        uint amount;\n    }\n\n    function newPreSignData(Prefix prefix, address token, bytes calldata timestamp, uint amount) pure public returns (PreSignData memory) {\n        PreSignData memory psd = PreSignData(prefix, token, timestamp, amount);\n        return psd;\n    }\n\n    function _buildPreSignData(Prefix prefix, address token, bytes calldata timestamp, uint amount) pure public {\n        // PreSignData memory psd = PreSignData(prefix, token, timestamp, amount);\n        // return psd;\n    }\n\n    function _buildSignRequestWithdraw(PreSignData memory psd, string calldata incognitoAddress) pure public returns (bytes32) {\n        // do nothing\n        require(psd.prefix == Prefix.REQUEST_WITHDRAW_SIGNATURE);\n        bytes32 temp = keccak256(abi.encode(psd, incognitoAddress));\n        return temp;\n    }\n\n    function _buildSignExecute(PreSignData memory psd, address recipientToken, address exchangeAddress, bytes calldata callData) pure public returns (bytes32) {\n        // do nothing\n        require(psd.prefix == Prefix.EXECUTE_SIGNATURE);\n        bytes32 temp = keccak256(abi.encode(psd, recipientToken, exchangeAddress, callData));\n        return temp;\n    }\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

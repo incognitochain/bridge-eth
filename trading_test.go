@@ -130,7 +130,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.IncPrivKeyStr = "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
 	tradingSuite.IncPaymentAddrStr = "12svfkP6w5UDJDSCwqH978PvqiqBxKmUnA9em9yAYWYJVRv7wuXY1qhhYpPAm4BDz2mLbFrRmdK3yRhnTqJCZXKHUmoi7NV83HCH2YFpctHNaDdkSiQshsjw2UFUuwdEvcidgaKmF3VJpY5f8RdN"
 
-	tradingSuite.IncEtherTokenIDStr = "dae027b21d8d57114da11209dce8eeb587d01adf59d4fc356a8be5eedc146859"
+	tradingSuite.IncEtherTokenIDStr = "b366fa400c36e6bbcf24ac3e99c90406ddc64346ab0b7ba21e159b83d938812d"
 	tradingSuite.IncUSDTTokenIDStr = "0000000000000000000000000000000000000000000000000000000000000098"
 	tradingSuite.IncSAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000097"
 	tradingSuite.IncDAITokenIDStr = "0000000000000000000000000000000000000000000000000000000000000096"
@@ -145,7 +145,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
 	tradingSuite.ETHOwnerAddrStr = "0xD7d93b7fa42b60b6076f3017fCA99b69257A912D"
 
-	tradingSuite.ETHHost = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
+	tradingSuite.ETHHost = "https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361"
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
@@ -156,10 +156,11 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	// tradingSuite.IncBridgeHost = "http://127.0.0.1:9350" // 0xkraken
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
 
-	tradingSuite.VaultAddr = common.HexToAddress("0x7bebc8445c6223b41b7bb4b0ae9742e2fd2f47f3")
-	tradingSuite.VaultBSCAddr = common.HexToAddress("0x599E96e0DAa48860310e2761aA8750BF873cAAE6")
-	tradingSuite.VaultPLGAddr = common.HexToAddress("0x493b80D988916a4E712b4d8fb9e123b5a477de1E")
-	tradingSuite.VaultFTMAddr = common.HexToAddress("0x2B0ef11745b726f9FdBE571b3F83AEa4248891A7")
+	// testnet 2 vaults
+	tradingSuite.VaultAddr = common.HexToAddress("0x9cb4baf1b60dabb6b22bcff07cc0e10395423aed")
+	tradingSuite.VaultBSCAddr = common.HexToAddress("0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7")
+	tradingSuite.VaultPLGAddr = common.HexToAddress("0x4fF5c88cD1FD773436C2aBcFE175fe4ba6a2eB68")
+	tradingSuite.VaultFTMAddr = common.HexToAddress("0xDdF0C1B9f513a8D0a26732B18478CC295d204320")
 
 	tradingSuite.PRVERC20Addr = common.HexToAddress("0xf4933b0288644778f6f2264EaB009fD04fF669a1")
 	tradingSuite.PRVBEP20Addr = common.HexToAddress("0x5A15626f6beA715870D46f43f50bE9821368963f")
@@ -167,7 +168,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.PDEXBEP20Addr = common.HexToAddress("0xa43F2911dF4a560A1F687Eba359D047753Cd9BD9")
 
 	tradingSuite.ChainIDBSC = 97
-	tradingSuite.ChainIDETH = 42
+	tradingSuite.ChainIDETH = 5
 	tradingSuite.ChainIDPLG = 80001
 	tradingSuite.ChainIDFTM = 4002
 	tradingSuite.ChainIDAURORA = 1313161555

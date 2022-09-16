@@ -8,4 +8,5 @@ genesisKey.hex
 .DS_Store
 cache
 artifacts
+*/scripts/src/*
 node_modules

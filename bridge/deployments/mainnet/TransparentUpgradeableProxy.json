@@ -1,0 +1,384 @@
+{
+  "address": "0x43D037A562099A4C2c95b1E2120cc43054450629",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_logic",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_admin",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_incognito",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        }
+      ],
+      "name": "Claim",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "previousIncognito",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newIncognito",
+          "type": "address"
+        }
+      ],
+      "name": "IncognitoChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "admin",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "previousSuccessor",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newSuccessor",
+          "type": "address"
+        }
+      ],
+      "name": "SuccessorChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "admin",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "Upgraded",
+      "type": "event"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "fallback"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "implementation",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "incognito",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newSuccessor",
+          "type": "address"
+        }
+      ],
+      "name": "retire",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "successor",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpause",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newIncognito",
+          "type": "address"
+        }
+      ],
+      "name": "upgradeIncognito",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newImplementation",
+          "type": "address"
+        }
+      ],
+      "name": "upgradeTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newImplementation",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "upgradeToAndCall",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "transactionHash": "0x1814d3f7f6f07e9acb6c9bb16e70f83e7e3e251a890627047ba8f386615a9d04",
+  "receipt": {
+    "to": null,
+    "from": "0xE2516f0F38d9400a8ceCe5672884De72FBD01cE1",
+    "contractAddress": "0x43D037A562099A4C2c95b1E2120cc43054450629",
+    "transactionIndex": 137,
+    "gasUsed": "1125935",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xaaba0333fc7e01927866019d1e6eb0119d38b9ca34c8c3a61416b7d93c3e3cc4",
+    "transactionHash": "0x1814d3f7f6f07e9acb6c9bb16e70f83e7e3e251a890627047ba8f386615a9d04",
+    "logs": [],
+    "blockNumber": 12332926,
+    "cumulativeGasUsed": "9499446",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xd190620159d82731F9951326Bafdc873a16CB2b1",
+    "0xE2516f0F38d9400a8ceCe5672884De72FBD01cE1",
+    "0xfAb5ab70500d1fab1e736829b4bf85e8bAC5fff2",
+    "0xc4d66de800000000000000000000000097875355ef55ae35613029df8b1c8cf8f89c9066"
+  ],
+  "solcInputHash": "41ab1ad11db6b86fa47959e6916f2304",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.12+commit.27d51765\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_logic\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_admin\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_incognito\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\"}],\"stateMutability\":\"payable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"claimer\",\"type\":\"address\"}],\"name\":\"Claim\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousIncognito\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newIncognito\",\"type\":\"address\"}],\"name\":\"IncognitoChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"admin\",\"type\":\"address\"}],\"name\":\"Paused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"previousSuccessor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"SuccessorChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"admin\",\"type\":\"address\"}],\"name\":\"Unpaused\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"implementation\",\"type\":\"address\"}],\"name\":\"Upgraded\",\"type\":\"event\"},{\"stateMutability\":\"payable\",\"type\":\"fallback\"},{\"inputs\":[],\"name\":\"admin\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claim\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"implementation\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"incognito\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newSuccessor\",\"type\":\"address\"}],\"name\":\"retire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"successor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpause\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newIncognito\",\"type\":\"address\"}],\"name\":\"upgradeIncognito\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"}],\"name\":\"upgradeTo\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newImplementation\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"name\":\"upgradeToAndCall\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"details\":\"This contract implements a proxy that is upgradeable by an admin.  To avoid https://medium.com/nomic-labs-blog/malicious-backdoors-in-ethereum-proxies-62629adf3357[proxy selector clashing], which can potentially be used in an attack, this contract uses the https://blog.openzeppelin.com/the-transparent-proxy-pattern/[transparent proxy pattern]. This pattern implies two things that go hand in hand:  1. If any account other than the admin calls the proxy, the call will be forwarded to the implementation, even if that call matches one of the admin functions exposed by the proxy itself. 2. If the admin calls the proxy, it can access the admin functions, but its calls will never be forwarded to the implementation. If the admin tries to call a function on the implementation it will fail with an error that says \\\"admin cannot fallback to proxy target\\\".  These properties mean that the admin account can only be used for admin actions like upgrading the proxy or changing the admin, so it's best if it's a dedicated account that is not used for anything else. This will avoid headaches due to sudden errors when trying to call a function from the proxy implementation.  Our recommendation is for the dedicated account to be an instance of the {ProxyAdmin} contract. If set up this way, you should think of the `ProxyAdmin` instance as the real administrative interface of your proxy.\",\"events\":{\"Claim(address)\":{\"details\":\"Emitted when the successor claimed thronze.*\"},\"IncognitoChanged(address,address)\":{\"details\":\"Emitted when the incognito proxy has changed.\"},\"Paused(address)\":{\"details\":\"Emitted when the admin pause contract.*\"},\"SuccessorChanged(address,address)\":{\"details\":\"Emitted when the successor account has changed.\"},\"Unpaused(address)\":{\"details\":\"Emitted when the admin unpaused contract.*\"}},\"kind\":\"dev\",\"methods\":{\"admin()\":{\"details\":\"Returns the current admin.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyAdmin}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103`\"},\"claim()\":{\"details\":\"Successor claims thronze.\"},\"constructor\":{\"details\":\"Initializes an upgradeable proxy managed by `_admin`, backed by the implementation at `_logic`, and optionally initialized with `_data` as explained in {UpgradeableProxy-constructor}.\"},\"implementation()\":{\"details\":\"Returns the current implementation.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc`\"},\"incognito()\":{\"details\":\"Returns the current incognito proxy.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x6c1fc16c781d41e11abf5619c272a94b10ccafab380060da4bd63325467b854e`\"},\"pause()\":{\"details\":\"Admin pause contract.\"},\"paused()\":{\"details\":\"Returns the current paused value.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa0248711450`\"},\"retire(address)\":{\"details\":\"Admin retire to prepare transfer thronze to successor.\"},\"successor()\":{\"details\":\"Returns the current successor.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f8`\"},\"unpause()\":{\"details\":\"Admin unpause contract.\"},\"upgradeIncognito(address)\":{\"details\":\"Admin upgrade incognito proxy.\"},\"upgradeTo(address)\":{\"details\":\"Upgrade the implementation of the proxy.  NOTE: Only the admin can call this function. See {ProxyAdmin-upgrade}.\"},\"upgradeToAndCall(address,bytes)\":{\"details\":\"Upgrade the implementation of the proxy, and then call a function from the new implementation as specified by `data`, which should be an encoded function call. This is useful to initialize new storage variables in the proxied contract.  NOTE: Only the admin can call this function. See {ProxyAdmin-upgradeAndCall}.\"}},\"stateVariables\":{\"_ADMIN_SLOT\":{\"details\":\"Storage slot with the admin of the contract. This is the keccak-256 hash of \\\"eip1967.proxy.admin\\\" subtracted by 1, and is validated in the constructor.\"},\"_INCOGNITO_SLOT\":{\"details\":\"Storage slot with the incognito proxy. This is the keccak-256 hash of \\\"eip1967.proxy.incognito.\\\" subtracted by 1, and is validated in the constructor.\"},\"_PAUSED_SLOT\":{\"details\":\"Storage slot with status paused or not. This is the keccak-256 hash of \\\"eip1967.proxy.paused\\\" subtracted by 1, and is validated in the constructor.\"},\"_SUCCESSOR_SLOT\":{\"details\":\"Storage slot with the admin of the contract. This is the keccak-256 hash of \\\"eip1967.proxy.successor\\\" subtracted by 1, and is validated in the constructor.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/transparentUpgraded.sol\":\"TransparentUpgradeableProxy\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/proxy.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.6.12;\\n\\n/**\\n * @dev This abstract contract provides a fallback function that delegates all calls to another contract using the EVM\\n * instruction `delegatecall`. We refer to the second contract as the _implementation_ behind the proxy, and it has to\\n * be specified by overriding the virtual {_implementation} function.\\n * \\n * Additionally, delegation to the implementation can be triggered manually through the {_fallback} function, or to a\\n * different contract through the {_delegate} function.\\n * \\n * The success and return data of the delegated call will be returned back to the caller of the proxy.\\n */\\nabstract contract Proxy {\\n    /**\\n     * @dev Delegates the current call to `implementation`.\\n     * \\n     * This function does not return to its internall call site, it will return directly to the external caller.\\n     */\\n    function _delegate(address implementation) internal {\\n        assembly {\\n            // Copy msg.data. We take full control of memory in this inline assembly\\n            // block because it will not return to Solidity code. We overwrite the\\n            // Solidity scratch pad at memory position 0.\\n            calldatacopy(0, 0, calldatasize())\\n\\n            // Call the implementation.\\n            // out and outsize are 0 because we don't know the size yet.\\n            let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)\\n\\n            // Copy the returned data.\\n            returndatacopy(0, 0, returndatasize())\\n\\n            switch result\\n            // delegatecall returns 0 on error.\\n            case 0 { revert(0, returndatasize()) }\\n            default { return(0, returndatasize()) }\\n        }\\n    }\\n\\n    /**\\n     * @dev This is a virtual function that should be overriden so it returns the address to which the fallback function\\n     * and {_fallback} should delegate.\\n     */\\n    function _implementation() internal virtual view returns (address);\\n\\n    /**\\n     * @dev Delegates the current call to the address returned by `_implementation()`.\\n     * \\n     * This function does not return to its internall call site, it will return directly to the external caller.\\n     */\\n    function _fallback() internal {\\n        _beforeFallback();\\n        _delegate(_implementation());\\n    }\\n\\n    /**\\n     * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if no other\\n     * function in the contract matches the call data.\\n     */\\n    fallback () payable external {\\n        _fallback();\\n    }\\n\\n    /**\\n     * @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if call data\\n     * is empty.\\n     */\\n    receive () payable external {\\n        _fallback();\\n    }\\n\\n    /**\\n     * @dev Hook that is called before falling back to the implementation. Can happen as part of a manual `_fallback`\\n     * call, or as part of the Solidity `fallback` or `receive` functions.\\n     * \\n     * If overriden should call `super._beforeFallback()`.\\n     */\\n    function _beforeFallback() internal virtual {\\n    }\\n}\",\"keccak256\":\"0x7426348c7cae706c3e862d16f2814b7530e5315896bf6ed8c7a91d875464f45e\",\"license\":\"MIT\"},\"contracts/transparentUpgraded.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.6.12;\\n\\nimport \\\"./upgradableProxy.sol\\\";\\n\\n/**\\n * @dev This contract implements a proxy that is upgradeable by an admin.\\n * \\n * To avoid https://medium.com/nomic-labs-blog/malicious-backdoors-in-ethereum-proxies-62629adf3357[proxy selector\\n * clashing], which can potentially be used in an attack, this contract uses the\\n * https://blog.openzeppelin.com/the-transparent-proxy-pattern/[transparent proxy pattern]. This pattern implies two\\n * things that go hand in hand:\\n * \\n * 1. If any account other than the admin calls the proxy, the call will be forwarded to the implementation, even if\\n * that call matches one of the admin functions exposed by the proxy itself.\\n * 2. If the admin calls the proxy, it can access the admin functions, but its calls will never be forwarded to the\\n * implementation. If the admin tries to call a function on the implementation it will fail with an error that says\\n * \\\"admin cannot fallback to proxy target\\\".\\n * \\n * These properties mean that the admin account can only be used for admin actions like upgrading the proxy or changing\\n * the admin, so it's best if it's a dedicated account that is not used for anything else. This will avoid headaches due\\n * to sudden errors when trying to call a function from the proxy implementation.\\n * \\n * Our recommendation is for the dedicated account to be an instance of the {ProxyAdmin} contract. If set up this way,\\n * you should think of the `ProxyAdmin` instance as the real administrative interface of your proxy.\\n */\\ncontract TransparentUpgradeableProxy is UpgradeableProxy {\\n    /**\\n     * @dev Initializes an upgradeable proxy managed by `_admin`, backed by the implementation at `_logic`, and\\n     * optionally initialized with `_data` as explained in {UpgradeableProxy-constructor}.\\n     */\\n    constructor(address _logic, address _admin, address _incognito, bytes memory _data) public payable UpgradeableProxy(_logic, _data) {\\n        assert(_ADMIN_SLOT == bytes32(uint256(keccak256(\\\"eip1967.proxy.admin\\\")) - 1));\\n        assert(_SUCCESSOR_SLOT == bytes32(uint256(keccak256(\\\"eip1967.proxy.successor\\\")) - 1));\\n        assert(_PAUSED_SLOT == bytes32(uint256(keccak256(\\\"eip1967.proxy.paused\\\")) - 1));\\n        assert(_INCOGNITO_SLOT == bytes32(uint256(keccak256(\\\"eip1967.proxy.incognito.\\\")) - 1));\\n        _setAdmin(_admin);\\n        _setIncognito(_incognito);\\n    }\\n\\n    /**\\n     * @dev Emitted when the successor account has changed.\\n     */\\n    event SuccessorChanged(address previousSuccessor, address newSuccessor);\\n    \\n    /**\\n     * @dev Emitted when the incognito proxy has changed.\\n     */\\n    event IncognitoChanged(address previousIncognito, address newIncognito);\\n\\n    /**\\n     * @dev Emitted when the successor claimed thronze.\\n     **/\\n    event Claim(address claimer);\\n    \\n    /**\\n     * @dev Emitted when the admin pause contract.\\n     **/\\n    event Paused(address admin);\\n    \\n    /**\\n     * @dev Emitted when the admin unpaused contract.\\n     **/\\n    event Unpaused(address admin);\\n\\n    /**\\n     * @dev Storage slot with the admin of the contract.\\n     * This is the keccak-256 hash of \\\"eip1967.proxy.admin\\\" subtracted by 1, and is\\n     * validated in the constructor.\\n     */\\n    bytes32 private constant _ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;\\n\\n    /**\\n     * @dev Storage slot with the admin of the contract.\\n     * This is the keccak-256 hash of \\\"eip1967.proxy.successor\\\" subtracted by 1, and is\\n     * validated in the constructor.\\n     */\\n    bytes32 private constant _SUCCESSOR_SLOT = 0x7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f8;\\n\\n    /**\\n     * @dev Storage slot with status paused or not.\\n     * This is the keccak-256 hash of \\\"eip1967.proxy.paused\\\" subtracted by 1, and is\\n     * validated in the constructor.\\n     */\\n    bytes32 private constant _PAUSED_SLOT = 0x8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa0248711450;\\n    \\n    /**\\n     * @dev Storage slot with the incognito proxy.\\n     * This is the keccak-256 hash of \\\"eip1967.proxy.incognito.\\\" subtracted by 1, and is\\n     * validated in the constructor.\\n     */\\n    bytes32 private constant _INCOGNITO_SLOT = 0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2;\\n\\n    /**\\n     * @dev Modifier used internally that will delegate the call to the implementation unless the sender is the admin.\\n     */\\n    modifier ifAdmin() {\\n        if (msg.sender == _admin()) {\\n            _;\\n        } else {\\n            _fallback();\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the current admin.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyAdmin}.\\n     * \\n     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the\\n     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.\\n     * `0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103`\\n     */\\n    function admin() external ifAdmin returns (address) {\\n        return _admin();\\n    }\\n\\n    /**\\n     * @dev Returns the current implementation.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.\\n     * \\n     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the\\n     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.\\n     * `0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc`\\n     */\\n    function implementation() external ifAdmin returns (address) {\\n        return _implementation();\\n    }\\n\\n    /**\\n     * @dev Returns the current successor.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.\\n     * \\n     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the\\n     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.\\n     * `0x7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f8`\\n     */\\n    function successor() external ifAdmin returns (address) {\\n        return _successor();\\n    }\\n\\n    /**\\n     * @dev Returns the current paused value.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.\\n     * \\n     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the\\n     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.\\n     * `0x8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa0248711450`\\n     */\\n    function paused() external ifAdmin returns (bool) {\\n        return _paused();\\n    }\\n    \\n    /**\\n     * @dev Returns the current incognito proxy.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.\\n     * \\n     * TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the\\n     * https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call.\\n     * `0x6c1fc16c781d41e11abf5619c272a94b10ccafab380060da4bd63325467b854e`\\n     */\\n    function incognito() external ifAdmin returns (address) {\\n        return _incognito();\\n    }\\n\\n    /**\\n     * @dev Upgrade the implementation of the proxy.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-upgrade}.\\n     */\\n    function upgradeTo(address newImplementation) external ifAdmin {\\n        _upgradeTo(newImplementation);\\n    }\\n\\n    /**\\n     * @dev Upgrade the implementation of the proxy, and then call a function from the new implementation as specified\\n     * by `data`, which should be an encoded function call. This is useful to initialize new storage variables in the\\n     * proxied contract.\\n     * \\n     * NOTE: Only the admin can call this function. See {ProxyAdmin-upgradeAndCall}.\\n     */\\n    function upgradeToAndCall(address newImplementation, bytes calldata data) external payable ifAdmin {\\n        _upgradeTo(newImplementation);\\n        // solhint-disable-next-line avoid-low-level-calls\\n        (bool success,) = newImplementation.delegatecall(data);\\n        require(success, \\\"DELEGATECALL failed\\\");\\n    }\\n\\n    /**\\n     * @dev Returns the current admin.\\n     */\\n    function _admin() internal view returns (address adm) {\\n        bytes32 slot = _ADMIN_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            adm := sload(slot)\\n        }\\n    }\\n\\n    /**\\n     * @dev Stores a new address in the EIP1967 admin slot.\\n     */\\n    function _setAdmin(address newAdmin) private {\\n        bytes32 slot = _ADMIN_SLOT;\\n\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, newAdmin)\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the current successor.\\n     */\\n    function _successor() internal view returns (address sor) {\\n        bytes32 slot = _SUCCESSOR_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sor := sload(slot)\\n        }\\n    }\\n\\n    /**\\n     * @dev Stores a new address in the EIP1967 successor slot.\\n     */\\n    function _setSuccesor(address newSuccessor) private {\\n        bytes32 slot = _SUCCESSOR_SLOT;\\n\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, newSuccessor)\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the current paused value.\\n     */\\n    function _paused() internal view returns (bool psd) {\\n        bytes32 slot = _PAUSED_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            psd := sload(slot)\\n        }\\n    }\\n\\n    /**\\n     * @dev Stores a new paused value in the EIP1967 paused slot.\\n     */\\n    function _setPaused(bool psd) private {\\n        bytes32 slot = _PAUSED_SLOT;\\n\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, psd)\\n        }\\n    }\\n    \\n    /**\\n     * @dev Returns the current incognito proxy.\\n     */\\n    function _incognito() internal view returns (address icg) {\\n        bytes32 slot = _INCOGNITO_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            icg := sload(slot)\\n        }\\n    }\\n\\n    /**\\n     * @dev Stores a new address in the EIP1967 incognito proxy slot.\\n     */\\n    function _setIncognito(address newIncognito) private {\\n        bytes32 slot = _INCOGNITO_SLOT;\\n\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, newIncognito)\\n        }\\n    }\\n\\n    /**\\n     * @dev Admin retire to prepare transfer thronze to successor.\\n     */\\n    function retire(address newSuccessor) external ifAdmin {\\n        require(newSuccessor != address(0), \\\"TransparentUpgradeableProxy: successor is the zero address\\\");\\n        emit SuccessorChanged(_successor(), newSuccessor);\\n        _setSuccesor(newSuccessor);\\n    }\\n\\n    /**\\n     * @dev Successor claims thronze.\\n     */\\n    function claim() external {\\n        if (msg.sender == _successor()) {\\n            emit Claim(_successor());\\n            _setAdmin(_successor());\\n        } else{\\n            _fallback();\\n        }\\n    }\\n    \\n    /**\\n     * @dev Admin pause contract.\\n     */\\n    function pause() external ifAdmin {\\n        require(!_paused(), \\\"TransparentUpgradeableProxy: contract paused already\\\");\\n        _setPaused(true);\\n    }\\n    \\n    /**\\n     * @dev Admin unpause contract.\\n     */\\n    function unpause() external ifAdmin {\\n        require(_paused(), \\\"TransparentUpgradeableProxy: contract not paused\\\");\\n        _setPaused(false);\\n    }\\n    \\n     /**\\n     * @dev Admin upgrade incognito proxy.\\n     */\\n    function upgradeIncognito(address newIncognito) external ifAdmin {\\n        require(newIncognito != address(0), \\\"TransparentUpgradeableProxy: incognito proxy is the zero address\\\");\\n        emit IncognitoChanged(_incognito(), newIncognito);\\n        _setIncognito(newIncognito);\\n    }\\n    \\n    /**\\n     * @dev Makes sure the admin cannot access the fallback function. See {Proxy-_beforeFallback}.\\n     */\\n    function _beforeFallback() internal override virtual {\\n        require(msg.sender != _admin(), \\\"TransparentUpgradeableProxy: admin cannot fallback to proxy target\\\");\\n        require(!_paused(), \\\"TransparentUpgradeableProxy: contract is paused\\\");\\n        super._beforeFallback();\\n    }\\n}\",\"keccak256\":\"0x1ee108e1d59632f1f5d11839c6a4b9686cbe529c587a30dcabd719f98050905b\",\"license\":\"MIT\"},\"contracts/upgradableProxy.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.6.12;\\n\\nimport \\\"./proxy.sol\\\";\\n\\n/**\\n * @dev This contract implements an upgradeable proxy. It is upgradeable because calls are delegated to an\\n * implementation address that can be changed. This address is stored in storage in the location specified by\\n * https://eips.ethereum.org/EIPS/eip-1967[EIP1967], so that it doesn't conflict with the storage layout of the\\n * implementation behind the proxy.\\n * \\n * Upgradeability is only provided internally through {_upgradeTo}. For an externally upgradeable proxy see\\n * {TransparentUpgradeableProxy}.\\n */\\ncontract UpgradeableProxy is Proxy {\\n    /**\\n     * @dev Initializes the upgradeable proxy with an initial implementation specified by `_logic`.\\n     * \\n     * If `_data` is nonempty, it's used as data in a delegate call to `_logic`. This will typically be an encoded\\n     * function call, and allows initializating the storage of the proxy like a Solidity constructor.\\n     */\\n    constructor(address _logic, bytes memory _data) public payable {\\n        assert(_IMPLEMENTATION_SLOT == bytes32(uint256(keccak256(\\\"eip1967.proxy.implementation\\\")) - 1));\\n        _setImplementation(_logic);\\n        if(_data.length > 0) {\\n            // solhint-disable-next-line avoid-low-level-calls\\n            (bool success,) = _logic.delegatecall(_data);\\n            require(success, \\\"DELEGATECALL failed\\\");\\n        }\\n    }\\n\\n    /**\\n     * @dev Emitted when the implementation is upgraded.\\n     */\\n    event Upgraded(address indexed implementation);\\n\\n    /**\\n     * @dev Storage slot with the address of the current implementation.\\n     * This is the keccak-256 hash of \\\"eip1967.proxy.implementation\\\" subtracted by 1, and is\\n     * validated in the constructor.\\n     */\\n    bytes32 private constant _IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;\\n\\n    /**\\n     * @dev Returns the current implementation address.\\n     */\\n    function _implementation() internal override view returns (address impl) {\\n        bytes32 slot = _IMPLEMENTATION_SLOT;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            impl := sload(slot)\\n        }\\n    }\\n\\n    /**\\n     * @dev Upgrades the proxy to a new implementation.\\n     * \\n     * Emits an {Upgraded} event.\\n     */\\n    function _upgradeTo(address newImplementation) internal {\\n        _setImplementation(newImplementation);\\n        emit Upgraded(newImplementation);\\n    }\\n\\n    /**\\n     * @dev Stores a new address in the EIP1967 implementation slot.\\n     */\\n    function _setImplementation(address newImplementation) private {\\n        require(isContract(newImplementation), \\\"UpgradeableProxy: new implementation is not a contract\\\");\\n\\n        bytes32 slot = _IMPLEMENTATION_SLOT;\\n\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly {\\n            sstore(slot, newImplementation)\\n        }\\n    }\\n    \\n    /**\\n     * @dev Returns true if `account` is a contract.\\n     *\\n     * [IMPORTANT]\\n     * ====\\n     * It is unsafe to assume that an address for which this function returns\\n     * false is an externally-owned account (EOA) and not a contract.\\n     *\\n     * Among others, `isContract` will return false for the following\\n     * types of addresses:\\n     *\\n     *  - an externally-owned account\\n     *  - a contract in construction\\n     *  - an address where a contract will be created\\n     *  - an address where a contract lived, but was destroyed\\n     * ====\\n     */\\n    function isContract(address account) internal view returns (bool) {\\n        // This method relies on extcodesize, which returns 0 for contracts in\\n        // construction, since the code is only stored at the end of the\\n        // constructor execution.\\n\\n        uint256 size;\\n        // solhint-disable-next-line no-inline-assembly\\n        assembly { size := extcodesize(account) }\\n        return size > 0;\\n    }\\n}\",\"keccak256\":\"0x9fbc70e287c46eb400060be72aa4fe90ba9058db29f984008bc142177a31f9b1\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x6080604052604051620016d1380380620016d1833981810160405260808110156200002957600080fd5b81019080805190602001909291908051906020019092919080519060200190929190805160405193929190846401000000008211156200006857600080fd5b838201915060208201858111156200007f57600080fd5b82518660018202830111640100000000821117156200009d57600080fd5b8083526020830192505050908051906020019080838360005b83811015620000d3578082015181840152602081019050620000b6565b50505050905090810190601f168015620001015780820380516001836020036101000a031916815260200191505b50604052505050838160017f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbd60001c0360001b7f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b146200016057fe5b62000171826200043260201b60201c565b600081511115620002ac5760008273ffffffffffffffffffffffffffffffffffffffff16826040518082805190602001908083835b60208310620001cb5780518252602082019150602081019050602083039250620001a6565b6001836020036101000a038019825116818451168082178552505050505050905001915050600060405180830381855af49150503d80600081146200022d576040519150601f19603f3d011682016040523d82523d6000602084013e62000232565b606091505b5050905080620002aa576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260138152602001807f44454c454741544543414c4c206661696c65640000000000000000000000000081525060200191505060405180910390fd5b505b505060017fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610460001c0360001b7fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b146200030457fe5b60017f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f960001c0360001b7f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b146200035a57fe5b60017f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145160001c0360001b7f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b14620003b057fe5b60017f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd360001c0360001b7f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b146200040657fe5b6200041783620004c960201b60201c565b6200042882620004f860201b60201c565b505050506200053a565b62000443816200052760201b60201c565b6200049a576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260368152602001806200169b6036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b90508181555050565b600080823b905060008111915050919050565b611151806200054a6000396000f3fe6080604052600436106100ab5760003560e01c80635c975abb116100645780635c975abb1461026e5780636ff968c31461029b5780638456cb59146102dc5780638a984538146102f35780639e6371ba14610334578063f851a44014610385576100ba565b80631c587771146100c45780633659cfe6146101155780633f4ba83a146101665780634e71d92d1461017d5780634f1ef286146101945780635c60da1b1461022d576100ba565b366100ba576100b86103c6565b005b6100c26103c6565b005b3480156100d057600080fd5b50610113600480360360208110156100e757600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506103e0565b005b34801561012157600080fd5b506101646004803603602081101561013857600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061052d565b005b34801561017257600080fd5b5061017b610582565b005b34801561018957600080fd5b50610192610634565b005b61022b600480360360408110156101aa57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001906401000000008111156101e757600080fd5b8201836020820111156101f957600080fd5b8035906020019184600183028401116401000000008311171561021b57600080fd5b90919293919293905050506106e3565b005b34801561023957600080fd5b50610242610822565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561027a57600080fd5b5061028361087a565b60405180821515815260200191505060405180910390f35b3480156102a757600080fd5b506102b06108d2565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156102e857600080fd5b506102f161092a565b005b3480156102ff57600080fd5b506103086109dd565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561034057600080fd5b506103836004803603602081101561035757600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610a35565b005b34801561039157600080fd5b5061039a610b82565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6103ce610bda565b6103de6103d9610cce565b610cff565b565b6103e8610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561052157600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156104a1576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260408152602001806110076040913960400191505060405180910390fd5b7f86d392a76e88298144124db3dd7265135d76810f52d747dc329a0f7722135e5c6104ca610d56565b82604051808373ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a161051c81610d87565b61052a565b6105296103c6565b5b50565b610535610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156105765761057181610db6565b61057f565b61057e6103c6565b5b50565b61058a610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610629576105c5610e05565b61061a576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260308152602001806110aa6030913960400191505060405180910390fd5b6106246000610e36565b610632565b6106316103c6565b5b565b61063c610e65565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156106d8577f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc610698610e65565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a16106d36106ce610e65565b610e96565b6106e1565b6106e06103c6565b5b565b6106eb610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156108145761072783610db6565b60008373ffffffffffffffffffffffffffffffffffffffff168383604051808383808284378083019250505092505050600060405180830381855af49150503d8060008114610792576040519150601f19603f3d011682016040523d82523d6000602084013e610797565b606091505b505090508061080e576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260138152602001807f44454c454741544543414c4c206661696c65640000000000000000000000000081525060200191505060405180910390fd5b5061081d565b61081c6103c6565b5b505050565b600061082c610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561086e57610867610cce565b9050610877565b6108766103c6565b5b90565b6000610884610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156108c6576108bf610e05565b90506108cf565b6108ce6103c6565b5b90565b60006108dc610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561091e57610917610e65565b9050610927565b6109266103c6565b5b90565b610932610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156109d25761096d610e05565b156109c3576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260348152602001806110476034913960400191505060405180910390fd5b6109cd6001610e36565b6109db565b6109da6103c6565b5b565b60006109e7610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610a2957610a22610d56565b9050610a32565b610a316103c6565b5b90565b610a3d610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610b7657600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415610af6576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180610f97603a913960400191505060405180910390fd5b7ff966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c974610b1f610e65565b82604051808373ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a1610b7181610ec5565b610b7f565b610b7e6103c6565b5b50565b6000610b8c610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610bce57610bc7610d25565b9050610bd7565b610bd66103c6565b5b90565b610be2610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610c66576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260428152602001806110da6042913960600191505060405180910390fd5b610c6e610e05565b15610cc4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602f81526020018061107b602f913960400191505060405180910390fd5b610ccc610ef4565b565b6000807f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b9050805491505090565b3660008037600080366000845af43d6000803e8060008114610d20573d6000f35b3d6000fd5b6000807fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b9050805491505090565b6000807f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b9050805491505090565b60007f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b90508181555050565b610dbf81610ef6565b8073ffffffffffffffffffffffffffffffffffffffff167fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b60405160405180910390a250565b6000807f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b9050805491505090565b60007f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b90508181555050565b6000807f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b9050805491505090565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b90508181555050565b565b610eff81610f83565b610f54576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180610fd16036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b600080823b90506000811191505091905056fe5472616e73706172656e745570677261646561626c6550726f78793a20737563636573736f7220697320746865207a65726f20616464726573735570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e74726163745472616e73706172656e745570677261646561626c6550726f78793a20696e636f676e69746f2070726f787920697320746865207a65726f20616464726573735472616e73706172656e745570677261646561626c6550726f78793a20636f6e74726163742070617573656420616c72656164795472616e73706172656e745570677261646561626c6550726f78793a20636f6e7472616374206973207061757365645472616e73706172656e745570677261646561626c6550726f78793a20636f6e7472616374206e6f74207061757365645472616e73706172656e745570677261646561626c6550726f78793a2061646d696e2063616e6e6f742066616c6c6261636b20746f2070726f787920746172676574a26469706673582212204ecb543c5f548ee560bd95168291b78d1e2450b6ffd2eef0681a29d050e26eb364736f6c634300060c00335570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e7472616374",
+  "deployedBytecode": "0x6080604052600436106100ab5760003560e01c80635c975abb116100645780635c975abb1461026e5780636ff968c31461029b5780638456cb59146102dc5780638a984538146102f35780639e6371ba14610334578063f851a44014610385576100ba565b80631c587771146100c45780633659cfe6146101155780633f4ba83a146101665780634e71d92d1461017d5780634f1ef286146101945780635c60da1b1461022d576100ba565b366100ba576100b86103c6565b005b6100c26103c6565b005b3480156100d057600080fd5b50610113600480360360208110156100e757600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506103e0565b005b34801561012157600080fd5b506101646004803603602081101561013857600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919050505061052d565b005b34801561017257600080fd5b5061017b610582565b005b34801561018957600080fd5b50610192610634565b005b61022b600480360360408110156101aa57600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190803590602001906401000000008111156101e757600080fd5b8201836020820111156101f957600080fd5b8035906020019184600183028401116401000000008311171561021b57600080fd5b90919293919293905050506106e3565b005b34801561023957600080fd5b50610242610822565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561027a57600080fd5b5061028361087a565b60405180821515815260200191505060405180910390f35b3480156102a757600080fd5b506102b06108d2565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156102e857600080fd5b506102f161092a565b005b3480156102ff57600080fd5b506103086109dd565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561034057600080fd5b506103836004803603602081101561035757600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff169060200190929190505050610a35565b005b34801561039157600080fd5b5061039a610b82565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6103ce610bda565b6103de6103d9610cce565b610cff565b565b6103e8610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561052157600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156104a1576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260408152602001806110076040913960400191505060405180910390fd5b7f86d392a76e88298144124db3dd7265135d76810f52d747dc329a0f7722135e5c6104ca610d56565b82604051808373ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a161051c81610d87565b61052a565b6105296103c6565b5b50565b610535610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156105765761057181610db6565b61057f565b61057e6103c6565b5b50565b61058a610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610629576105c5610e05565b61061a576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260308152602001806110aa6030913960400191505060405180910390fd5b6106246000610e36565b610632565b6106316103c6565b5b565b61063c610e65565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156106d8577f0c7ef932d3b91976772937f18d5ef9b39a9930bef486b576c374f047c4b512dc610698610e65565b604051808273ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a16106d36106ce610e65565b610e96565b6106e1565b6106e06103c6565b5b565b6106eb610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156108145761072783610db6565b60008373ffffffffffffffffffffffffffffffffffffffff168383604051808383808284378083019250505092505050600060405180830381855af49150503d8060008114610792576040519150601f19603f3d011682016040523d82523d6000602084013e610797565b606091505b505090508061080e576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260138152602001807f44454c454741544543414c4c206661696c65640000000000000000000000000081525060200191505060405180910390fd5b5061081d565b61081c6103c6565b5b505050565b600061082c610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561086e57610867610cce565b9050610877565b6108766103c6565b5b90565b6000610884610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156108c6576108bf610e05565b90506108cf565b6108ce6103c6565b5b90565b60006108dc610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16141561091e57610917610e65565b9050610927565b6109266103c6565b5b90565b610932610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614156109d25761096d610e05565b156109c3576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260348152602001806110476034913960400191505060405180910390fd5b6109cd6001610e36565b6109db565b6109da6103c6565b5b565b60006109e7610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610a2957610a22610d56565b9050610a32565b610a316103c6565b5b90565b610a3d610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610b7657600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff161415610af6576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252603a815260200180610f97603a913960400191505060405180910390fd5b7ff966f857c3c376f2e1df873bbe2596a18675dc056dc3465dfbbe8fe9ac02c974610b1f610e65565b82604051808373ffffffffffffffffffffffffffffffffffffffff1681526020018273ffffffffffffffffffffffffffffffffffffffff1681526020019250505060405180910390a1610b7181610ec5565b610b7f565b610b7e6103c6565b5b50565b6000610b8c610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610bce57610bc7610d25565b9050610bd7565b610bd66103c6565b5b90565b610be2610d25565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415610c66576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260428152602001806110da6042913960600191505060405180910390fd5b610c6e610e05565b15610cc4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040180806020018281038252602f81526020018061107b602f913960400191505060405180910390fd5b610ccc610ef4565b565b6000807f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b9050805491505090565b3660008037600080366000845af43d6000803e8060008114610d20573d6000f35b3d6000fd5b6000807fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b9050805491505090565b6000807f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b9050805491505090565b60007f62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd260001b90508181555050565b610dbf81610ef6565b8073ffffffffffffffffffffffffffffffffffffffff167fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b60405160405180910390a250565b6000807f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b9050805491505090565b60007f8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa024871145060001b90508181555050565b6000807f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b9050805491505090565b60007fb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d610360001b90508181555050565b60007f7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f860001b90508181555050565b565b610eff81610f83565b610f54576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401808060200182810382526036815260200180610fd16036913960400191505060405180910390fd5b60007f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc60001b90508181555050565b600080823b90506000811191505091905056fe5472616e73706172656e745570677261646561626c6550726f78793a20737563636573736f7220697320746865207a65726f20616464726573735570677261646561626c6550726f78793a206e657720696d706c656d656e746174696f6e206973206e6f74206120636f6e74726163745472616e73706172656e745570677261646561626c6550726f78793a20696e636f676e69746f2070726f787920697320746865207a65726f20616464726573735472616e73706172656e745570677261646561626c6550726f78793a20636f6e74726163742070617573656420616c72656164795472616e73706172656e745570677261646561626c6550726f78793a20636f6e7472616374206973207061757365645472616e73706172656e745570677261646561626c6550726f78793a20636f6e7472616374206e6f74207061757365645472616e73706172656e745570677261646561626c6550726f78793a2061646d696e2063616e6e6f742066616c6c6261636b20746f2070726f787920746172676574a26469706673582212204ecb543c5f548ee560bd95168291b78d1e2450b6ffd2eef0681a29d050e26eb364736f6c634300060c0033",
+  "devdoc": {
+    "details": "This contract implements a proxy that is upgradeable by an admin.  To avoid https://medium.com/nomic-labs-blog/malicious-backdoors-in-ethereum-proxies-62629adf3357[proxy selector clashing], which can potentially be used in an attack, this contract uses the https://blog.openzeppelin.com/the-transparent-proxy-pattern/[transparent proxy pattern]. This pattern implies two things that go hand in hand:  1. If any account other than the admin calls the proxy, the call will be forwarded to the implementation, even if that call matches one of the admin functions exposed by the proxy itself. 2. If the admin calls the proxy, it can access the admin functions, but its calls will never be forwarded to the implementation. If the admin tries to call a function on the implementation it will fail with an error that says \"admin cannot fallback to proxy target\".  These properties mean that the admin account can only be used for admin actions like upgrading the proxy or changing the admin, so it's best if it's a dedicated account that is not used for anything else. This will avoid headaches due to sudden errors when trying to call a function from the proxy implementation.  Our recommendation is for the dedicated account to be an instance of the {ProxyAdmin} contract. If set up this way, you should think of the `ProxyAdmin` instance as the real administrative interface of your proxy.",
+    "events": {
+      "Claim(address)": {
+        "details": "Emitted when the successor claimed thronze.*"
+      },
+      "IncognitoChanged(address,address)": {
+        "details": "Emitted when the incognito proxy has changed."
+      },
+      "Paused(address)": {
+        "details": "Emitted when the admin pause contract.*"
+      },
+      "SuccessorChanged(address,address)": {
+        "details": "Emitted when the successor account has changed."
+      },
+      "Unpaused(address)": {
+        "details": "Emitted when the admin unpaused contract.*"
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "admin()": {
+        "details": "Returns the current admin.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyAdmin}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103`"
+      },
+      "claim()": {
+        "details": "Successor claims thronze."
+      },
+      "constructor": {
+        "details": "Initializes an upgradeable proxy managed by `_admin`, backed by the implementation at `_logic`, and optionally initialized with `_data` as explained in {UpgradeableProxy-constructor}."
+      },
+      "implementation()": {
+        "details": "Returns the current implementation.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc`"
+      },
+      "incognito()": {
+        "details": "Returns the current incognito proxy.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x6c1fc16c781d41e11abf5619c272a94b10ccafab380060da4bd63325467b854e`"
+      },
+      "pause()": {
+        "details": "Admin pause contract."
+      },
+      "paused()": {
+        "details": "Returns the current paused value.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x8dea8703c3cf94703383ce38a9c894669dccd4ca8e65ddb43267aa0248711450`"
+      },
+      "retire(address)": {
+        "details": "Admin retire to prepare transfer thronze to successor."
+      },
+      "successor()": {
+        "details": "Returns the current successor.  NOTE: Only the admin can call this function. See {ProxyAdmin-getProxyImplementation}.  TIP: To get this value clients can read directly from the storage slot shown below (specified by EIP1967) using the https://eth.wiki/json-rpc/API#eth_getstorageat[`eth_getStorageAt`] RPC call. `0x7b13fc932b1063ca775d428558b73e20eab6804d4d9b5a148d7cbae4488973f8`"
+      },
+      "unpause()": {
+        "details": "Admin unpause contract."
+      },
+      "upgradeIncognito(address)": {
+        "details": "Admin upgrade incognito proxy."
+      },
+      "upgradeTo(address)": {
+        "details": "Upgrade the implementation of the proxy.  NOTE: Only the admin can call this function. See {ProxyAdmin-upgrade}."
+      },
+      "upgradeToAndCall(address,bytes)": {
+        "details": "Upgrade the implementation of the proxy, and then call a function from the new implementation as specified by `data`, which should be an encoded function call. This is useful to initialize new storage variables in the proxied contract.  NOTE: Only the admin can call this function. See {ProxyAdmin-upgradeAndCall}."
+      }
+    },
+    "stateVariables": {
+      "_ADMIN_SLOT": {
+        "details": "Storage slot with the admin of the contract. This is the keccak-256 hash of \"eip1967.proxy.admin\" subtracted by 1, and is validated in the constructor."
+      },
+      "_INCOGNITO_SLOT": {
+        "details": "Storage slot with the incognito proxy. This is the keccak-256 hash of \"eip1967.proxy.incognito.\" subtracted by 1, and is validated in the constructor."
+      },
+      "_PAUSED_SLOT": {
+        "details": "Storage slot with status paused or not. This is the keccak-256 hash of \"eip1967.proxy.paused\" subtracted by 1, and is validated in the constructor."
+      },
+      "_SUCCESSOR_SLOT": {
+        "details": "Storage slot with the admin of the contract. This is the keccak-256 hash of \"eip1967.proxy.successor\" subtracted by 1, and is validated in the constructor."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}

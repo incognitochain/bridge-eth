@@ -4,6 +4,7 @@
 package kbntrade
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -26,19 +28,27 @@ var (
 	_ = event.NewSubscription
 )
 
-// IERC20ABI is the input ABI used to generate the binding from.
-const IERC20ABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-
-// IERC20FuncSigs maps the 4-byte function signature to its string representation.
-var IERC20FuncSigs = map[string]string{
-	"dd62ed3e": "allowance(address,address)",
-	"095ea7b3": "approve(address,uint256)",
-	"70a08231": "balanceOf(address)",
-	"313ce567": "decimals()",
-	"18160ddd": "totalSupply()",
-	"a9059cbb": "transfer(address,uint256)",
-	"23b872dd": "transferFrom(address,address,uint256)",
+// IERC20MetaData contains all meta data concerning the IERC20 contract.
+var IERC20MetaData = &bind.MetaData{
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Sigs: map[string]string{
+		"dd62ed3e": "allowance(address,address)",
+		"095ea7b3": "approve(address,uint256)",
+		"70a08231": "balanceOf(address)",
+		"313ce567": "decimals()",
+		"18160ddd": "totalSupply()",
+		"a9059cbb": "transfer(address,uint256)",
+		"23b872dd": "transferFrom(address,address,uint256)",
+	},
 }
+
+// IERC20ABI is the input ABI used to generate the binding from.
+// Deprecated: Use IERC20MetaData.ABI instead.
+var IERC20ABI = IERC20MetaData.ABI
+
+// Deprecated: Use IERC20MetaData.Sigs instead.
+// IERC20FuncSigs maps the 4-byte function signature to its string representation.
+var IERC20FuncSigs = IERC20MetaData.Sigs
 
 // IERC20 is an auto generated Go binding around an Ethereum contract.
 type IERC20 struct {
@@ -677,28 +687,41 @@ func (_IERC20 *IERC20Filterer) ParseTransfer(log types.Log) (*IERC20Transfer, er
 	return event, nil
 }
 
-// KBNTradeABI is the input ABI used to generate the binding from.
-const KBNTradeABI = "[{\"inputs\":[{\"internalType\":\"contractKyberNetwork\",\"name\":\"_kyberNetworkProxyContract\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"}],\"name\":\"getConversionRates\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"kyberNetworkProxyContract\",\"outputs\":[{\"internalType\":\"contractKyberNetwork\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]"
-
-// KBNTradeFuncSigs maps the 4-byte function signature to its string representation.
-var KBNTradeFuncSigs = map[string]string{
-	"72e94bf6": "ETH_CONTRACT_ADDRESS()",
-	"0aea8188": "getConversionRates(address,uint256,address)",
-	"785250da": "kyberNetworkProxyContract()",
-	"bb39a960": "trade(address,uint256,address,uint256)",
+// KBNTradeMetaData contains all meta data concerning the KBNTrade contract.
+var KBNTradeMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractKyberNetwork\",\"name\":\"_kyberNetworkProxyContract\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"}],\"name\":\"getConversionRates\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"kyberNetworkProxyContract\",\"outputs\":[{\"internalType\":\"contractKyberNetwork\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"srcToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"destToken\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}]",
+	Sigs: map[string]string{
+		"72e94bf6": "ETH_CONTRACT_ADDRESS()",
+		"0aea8188": "getConversionRates(address,uint256,address)",
+		"785250da": "kyberNetworkProxyContract()",
+		"bb39a960": "trade(address,uint256,address,uint256)",
+	},
+	Bin: "0x608060405234801561001057600080fd5b506040516107f73803806107f78339818101604052602081101561003357600080fd5b5051600080546001600160a01b039092166001600160a01b0319909216919091179055610792806100656000396000f3fe6080604052600436106100435760003560e01c80630aea81881461004f57806372e94bf6146100ab578063785250da146100dc578063bb39a960146100f15761004a565b3661004a57005b600080fd5b34801561005b57600080fd5b506100926004803603606081101561007257600080fd5b506001600160a01b0381358116916020810135916040909101351661014e565b6040805192835260208301919091528051918290030190f35b3480156100b757600080fd5b506100c06101e8565b604080516001600160a01b039092168252519081900360200190f35b3480156100e857600080fd5b506100c06101ed565b61012b6004803603608081101561010757600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101fc565b604080516001600160a01b03909316835260208301919091528051918290030190f35b600080546040805163809a9e5560e01b81526001600160a01b03878116600483015285811660248301526044820187905282518594919091169263809a9e559260648082019391829003018186803b1580156101a957600080fd5b505afa1580156101bd573d6000803e3d6000fd5b505050506040513d60408110156101d357600080fd5b50805160209091015190969095509350505050565b600081565b6000546001600160a01b031681565b60008084610209876102dd565b101561021457600080fd5b836001600160a01b0316866001600160a01b0316141561023357600080fd5b60006001600160a01b038716156102a45760005461025c9088906001600160a01b03168861036e565b6001600160a01b038516156102885760006102798888888861047a565b1161028357600080fd5b61029f565b6000610295888887610514565b1161029f57600080fd5b6102bb565b60006102b18688876105a5565b116102bb57600080fd5b6102c4856102dd565b90506102d08582610637565b9396939550929350505050565b60006001600160a01b0382166102f4575047610369565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561033a57600080fd5b505afa15801561034e573d6000803e3d6000fd5b505050506040513d602081101561036457600080fd5b505190505b919050565b6001600160a01b03831615610475576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156103cc57600080fd5b505af11580156103e0573d6000803e3d6000fd5b505050506103ec610728565b6103f557600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561044c57600080fd5b505af1158015610460573d6000803e3d6000fd5b5050505061046c610728565b61047557600080fd5b505050565b6000805460408051637409e2eb60e01b81526001600160a01b0388811660048301526024820188905286811660448301526064820186905291519190921691637409e2eb91608480830192602092919082900301818787803b1580156104df57600080fd5b505af11580156104f3573d6000803e3d6000fd5b505050506040513d602081101561050957600080fd5b505195945050505050565b6000805460408051630eee887760e21b81526001600160a01b038781166004830152602482018790526044820186905291519190921691633bba21dc91606480830192602092919082900301818787803b15801561057157600080fd5b505af1158015610585573d6000803e3d6000fd5b505050506040513d602081101561059b57600080fd5b5051949350505050565b6000824710156105b457600080fd5b60005460408051633d15022b60e11b81526001600160a01b0387811660048301526024820186905291519190921691637a2a045691869160448082019260209290919082900301818588803b15801561060c57600080fd5b505af1158015610620573d6000803e3d6000fd5b50505050506040513d602081101561059b57600080fd5b6001600160a01b0382166106ad578047101561065257600080fd5b604051600090339083908381818185875af1925050503d8060008114610694576040519150601f19603f3d011682016040523d82523d6000602084013e610699565b606091505b50509050806106a757600080fd5b50610724565b6040805163a9059cbb60e01b81523360048201526024810183905290516001600160a01b0384169163a9059cbb91604480830192600092919082900301818387803b1580156106fb57600080fd5b505af115801561070f573d6000803e3d6000fd5b5050505061071b610728565b61072457600080fd5b5050565b6000803d801561073f576020811461074857610754565b60019150610754565b60206000803e60005191505b50151590509056fea2646970667358221220803e2ba22783063cdbdcffdbc7c7d94588197f30bde5ce5c650cc7569ee9d1ff64736f6c634300060c0033",
 }
 
+// KBNTradeABI is the input ABI used to generate the binding from.
+// Deprecated: Use KBNTradeMetaData.ABI instead.
+var KBNTradeABI = KBNTradeMetaData.ABI
+
+// Deprecated: Use KBNTradeMetaData.Sigs instead.
+// KBNTradeFuncSigs maps the 4-byte function signature to its string representation.
+var KBNTradeFuncSigs = KBNTradeMetaData.Sigs
+
 // KBNTradeBin is the compiled bytecode used for deploying new contracts.
-var KBNTradeBin = "0x608060405234801561001057600080fd5b506040516107f73803806107f78339818101604052602081101561003357600080fd5b5051600080546001600160a01b039092166001600160a01b0319909216919091179055610792806100656000396000f3fe6080604052600436106100435760003560e01c80630aea81881461004f57806372e94bf6146100ab578063785250da146100dc578063bb39a960146100f15761004a565b3661004a57005b600080fd5b34801561005b57600080fd5b506100926004803603606081101561007257600080fd5b506001600160a01b0381358116916020810135916040909101351661014e565b6040805192835260208301919091528051918290030190f35b3480156100b757600080fd5b506100c06101e8565b604080516001600160a01b039092168252519081900360200190f35b3480156100e857600080fd5b506100c06101ed565b61012b6004803603608081101561010757600080fd5b506001600160a01b03813581169160208101359160408201351690606001356101fc565b604080516001600160a01b03909316835260208301919091528051918290030190f35b600080546040805163809a9e5560e01b81526001600160a01b03878116600483015285811660248301526044820187905282518594919091169263809a9e559260648082019391829003018186803b1580156101a957600080fd5b505afa1580156101bd573d6000803e3d6000fd5b505050506040513d60408110156101d357600080fd5b50805160209091015190969095509350505050565b600081565b6000546001600160a01b031681565b60008084610209876102dd565b101561021457600080fd5b836001600160a01b0316866001600160a01b0316141561023357600080fd5b60006001600160a01b038716156102a45760005461025c9088906001600160a01b03168861036e565b6001600160a01b038516156102885760006102798888888861047a565b1161028357600080fd5b61029f565b6000610295888887610514565b1161029f57600080fd5b6102bb565b60006102b18688876105a5565b116102bb57600080fd5b6102c4856102dd565b90506102d08582610637565b9396939550929350505050565b60006001600160a01b0382166102f4575047610369565b604080516370a0823160e01b815230600482015290516001600160a01b038416916370a08231916024808301926020929190829003018186803b15801561033a57600080fd5b505afa15801561034e573d6000803e3d6000fd5b505050506040513d602081101561036457600080fd5b505190505b919050565b6001600160a01b03831615610475576040805163095ea7b360e01b81526001600160a01b03848116600483015260006024830181905292519086169263095ea7b3926044808201939182900301818387803b1580156103cc57600080fd5b505af11580156103e0573d6000803e3d6000fd5b505050506103ec610728565b6103f557600080fd5b826001600160a01b031663095ea7b383836040518363ffffffff1660e01b815260040180836001600160a01b0316815260200182815260200192505050600060405180830381600087803b15801561044c57600080fd5b505af1158015610460573d6000803e3d6000fd5b5050505061046c610728565b61047557600080fd5b505050565b6000805460408051637409e2eb60e01b81526001600160a01b0388811660048301526024820188905286811660448301526064820186905291519190921691637409e2eb91608480830192602092919082900301818787803b1580156104df57600080fd5b505af11580156104f3573d6000803e3d6000fd5b505050506040513d602081101561050957600080fd5b505195945050505050565b6000805460408051630eee887760e21b81526001600160a01b038781166004830152602482018790526044820186905291519190921691633bba21dc91606480830192602092919082900301818787803b15801561057157600080fd5b505af1158015610585573d6000803e3d6000fd5b505050506040513d602081101561059b57600080fd5b5051949350505050565b6000824710156105b457600080fd5b60005460408051633d15022b60e11b81526001600160a01b0387811660048301526024820186905291519190921691637a2a045691869160448082019260209290919082900301818588803b15801561060c57600080fd5b505af1158015610620573d6000803e3d6000fd5b50505050506040513d602081101561059b57600080fd5b6001600160a01b0382166106ad578047101561065257600080fd5b604051600090339083908381818185875af1925050503d8060008114610694576040519150601f19603f3d011682016040523d82523d6000602084013e610699565b606091505b50509050806106a757600080fd5b50610724565b6040805163a9059cbb60e01b81523360048201526024810183905290516001600160a01b0384169163a9059cbb91604480830192600092919082900301818387803b1580156106fb57600080fd5b505af115801561070f573d6000803e3d6000fd5b5050505061071b610728565b61072457600080fd5b5050565b6000803d801561073f576020811461074857610754565b60019150610754565b60206000803e60005191505b50151590509056fea26469706673582212206b10dd3c84675d44f68b944a8b1d5521d7ff0d97f70f3a374b676fcb66e5a33164736f6c634300060c0033"
+// Deprecated: Use KBNTradeMetaData.Bin instead.
+var KBNTradeBin = KBNTradeMetaData.Bin
 
 // DeployKBNTrade deploys a new Ethereum contract, binding an instance of KBNTrade to it.
 func DeployKBNTrade(auth *bind.TransactOpts, backend bind.ContractBackend, _kyberNetworkProxyContract common.Address) (common.Address, *types.Transaction, *KBNTrade, error) {
-	parsed, err := abi.JSON(strings.NewReader(KBNTradeABI))
+	parsed, err := KBNTradeMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(KBNTradeBin), backend, _kyberNetworkProxyContract)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(KBNTradeBin), backend, _kyberNetworkProxyContract)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
@@ -983,17 +1006,25 @@ func (_KBNTrade *KBNTradeTransactorSession) Receive() (*types.Transaction, error
 	return _KBNTrade.Contract.Receive(&_KBNTrade.TransactOpts)
 }
 
-// KyberNetworkABI is the input ABI used to generate the binding from.
-const KyberNetworkABI = "[{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"src\",\"type\":\"address\"},{\"internalType\":\"contractIERC20\",\"name\":\"dest\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"}],\"name\":\"getExpectedRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"expectedRate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"slippageRate\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"swapEtherToToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"swapTokenToEther\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"src\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcAmount\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"dest\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"swapTokenToToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"src\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcAmount\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"dest\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"destAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"maxDestAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"walletId\",\"type\":\"address\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}]"
-
-// KyberNetworkFuncSigs maps the 4-byte function signature to its string representation.
-var KyberNetworkFuncSigs = map[string]string{
-	"809a9e55": "getExpectedRate(address,address,uint256)",
-	"7a2a0456": "swapEtherToToken(address,uint256)",
-	"3bba21dc": "swapTokenToEther(address,uint256,uint256)",
-	"7409e2eb": "swapTokenToToken(address,uint256,address,uint256)",
-	"cb3c28c7": "trade(address,uint256,address,address,uint256,uint256,address)",
+// KyberNetworkMetaData contains all meta data concerning the KyberNetwork contract.
+var KyberNetworkMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"src\",\"type\":\"address\"},{\"internalType\":\"contractIERC20\",\"name\":\"dest\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcQty\",\"type\":\"uint256\"}],\"name\":\"getExpectedRate\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"expectedRate\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"slippageRate\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"swapEtherToToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"swapTokenToEther\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"src\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcAmount\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"dest\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"}],\"name\":\"swapTokenToToken\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"src\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"srcAmount\",\"type\":\"uint256\"},{\"internalType\":\"contractIERC20\",\"name\":\"dest\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"destAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"maxDestAmount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minConversionRate\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"walletId\",\"type\":\"address\"}],\"name\":\"trade\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	Sigs: map[string]string{
+		"809a9e55": "getExpectedRate(address,address,uint256)",
+		"7a2a0456": "swapEtherToToken(address,uint256)",
+		"3bba21dc": "swapTokenToEther(address,uint256,uint256)",
+		"7409e2eb": "swapTokenToToken(address,uint256,address,uint256)",
+		"cb3c28c7": "trade(address,uint256,address,address,uint256,uint256,address)",
+	},
 }
+
+// KyberNetworkABI is the input ABI used to generate the binding from.
+// Deprecated: Use KyberNetworkMetaData.ABI instead.
+var KyberNetworkABI = KyberNetworkMetaData.ABI
+
+// Deprecated: Use KyberNetworkMetaData.Sigs instead.
+// KyberNetworkFuncSigs maps the 4-byte function signature to its string representation.
+var KyberNetworkFuncSigs = KyberNetworkMetaData.Sigs
 
 // KyberNetwork is an auto generated Go binding around an Ethereum contract.
 type KyberNetwork struct {
@@ -1266,25 +1297,38 @@ func (_KyberNetwork *KyberNetworkTransactorSession) Trade(src common.Address, sr
 	return _KyberNetwork.Contract.Trade(&_KyberNetwork.TransactOpts, src, srcAmount, dest, destAddress, maxDestAmount, minConversionRate, walletId)
 }
 
-// TradeUtilsABI is the input ABI used to generate the binding from.
-const TradeUtilsABI = "[{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
-
-// TradeUtilsFuncSigs maps the 4-byte function signature to its string representation.
-var TradeUtilsFuncSigs = map[string]string{
-	"72e94bf6": "ETH_CONTRACT_ADDRESS()",
+// TradeUtilsMetaData contains all meta data concerning the TradeUtils contract.
+var TradeUtilsMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[],\"name\":\"ETH_CONTRACT_ADDRESS\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	Sigs: map[string]string{
+		"72e94bf6": "ETH_CONTRACT_ADDRESS()",
+	},
+	Bin: "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220df92cb25fb3dd755d604fe0b1fcc21ffb1d74d2628b5928d6af8e7d39626bb1564736f6c634300060c0033",
 }
 
+// TradeUtilsABI is the input ABI used to generate the binding from.
+// Deprecated: Use TradeUtilsMetaData.ABI instead.
+var TradeUtilsABI = TradeUtilsMetaData.ABI
+
+// Deprecated: Use TradeUtilsMetaData.Sigs instead.
+// TradeUtilsFuncSigs maps the 4-byte function signature to its string representation.
+var TradeUtilsFuncSigs = TradeUtilsMetaData.Sigs
+
 // TradeUtilsBin is the compiled bytecode used for deploying new contracts.
-var TradeUtilsBin = "0x6080604052348015600f57600080fd5b50608a8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806372e94bf614602d575b600080fd5b6033604f565b604080516001600160a01b039092168252519081900360200190f35b60008156fea2646970667358221220b7777546a30e2b201149c5afb6d1db6bd399fcccbc04741c03e2ec6057762ba564736f6c634300060c0033"
+// Deprecated: Use TradeUtilsMetaData.Bin instead.
+var TradeUtilsBin = TradeUtilsMetaData.Bin
 
 // DeployTradeUtils deploys a new Ethereum contract, binding an instance of TradeUtils to it.
 func DeployTradeUtils(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *TradeUtils, error) {
-	parsed, err := abi.JSON(strings.NewReader(TradeUtilsABI))
+	parsed, err := TradeUtilsMetaData.GetAbi()
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
 
-	address, tx, contract, err := bind.DeployContract(auth, parsed, common.FromHex(TradeUtilsBin), backend)
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(TradeUtilsBin), backend)
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
