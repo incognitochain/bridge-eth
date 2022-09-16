@@ -1,6 +1,7 @@
 const { deployments, ethers } = require('hardhat');
 const { getInstance, confirm, getCodeSlot } = require('../scripts/utils');
 const BN = ethers.BigNumber;
+const latestStorageLayoutVersion = 2;
 
 module.exports = async({
     getNamedAccounts,
@@ -39,11 +40,21 @@ module.exports = async({
         const vaultFactory = await ethers.getContractFactory(vaultContractName);
         const vaultImpl = await deployments.get(vaultContractName);
         const upgradeData = vaultFactory.interface.encodeFunctionData('upgradeVaultStorage', [regAddr, ex.address]);
-
-        const tx = await proxy.connect(vaultAdminSigner).upgradeToAndCall(vaultImpl.address, upgradeData);
-        log('upgraded existing proxy to new implementation with params', vaultImpl.address, vaultAdminSigner.address, regAddr, ex.address);
-        const { gasUsed } = await tx.wait();
-        log('gas used for upgrade:', gasUsed.toString());
+        const v = await vaultFactory.attach(proxy.address);
+        let slver = BN.from(0); 
+        try {
+            slver = await v.storageLayoutVersion();
+        } catch (e){ console.log('...vault has no storage layout version, use zero') } // likely upgrading from an old version
+        console.log('storage layout version', slver.toString());
+        if (slver.eq(latestStorageLayoutVersion)) {
+            console.log('Upgrade without call');
+            const tx = await proxy.connect(vaultAdminSigner).upgradeTo(vaultImpl.address);
+        } else {
+            const tx = await proxy.connect(vaultAdminSigner).upgradeToAndCall(vaultImpl.address, upgradeData);
+            log('upgraded existing proxy to new implementation with params', vaultImpl.address, vaultAdminSigner.address, regAddr, ex.address);
+            const { gasUsed } = await tx.wait();
+            log('gas used for upgrade:', gasUsed.toString());
+        }
     } else {
         throw `Unable to upgrade. Your signer ${vaultAdminSigner.address} does not match Vault Admin`;
     }
