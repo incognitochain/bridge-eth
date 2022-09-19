@@ -144,7 +144,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
+	tradingSuite.ETHPrivKeyStr = "1193a43543fc11e37daa1a026ae8fae69d84c5dd1f3f933047ff2588778c5cca"
 	tradingSuite.ETHOwnerAddrStr = "D7d93b7fa42b60b6076f3017fCA99b69257A912D"
 	tradingSuite.ETHRegulatorPrivKeyStr = "98452cb9c013387c2f5806417fe198a0de014594678e2f9d3223d7e7e921b04d"
 

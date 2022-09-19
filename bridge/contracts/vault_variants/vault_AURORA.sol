@@ -342,7 +342,7 @@ contract VaultAURORA {
         {
             (bdata.token, bdata.to, bdata.amount, bdata.itx, opt.redepositToken, opt.withdrawAddress) = abi.decode(inst[3:195], (address, address, uint256, bytes32, address, address));
         }
-    
+
         opt.redepositIncAddress = bytes(inst[195:296]);
         return (bdata, opt, bytes(inst[296:]));
     }
@@ -694,7 +694,7 @@ contract VaultAURORA {
     ) external nonReentrant {
         verifyRegulator(txId, regulatorSig);
         // verify owner signs data
-        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.BSC_REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
+        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.AURORA_REQUEST_WITHDRAW_SIGNATURE, token, timestamp, amount), incognitoAddress), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -735,7 +735,7 @@ contract VaultAURORA {
         bytes calldata signData
     ) external payable nonReentrant {
         //verify ower signs data from input
-        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.BSC_EXECUTE_SIGNATURE, token, timestamp, amount), recipientToken, exchangeAddress, callData), signData);
+        address verifier = verifySignData(abi.encode(newPreSignData(Prefix.AURORA_EXECUTE_SIGNATURE, token, timestamp, amount), recipientToken, exchangeAddress, callData), signData);
 
         // migrate from preVault
         migrateBalance(verifier, token);
@@ -917,7 +917,7 @@ contract VaultAURORA {
         require(Address.isContract(token), "getDecimals non-contract");
         IERC20 erc20 = IERC20(token);
         try erc20.decimals() returns (uint256 d) {
-            return uint8(d);    
+            return uint8(d);
         } catch {
             revert("get ERC20 decimal failed");
         }
