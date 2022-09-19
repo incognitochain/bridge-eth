@@ -8,7 +8,7 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { SafeMath, Counters, Incognito, Withdrawable } from "../vault.sol";
 import "../trade_utils.sol";
 
-contract VaultBSC {
+contract VaultAURORA {
     using SafeMath for uint;
     using Counters for Counters.Counter;
     /**

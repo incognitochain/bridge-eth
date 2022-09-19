@@ -88,6 +88,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	executor := common.HexToAddress(Executor)
 	fmt.Println("Admin address:", admin.Hex())
 	fmt.Println("Regulator address:", regulator.Hex())
+	fmt.Println("Rxecutor address:", executor.Hex())
 
 	// Genesis committee
 	// LOCAL
