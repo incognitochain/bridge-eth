@@ -171,16 +171,31 @@ func TestDeployKBNTrade(t *testing.T) {
 	fmt.Printf("addr: %s\n", kbnTradeAddr.Hex())
 }
 
-// func TestPauseVault(t *testing.T) {
-// 	privKey, c := getVault(t)
+func TestPauseVault(t *testing.T) {
+	privKey, client, chainID, err := connect()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	// Pause vault
+	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(chainID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("Vault address: %s\n", VaultAddress)
 
-// 	// Pause vault
-// 	auth := bind.NewKeyedTransactor(privKey)
-// 	_, err := c.Pause(auth)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(VaultAddress), client)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	auth.GasPrice = big.NewInt(5000000000) // 5 gwei
+	tx, err := c.Pause(auth)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("Paused vault on chain id %d with tx: %s\n", chainID, tx.Hash().String())
+}
 
 // func TestUnpauseVault(t *testing.T) {
 // 	privKey, c := getVault(t)
