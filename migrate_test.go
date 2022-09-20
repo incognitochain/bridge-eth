@@ -189,7 +189,6 @@ func TestPauseVault(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	auth.GasPrice = big.NewInt(5000000000) // 5 gwei
 	tx, err := c.Pause(auth)
 	if err != nil {
 		t.Fatal(err)
