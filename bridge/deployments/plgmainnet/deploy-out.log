@@ -1,0 +1,9 @@
+reusing "IncognitoProxy" at 0xd190620159d82731f9951326bafdc873a16cb2b1
+Using trade router addresses { UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45' }
+executor points to 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45
+deploying "UniswapProxy" (tx: 0xf3d309f555ea3ecfa020bf4773f66ce5e5354dc9ef7b9c4309cbab7e95f24201)...: deployed at 0xCC8c88e9Dae72fa07aC077933a2E73d146FECdf0 with 1912039 gas
+Deployed some testing contracts for localhost network
+Deploy: VaultPLG
+deploying "VaultPLG" (tx: 0x486696ea2d575b08b916eb1c7c7f43ca1946fb69147b8ccf8a784ec58141ee6c)...: deployed at 0x4f7903Ae97f1aD3665093417007d06e83b43C00C with 4526927 gas
+reusing "TransparentUpgradeableProxy" at 0x43D037A562099A4C2c95b1E2120cc43054450629
+DEV : Incognito nodes should use 0x43D037A562099A4C2c95b1E2120cc43054450629 as EthVaultContract

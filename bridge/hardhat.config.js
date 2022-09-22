@@ -282,11 +282,15 @@ const networks = {
         deployed: {
             // make sure this matches vaultAdminPrivateKey
             // previousVaultAdmin: '0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040',
-            kyber: '0x9AAb3f75489902f3a48495025729a0AF77d4b11e', // previously '0x818E6FECD516Ecc3849DAf6845e3EC868087B755',
-            kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-            uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+            // kyber: '0x9AAb3f75489902f3a48495025729a0AF77d4b11e', // previously '0x818E6FECD516Ecc3849DAf6845e3EC868087B755',
+            // kyberEtherAddress: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+            // uniswap: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+            routers: {
+                UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'
+            },
         },
         committees: mainnetCommittees,
+        executorContractName: 'UniswapProxy',
     },
     plgmainnet: {
         chainId: 137,

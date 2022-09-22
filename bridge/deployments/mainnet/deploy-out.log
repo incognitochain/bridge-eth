@@ -268,3 +268,16 @@ Yielding Admin role of both vaults to 0x037ac7fFfC1C52Cf6351e33A77eDBdd14CE35040
 Gas used: 31192
 0x68d8ad29c452f0c99697323b37b1007071e6eb9b2ce037cfcc954313bcd5538a => waiting for 2 confirmations
 Gas used: 47560
+
+*** Sep 2022 deployment ***
+reusing "IncognitoProxy" at 0xfAb5ab70500d1fab1e736829b4bf85e8bAC5fff2
+Using trade router addresses {}
+Deployed some testing contracts for localhost network
+Deploy: Vault
+deploying "Vault" (tx: 0xca2c0764a035b78f48ea25d56722e2e7ecc9e6595c0e96fb47611ea2b66dd665)...: deployed at 0x4f7903Ae97f1aD3665093417007d06e83b43C00C with 4526723 gas
+...
+reusing "IncognitoProxy" at 0xfAb5ab70500d1fab1e736829b4bf85e8bAC5fff2
+Using trade router addresses { UniswapProxy: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45' }
+executor points to 0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45
+deploying "UniswapProxy" (tx: 0x77fb8526a6faea5b7e52bc61c2ce1ba598024afd7790fb032a405afd877a8565)...: deployed at 0xe38e54B2d6B1FCdfaAe8B674bF36ca62429fdBDe with 1912039 gas
+Deployed some testing contracts for localhost network

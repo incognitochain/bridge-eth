@@ -1,0 +1,9 @@
+reusing "IncognitoProxy" at 0xd190620159d82731f9951326bafdc873a16cb2b1
+Using trade router addresses { PancakeProxy: '0x10ED43C718714eb63d5aA57B78B54704E256024E' }
+executor points to 0x10ED43C718714eb63d5aA57B78B54704E256024E
+deploying "PancakeProxy" (tx: 0x934ff65dd48b9a9ca27af50fef856ee555126e5a186ecf9d773f293e7528084b)...: deployed at 0x95Cd8898917c7216Da0517aAB6A115d7A7b6CA90 with 1597979 gas
+Deployed some testing contracts for localhost network
+Deploy: VaultBSC
+deploying "VaultBSC" (tx: 0x658b86446b321e93a5bab1947582eaa69675cacd081ac7e759aa8443b12020ea)...: deployed at 0xFe24f30d6683410d6daA5B5a950d518a6c58A6a1 with 4526915 gas
+reusing "TransparentUpgradeableProxy" at 0x43D037A562099A4C2c95b1E2120cc43054450629
+DEV : Incognito nodes should use 0x43D037A562099A4C2c95b1E2120cc43054450629 as EthVaultContract
