@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-waffle");
 // require("@nomiclabs/hardhat-web3");
 require("hardhat-deploy");
 // require("hardhat-deploy-ethers");
+require("@nomiclabs/hardhat-etherscan");
 
 const fs = require('fs');
 
@@ -176,7 +177,14 @@ const networks = {
             providers: devProviders,
             chainId: 31337,
             numShards: 2,
-            deployed: {},
+            deployed: {
+                routers: {
+                    UniswapV2Trade: 1,
+                    UniswapProxy: 1,
+                    KBNTrade: 1,
+                }
+            },
+            executorContractName: 'KBNTrade'
         }, process.env.FORK ? forkcfg[process.env.FORK] : {},
         process.env.FORK ? {
             accounts: [{
@@ -203,7 +211,8 @@ const networks = {
                     UniswapProxy: 1,
                     KBNTrade: 1,
                 }
-            }
+            },
+            executorContractName: 'KBNTrade'
         },
         // process.env.FORK ? forkcfg[process.env.FORK] : {}
     ),
@@ -380,6 +389,22 @@ module.exports = {
         timeout: 12000000,
     },
     networks,
+    etherscan: {
+        apiKey: {
+            mainnet: '<key>',
+            plgmainnet: '<key>'
+        },
+        customChains: [
+            {
+                network: "plgmainnet",
+                chainId: 137,
+                urls: {
+                    apiURL: "https://api.polygonscan.com/api",
+                    browserURL: "https://polygonscan.com"
+                }
+            }
+        ]
+    },
     namedAccounts: {
         deployer: {
             default: 0

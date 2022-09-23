@@ -4,9 +4,9 @@ export.sh
 genesisKey.hex
 */build/contracts/*
 */node_modules/
-.*
 .DS_Store
 cache
 artifacts
 */scripts/src/*
 node_modules
+solcInputs
