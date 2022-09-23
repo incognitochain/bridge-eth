@@ -16,4 +16,4 @@ popd
 FORK=eth npx hardhat node --tags fork,vault,upgrade --no-reset --hostname 0.0.0.0 --port 8545 
 
 # manually check vault state after deploying on fork mainnet
-# hh list-contracts --network localhost; hh show-committees --network localhost; hh query-var --name regulator --network localhost
+# hh list-contracts --network localhost; hh show-committees --network localhost; hh query-var --name regulator --network localhost; hh query-var --name storageLayoutVersion --network localhost; hh query-var --name executor --network localhost

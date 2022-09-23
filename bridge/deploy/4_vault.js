@@ -31,7 +31,7 @@ module.exports = async({
         previousVault = {address: '0x0000000000000000000000000000000000000000'};
     }
 
-    const regAddr = '0xdbeCBd9F55922e6487b24B4Fed572D5BF4982562'; // regulator address TBD
+    const regAddr = '0x86a879cF735B0F462F4659bFAADD91F84Ed61aB3'; // mainnet regulator address
     const executorContractName = hre.networkCfg().executorContractName || 'UniswapV2Trade';
     const ex = await deployments.get(executorContractName);
     const initializeData = vaultImpl.interface.encodeFunctionData('initialize', [previousVault.address, regAddr, ex.address]);

@@ -27,7 +27,7 @@ module.exports = async({
     const getAdmin = (pVault) => {
         return getCodeSlot(pVault.address, '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103');
     }
-    const regAddr = '0xdbeCBd9F55922e6487b24B4Fed572D5BF4982562'; // regulator address TBD
+    const regAddr = '0x86a879cF735B0F462F4659bFAADD91F84Ed61aB3'; // mainnet regulator address
     const executorContractName = hre.networkCfg().executorContractName || 'UniswapV2Trade';
     const ex = await deployments.get(executorContractName);
     const proxy = await getInstance('TransparentUpgradeableProxy');
