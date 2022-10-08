@@ -152,8 +152,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
-	tradingSuite.AVAXHost = "https://api.avax-test.network/ext/C/rpc"
-	tradingSuite.AURORAHost = "https://testnet.aurora.dev"
+	tradingSuite.AVAXHost = "https://api.avax.network/ext/bc/C/rpc" // mainnet
+	tradingSuite.AURORAHost = "https://mainnet.aurora.dev"          // mainnet
 
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"

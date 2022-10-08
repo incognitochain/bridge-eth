@@ -98,7 +98,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// TESTNET2
 	beaconComm, bridgeComm, err := convertCommittees(
-		localBeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
+		mainnetBeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
