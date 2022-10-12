@@ -144,7 +144,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.DAIAddressStr = "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa"
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
-	tradingSuite.ETHPrivKeyStr = "aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f"
+	tradingSuite.ETHPrivKeyStr = "1193a43543fc11e37daa1a026ae8fae69d84c5dd1f3f933047ff2588778c5cca"
 	tradingSuite.ETHOwnerAddrStr = "D7d93b7fa42b60b6076f3017fCA99b69257A912D"
 	tradingSuite.ETHRegulatorPrivKeyStr = "98452cb9c013387c2f5806417fe198a0de014594678e2f9d3223d7e7e921b04d"
 
@@ -152,8 +152,8 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.BSCHost = "https://data-seed-prebsc-1-s1.binance.org:8545"
 	tradingSuite.PLGHost = "https://polygon-mumbai.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
 	tradingSuite.FTMHost = "https://rpc.testnet.fantom.network"
-	tradingSuite.AVAXHost = "https://api.avax-test.network/ext/C/rpc"
-	tradingSuite.AURORAHost = "https://testnet.aurora.dev"
+	tradingSuite.AVAXHost = "https://api.avax.network/ext/bc/C/rpc" // mainnet
+	tradingSuite.AURORAHost = "https://mainnet.aurora.dev"          // mainnet
 
 	tradingSuite.IncBridgeHost = "http://127.0.0.1:9338"
 	tradingSuite.IncRPCHost = "http://127.0.0.1:9334"
