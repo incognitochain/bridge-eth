@@ -9,6 +9,15 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelo
 
 contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable, GovernorTimelockControlUpgradeable {
 
+    // storage layout
+    address private tempAddress;
+    mapping(bytes32 => bool) public sigDataUsed;
+
+    modifier senderWithSig() {
+        _;
+        tempAddress = address(0x0);
+    }
+
     function initialize(IVotesUpgradeable _token, TimelockControllerUpgradeable _timelock) external initializer {
         __Governor_init("IncognitoDAO");
         __GovernorVotes_init(_token);
@@ -88,4 +97,31 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     {
         return super.supportsInterface(interfaceId);
     }
+
+    function _msgSender() internal view override returns (address) {
+        return tempAddress != address(0x0) ? tempAddress : msg.sender;
+    }
+
+    //    function castVoteBySig(
+    //        uint256 proposalId,
+    //        uint8 support,
+    //        uint8 v,
+    //        bytes32 r,
+    //        bytes32 s
+    //    ) public virtual override returns (uint256) {
+    //        address voter = ECDSAUpgradeable.recover(
+    //            _hashTypedDataV4(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId, support))),
+    //            v,
+    //            r,
+    //            s
+    //        );
+    //        return _castVote(proposalId, voter, support, "");
+    //    }
+
+    /// @dev: pdapp handle with user signature
+
+    // todo: add function propose by sig
+
+    // todo: add function cancel by sig
+
 }
