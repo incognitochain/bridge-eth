@@ -9,6 +9,8 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelo
 
 contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable, GovernorTimelockControlUpgradeable {
 
+    bytes32 public constant PROPOSAL_HASH = keccak256("proposal");
+
     // storage layout
     address private tempAddress;
     mapping(bytes32 => bool) public sigDataUsed;
@@ -102,26 +104,46 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
         return tempAddress != address(0x0) ? tempAddress : msg.sender;
     }
 
-    //    function castVoteBySig(
-    //        uint256 proposalId,
-    //        uint8 support,
-    //        uint8 v,
-    //        bytes32 r,
-    //        bytes32 s
-    //    ) public virtual override returns (uint256) {
-    //        address voter = ECDSAUpgradeable.recover(
-    //            _hashTypedDataV4(keccak256(abi.encode(BALLOT_TYPEHASH, proposalId, support))),
-    //            v,
-    //            r,
-    //            s
-    //        );
-    //        return _castVote(proposalId, voter, support, "");
-    //    }
+    // pdapp handle with user signature
 
-    /// @dev: pdapp handle with user signature
+    function proposeBySigBySig(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    )
+    public
+    senderWithSig
+    returns (uint256)
+    {
+        bytes32 signData = _hashTypedDataV4(keccak256(abi.encode(PROPOSAL_HASH, targets, values, calldatas, description)));
+        require(!sigDataUsed[signData], "Governance: signature used");
+        sigDataUsed[signData] = true;
+        tempAddress = ECDSAUpgradeable.recover(
+            signData,
+            v,
+            r,
+            s
+        );
+        return super.propose(targets, values, calldatas, description);
+    }
 
-    // todo: add function propose by sig
+    function cancelBySig(
+        uint256 proposalId,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public senderWithSig {
+        tempAddress = ECDSAUpgradeable.recover(
+            _hashTypedDataV4(keccak256(abi.encode(proposalId))),
+            v,
+            r,
+            s
+        );
 
-    // todo: add function cancel by sig
-
+        cancel(proposalId);
+    }
 }
