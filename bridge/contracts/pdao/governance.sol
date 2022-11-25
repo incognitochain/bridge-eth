@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/compatibility/GovernorCompatibilityBravoUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorTimelockControlUpgradeable.sol";
 
-contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable, GovernorTimelockControlUpgradeable {
+contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable, GovernorVotesUpgradeable, GovernorVotesQuorumFractionUpgradeable {
 
     bytes32 public constant PROPOSAL_HASH = keccak256("proposal");
 
@@ -20,11 +19,10 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
         tempAddress = address(0x0);
     }
 
-    function initialize(IVotesUpgradeable _token, TimelockControllerUpgradeable _timelock) external initializer {
+    function initialize(IVotesUpgradeable _token) external initializer {
         __Governor_init("IncognitoDAO");
         __GovernorVotes_init(_token);
-        __GovernorVotesQuorumFraction_init(100);
-        __GovernorTimelockControl_init(_timelock);
+        __GovernorVotesQuorumFraction_init(50);
     }
 
     function votingDelay() public pure override returns (uint256) {
@@ -36,7 +34,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     }
 
     function proposalThreshold() public pure override returns (uint256) {
-        return 0;
+        return 1e8;
     }
 
     // The functions below are overrides required by Solidity.
@@ -53,7 +51,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     function state(uint256 proposalId)
     public
     view
-    override(GovernorUpgradeable, IGovernorUpgradeable, GovernorTimelockControlUpgradeable)
+    override(GovernorUpgradeable, IGovernorUpgradeable)
     returns (ProposalState)
     {
         return super.state(proposalId);
@@ -61,7 +59,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
 
     function propose(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, string memory description)
     public
-    override(GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable, IGovernorUpgradeable)
+    override(GovernorUpgradeable, GovernorCompatibilityBravoUpgradeable)
     returns (uint256)
     {
         return super.propose(targets, values, calldatas, description);
@@ -69,14 +67,14 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
 
     function _execute(uint256 proposalId, address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
     internal
-    override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+    override(GovernorUpgradeable)
     {
         super._execute(proposalId, targets, values, calldatas, descriptionHash);
     }
 
     function _cancel(address[] memory targets, uint256[] memory values, bytes[] memory calldatas, bytes32 descriptionHash)
     internal
-    override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+    override(GovernorUpgradeable)
     returns (uint256)
     {
         return super._cancel(targets, values, calldatas, descriptionHash);
@@ -85,7 +83,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     function _executor()
     internal
     view
-    override(GovernorUpgradeable, GovernorTimelockControlUpgradeable)
+    override(GovernorUpgradeable)
     returns (address)
     {
         return super._executor();
@@ -94,7 +92,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     function supportsInterface(bytes4 interfaceId)
     public
     view
-    override(GovernorUpgradeable, IERC165Upgradeable, GovernorTimelockControlUpgradeable)
+    override(GovernorUpgradeable, IERC165Upgradeable)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -105,8 +103,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     }
 
     // pdapp handle with user signature
-
-    function proposeBySigBySig(
+    function proposeBySig(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -145,5 +142,27 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
         );
 
         cancel(proposalId);
+    }
+
+    // override unused functions
+    function proposalEta(uint256) public pure override returns (uint256) {
+        return 0;
+    }
+
+    function timelock() public pure override returns (address) {
+        return address(0x0);
+    }
+
+    function queue(
+        address[] memory,
+        uint256[] memory,
+        bytes[] memory,
+        bytes32
+    ) public pure override returns (uint256) {
+        return 0;
+    }
+
+    function getDataSign(bytes32 _input) external view returns (bytes32) {
+        return _hashTypedDataV4(_input);
     }
 }

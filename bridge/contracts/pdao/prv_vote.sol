@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesCompUpgradeable.sol";
@@ -26,7 +27,7 @@ interface Incognito {
 contract PrvVoting is ERC20VotesCompUpgradeable {
 
     IERC20Upgradeable constant private OLD_PRV = IERC20Upgradeable(address(0x0));
-    uint256 constant private BEACON_HEIGHT = 10000; // todo: update on testnet/mainnet
+    uint256 constant private BEACON_HEIGHT = 0; // todo: update on testnet/mainnet
     uint constant private MINT_METADATA = 170;
 
     /**
@@ -61,7 +62,6 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
     event Migrate(uint256 amount);
 
     function initialize(string memory name_, string memory symbol_) external initializer {
-        __ERC20VotesComp_init();
         __ERC20_init(name_, symbol_);
     }
 
@@ -220,5 +220,17 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         _mint(_msgSender(), amount);
 
         emit Migrate(amount);
+    }
+
+    /**
+     * @dev Get the address `account` is currently delegating to. By default will be itself.
+     */
+    function delegates(address account) public view override returns (address) {
+        address temp = super.delegates(account);
+        return temp == address(0) ? account : temp;
+    }
+
+    function decimals() public view override returns (uint8) {
+        return 9;
     }
 }
