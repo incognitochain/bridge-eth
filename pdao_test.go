@@ -25,16 +25,17 @@ import (
 // // functionality from testify - including assertion methods.
 type PDaoTestSuite struct {
 	suite.Suite
-	p              *Platform
-	c              *committees
-	v              *vault.Vault
-	governance     *governance.Governance
-	governanceAddr common.Address
-	prvvote        *prvvote.Prvvote
-	prvvoteAddr    common.Address
-	withdrawer     common.Address
-	auth           *bind.TransactOpts
-	EtherAddress   common.Address
+	p                *Platform
+	c                *committees
+	v                *vault.Vault
+	governance       *governance.Governance
+	governanceHelper *governance.GovernanceHelper
+	governanceAddr   common.Address
+	prvvote          *prvvote.Prvvote
+	prvvoteAddr      common.Address
+	withdrawer       common.Address
+	auth             *bind.TransactOpts
+	EtherAddress     common.Address
 }
 
 // Make sure that VariableThatShouldStartAtFive is set to five
@@ -50,6 +51,12 @@ func (v2 *PDaoTestSuite) SetupSuite() {
 	//err = exec.Command("/bin/bash", "-c",
 	//	"abigen --abi bridge/governance/IncognitoDAO.abi --bin bridge/governance/IncognitoDAO.bin --out bridge/governance/governance.go --pkg governance").Run()
 	//require.Equal(v2.T(), nil, err)
+	//err = exec.Command("/bin/bash", "-c",
+	//	"solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --optimize --overwrite bridge/contracts/pdao/governanceHelper.sol -o bridge/governance").Run()
+	//require.Equal(v2.T(), nil, err)
+	//err = exec.Command("/bin/bash", "-c",
+	//	"abigen --abi bridge/governance/GovernanceHelper.abi --bin bridge/governance/GovernanceHelper.bin --out bridge/governance/governanceHelper.go --pkg governanceHelper").Run()
+	require.Equal(v2.T(), nil, err)
 	err = exec.Command("/bin/bash", "-c", "solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --overwrite bridge/contracts/pdao/prv_vote.sol -o bridge/prvvote").Run()
 	require.Equal(v2.T(), nil, err)
 	err = exec.Command("/bin/bash", "-c", "abigen --abi bridge/prvvote/PrvVoting.abi --bin bridge/prvvote/PrvVoting.bin --out bridge/prvvote/prvvote.go --pkg prvvote").Run()
@@ -60,6 +67,12 @@ func (v2 *PDaoTestSuite) SetupSuite() {
 	v2.p = p
 	v2.c = c
 	require.Equal(v2.T(), nil, err)
+
+	// deploy governance helper
+	_, _, gHelper, err := governance.DeployGovernanceHelper(auth2, v2.p.sim)
+	require.Equal(v2.T(), nil, err)
+	v2.governanceHelper = gHelper
+	v2.p.sim.Commit()
 
 	// deploy prv vote
 	var prvVote common.Address
@@ -138,7 +151,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	require.Equal(v2.T(), true, ok)
 
 	// transfer native token to governance
-	gr := governance.GovernanceRaw{v2.governance}
+	gr := governance.GovernanceRaw{Contract: v2.governance}
 	auth2.Value = n
 	_, err = gr.Transfer(auth2)
 	require.Equal(v2.T(), nil, err)
@@ -146,26 +159,32 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 
 	testAccount := newAccount()
 	// case fail cause not enough PRV token to create proposal
-	_, err = v2.governance.Propose(auth, []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e10)}, [][]byte{}, "move funds")
+	_, err = v2.governance.Propose(auth, []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e10)}, [][]byte{{0x0}}, "move funds")
 	require.NotEqual(v2.T(), nil, err)
 
 	// auth2 create new proposal
-	_, err = v2.governance.Propose(auth2, []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e11)}, [][]byte{}, "move funds")
-	require.NotEqual(v2.T(), nil, err)
+	_, err = v2.governance.Propose(auth2, []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e11)}, [][]byte{{0x0}}, "move funds")
+	require.Equal(v2.T(), nil, err)
 	GenNewBlocks(v2.p.sim, 1)
 
 	// auth2 create new proposal by signature
-	governanceABI, _ := abi.JSON(strings.NewReader(governance.GovernanceMetaData.ABI))
-	domainHash, _ := v2.governance.PROPOSALHASH(nil)
-	proposalInput, _ := governanceABI.Pack("propose", []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e11)}, [][]byte{}, "move funds")
-	signData, _ := v2.governance.GetDataSign(nil, toByte32(rawsha3(append(domainHash[:], proposalInput[4:]...))))
+	testAccount2 := newAccount()
+	propEncode, _ := v2.governanceHelper.BuildSignProposalEncodeAbi(
+		nil,
+		[]common.Address{testAccount2.Address},
+		[]*big.Int{big.NewInt(1e11)},
+		[][]byte{{0x0}},
+		"move funds",
+	)
+	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
+	require.Equal(v2.T(), nil, err)
 	signBytes, err := crypto.Sign(signData[:], genesisAcc2.PrivateKey)
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.governance.ProposeBySig(
 		auth2,
-		[]common.Address{testAccount.Address},
+		[]common.Address{testAccount2.Address},
 		[]*big.Int{big.NewInt(1e11)},
-		[][]byte{},
+		[][]byte{{0x0}},
 		"move funds",
 		signBytes[64]+27,
 		toByte32(signBytes[:32]),
@@ -173,6 +192,16 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	)
 	require.Equal(v2.T(), nil, err)
 	GenNewBlocks(v2.p.sim, 1)
+
+	// cancel proposal 1 by signature
+
+	// vote proposal 2 by signature
+
+	// burn before snapshot day can vote
+
+	// burn after snapshot day can not vote
+
+	// execute proposal 2
 }
 
 func GenNewBlocks(s *backends.SimulatedBackend, n int) {
