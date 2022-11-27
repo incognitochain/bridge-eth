@@ -10,6 +10,7 @@ contract GovernanceHelper is EIP712Upgradeable {
         __EIP712_init("IncognitoDAO", "1");
     }
 
+    bytes32 public constant BALLOT_TYPEHASH = keccak256("Ballot(uint256 proposalId,uint8 support)");
     bytes32 public constant PROPOSAL_HASH = keccak256("proposal");
 
     function _buildSignProposal(
@@ -30,5 +31,13 @@ contract GovernanceHelper is EIP712Upgradeable {
     ) pure public returns (bytes memory) {
         // do nothing
         return abi.encode(PROPOSAL_HASH, targets, values, calldatas, description);
+    }
+
+    function _buildSignVoteEncodeAbi(
+        uint256 proposalId,
+        uint8 support
+    ) pure public returns (bytes memory) {
+        // do nothing
+        return abi.encode(BALLOT_TYPEHASH, proposalId, support);
     }
 }

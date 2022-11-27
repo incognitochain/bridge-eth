@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
 	ec "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/bridge-eth/bridge/governance"
 	"github.com/incognitochain/bridge-eth/bridge/prveth"
@@ -20,6 +21,8 @@ import (
 	"strings"
 	"testing"
 )
+
+const NEW_PROP_TOPIC = "0x7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0"
 
 // // Define the suite, and absorb the built-in basic suite
 // // functionality from testify - including assertion methods.
@@ -163,41 +166,44 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	require.NotEqual(v2.T(), nil, err)
 
 	// auth2 create new proposal
-	_, err = v2.governance.Propose(auth2, []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e11)}, [][]byte{{0x0}}, "move funds")
+	tx, err := v2.governance.Propose(auth2, []common.Address{testAccount.Address}, []*big.Int{big.NewInt(1e11)}, [][]byte{{0x0}}, "move funds")
 	require.Equal(v2.T(), nil, err)
 	GenNewBlocks(v2.p.sim, 1)
+	propId1 := v2.extractPropIdFromTx(tx)
 
 	// auth2 create new proposal by signature
 	testAccount2 := newAccount()
-	propEncode, _ := v2.governanceHelper.BuildSignProposalEncodeAbi(
-		nil,
+	v2.extractPropIdFromTx(v2.createProposalBySign(
+		genesisAcc2,
 		[]common.Address{testAccount2.Address},
 		[]*big.Int{big.NewInt(1e11)},
 		[][]byte{{0x0}},
 		"move funds",
-	)
-	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
-	require.Equal(v2.T(), nil, err)
-	signBytes, err := crypto.Sign(signData[:], genesisAcc2.PrivateKey)
-	require.Equal(v2.T(), nil, err)
-	_, err = v2.governance.ProposeBySig(
-		auth2,
+		false,
+	))
+
+	// sign with account 1
+	v2.createProposalBySign(
+		genesisAcc,
 		[]common.Address{testAccount2.Address},
-		[]*big.Int{big.NewInt(1e11)},
+		[]*big.Int{big.NewInt(1e10)},
 		[][]byte{{0x0}},
 		"move funds",
-		signBytes[64]+27,
-		toByte32(signBytes[:32]),
-		toByte32(signBytes[32:64]),
+		true,
 	)
-	require.Equal(v2.T(), nil, err)
-	GenNewBlocks(v2.p.sim, 1)
 
-	// cancel proposal 1 by signature
+	// cancel proposal 1 by signature => fail
+	v2.cancelVoteBySign(genesisAcc, propId1, true)
 
-	// vote proposal 2 by signature
+	// vote proposal 2 by signature => success
+	v2.cancelVoteBySign(genesisAcc2, propId1, false)
 
 	// burn before snapshot day can vote
+	fmt.Println(v2.p.sim.Blockchain().CurrentHeader().Number.String())
+	proof = buildWithdrawTestcaseV2(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(1e11), auth.From)
+	_, err = SubmitMintPRVProof(prvInst, auth, proof)
+	require.Equal(v2.T(), nil, err)
+	GenNewBlocks(v2.p.sim, 1)
 
 	// burn after snapshot day can not vote
 
@@ -210,4 +216,80 @@ func GenNewBlocks(s *backends.SimulatedBackend, n int) {
 		s.Commit()
 		i++
 	}
+}
+
+func (v2 *PDaoTestSuite) createProposalBySign(signAccount *account, targets []common.Address, values []*big.Int, calldatas [][]byte, description string, isFail bool) *types.Transaction {
+	propEncode, _ := v2.governanceHelper.BuildSignProposalEncodeAbi(nil, targets, values, calldatas, description)
+	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
+	require.Equal(v2.T(), nil, err)
+	signBytes, err := crypto.Sign(signData[:], signAccount.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	tx, err := v2.governance.ProposeBySig(
+		auth2,
+		targets, values, calldatas, description,
+		signBytes[64]+27,
+		toByte32(signBytes[:32]),
+		toByte32(signBytes[32:64]),
+	)
+	if isFail {
+		require.NotEqual(v2.T(), nil, err)
+	} else {
+		require.Equal(v2.T(), nil, err)
+	}
+	GenNewBlocks(v2.p.sim, 1)
+	return tx
+}
+
+func (v2 *PDaoTestSuite) voteBySign(signAccount *account, proposalId *big.Int, support uint8, isFail bool) {
+	propEncode, _ := v2.governanceHelper.BuildSignVoteEncodeAbi(nil, proposalId, support)
+	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
+	require.Equal(v2.T(), nil, err)
+	signBytes, err := crypto.Sign(signData[:], signAccount.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.governance.CastVoteBySig(
+		auth2,
+		proposalId,
+		support,
+		signBytes[64]+27,
+		toByte32(signBytes[:32]),
+		toByte32(signBytes[32:64]),
+	)
+	if isFail {
+		require.NotEqual(v2.T(), nil, err)
+	} else {
+		require.Equal(v2.T(), nil, err)
+	}
+	GenNewBlocks(v2.p.sim, 1)
+}
+
+func (v2 *PDaoTestSuite) cancelVoteBySign(signAccount *account, proposalId *big.Int, isFail bool) {
+	governanceAbi, _ := abi.JSON(strings.NewReader(governance.GovernanceMetaData.ABI))
+	input, _ := governanceAbi.Pack("state", proposalId)
+	signData, err := v2.governance.GetDataSign(nil, keccak256(input[4:]))
+	require.Equal(v2.T(), nil, err)
+	signBytes, err := crypto.Sign(signData[:], signAccount.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.governance.CancelBySig(
+		auth2,
+		proposalId,
+		signBytes[64]+27,
+		toByte32(signBytes[:32]),
+		toByte32(signBytes[32:64]),
+	)
+	if isFail {
+		require.NotEqual(v2.T(), nil, err)
+	} else {
+		require.Equal(v2.T(), nil, err)
+	}
+	GenNewBlocks(v2.p.sim, 1)
+}
+
+func (v2 *PDaoTestSuite) extractPropIdFromTx(tx *types.Transaction) *big.Int {
+	_, events, err := retrieveEvents(v2.p.sim, tx)
+	require.Equal(v2.T(), nil, err)
+	gAbi, err := abi.JSON(strings.NewReader(governance.GovernanceMetaData.ABI))
+	require.Equal(v2.T(), nil, err)
+	depositResult, err := gAbi.Unpack("ProposalCreated", events[NEW_PROP_TOPIC])
+	require.Equal(v2.T(), nil, err)
+	return depositResult[0].(*big.Int)
 }
