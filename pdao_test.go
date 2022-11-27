@@ -1,6 +1,7 @@
 package bridge
 
 import (
+	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -173,7 +174,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 
 	// auth2 create new proposal by signature
 	testAccount2 := newAccount()
-	v2.extractPropIdFromTx(v2.createProposalBySign(
+	propId2 := v2.extractPropIdFromTx(v2.createProposalBySign(
 		genesisAcc2,
 		[]common.Address{testAccount2.Address},
 		[]*big.Int{big.NewInt(1e11)},
@@ -199,15 +200,43 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	v2.cancelVoteBySign(genesisAcc2, propId1, false)
 
 	// burn before snapshot day can vote
-	fmt.Println(v2.p.sim.Blockchain().CurrentHeader().Number.String())
-	proof = buildWithdrawTestcaseV2(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(1e11), auth.From)
+	receiveFundAcc := newAccount()
+	proof = buildWithdrawTestcaseV2Uniswap(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(5e9), receiveFundAcc.Address)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
-	GenNewBlocks(v2.p.sim, 1)
-
+	GenNewBlocks(v2.p.sim, 6576)
+	fmt.Println(v2.p.sim.Blockchain().CurrentHeader().Number.String())
 	// burn after snapshot day can not vote
+	proof = buildWithdrawTestcaseV2Uniswap(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From)
+	_, err = SubmitMintPRVProof(prvInst, auth, proof)
+	require.Equal(v2.T(), nil, err)
+
+	prop2, _ := v2.governance.Proposals(nil, propId2)
+
+	// vote
+	// vote for not active prop1 => fail
+	v2.voteBySign(receiveFundAcc, propId1, 1, true)
+	// burn after snapshot can not vote
+	v2.voteBySign(genesisAcc, propId2, 1, false)
+	GenNewBlocks(v2.p.sim, 1)
+	prop2After, _ := v2.governance.Proposals(nil, propId2)
+	require.Equal(v2.T(), prop2After.ForVotes, prop2.ForVotes)
+	// burn before snapshot
+	v2.voteBySign(receiveFundAcc, propId2, 1, false)
+	GenNewBlocks(v2.p.sim, 1)
+	prop2After, _ = v2.governance.Proposals(nil, propId2)
+	require.Equal(v2.T(), 1, prop2After.ForVotes.Cmp(prop2.ForVotes))
+	v2.voteBySign(genesisAcc2, propId2, 1, false)
+	GenNewBlocks(v2.p.sim, 46027)
+	prop2After, _ = v2.governance.Proposals(nil, propId2)
+	fmt.Println(prop2After)
 
 	// execute proposal 2
+	_, err = v2.governance.Execute0(auth, propId2)
+	require.Equal(v2.T(), nil, err)
+	GenNewBlocks(v2.p.sim, 1)
+	testAddr2Bal, _ := v2.p.sim.BalanceAt(context.Background(), testAccount2.Address, v2.p.sim.Blockchain().CurrentHeader().Number)
+	require.Equal(v2.T(), big.NewInt(1e11), testAddr2Bal)
 }
 
 func GenNewBlocks(s *backends.SimulatedBackend, n int) {
