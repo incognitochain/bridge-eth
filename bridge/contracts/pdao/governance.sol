@@ -12,7 +12,6 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
 
     // storage layout
     address private tempAddress;
-    mapping(bytes32 => bool) public sigDataUsed;
 
     modifier senderWithSig() {
         _;
@@ -117,8 +116,6 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     returns (uint256)
     {
         bytes32 signData = _hashTypedDataV4(keccak256(abi.encode(PROPOSAL_HASH, targets, values, calldatas, description)));
-        require(!sigDataUsed[signData], "Governance: signature used");
-        sigDataUsed[signData] = true;
         tempAddress = ECDSAUpgradeable.recover(
             signData,
             v,
