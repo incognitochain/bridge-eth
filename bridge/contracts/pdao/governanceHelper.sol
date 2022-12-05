@@ -40,4 +40,13 @@ contract GovernanceHelper is EIP712Upgradeable {
         // do nothing
         return abi.encode(BALLOT_TYPEHASH, proposalId, support);
     }
+
+    function _buildSignBurnEncodeAbi(
+        string calldata incognitoAddress,
+        uint256 amount,
+        bytes calldata timestamp
+    ) pure public returns (bytes memory) {
+        // do nothing
+        return abi.encode(incognitoAddress, amount, timestamp);
+    }
 }

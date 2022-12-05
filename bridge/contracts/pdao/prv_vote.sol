@@ -29,6 +29,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
     IERC20Upgradeable constant private OLD_PRV = IERC20Upgradeable(address(0x0));
     uint256 constant private BEACON_HEIGHT = 0; // todo: update on testnet/mainnet
     uint constant private MINT_METADATA = 170;
+    mapping(bytes32 => bool) public sigDataUsed;
 
     /**
      * @dev START Storage variables
@@ -63,6 +64,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
 
     function initialize(string memory name_, string memory symbol_) external initializer {
         __ERC20_init(name_, symbol_);
+        __ERC20Permit_init("PrvVoting");
     }
 
     /**
@@ -232,5 +234,34 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
 
     function decimals() public view override returns (uint8) {
         return 9;
+    }
+
+    // reshield by signature
+    function burnBySign(
+        string calldata incognitoAddress,
+        uint256 amount,
+        bytes calldata timestamp,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external virtual returns (bool) {
+        bytes32 signData = _hashTypedDataV4(keccak256(abi.encode(incognitoAddress, amount, timestamp)));
+        require(!sigDataUsed[signData], "ERC20: sign data used");
+        address burner = ECDSAUpgradeable.recover(
+            signData,
+            v,
+            r,
+            s
+        );
+        sigDataUsed[signData] = true;
+        _burn(burner, amount);
+
+        emit Deposit(address(this), incognitoAddress, amount);
+
+        return true;
+    }
+
+    function getDataSign(bytes32 _input) external view returns (bytes32) {
+        return _hashTypedDataV4(_input);
     }
 }

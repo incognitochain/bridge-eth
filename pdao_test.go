@@ -24,6 +24,7 @@ import (
 )
 
 const NEW_PROP_TOPIC = "0x7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0"
+const DEPOSIT_TOPIC = "0x2d4b597935f3cd67fb2eebf1db4debc934cee5c7baa7153f980fdbeb2e74084e"
 
 // // Define the suite, and absorb the built-in basic suite
 // // functionality from testify - including assertion methods.
@@ -237,6 +238,22 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	GenNewBlocks(v2.p.sim, 1)
 	testAddr2Bal, _ := v2.p.sim.BalanceAt(context.Background(), testAccount2.Address, v2.p.sim.Blockchain().CurrentHeader().Number)
 	require.Equal(v2.T(), big.NewInt(1e11), testAddr2Bal)
+
+	// re-shield by sign
+	paymentaddr := "12svfkP6w5UDJDSCwqH978PvqiqBxKmUnA9em9yAYWYJVRv7wuXY1qhhYpPAm4BDz2mLbFrRmdK3yRhnTqJCZXKHUmoi7NV83HCH2YFpctHNaDdkSiQshsjw2UFUuwdEvcidgaKmF3VJpY5f8RdN"
+	timestamp := []byte(randomizeTimestamp())
+	burnAmount := big.NewInt(5e9)
+	tx = v2.burnBySign(receiveFundAcc, paymentaddr, timestamp, burnAmount, false)
+	v2.extractBurnInfoFromTx(tx)
+	// query balance must be 0
+	prvBal, _ = v2.prvvote.BalanceOf(nil, receiveFundAcc.Address)
+	require.Equal(v2.T(), prvBal.Uint64(), big.NewInt(0).Uint64())
+
+	// can not use data sign twice
+	v2.burnBySign(receiveFundAcc, paymentaddr, timestamp, burnAmount, true)
+	// user must have token to burn
+	timestamp = []byte(randomizeTimestamp())
+	v2.burnBySign(receiveFundAcc, paymentaddr, timestamp, burnAmount, true)
 }
 
 func GenNewBlocks(s *backends.SimulatedBackend, n int) {
@@ -313,6 +330,29 @@ func (v2 *PDaoTestSuite) cancelVoteBySign(signAccount *account, proposalId *big.
 	GenNewBlocks(v2.p.sim, 1)
 }
 
+func (v2 *PDaoTestSuite) burnBySign(signAccount *account, paymentAddr string, timestamp []byte, amount *big.Int, isFail bool) *types.Transaction {
+	dataEncode, _ := v2.governanceHelper.BuildSignBurnEncodeAbi(nil, paymentAddr, amount, timestamp)
+	dataSign, _ := v2.prvvote.GetDataSign(nil, keccak256(dataEncode))
+	signBytes, err := crypto.Sign(dataSign[:], signAccount.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	tx, err := v2.prvvote.BurnBySign(
+		auth,
+		paymentAddr,
+		amount,
+		timestamp,
+		signBytes[64]+27,
+		toByte32(signBytes[:32]),
+		toByte32(signBytes[32:64]),
+	)
+	if isFail {
+		require.NotEqual(v2.T(), nil, err)
+	} else {
+		require.Equal(v2.T(), nil, err)
+	}
+	GenNewBlocks(v2.p.sim, 1)
+	return tx
+}
+
 func (v2 *PDaoTestSuite) extractPropIdFromTx(tx *types.Transaction) *big.Int {
 	_, events, err := retrieveEvents(v2.p.sim, tx)
 	require.Equal(v2.T(), nil, err)
@@ -321,4 +361,14 @@ func (v2 *PDaoTestSuite) extractPropIdFromTx(tx *types.Transaction) *big.Int {
 	depositResult, err := gAbi.Unpack("ProposalCreated", events[NEW_PROP_TOPIC])
 	require.Equal(v2.T(), nil, err)
 	return depositResult[0].(*big.Int)
+}
+
+func (v2 *PDaoTestSuite) extractBurnInfoFromTx(tx *types.Transaction) {
+	_, events, err := retrieveEvents(v2.p.sim, tx)
+	require.Equal(v2.T(), nil, err)
+	prvAbi, err := abi.JSON(strings.NewReader(prvvote.PrvvoteMetaData.ABI))
+	require.Equal(v2.T(), nil, err)
+	depositResult, err := prvAbi.Unpack("Deposit", events[DEPOSIT_TOPIC])
+	require.Equal(v2.T(), nil, err)
+	fmt.Println(depositResult)
 }
