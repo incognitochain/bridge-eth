@@ -26,9 +26,8 @@ interface Incognito {
 
 contract PrvVoting is ERC20VotesCompUpgradeable {
 
-    IERC20Upgradeable constant private OLD_PRV = IERC20Upgradeable(address(0x0));
-    uint256 constant private BEACON_HEIGHT = 0; // todo: update on testnet/mainnet
-    uint constant private MINT_METADATA = 170;
+    uint256 constant private BEACON_HEIGHT = 5840793; // todo: update on testnet/mainnet
+    uint constant private MINT_METADATA = 150;
     mapping(bytes32 => bool) public sigDataUsed;
 
     /**
@@ -217,13 +216,6 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         return true;
     }
 
-    function migrate(uint256 amount) external {
-        OLD_PRV.transferFrom(_msgSender(), address(0x0), amount);
-        _mint(_msgSender(), amount);
-
-        emit Migrate(amount);
-    }
-
     /**
      * @dev Get the address `account` is currently delegating to. By default will be itself.
      */
@@ -232,7 +224,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         return temp == address(0) ? account : temp;
     }
 
-    function decimals() public view override returns (uint8) {
+    function decimals() public pure override returns (uint8) {
         return 9;
     }
 

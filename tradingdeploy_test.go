@@ -492,7 +492,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 		prvAbi, _ := abi.JSON(strings.NewReader(prvvote.PrvvoteMetaData.ABI))
 		input, _ := prvAbi.Pack("initialize", "Incognito", "PRV")
-		prvVote, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, prvVote, auth3.From, incognitoProxy, input)
+		prvVote, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, prvVote, admin, incognitoProxy, input)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		// Wait until tx is confirmed
 		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
@@ -512,7 +512,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		input, _ = governanceAbi.Pack("initialize", prvVote)
 
 		// todo: update to simplified proxy contract
-		governanceAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, governanceAddr, auth3.From, incognitoProxy, input)
+		governanceAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, governanceAddr, admin, incognitoProxy, input)
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		// Wait until tx is confirmed
 		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
