@@ -26,9 +26,15 @@ interface Incognito {
 
 contract PrvVoting is ERC20VotesCompUpgradeable {
 
+    struct ReDeposit {
+        bytes redepositIncAddress;
+        uint256 amount;
+    }
+
     uint256 constant private BEACON_HEIGHT = 5840793; // todo: update on testnet/mainnet
-    uint constant private MINT_METADATA = 150;
+    uint constant private MINT_METADATA = 170;
     mapping(bytes32 => bool) public sigDataUsed;
+    mapping(bytes32 => ReDeposit) public reDepositInfo;
 
     /**
      * @dev START Storage variables
@@ -51,6 +57,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         address payable to; // ETH address of the receiver of the token
         uint amount; // burned amount (on Incognito)
         bytes32 itx; // Incognito's burning tx
+        bytes reDeposit; // Incognito address for re-shielding purpose
     }
 
     /**
@@ -59,7 +66,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
      * Note that `value` may be zero.
      */
     event Deposit(address token, string incognitoAddress, uint amount);
-    event Migrate(uint256 amount);
+    event Redeposit(address token, bytes redepositIncAddress, uint256 amount, bytes32 itx);
 
     function initialize(string memory name_, string memory symbol_) external initializer {
         __ERC20_init(name_, symbol_);
@@ -81,25 +88,14 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
          * @dev Parses a burn instruction and returns the components
      * @param inst: the full instruction, containing both metadata and body
      */
-    function _parseBurnInst(bytes memory inst) internal pure returns (BurnInstData memory) {
+    function _parseBurnInst(bytes calldata inst) internal pure returns (BurnInstData memory) {
         BurnInstData memory data;
         data.meta = uint8(inst[0]);
         data.shard = uint8(inst[1]);
-        address token;
-        address payable to;
-        uint amount;
-        bytes32 itx;
-        assembly {
-        // skip first 0x20 bytes (stored length of inst)
-            token := mload(add(inst, 0x22)) // [3:34]
-            to := mload(add(inst, 0x42)) // [34:66]
-            amount := mload(add(inst, 0x62)) // [66:98]
-            itx := mload(add(inst, 0x82)) // [98:130]
+        {
+            (data.token, data.to, data.amount, data.itx) = abi.decode(inst[2:130], (address, address, uint256, bytes32));
         }
-        data.token = token;
-        data.to = to;
-        data.amount = amount;
-        data.itx = itx;
+        data.reDeposit = bytes(inst[162:263]);
         return data;
     }
 
@@ -157,7 +153,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
      * @param sigSs: part of the signatures of the validators
      */
     function mint(
-        bytes memory inst,
+        bytes calldata inst,
         uint heights,
         bytes32[] memory instPaths,
         bool[] memory instPathIsLefts,
@@ -170,7 +166,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
     ) external virtual returns (bool) {
 
         require(heights > BEACON_HEIGHT, "ERC20: invalid beacon height");
-        require(inst.length >= 130, "ERC20: invalid inst");
+        require(inst.length >= 263, "ERC20: invalid inst");
         BurnInstData memory data = _parseBurnInst(inst);
         // Check instruction type
         require(data.meta == MINT_METADATA && data.shard == 1, "ERC20: invalid inst's data");
@@ -193,6 +189,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
             sigSs
         );
         _mint(data.to, data.amount);
+        reDepositInfo[keccak256(abi.encode(data.to, data.itx))] = ReDeposit(data.reDeposit, data.amount);
 
         return true;
     }
@@ -228,7 +225,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         return 9;
     }
 
-    // reshield by signature
+    // reDeposit by signature
     function burnBySign(
         string calldata incognitoAddress,
         uint256 amount,
@@ -249,6 +246,30 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         _burn(burner, amount);
 
         emit Deposit(address(this), incognitoAddress, amount);
+
+        return true;
+    }
+
+    // reDeposit by burn txid
+    function burnBySignUnShieldTx(
+        bytes32 itx,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external virtual returns (bool) {
+        require(!sigDataUsed[itx], "ERC20: sign data used");
+        address burner = ECDSAUpgradeable.recover(
+            itx,
+            v,
+            r,
+            s
+        );
+        sigDataUsed[itx] = true;
+        ReDeposit memory reDepositInfoData = reDepositInfo[keccak256(abi.encode(burner, itx))];
+        require(reDepositInfoData.amount > 0, "ERC20: invalid reDeposit value");
+        _burn(burner, reDepositInfoData.amount);
+
+        emit Redeposit(address(this), reDepositInfoData.redepositIncAddress, reDepositInfoData.amount, itx);
 
         return true;
     }

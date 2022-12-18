@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"context"
+	crand "crypto/rand"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -25,6 +26,7 @@ import (
 
 const NEW_PROP_TOPIC = "0x7d84a6263ae0d98d3329bd7b46bb4e8d6f98cd35a7adb45c274c8b7fd5ebd5e0"
 const DEPOSIT_TOPIC = "0x2d4b597935f3cd67fb2eebf1db4debc934cee5c7baa7153f980fdbeb2e74084e"
+const REDEPOSIT_TOPIC = "0x00b45d95b5117447e2fafe7f34def913ff3ba220e4b8688acf37ae2328af7a3d"
 
 // // Define the suite, and absorb the built-in basic suite
 // // functionality from testify - including assertion methods.
@@ -62,7 +64,7 @@ func (v2 *PDaoTestSuite) SetupSuite() {
 	//err = exec.Command("/bin/bash", "-c",
 	//	"abigen --abi bridge/governance/GovernanceHelper.abi --bin bridge/governance/GovernanceHelper.bin --out bridge/governance/governanceHelper.go --pkg governanceHelper").Run()
 	require.Equal(v2.T(), nil, err)
-	err = exec.Command("/bin/bash", "-c", "solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --overwrite bridge/contracts/pdao/prv_vote.sol -o bridge/prvvote").Run()
+	err = exec.Command("/bin/bash", "-c", "solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --optimize --abi --overwrite bridge/contracts/pdao/prv_vote.sol -o bridge/prvvote").Run()
 	require.Equal(v2.T(), nil, err)
 	err = exec.Command("/bin/bash", "-c", "abigen --abi bridge/prvvote/PrvVoting.abi --bin bridge/prvvote/PrvVoting.bin --out bridge/prvvote/prvvote.go --pkg prvvote").Run()
 	require.Equal(v2.T(), nil, err)
@@ -133,8 +135,14 @@ func TestPDao(t *testing.T) {
 }
 
 func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
+	// gen random incognito addr
+	incognitoAddrRand := make([]byte, 101)
+	crand.Read(incognitoAddrRand)
+	var incognitoAddr [101]byte
+	copy(incognitoAddr[:], incognitoAddrRand)
+
 	// burn and submit proof to prv vote contract
-	proof := buildWithdrawTestcaseV2(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(1e10), auth2.From)
+	proof := buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(1e10), auth2.From, incognitoAddr)
 	prvInst, err := prveth.NewPrveth(v2.prvvoteAddr, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
@@ -202,13 +210,13 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 
 	// burn before snapshot day can vote
 	receiveFundAcc := newAccount()
-	proof = buildWithdrawTestcaseV2Uniswap(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(5e9), receiveFundAcc.Address)
+	proof = buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(5e9), receiveFundAcc.Address, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
 	GenNewBlocks(v2.p.sim, 6576)
 	fmt.Println(v2.p.sim.Blockchain().CurrentHeader().Number.String())
 	// burn after snapshot day can not vote
-	proof = buildWithdrawTestcaseV2Uniswap(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From)
+	proof = buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
 
@@ -254,6 +262,17 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	// user must have token to burn
 	timestamp = []byte(randomizeTimestamp())
 	v2.burnBySign(receiveFundAcc, paymentaddr, timestamp, burnAmount, true)
+
+	// burn and reshield by unshield tx's signature
+	proof = buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(6e9), receiveFundAcc.Address, incognitoAddr)
+	// submit proof
+	_, err = SubmitMintPRVProof(prvInst, auth, proof)
+	require.Equal(v2.T(), nil, err)
+
+	// request reshield
+	v2.extractBurnInfoFromSingUnShieldTx(
+		v2.burnBySignUnshieldTx(receiveFundAcc, toByte32(proof.Instruction[98:130]), false),
+	)
 }
 
 func GenNewBlocks(s *backends.SimulatedBackend, n int) {
@@ -265,7 +284,7 @@ func GenNewBlocks(s *backends.SimulatedBackend, n int) {
 }
 
 func (v2 *PDaoTestSuite) createProposalBySign(signAccount *account, targets []common.Address, values []*big.Int, calldatas [][]byte, description string, isFail bool) *types.Transaction {
-	propEncode, _ := v2.governanceHelper.BuildSignProposalEncodeAbi(nil, targets, values, calldatas, description)
+	propEncode, _ := v2.governanceHelper.BuildSignProposalEncodeAbi(nil, keccak256([]byte("proposal")), targets, values, calldatas, description)
 	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
 	require.Equal(v2.T(), nil, err)
 	signBytes, err := crypto.Sign(signData[:], signAccount.PrivateKey)
@@ -353,6 +372,25 @@ func (v2 *PDaoTestSuite) burnBySign(signAccount *account, paymentAddr string, ti
 	return tx
 }
 
+func (v2 *PDaoTestSuite) burnBySignUnshieldTx(signAccount *account, unshieldTx [32]byte, isFail bool) *types.Transaction {
+	signBytes, err := crypto.Sign(unshieldTx[:], signAccount.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	tx, err := v2.prvvote.BurnBySignUnShieldTx(
+		auth,
+		unshieldTx,
+		signBytes[64]+27,
+		toByte32(signBytes[:32]),
+		toByte32(signBytes[32:64]),
+	)
+	if isFail {
+		require.NotEqual(v2.T(), nil, err)
+	} else {
+		require.Equal(v2.T(), nil, err)
+	}
+	GenNewBlocks(v2.p.sim, 1)
+	return tx
+}
+
 func (v2 *PDaoTestSuite) extractPropIdFromTx(tx *types.Transaction) *big.Int {
 	_, events, err := retrieveEvents(v2.p.sim, tx)
 	require.Equal(v2.T(), nil, err)
@@ -371,4 +409,66 @@ func (v2 *PDaoTestSuite) extractBurnInfoFromTx(tx *types.Transaction) {
 	depositResult, err := prvAbi.Unpack("Deposit", events[DEPOSIT_TOPIC])
 	require.Equal(v2.T(), nil, err)
 	fmt.Println(depositResult)
+}
+
+func (v2 *PDaoTestSuite) extractBurnInfoFromSingUnShieldTx(tx *types.Transaction) {
+	_, events, err := retrieveEvents(v2.p.sim, tx)
+	require.Equal(v2.T(), nil, err)
+	prvAbi, err := abi.JSON(strings.NewReader(prvvote.PrvvoteMetaData.ABI))
+	require.Equal(v2.T(), nil, err)
+	depositResult, err := prvAbi.Unpack("Redeposit", events[REDEPOSIT_TOPIC])
+	require.Equal(v2.T(), nil, err)
+	fmt.Println(depositResult)
+}
+
+func buildWithdrawTestcasePDao(c *committees, meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address, incognitoAddr [101]byte) *DecodedProof {
+	inst, mp, blkData, blkHash, height := buildWithdrawDataV2pDAO(meta, shard, tokenID, amount, withdrawer, incognitoAddr)
+	ipBeacon := signAndReturnInstProof(c.beaconPrivs, true, mp, blkData, blkHash[:])
+	return &DecodedProof{
+		Instruction: inst,
+		Heights:     [2]*big.Int{height, big.NewInt(1)},
+
+		InstPaths:       [2][][32]byte{ipBeacon.instPath},
+		InstPathIsLefts: [2][]bool{ipBeacon.instPathIsLeft},
+		InstRoots:       [2][32]byte{ipBeacon.instRoot},
+		BlkData:         [2][32]byte{ipBeacon.blkData},
+		SigIdxs:         [2][]*big.Int{ipBeacon.sigIdx},
+		SigVs:           [2][]uint8{ipBeacon.sigV},
+		SigRs:           [2][][32]byte{ipBeacon.sigR},
+		SigSs:           [2][][32]byte{ipBeacon.sigS},
+	}
+}
+
+func buildWithdrawDataV2pDAO(meta, shard int, tokenID common.Address, amount *big.Int, withdrawer common.Address, incognitoAddr [101]byte) ([]byte, *merklePath, []byte, []byte, *big.Int) {
+	// Build instruction merkle tree
+	numInst := 10
+	startNodeID := 7
+	height := big.NewInt(6000000)
+	inst := buildDecodedWithdrawInstpDAO(meta, shard, tokenID, withdrawer, amount, incognitoAddr)
+	instWithHeight := append(inst, toBytes32BigEndian(height.Bytes())...)
+	data := randomMerkleHashes(numInst)
+	data[startNodeID] = instWithHeight
+	mp := buildInstructionMerklePath(data, numInst, startNodeID)
+
+	// Generate random blkHash
+	h := randomMerkleHashes(1)
+	blkData := h[0]
+	blkHash := rawsha3(append(blkData, mp.root[:]...))
+	return inst, mp, blkData, blkHash[:], height
+}
+
+func buildDecodedWithdrawInstpDAO(meta, shard int, tokenID, withdrawer common.Address, amount *big.Int, incognitoAddr [101]byte) []byte {
+	decoded := []byte{byte(meta)}
+	decoded = append(decoded, byte(shard))
+	decoded = append(decoded, toBytes32BigEndian(tokenID[:])...)
+	decoded = append(decoded, toBytes32BigEndian(withdrawer[:])...)
+	decoded = append(decoded, toBytes32BigEndian(amount.Bytes())...)
+	txId := make([]byte, 32)
+	crand.Read(txId)
+	decoded = append(decoded, toBytes32BigEndian(txId)...) // txID
+	incTokenId := make([]byte, 32)
+	crand.Read(incTokenId)
+	decoded = append(decoded, incTokenId...)       // incTokenID, variable length
+	decoded = append(decoded, incognitoAddr[:]...) // reshield addr
+	return decoded
 }
