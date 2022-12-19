@@ -31,8 +31,7 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         uint256 amount;
     }
 
-    uint256 constant private BEACON_HEIGHT = 5840793; // todo: update on testnet/mainnet
-    uint constant private MINT_METADATA = 170;
+    uint constant private MINT_METADATA = 164;
     mapping(bytes32 => bool) public sigDataUsed;
     mapping(bytes32 => ReDeposit) public reDepositInfo;
 
@@ -165,7 +164,6 @@ contract PrvVoting is ERC20VotesCompUpgradeable {
         bytes32[] memory sigSs
     ) external virtual returns (bool) {
 
-        require(heights > BEACON_HEIGHT, "ERC20: invalid beacon height");
         require(inst.length >= 263, "ERC20: invalid inst");
         BurnInstData memory data = _parseBurnInst(inst);
         // Check instruction type

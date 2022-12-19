@@ -29,11 +29,11 @@ type PDaoIntegrationTestSuite struct {
 	withdrawer       common.Address
 	auth             *bind.TransactOpts
 	EtherAddress     common.Address
-	ETHPrivKeyStr    string
 	ETHHost          string
-	ETHPrivKey       *ecdsa.PrivateKey
 	ETHClient        *ethclient.Client
 	IncHost          string
+	ETHPrivKeyStr    string
+	ETHPrivKey       *ecdsa.PrivateKey
 }
 
 func NewPDaoIntegrationTestSuite(tradingTestSuite *TradingTestSuite) *PDaoIntegrationTestSuite {
@@ -57,18 +57,19 @@ func (v2 *PDaoIntegrationTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.ETHClient = client
 
-	privKey, err := crypto.HexToECDSA(v2.ETHPrivKeyStr)
-	require.Equal(v2.T(), nil, err)
-	v2.ETHPrivKey = privKey
-
-	v2.PRVERC20Addr = common.HexToAddress("0xD58d36a9053BbB69a75C4F9AF6864164dcbD2Cdb")
-	gv, err := governance.NewGovernance(v2.PRVERC20Addr, v2.ETHClient)
+	gv, err := governance.NewGovernance(common.HexToAddress("0xD58d36a9053BbB69a75C4F9AF6864164dcbD2Cdb"), v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.governance = gv
 
-	prv, err := prvvote.NewPrvvote(common.HexToAddress("0xa0904E2F05D1108063Ac7CfB7719bD6518FDBDF4"), v2.ETHClient)
+	v2.PRVERC20Addr = common.HexToAddress("0xa0904E2F05D1108063Ac7CfB7719bD6518FDBDF4")
+	prv, err := prvvote.NewPrvvote(v2.PRVERC20Addr, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.prvvote = prv
+
+	v2.ETHPrivKeyStr = "1193a43543fc11e37daa1a026ae8fae69d84c5dd1f3f933047ff2588778c5cca"
+	privKey, err := crypto.HexToECDSA(v2.ETHPrivKeyStr)
+	require.Equal(v2.T(), nil, err)
+	v2.ETHPrivKey = privKey
 }
 
 func (v2 *PDaoIntegrationTestSuite) TearDownSuite() {
@@ -99,6 +100,9 @@ func TestPDaoIntegration(t *testing.T) {
 func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	// burn prv token
 	fmt.Println("------------ STEP 1: burning pPRV --------------")
+	auth, err := bind.NewKeyedTransactorWithChainID(v2.ETHPrivKey, big.NewInt(int64(v2.ChainIDETH)))
+	require.Equal(v2.T(), nil, err)
+
 	// make a burn tx to incognito chain as a result of deposit to SC
 	burningRes, err := v2.callBurningPRV(
 		big.NewInt(1e9),
@@ -111,15 +115,15 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	time.Sleep(60 * time.Second)
 
 	// submit burn proof
-	v2.submitBurnProofForMintPRV(burningTxID.(string), v2.PRVERC20Addr, "getprvburnproof", v2.ETHClient, int64(v2.ChainIDETH))
-	time.Sleep(30 * time.Second)
+	proof := v2.submitBurnProofForMintPRV(burningTxID.(string), v2.PRVERC20Addr, "getprvburnproof", v2.ETHClient, int64(v2.ChainIDETH))
+	time.Sleep(60 * time.Second)
 
 	// sign to reshield
-	signBytes, err := crypto.Sign(common.Hex2Bytes(burningTxID.(string)), v2.ETHPrivKey)
+	signBytes, err := crypto.Sign(proof.Instruction[98:130], v2.ETHPrivKey)
 	require.Equal(v2.T(), nil, err)
 	tx, err := v2.prvvote.BurnBySignUnShieldTx(
 		auth,
-		toByte32(common.Hex2Bytes(burningTxID.(string))),
+		toByte32(proof.Instruction[98:130]),
 		signBytes[64]+27,
 		toByte32(signBytes[:32]),
 		toByte32(signBytes[32:64]),
@@ -130,7 +134,6 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	}
 
 	// shield prv to chain
-	time.Sleep(30 * time.Second)
 	_, ethBlockHash, ethTxIdx, ethDepositProof, err := getETHDepositProof(v2.ETHHost, tx.Hash())
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
@@ -141,7 +144,7 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 		ethDepositProof,
 		ethBlockHash,
 		ethTxIdx,
-		"createandsendtxwithissuingprvreq",
+		"createandsendtxwithissuingprverc20req",
 	)
 	require.Equal(v2.T(), nil, err)
 }

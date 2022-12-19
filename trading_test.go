@@ -643,7 +643,7 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
 	method string,
 	clientInst *ethclient.Client,
 	chainID int64,
-) {
+) *DecodedProof {
 	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, method)
 	require.Equal(tradingSuite.T(), nil, err)
 
@@ -663,6 +663,8 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("mint evm prv, txHash: %x\n", txHash[:])
+
+	return proof
 }
 
 func (tradingSuite *TradingTestSuite) genKeysPairForSC() {
