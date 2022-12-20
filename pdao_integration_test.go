@@ -2,6 +2,7 @@ package bridge
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -119,6 +120,7 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	time.Sleep(60 * time.Second)
 
 	// sign to reshield
+	fmt.Println("Encode unshield tx: " + hex.EncodeToString(proof.Instruction[98:130]))
 	signBytes, err := crypto.Sign(proof.Instruction[98:130], v2.ETHPrivKey)
 	require.Equal(v2.T(), nil, err)
 	tx, err := v2.prvvote.BurnBySignUnShieldTx(
@@ -138,7 +140,7 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("depositProof ---- : ", ethBlockHash, ethTxIdx, ethDepositProof)
 	fmt.Println("Waiting 90s for 15 blocks confirmation")
-	time.Sleep(150 * time.Second)
+	time.Sleep(200 * time.Second)
 	_, err = v2.callIssuingPRVReq(
 		v2.IncPRVTokenIDStr,
 		ethDepositProof,
