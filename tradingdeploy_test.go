@@ -100,7 +100,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// TESTNET2
 	beaconComm, bridgeComm, err := convertCommittees(
-		mainnetBeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
+		testnet2BeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
@@ -479,7 +479,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 	// deploy prv and gov
 	if network == "7" {
 		fmt.Println("============== DEPLOY PRV VOTE CONTRACT ON GOERLI ===============")
-		incognitoProxy := common.HexToAddress("0xb8fa91275aa0aae82774fa0d1c621c48047bc3cb")
+		incognitoProxy := common.HexToAddress("0xb8Fa91275Aa0aae82774Fa0d1c621c48047bC3cB")
 		auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(int64(tradingDeploySuite.ChainIDETH)))
 		require.Equal(tradingDeploySuite.T(), nil, err)
 		// deploy prv vote
