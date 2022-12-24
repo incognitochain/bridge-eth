@@ -149,4 +149,17 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 		"createandsendtxwithissuingprverc20req",
 	)
 	require.Equal(v2.T(), nil, err)
+
+	// submit burn proof and create prop
+	//v2.submitBurnProofForMintPRV("97453e6eb55f1de89799b8237b6fc05b744d576387336e214c5b48e330d6ed90", v2.PRVERC20Addr, "getprverc20burnproof", v2.ETHClient, int64(v2.ChainIDETH))
+
+	//tx, err := v2.governance.Propose(
+	//	auth,
+	//	[]common.Address{auth.From},
+	//	[]*big.Int{big.NewInt(1e11)},
+	//	[][]byte{{0x0}},
+	//	"move funds",
+	//)
+	//require.Equal(v2.T(), nil, err)
+	//fmt.Printf("tx hash: %v \n", tx.Hash())
 }
