@@ -94,47 +94,95 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 	fmt.Println("------------ STEP 1: burning pPRV --------------")
 	auth, err := bind.NewKeyedTransactorWithChainID(v2.ETHPrivKey, big.NewInt(int64(v2.ChainIDETH)))
 	require.Equal(v2.T(), nil, err)
-	value, ok := big.NewInt(0).SetString("1000000000000000", 10)
+	value, ok := big.NewInt(0).SetString("10000000000000000", 10)
 	require.Equal(v2.T(), true, ok)
 	auth.Value = value
-	salt, ok := big.NewInt(0).SetString("0x360c6ebe0000000000000000000000000000000000000000f6d621abfb415587"[2:], 16)
+	salt, ok := big.NewInt(0).SetString("0x360c6ebe0000000000000000000000000000000000000000b73405421208f37d"[2:], 16)
 	require.Equal(v2.T(), true, ok)
-	offerId, ok := big.NewInt(0).SetString("7", 10)
+	offerId, ok := big.NewInt(0).SetString("0", 10)
 	require.Equal(v2.T(), true, ok)
-	signature, err := hex.DecodeString("0x9245f238efb011fb78fa25af772102f7e70b66b003691277d0a60795de549e290e67be3cd98dac444c8ba3cc2e51d4076c34c35d4dc4b4278806a0be631f13da1b"[2:])
+	signature, err := hex.DecodeString("0xb6e32411b8d2419a67856fec922915a4c11742095410a732d229a699beac6cd25e4cd13d1605a7b3912d5e54a6e641db8832612a9d8ad8841f160bb42a081e7b1b"[2:])
 	require.Equal(v2.T(), nil, err)
 
-	basicOrder := opensea.BasicOrderParameters{
-		ConsiderationToken:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
-		ConsiderationIdentifier:           big.NewInt(0),
-		ConsiderationAmount:               big.NewInt(975000000000000),
-		Offerer:                           common.HexToAddress("0x0fbd0254d34b9f82c054ceb77515e6eacd80e3f9"),
-		Zone:                              common.HexToAddress("0x0000000000000000000000000000000000000000"),
-		OfferToken:                        common.HexToAddress("0xA04B2E948D96CE9AAf78b6C4bdd2a6eC54DB8279"),
-		OfferIdentifier:                   offerId,
-		OfferAmount:                       big.NewInt(1),
-		BasicOrderType:                    0,
-		StartTime:                         big.NewInt(1671852986),
-		EndTime:                           big.NewInt(1674531386),
-		ZoneHash:                          [32]byte{},
-		Salt:                              salt,
-		OffererConduitKey:                 toByte32(common.HexToHash("0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000").Bytes()),
-		FulfillerConduitKey:               toByte32(common.HexToHash("0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000").Bytes()),
-		TotalOriginalAdditionalRecipients: big.NewInt(1),
-		AdditionalRecipients: []opensea.AdditionalRecipient{
-			{
-				Amount:    big.NewInt(25000000000000),
-				Recipient: common.HexToAddress("0x0000a26b00c1F0DF003000390027140000fAa719"),
+	//basicOrder := opensea.BasicOrderParameters{
+	//	ConsiderationToken:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+	//	ConsiderationIdentifier:           big.NewInt(0),
+	//	ConsiderationAmount:               big.NewInt(9750000000000000),
+	//	Offerer:                           common.HexToAddress("0x50e5ca66d250bb3b1e52f7eaade8af016ad2e147"),
+	//	Zone:                              common.HexToAddress("0x0000000000000000000000000000000000000000"),
+	//	OfferToken:                        common.HexToAddress("0x8b0e17927a58392BBc42faeD1Cb41abE3A43A50C"),
+	//	OfferIdentifier:                   offerId,
+	//	OfferAmount:                       big.NewInt(1),
+	//	BasicOrderType:                    0,
+	//	StartTime:                         big.NewInt(1671919307),
+	//	EndTime:                           big.NewInt(1687471307),
+	//	ZoneHash:                          [32]byte{},
+	//	Salt:                              salt,
+	//	OffererConduitKey:                 toByte32(common.HexToHash("0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000").Bytes()),
+	//	FulfillerConduitKey:               toByte32(common.HexToHash("0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000").Bytes()),
+	//	TotalOriginalAdditionalRecipients: big.NewInt(1),
+	//	AdditionalRecipients: []opensea.AdditionalRecipient{
+	//		{
+	//			Amount:    big.NewInt(250000000000000),
+	//			Recipient: common.HexToAddress("0x0000a26b00c1F0DF003000390027140000fAa719"),
+	//		},
+	//	},
+	//	Signature: signature,
+	//}
+	advanceOrder := opensea.AdvancedOrder{
+		Parameters: opensea.OrderParameters{
+			Offerer: common.HexToAddress("0x50e5ca66d250bb3b1e52f7eaade8af016ad2e147"),
+			Zone:    common.HexToAddress("0x0000000000000000000000000000000000000000"),
+			Offer: []opensea.OfferItem{
+				{
+					ItemType:             2,
+					Token:                common.HexToAddress("0x8b0e17927a58392BBc42faeD1Cb41abE3A43A50C"),
+					IdentifierOrCriteria: offerId,
+					StartAmount:          big.NewInt(1),
+					EndAmount:            big.NewInt(1),
+				},
 			},
+			Consideration: []opensea.ConsiderationItem{
+				{
+					ItemType:             0,
+					Token:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+					IdentifierOrCriteria: big.NewInt(0),
+					StartAmount:          big.NewInt(9750000000000000),
+					EndAmount:            big.NewInt(9750000000000000),
+					Recipient:            common.HexToAddress("0x50E5ca66d250BB3B1e52F7EAAde8aF016AD2E147"),
+				},
+				{
+					ItemType:             0,
+					Token:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+					IdentifierOrCriteria: big.NewInt(0),
+					StartAmount:          big.NewInt(250000000000000),
+					EndAmount:            big.NewInt(250000000000000),
+					Recipient:            common.HexToAddress("0x0000a26b00c1F0DF003000390027140000fAa719"),
+				},
+			},
+			OrderType:                       0,
+			StartTime:                       big.NewInt(1671919307),
+			EndTime:                         big.NewInt(1687471307),
+			ZoneHash:                        [32]byte{},
+			Salt:                            salt,
+			ConduitKey:                      toByte32(common.HexToHash("0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000").Bytes()),
+			TotalOriginalConsiderationItems: big.NewInt(2),
 		},
-		Signature: signature,
+		Numerator:   big.NewInt(1),
+		Denominator: big.NewInt(1),
+		Signature:   signature,
+		ExtraData:   []byte{},
 	}
-	tradeAbi, _ := abi.JSON(strings.NewReader(opensea.IopenseaMetaData.ABI))
-	calldata, err := tradeAbi.Pack("fulfillBasicOrder", basicOrder)
-	require.Equal(v2.T(), nil, err)
+	fulfillerConduitKey := toByte32(common.HexToHash("0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000").Bytes())
+	// address will receive nft
+	reciepentAddr := common.HexToAddress("0x126748A0144968DD14b0187B906dE62378c59067")
 
-	tx, err := v2.OpenseaProxy.Forward(auth, calldata)
+	iopenseaAbi, _ := abi.JSON(strings.NewReader(opensea.IopenseaMetaData.ABI))
+	calldata, err := iopenseaAbi.Pack("fulfillAdvancedOrder", advanceOrder, []opensea.CriteriaResolver{}, fulfillerConduitKey, reciepentAddr)
 	require.Equal(v2.T(), nil, err)
+	fmt.Println("build opensea calldata: " + hex.EncodeToString(calldata) + "\n")
+	//tx, err := v2.OpenseaProxy.Forward(auth, calldata)
+	//require.Equal(v2.T(), nil, err)
 
 	//openseaAddr := common.HexToAddress("0x00000000006c3852cbEf3e08E8dF289169EdE581")
 	//iopensea, _ := opensea.NewIopensea(openseaAddr, v2.ETHClient)
@@ -142,5 +190,11 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 	//tx, err := iopensea.FulfillBasicOrder(auth, basicOrder)
 	//require.Equal(v2.T(), nil, err)
 
-	fmt.Println(tx.Hash().String())
+	//fmt.Println(tx.Hash().String())
+
+	// final burncalldata
+	openseaProxyAbi, _ := abi.JSON(strings.NewReader(opensea.OpenseaMetaData.ABI))
+	calldata, err = openseaProxyAbi.Pack("forward", calldata)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println("final burn calldata: " + hex.EncodeToString(calldata) + "\n")
 }
