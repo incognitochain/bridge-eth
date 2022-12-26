@@ -58,7 +58,7 @@ func (v2 *PDaoIntegrationTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.ETHClient = client
 
-	gv, err := governance.NewGovernance(common.HexToAddress("0xD58d36a9053BbB69a75C4F9AF6864164dcbD2Cdb"), v2.ETHClient)
+	gv, err := governance.NewGovernance(common.HexToAddress("0x01f6549BeF494C8b0B00C2790577AcC1A3Fa0Bd0"), v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.governance = gv
 
@@ -150,6 +150,7 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	)
 	require.Equal(v2.T(), nil, err)
 
+	// Create new prop testnet for testing BE FE
 	// submit burn proof and create prop
 	//v2.submitBurnProofForMintPRV("97453e6eb55f1de89799b8237b6fc05b744d576387336e214c5b48e330d6ed90", v2.PRVERC20Addr, "getprverc20burnproof", v2.ETHClient, int64(v2.ChainIDETH))
 
@@ -162,4 +163,41 @@ func (v2 *PDaoIntegrationTestSuite) TestPDAOCreateProp() {
 	//)
 	//require.Equal(v2.T(), nil, err)
 	//fmt.Printf("tx hash: %v \n", tx.Hash())
+
+	//targets := []common.Address{common.HexToAddress("0x0000000000000000000000000000000000000000")}
+	//values := []*big.Int{big.NewInt(0)}
+	//calldatas := [][]byte{{0x0}}
+	//descriptionProp := "Test create prop"
+	//
+	//governanceHelperAbi, _ := abi.JSON(strings.NewReader(governance.GovernanceHelperMetaData.ABI))
+	//input, _ := governanceHelperAbi.Pack("_buildSignProposalEncodeAbi", keccak256([]byte("proposal")), targets, values, calldatas, descriptionProp)
+	//
+	//// create data prop
+	//signData, err := v2.governance.GetDataSign(nil, keccak256(input[4:]))
+	//require.Equal(v2.T(), nil, err)
+	//signBytes, err := crypto.Sign(signData[:], v2.ETHPrivKey)
+	//require.Equal(v2.T(), nil, err)
+	//fmt.Println("Prop Sign")
+	//fmt.Println(signBytes)
+	//
+	//// create data vote prop
+	//propID, err := v2.governance.HashProposal(nil, targets, values, calldatas, keccak256([]byte(descriptionProp)))
+	//require.Equal(v2.T(), nil, err)
+	//inputVote, err := governanceHelperAbi.Pack("_buildSignVoteEncodeAbi", propID, uint8(1))
+	//require.Equal(v2.T(), nil, err)
+	//BALLOT := keccak256([]byte("Ballot(uint256 proposalId,uint8 support)"))
+	//input = append(BALLOT[:], inputVote[4:]...)
+	//signData, err = v2.governance.GetDataSign(nil, keccak256(input))
+	//require.Equal(v2.T(), nil, err)
+	//signBytes, err = crypto.Sign(signData[:], v2.ETHPrivKey)
+	//require.Equal(v2.T(), nil, err)
+	//fmt.Println("Vote Sign")
+	//fmt.Println(signBytes)
+	//
+	//// create reshield
+	//unshieldTx := "0xd2ff91de1add9e26500698da395a4a6a881b350e709d1a4edb6f6483c05f1362"
+	//signBytes, err = crypto.Sign(common.HexToHash(unshieldTx).Bytes(), v2.ETHPrivKey)
+	//require.Equal(v2.T(), nil, err)
+	//fmt.Println("Reshield Sign")
+	//fmt.Println(signBytes)
 }

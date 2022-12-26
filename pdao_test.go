@@ -142,7 +142,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	copy(incognitoAddr[:], incognitoAddrRand)
 
 	// burn and submit proof to prv vote contract
-	proof := buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(1e10), auth2.From, incognitoAddr)
+	proof := buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(1e10), auth2.From, incognitoAddr)
 	prvInst, err := prveth.NewPrveth(v2.prvvoteAddr, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
@@ -210,13 +210,13 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 
 	// burn before snapshot day can vote
 	receiveFundAcc := newAccount()
-	proof = buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(5e9), receiveFundAcc.Address, incognitoAddr)
+	proof = buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(5e9), receiveFundAcc.Address, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
 	GenNewBlocks(v2.p.sim, 6576)
 	fmt.Println(v2.p.sim.Blockchain().CurrentHeader().Number.String())
 	// burn after snapshot day can not vote
-	proof = buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From, incognitoAddr)
+	proof = buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
 
@@ -264,7 +264,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	v2.burnBySign(receiveFundAcc, paymentaddr, timestamp, burnAmount, true)
 
 	// burn and reshield by unshield tx's signature
-	proof = buildWithdrawTestcasePDao(v2.c, 170, 1, v2.prvvoteAddr, big.NewInt(6e9), receiveFundAcc.Address, incognitoAddr)
+	proof = buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(6e9), receiveFundAcc.Address, incognitoAddr)
 	// submit proof
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
@@ -284,8 +284,9 @@ func GenNewBlocks(s *backends.SimulatedBackend, n int) {
 }
 
 func (v2 *PDaoTestSuite) createProposalBySign(signAccount *account, targets []common.Address, values []*big.Int, calldatas [][]byte, description string, isFail bool) *types.Transaction {
-	propEncode, _ := v2.governanceHelper.BuildSignProposalEncodeAbi(nil, keccak256([]byte("proposal")), targets, values, calldatas, description)
-	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
+	governanceHelperAbi, _ := abi.JSON(strings.NewReader(governance.GovernanceHelperMetaData.ABI))
+	input, _ := governanceHelperAbi.Pack("_buildSignProposalEncodeAbi", keccak256([]byte("proposal")), targets, values, calldatas, description)
+	signData, err := v2.governance.GetDataSign(nil, keccak256(input[4:]))
 	require.Equal(v2.T(), nil, err)
 	signBytes, err := crypto.Sign(signData[:], signAccount.PrivateKey)
 	require.Equal(v2.T(), nil, err)
@@ -306,8 +307,12 @@ func (v2 *PDaoTestSuite) createProposalBySign(signAccount *account, targets []co
 }
 
 func (v2 *PDaoTestSuite) voteBySign(signAccount *account, proposalId *big.Int, support uint8, isFail bool) {
-	propEncode, _ := v2.governanceHelper.BuildSignVoteEncodeAbi(nil, proposalId, support)
-	signData, err := v2.governance.GetDataSign(nil, keccak256(propEncode))
+	governanceHelperAbi, _ := abi.JSON(strings.NewReader(governance.GovernanceHelperMetaData.ABI))
+	inputVote, err := governanceHelperAbi.Pack("_buildSignVoteEncodeAbi", proposalId, uint8(1))
+	require.Equal(v2.T(), nil, err)
+	BALLOT := keccak256([]byte("Ballot(uint256 proposalId,uint8 support)"))
+	input := append(BALLOT[:], inputVote[4:]...)
+	signData, err := v2.governance.GetDataSign(nil, keccak256(input))
 	require.Equal(v2.T(), nil, err)
 	signBytes, err := crypto.Sign(signData[:], signAccount.PrivateKey)
 	require.Equal(v2.T(), nil, err)
