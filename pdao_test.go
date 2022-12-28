@@ -55,14 +55,14 @@ func (v2 *PDaoTestSuite) SetupSuite() {
 	err := exec.Command("/bin/bash", "-c",
 		"solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --optimize --overwrite bridge/contracts/pdao/governance.sol -o bridge/governance").Run()
 	require.Equal(v2.T(), nil, err)
-	err = exec.Command("/bin/bash", "-c",
-		"abigen --abi bridge/governance/IncognitoDAO.abi --bin bridge/governance/IncognitoDAO.bin --out bridge/governance/governance.go --pkg governance").Run()
+	//err = exec.Command("/bin/bash", "-c",
+	//	"abigen --abi bridge/governance/IncognitoDAO.abi --bin bridge/governance/IncognitoDAO.bin --out bridge/governance/governance.go --pkg governance").Run()
 	require.Equal(v2.T(), nil, err)
 	err = exec.Command("/bin/bash", "-c",
 		"solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --optimize --overwrite bridge/contracts/pdao/governanceHelper.sol -o bridge/governance").Run()
 	require.Equal(v2.T(), nil, err)
-	err = exec.Command("/bin/bash", "-c",
-		"abigen --abi bridge/governance/GovernanceHelper.abi --bin bridge/governance/GovernanceHelper.bin --out bridge/governance/governanceHelper.go --pkg governanceHelper").Run()
+	//err = exec.Command("/bin/bash", "-c",
+	//	"abigen --abi bridge/governance/GovernanceHelper.abi --bin bridge/governance/GovernanceHelper.bin --out bridge/governance/governanceHelper.go --pkg governanceHelper").Run()
 	require.Equal(v2.T(), nil, err)
 	err = exec.Command("/bin/bash", "-c", "solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --optimize --abi --overwrite bridge/contracts/pdao/prv_vote.sol -o bridge/prvvote").Run()
 	require.Equal(v2.T(), nil, err)
