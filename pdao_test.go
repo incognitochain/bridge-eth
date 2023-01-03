@@ -225,7 +225,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	// vote
 	// vote for not active prop1 => fail
 	v2.voteBySign(receiveFundAcc, propId1, 1, true)
-	// burn after snapshot can not vote
+	// burn after snapshot can vote but not affect to prop
 	v2.voteBySign(genesisAcc, propId2, 1, false)
 	GenNewBlocks(v2.p.sim, 1)
 	prop2After, _ := v2.governance.Proposals(nil, propId2)
@@ -237,7 +237,8 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	require.Equal(v2.T(), 1, prop2After.ForVotes.Cmp(prop2.ForVotes))
 	v2.voteBySign(genesisAcc2, propId2, 1, false)
 	GenNewBlocks(v2.p.sim, 46027)
-	prop2After, _ = v2.governance.Proposals(nil, propId2)
+	prop2After, err = v2.governance.Proposals(nil, propId2)
+	require.Equal(v2.T(), nil, err)
 	fmt.Println(prop2After)
 
 	// execute proposal 2

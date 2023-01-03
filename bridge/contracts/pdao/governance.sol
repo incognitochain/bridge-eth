@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/governance/compatibility/GovernorCompatibilityBravoUpgradeable.sol";
+import "./GovernorCompatibilityBravoUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
@@ -148,6 +148,16 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
 
     function timelock() public pure override returns (address) {
         return address(0x0);
+    }
+
+    function _quorumReached(uint256 proposalId)
+    internal
+    view
+    virtual
+    override(GovernorCompatibilityBravoUpgradeable, GovernorUpgradeable)
+    returns (bool)
+    {
+        return super._forVotes(proposalId) >= uint256(15000000000);
     }
 
     function queue(
