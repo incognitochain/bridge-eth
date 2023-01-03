@@ -214,7 +214,6 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
 	GenNewBlocks(v2.p.sim, 6576)
-	fmt.Println(v2.p.sim.Blockchain().CurrentHeader().Number.String())
 	// burn after snapshot day can not vote
 	proof = buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
@@ -274,6 +273,48 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	v2.extractBurnInfoFromSingUnShieldTx(
 		v2.burnBySignUnshieldTx(receiveFundAcc, toByte32(proof.Instruction[98:130]), false),
 	)
+
+	// create new prop
+	propId3 := v2.extractPropIdFromTx(v2.createProposalBySign(
+		genesisAcc,
+		[]common.Address{testAccount2.Address},
+		[]*big.Int{big.NewInt(1e10)},
+		[][]byte{{0x0}},
+		"move funds 2",
+		false,
+	))
+	GenNewBlocks(v2.p.sim, 10)
+
+	// cancel prop non-exist
+	v2.cancelVoteBySign(genesisAcc, big.NewInt(1), true)
+	// can not cancel cause proposer still hold enough token
+	v2.cancelVoteBySign(genesisAcc2, propId3, true)
+	_, err = v2.prvvote.Transfer(auth, auth3.From, big.NewInt(6e9))
+	require.Equal(v2.T(), nil, err)
+
+	// anyone can cancel prop when proposer hold amount of token lower than require threshold value
+	GenNewBlocks(v2.p.sim, 6575+10)
+	v2.cancelVoteBySign(receiveFundAcc, propId3, false)
+
+	// create new prop
+	propId4 := v2.extractPropIdFromTx(v2.createProposalBySign(
+		genesisAcc3,
+		[]common.Address{testAccount2.Address},
+		[]*big.Int{big.NewInt(1e10)},
+		[][]byte{{0x0}},
+		"move funds 3",
+		false,
+	))
+
+	// none can cancel prop when proposer hold token til prop ended
+	GenNewBlocks(v2.p.sim, 46027+6576+1)
+	bal3, err := v2.prvvote.BalanceOf(nil, auth3.From)
+	require.Equal(v2.T(), nil, err)
+	require.NotEqual(v2.T(), big.NewInt(0), bal3)
+	v2.prvvote.Transfer(auth3, auth.From, bal3)
+	GenNewBlocks(v2.p.sim, 1)
+	v2.cancelVoteBySign(receiveFundAcc, propId4, true)
+
 }
 
 func GenNewBlocks(s *backends.SimulatedBackend, n int) {

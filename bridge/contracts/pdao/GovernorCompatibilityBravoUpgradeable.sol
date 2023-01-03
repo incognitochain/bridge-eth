@@ -107,9 +107,11 @@ abstract contract GovernorCompatibilityBravoUpgradeable is Initializable, IGover
 
     function cancel(uint256 proposalId) public virtual override {
         ProposalDetails storage details = _proposalDetails[proposalId];
+        uint256 blockNum = block.number - 1 > proposalDeadline(proposalId) ? proposalDeadline(proposalId) : block.number - 1;
+        require(blockNum > 0, "GovernorBravo: can not cancel non-exist proposal");
 
         require(
-            _msgSender() == details.proposer || getVotes(details.proposer, block.number - 1) < proposalThreshold(),
+            _msgSender() == details.proposer || getVotes(details.proposer, blockNum) < proposalThreshold(),
             "GovernorBravo: proposer above threshold"
         );
 
