@@ -25,11 +25,11 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     }
 
     function votingDelay() public pure override returns (uint256) {
-        return 6575; // 1 day
+        return 75; // 1 day
     }
 
     function votingPeriod() public pure override returns (uint256) {
-        return 46027; // 1 week
+        return 300; // 1 week
     }
 
     function proposalThreshold() public pure override returns (uint256) {

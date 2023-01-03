@@ -135,6 +135,11 @@ func TestPDao(t *testing.T) {
 }
 
 func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
+	voteDelay, _ := v2.governance.VotingDelay(nil)
+	votePeriod, _ := v2.governance.VotingPeriod(nil)
+	voteDelayNum := int(voteDelay.Uint64())
+	votePeriodNum := int(votePeriod.Uint64())
+
 	// gen random incognito addr
 	incognitoAddrRand := make([]byte, 101)
 	crand.Read(incognitoAddrRand)
@@ -213,7 +218,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	proof = buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(5e9), receiveFundAcc.Address, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
 	require.Equal(v2.T(), nil, err)
-	GenNewBlocks(v2.p.sim, 6576)
+	GenNewBlocks(v2.p.sim, voteDelayNum)
 	// burn after snapshot day can not vote
 	proof = buildWithdrawTestcasePDao(v2.c, 164, 1, v2.prvvoteAddr, big.NewInt(6e9), auth.From, incognitoAddr)
 	_, err = SubmitMintPRVProof(prvInst, auth, proof)
@@ -235,7 +240,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	prop2After, _ = v2.governance.Proposals(nil, propId2)
 	require.Equal(v2.T(), 1, prop2After.ForVotes.Cmp(prop2.ForVotes))
 	v2.voteBySign(genesisAcc2, propId2, 1, false)
-	GenNewBlocks(v2.p.sim, 46027)
+	GenNewBlocks(v2.p.sim, votePeriodNum)
 	prop2After, err = v2.governance.Proposals(nil, propId2)
 	require.Equal(v2.T(), nil, err)
 	fmt.Println(prop2After)
@@ -307,7 +312,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	))
 
 	// none can cancel prop when proposer hold token til prop ended
-	GenNewBlocks(v2.p.sim, 46027+6576+1)
+	GenNewBlocks(v2.p.sim, votePeriodNum+voteDelayNum+1)
 	bal3, err := v2.prvvote.BalanceOf(nil, auth3.From)
 	require.Equal(v2.T(), nil, err)
 	require.NotEqual(v2.T(), big.NewInt(0), bal3)
