@@ -25,15 +25,19 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     }
 
     function votingDelay() public pure override returns (uint256) {
-        return 75; // 1 day
+        return 50400; // 7 days
     }
 
     function votingPeriod() public pure override returns (uint256) {
-        return 300; // 1 week
+        return 7200; // 1 day
     }
 
     function proposalThreshold() public pure override returns (uint256) {
-        return 1e8;
+        return 62500 * 1e9; // 0.25% of 25M PRV
+    }
+
+    function quorumVotes() public pure override returns (uint256) {
+        return 500000 * 1e9; // 2% of 25M PRV
     }
 
     // The functions below are overrides required by Solidity.
@@ -157,7 +161,7 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     override(GovernorCompatibilityBravoUpgradeable, GovernorUpgradeable)
     returns (bool)
     {
-        return super._forVotes(proposalId) >= uint256(15000000000);
+        return super._forVotes(proposalId) >= quorumVotes();
     }
 
     function queue(
