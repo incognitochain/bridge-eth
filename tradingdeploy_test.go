@@ -3,6 +3,8 @@ package bridge
 // Basic imports
 import (
 	"fmt"
+	"github.com/incognitochain/bridge-eth/bridge/governance"
+	"github.com/incognitochain/bridge-eth/bridge/prvvote"
 	"math/big"
 	"os"
 	"strings"
@@ -98,7 +100,7 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 
 	// TESTNET2
 	beaconComm, bridgeComm, err := convertCommittees(
-		mainnetBeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
+		testnet2BeaconCommitteePubKeys, testnet2BridgeCommitteePubKeys,
 	)
 	// NOTE: uncomment this block to get mainnet committees when deploying to mainnet env
 	/*
@@ -474,7 +476,54 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		}
 	}
 
-	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 6 ===============")
+	// deploy prv and gov
+	if network == "7" {
+		fmt.Println("============== DEPLOY PRV VOTE CONTRACT ON GOERLI ===============")
+		incognitoProxy := common.HexToAddress("0xb8Fa91275Aa0aae82774Fa0d1c621c48047bC3cB")
+		auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(int64(tradingDeploySuite.ChainIDETH)))
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// deploy prv vote
+		var prvVote common.Address
+		prvVote, tx, _, err := prvvote.DeployPrvvote(auth, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		prvAbi, _ := abi.JSON(strings.NewReader(prvvote.PrvvoteMetaData.ABI))
+		input, _ := prvAbi.Pack("initialize", "Incognito", "PRV")
+		prvVote, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, prvVote, admin, incognitoProxy, input)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed prv vote")
+		fmt.Printf("addr: %s\n", prvVote.Hex())
+
+		// deploy governance
+		var governanceAddr common.Address
+		governanceAddr, tx, _, err = governance.DeployGovernance(auth, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		governanceAbi, _ := abi.JSON(strings.NewReader(governance.GovernanceMetaData.ABI))
+		input, _ = governanceAbi.Pack("initialize", prvVote)
+
+		// todo: update to simplified proxy contract
+		governanceAddr, tx, _, err = vaultproxy.DeployTransparentUpgradeableProxy(auth, tradingDeploySuite.ETHClient, governanceAddr, admin, incognitoProxy, input)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed governance")
+		fmt.Printf("addr: %s\n", governanceAddr.Hex())
+
+		return
+	}
+
+	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 7 ===============")
 }
 
 func convertCommittees(

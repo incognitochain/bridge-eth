@@ -145,7 +145,7 @@ func (tradingSuite *TradingTestSuite) SetupSuite() {
 	tradingSuite.SAIAddressStr = "0xc4375b7de8af5a38a93548eb8453a498222c4ff2"
 
 	tradingSuite.ETHPrivKeyStr = "1193a43543fc11e37daa1a026ae8fae69d84c5dd1f3f933047ff2588778c5cca"
-	tradingSuite.ETHOwnerAddrStr = "D7d93b7fa42b60b6076f3017fCA99b69257A912D"
+	tradingSuite.ETHOwnerAddrStr = "9699b31b25D71BDA4819bBe66244E9130cEE62b7"
 	tradingSuite.ETHRegulatorPrivKeyStr = "98452cb9c013387c2f5806417fe198a0de014594678e2f9d3223d7e7e921b04d"
 
 	tradingSuite.ETHHost = "https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361"
@@ -643,7 +643,7 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
 	method string,
 	clientInst *ethclient.Client,
 	chainID int64,
-) {
+) *DecodedProof {
 	proof, err := getAndDecodeBurnProofV2(tradingSuite.IncBridgeHost, burningTxIDStr, method)
 	require.Equal(tradingSuite.T(), nil, err)
 
@@ -663,6 +663,8 @@ func (tradingSuite *TradingTestSuite) submitBurnProofForMintPRV(
 		require.Equal(tradingSuite.T(), nil, err)
 	}
 	fmt.Printf("mint evm prv, txHash: %x\n", txHash[:])
+
+	return proof
 }
 
 func (tradingSuite *TradingTestSuite) genKeysPairForSC() {

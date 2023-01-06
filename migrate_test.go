@@ -1,8 +1,10 @@
 package bridge
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"strings"
 	"testing"
@@ -102,6 +104,20 @@ func TestClaimAllVaultAdmin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestGetStorageAt(t *testing.T) {
+	client, err := ethclient.Dial("https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+
+	admin, err := client.StorageAt(context.Background(), common.HexToAddress("0xc157CC3077ddfa425bae12d2F3002668971A4e3d"), common.HexToHash("0x62135fc083646fdb4e1a9d700e351b886a4a5a39da980650269edd1ade91ffd2"), big.NewInt(8166648))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Printf("Admin address: %+v \n", common.BytesToAddress(admin).String())
 }
 
 func TestDeployNewVaultToMigrate(t *testing.T) {
