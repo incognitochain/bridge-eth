@@ -19,7 +19,7 @@ contract ProxyOpenSeaOffer {
     ConsiderationInterface constant public seaport = ConsiderationInterface(0x00000000006c3852cbEf3e08E8dF289169EdE581);
     bytes32 constant public domainSeparator = 0x712fdde1f147adcbb0fabb1aeb9c2d317530a46d266db095bc40c606fe94f0c2;
     Vault constant public vault = Vault(0xc157CC3077ddfa425bae12d2F3002668971A4e3d);
-    WETH constant public weth = WETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    WETH constant public weth = WETH(0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6);
     mapping(bytes32 => Offer) public offers;
 
     // offer data structure
@@ -35,7 +35,7 @@ contract ProxyOpenSeaOffer {
     // new offer
     function offer(OrderComponents calldata order, string calldata otaKey, bytes calldata signature, address conduit) payable external {
         // verify offerer
-        require(order.offerer == address(this), "OpenseaOffer: invalid offerer");
+        require(order.offerer == address(this) && order.offer.length == 1, "OpenseaOffer: invalid offerer");
         bytes32 signOfferHash = toTypedDataHash(domainSeparator, seaport.getOrderHash(order));
         require(offers[signOfferHash].startTime == 0, "OpenseaOffer: offer existed");
         address signer = recoverSigner(signOfferHash, signature);
@@ -57,8 +57,9 @@ contract ProxyOpenSeaOffer {
 
     function cancelOffer(OrderComponents calldata order,  bytes calldata offerSignature, bytes32 txId, bytes calldata regulatorSignData) external {
         bytes32 orderHash = seaport.getOrderHash(order);
+        (,bool isCanceled,,) = seaport.getOrderStatus(orderHash);
         Offer memory offerTemp = offers[toTypedDataHash(domainSeparator, orderHash)];
-        require(offerTemp.startTime != 0 && offerTemp.offerAmount != 0, "OpenseaOffer: invalid offer");
+        require(offerTemp.startTime != 0 && offerTemp.offerAmount != 0 && !isCanceled, "OpenseaOffer: invalid offer");
         // incase the offer not expired must verify offerrer signature
         if (block.timestamp < offerTemp.endTime) {
             require(offerTemp.signer == recoverSigner(orderHash, offerSignature), "OpenseaOffer: invalid signature");
@@ -164,4 +165,7 @@ contract ProxyOpenSeaOffer {
     function toTypedDataHash(bytes32 domainSeparator_, bytes32 structHash_) public pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator_, structHash_));
     }
+
+    // Receive function which allows transfer eth.
+    receive() external payable {}
 }

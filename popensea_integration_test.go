@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/incognitochain/bridge-eth/bridge/opensea"
+	"github.com/incognitochain/bridge-eth/bridge/vault"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"math/big"
@@ -64,7 +65,7 @@ func (v2 *POpenseaIntegrationTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaProxy = ops
 
-	v2.OpenseaOfferAddr = common.HexToAddress("0x14D0cf3bC307aA15DA40Aa4c8cc2A2a81eF96B3a")
+	v2.OpenseaOfferAddr = common.HexToAddress("0x88E34AD6D526761638e9C1b5c0a302C2Ef9Adc09")
 	opsO, err := opensea.NewOpenseaOffer(v2.OpenseaOfferAddr, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaOffer = opsO
@@ -221,6 +222,8 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 	require.Equal(v2.T(), true, ok)
 	conduit := common.HexToAddress("0x1e0049783f008a0085193e00003d00cd54003c71")
 	offerAmount := big.NewInt(1000000000000000)
+	isTestCancel := true
+
 	// build new offer and sign
 	offer := opensea.OrderComponents{
 		Offerer: v2.OpenseaOfferAddr,
@@ -279,8 +282,12 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 	orderStatus, err := v2.OpenseaOffer.Offers(nil, signData)
 	if orderStatus.StartTime.Cmp(big.NewInt(0)) == 0 {
 		auth.Value = offerAmount
-		_, err = v2.OpenseaProxy.Forward(auth, v2.OpenseaOfferAddr, tempData)
+		tx, err := v2.OpenseaProxy.Forward(auth, v2.OpenseaOfferAddr, tempData)
 		require.Equal(v2.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(v2.ETHClient, tx.Hash())
+		require.Equal(v2.T(), nil, err)
+
 		auth.Value = big.NewInt(0)
 	}
 
@@ -308,13 +315,44 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 		ExtraData:   []byte{},
 	}
 
-	tx, err := v2.OpenSea.FulfillAdvancedOrder(
-		auth,
-		advanceOrder,
-		[]opensea.CriteriaResolver{},
-		offer.ConduitKey,
-		reciepentAddr,
-	)
-	require.Equal(v2.T(), nil, err)
-	fmt.Println("accept offer tx: ", tx.Hash())
+	if !isTestCancel {
+		tx, err := v2.OpenSea.FulfillAdvancedOrder(
+			auth,
+			advanceOrder,
+			[]opensea.CriteriaResolver{},
+			offer.ConduitKey,
+			reciepentAddr,
+		)
+		require.Equal(v2.T(), nil, err)
+		fmt.Println("accept offer tx: ", tx.Hash())
+	}
+
+	if isTestCancel {
+		signBytes, err = crypto.Sign(orderHash[:], tempWallet)
+		require.Equal(v2.T(), nil, err)
+		if signBytes[64] <= 1 {
+			signBytes[64] += 27
+		}
+
+		// regulator sign
+		vaultHelperAbi, err := abi.JSON(strings.NewReader(vault.VaultHelperMetaData.ABI))
+		require.Equal(v2.T(), nil, err)
+		tempData, err := vaultHelperAbi.Pack("_buildSignShield", v2.OpenseaOfferAddr, [32]byte{})
+		require.Equal(v2.T(), nil, err)
+		data := rawsha3(tempData[4:])
+		regulatorSignature, err := crypto.Sign(data, v2.ETHRegulatorPrivKey)
+		require.Equal(v2.T(), nil, err)
+
+		auth.Value = big.NewInt(0)
+		tx, err := v2.OpenseaOffer.CancelOffer(auth, offer, signBytes, [32]byte{}, regulatorSignature)
+		require.Equal(v2.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(v2.ETHClient, tx.Hash())
+		require.Equal(v2.T(), nil, err)
+		fmt.Println("cancel offer tx: ", tx.Hash())
+
+		// cancel will fail if do it twice
+		_, err = v2.OpenseaOffer.CancelOffer(auth, offer, signBytes, common.Hash{}, regulatorSignature)
+		require.NotEqual(v2.T(), nil, err)
+	}
 }
