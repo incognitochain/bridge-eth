@@ -52,7 +52,7 @@ func (v2 *POpenseaIntegrationTestSuite) SetupSuite() {
 		"solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --optimize --overwrite bridge/contracts/opensea/proxy_offer.sol -o bridge/opensea/").Run()
 	require.Equal(v2.T(), nil, err)
 	//err = exec.Command("/bin/bash", "-c",
-	//	"abigen --abi bridge/opensea/ProxyOpenSeaOffer.abi --bin bridge/opensea/ProxyOpenSeaOffer.bin --out bridge/governance/governance.go --pkg openseaOffer").Run()
+	//	"abigen --abi bridge/opensea/ProxyOpenSeaOffer.abi --bin bridge/opensea/ProxyOpenSeaOffer.bin --out bridge/opensea/openseaOffer.go --pkg openseaOffer").Run()
 
 	v2.IncHost = "http://127.0.0.1:9338"
 	v2.ETHHost = "https://goerli.infura.io/v3/1138a1e99b154b10bae5c382ad894361"
@@ -271,7 +271,7 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 		signBytes[64] += 27
 	}
 	openseaOfferAbi, _ := abi.JSON(strings.NewReader(opensea.OpenseaOfferMetaData.ABI))
-	otaKey := []byte("12121212")
+	otaKey := "12121212"
 	tempData, err := openseaOfferAbi.Pack("offer", offer, otaKey, signBytes, conduit)
 	require.Equal(v2.T(), nil, err)
 

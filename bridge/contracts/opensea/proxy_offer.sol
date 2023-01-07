@@ -24,7 +24,7 @@ contract ProxyOpenSeaOffer {
 
     // offer data structure
     struct Offer {
-        bytes otaKey;
+        string otaKey;
         address signer;
         bytes signature;
         uint256 startTime;
@@ -33,7 +33,7 @@ contract ProxyOpenSeaOffer {
     }
 
     // new offer
-    function offer(OrderComponents calldata order, bytes calldata otaKey, bytes calldata signature, address conduit) payable external {
+    function offer(OrderComponents calldata order, string calldata otaKey, bytes calldata signature, address conduit) payable external {
         // verify offerer
         require(order.offerer == address(this), "OpenseaOffer: invalid offerer");
         bytes32 signOfferHash = toTypedDataHash(domainSeparator, seaport.getOrderHash(order));
@@ -71,7 +71,7 @@ contract ProxyOpenSeaOffer {
         weth.withdraw(offerTemp.offerAmount);
         // call deposit to vault contract
         vault.deposit{value: offerTemp.offerAmount}(
-            string(abi.encodePacked(offerTemp.otaKey)),
+            offerTemp.otaKey,
             txId,
             regulatorSignData
         );
