@@ -12,44 +12,34 @@ interface WETH {
     function approve(address spender, uint amount) external;
     function withdraw(uint wad) external;
     function deposit() payable external;
+    function allowance(address owner, address spender) external view returns (uint256);
 }
 
 contract ProxyOpenSeaOffer {
     ConsiderationInterface constant public seaport = ConsiderationInterface(0x00000000006c3852cbEf3e08E8dF289169EdE581);
-    address constant public executor= address(0);
+    bytes32 constant public domainSeparator = 0x712fdde1f147adcbb0fabb1aeb9c2d317530a46d266db095bc40c606fe94f0c2;
     Vault constant public vault = Vault(0xc157CC3077ddfa425bae12d2F3002668971A4e3d);
     WETH constant public weth = WETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     mapping(bytes32 => Offer) public offers;
 
-    enum Status {
-        empty,
-        offering,
-        expired
-    }
-
     // offer data structure
     struct Offer {
         bytes otaKey;
-        bool isCanceled;
         address signer;
+        bytes signature;
         uint256 startTime;
         uint256 endTime;
         uint256 offerAmount;
     }
 
-    constructor() {
-        weth.approve(address(seaport), 2**256 - 1);
-    }
-
-    modifier onlyProxyOffer() {
-        require(msg.sender == executor, "ProxyOfferStorage: not authorised");
-        _;
-    }
-
     // new offer
-    function newOffer(OrderComponents calldata order, bytes calldata otaKey, address signer) payable external {
+    function offer(OrderComponents calldata order, bytes calldata otaKey, bytes calldata signature, address conduit) payable external {
         // verify offerer
         require(order.offerer == address(this), "OpenseaOffer: invalid offerer");
+        bytes32 signOfferHash = toTypedDataHash(domainSeparator, seaport.getOrderHash(order));
+        require(offers[signOfferHash].startTime == 0, "OpenseaOffer: offer existed");
+        address signer = recoverSigner(signOfferHash, signature);
+
         // verify eth amount
         uint256 offerAmount;
         for(uint8 i = 0; i < order.offer.length; i++) {
@@ -58,28 +48,33 @@ contract ProxyOpenSeaOffer {
             offerAmount = offerAmount + item.startAmount;
         }
         require(msg.value == offerAmount, "OpenseaOffer: invalid offer amount");
-        bytes32 orderHash = seaport.getOrderHash(order);
-        offers[orderHash] = Offer(otaKey, false, signer, order.startTime, order.endTime, offerAmount);
+        offers[signOfferHash] = Offer(otaKey, signer, signature, order.startTime, order.endTime, offerAmount);
         weth.deposit{value: msg.value}();
+
+        // approve to corresponding conduit key
+        weth.approve(conduit, weth.allowance(address(this), conduit) + offerAmount);
     }
 
     function cancelOffer(OrderComponents calldata order,  bytes calldata offerSignature, bytes32 txId, bytes calldata regulatorSignData) external {
         bytes32 orderHash = seaport.getOrderHash(order);
-        require(!offers[orderHash].isCanceled, "OpenseaOffer: offer cancelled");
-        // verify signature
-        require(offers[orderHash].signer == recoverSigner(orderHash, offerSignature), "OpenseaOffer: invalid signature");
-        // call seaport cancel offer
+        Offer memory offerTemp = offers[toTypedDataHash(domainSeparator, orderHash)];
+        require(offerTemp.startTime != 0 && offerTemp.offerAmount != 0, "OpenseaOffer: invalid offer");
+        // incase the offer not expired must verify offerrer signature
+        if (block.timestamp < offerTemp.endTime) {
+            require(offerTemp.signer == recoverSigner(orderHash, offerSignature), "OpenseaOffer: invalid signature");
+        }
+        // call seaport to cancel offer
         OrderComponents[] memory orders = new OrderComponents[](1);
         orders[0] = order;
-        require(seaport.cancel(orders), "OpenseaOffer:");
-        weth.withdraw(offers[orderHash].offerAmount);
+        require(seaport.cancel(orders), "OpenseaOffer: execute cancel on seaport failed");
+        // withdraw native token
+        weth.withdraw(offerTemp.offerAmount);
         // call deposit to vault contract
-        vault.deposit{value: offers[orderHash].offerAmount}(
-            string(abi.encodePacked(offers[orderHash].otaKey)),
+        vault.deposit{value: offerTemp.offerAmount}(
+            string(abi.encodePacked(offerTemp.otaKey)),
             txId,
             regulatorSignData
         );
-        offers[orderHash].isCanceled = true;
     }
 
     // verify signature source https://eips.ethereum.org/EIPS/eip-1271
@@ -90,13 +85,20 @@ contract ProxyOpenSeaOffer {
         bytes32 _hash,
         bytes calldata _signature
     ) external view returns (bytes4) {
-        // todo: update here
-        // Validate signatures
-        if (recoverSigner(_hash, _signature) == offers[_hash].signer) {
+        if (validateSignature(_hash, _signature)) {
             return 0x1626ba7e;
         } else {
             return 0xffffffff;
         }
+    }
+
+    function validateSignature(
+        bytes32 _hash,
+        bytes calldata _signature
+    ) view internal returns(bool) {
+        Offer memory temp = offers[_hash];
+        if (temp.startTime == 0 || keccak256(temp.signature) != keccak256(_signature) || temp.endTime < block.timestamp) return false;
+        return true;
     }
 
     /**
@@ -148,5 +150,18 @@ contract ProxyOpenSeaOffer {
         require( signer != address(0x0), "SignatureValidator#recoverSigner: INVALID_SIGNER");
 
         return signer;
+    }
+
+    /**
+     * @dev Returns an Ethereum Signed Typed Data, created from a
+     * `domainSeparator` and a `structHash`. This produces hash corresponding
+     * to the one signed with the
+     * https://eips.ethereum.org/EIPS/eip-712[`eth_signTypedData`]
+     * JSON-RPC method as part of EIP-712.
+     *
+     * See {recover}.
+     */
+    function toTypedDataHash(bytes32 domainSeparator_, bytes32 structHash_) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x01", domainSeparator_, structHash_));
     }
 }
