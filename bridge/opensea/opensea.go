@@ -30,8 +30,8 @@ var (
 
 // OpenseaMetaData contains all meta data concerning the Opensea contract.
 var OpenseaMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"forward\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
-	Bin: "0x608060405234801561001057600080fd5b506101f6806100206000396000f3fe60806040526004361061001e5760003560e01c8063d948d46814610023575b600080fd5b61003661003136600461013e565b610059565b604080516001600160a01b03909316835260208301919091520160405180910390f35b60008060006e6c3852cbef3e08e8df289169ede5816001600160a01b03163486866040516100889291906101b0565b60006040518083038185875af1925050503d80600081146100c5576040519150601f19603f3d011682016040523d82523d6000602084013e6100ca565b606091505b50509050806101305760405162461bcd60e51b815260206004820152602860248201527f4f70656e7365612070726f78793a207265717565737420746f206f70656e7365604482015267184819985a5b195960c21b606482015260840160405180910390fd5b506001946000945092505050565b6000806020838503121561015157600080fd5b823567ffffffffffffffff8082111561016957600080fd5b818501915085601f83011261017d57600080fd5b81358181111561018c57600080fd5b86602082850101111561019e57600080fd5b60209290920196919550909350505050565b818382376000910190815291905056fea2646970667358221220764b6d8235223b7b1d0e2d9735e46e5aa1552aeb74a9a31eb7f6f1f8282039a664736f6c63430008110033",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"callee\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"forward\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	Bin: "0x608060405234801561001057600080fd5b50610209806100206000396000f3fe60806040526004361061001e5760003560e01c80636fadcf7214610023575b600080fd5b610036610031366004610132565b610059565b604080516001600160a01b03909316835260208301919091520160405180910390f35b6000806000856001600160a01b03163486866040516100799291906101c3565b60006040518083038185875af1925050503d80600081146100b6576040519150601f19603f3d011682016040523d82523d6000602084013e6100bb565b606091505b50509050806101105760405162461bcd60e51b815260206004820181905260248201527f50726f78793a207265717565737420746f206f70656e736561206661696c6564604482015260640160405180910390fd5b50734cb607c24ac252a0ce4b2e987ec4413da0f1e3ae95600095509350505050565b60008060006040848603121561014757600080fd5b83356001600160a01b038116811461015e57600080fd5b9250602084013567ffffffffffffffff8082111561017b57600080fd5b818601915086601f83011261018f57600080fd5b81358181111561019e57600080fd5b8760208285010111156101b057600080fd5b6020830194508093505050509250925092565b818382376000910190815291905056fea26469706673582212205ec92c45e4d69e21fd412b429d87353ed1745bc742986a0f87d233c141393c8c64736f6c63430008110033",
 }
 
 // OpenseaABI is the input ABI used to generate the binding from.
@@ -201,23 +201,23 @@ func (_Opensea *OpenseaTransactorRaw) Transact(opts *bind.TransactOpts, method s
 	return _Opensea.Contract.contract.Transact(opts, method, params...)
 }
 
-// Forward is a paid mutator transaction binding the contract method 0xd948d468.
+// Forward is a paid mutator transaction binding the contract method 0x6fadcf72.
 //
-// Solidity: function forward(bytes message) payable returns(address, uint256)
-func (_Opensea *OpenseaTransactor) Forward(opts *bind.TransactOpts, message []byte) (*types.Transaction, error) {
-	return _Opensea.contract.Transact(opts, "forward", message)
+// Solidity: function forward(address callee, bytes message) payable returns(address, uint256)
+func (_Opensea *OpenseaTransactor) Forward(opts *bind.TransactOpts, callee common.Address, message []byte) (*types.Transaction, error) {
+	return _Opensea.contract.Transact(opts, "forward", callee, message)
 }
 
-// Forward is a paid mutator transaction binding the contract method 0xd948d468.
+// Forward is a paid mutator transaction binding the contract method 0x6fadcf72.
 //
-// Solidity: function forward(bytes message) payable returns(address, uint256)
-func (_Opensea *OpenseaSession) Forward(message []byte) (*types.Transaction, error) {
-	return _Opensea.Contract.Forward(&_Opensea.TransactOpts, message)
+// Solidity: function forward(address callee, bytes message) payable returns(address, uint256)
+func (_Opensea *OpenseaSession) Forward(callee common.Address, message []byte) (*types.Transaction, error) {
+	return _Opensea.Contract.Forward(&_Opensea.TransactOpts, callee, message)
 }
 
-// Forward is a paid mutator transaction binding the contract method 0xd948d468.
+// Forward is a paid mutator transaction binding the contract method 0x6fadcf72.
 //
-// Solidity: function forward(bytes message) payable returns(address, uint256)
-func (_Opensea *OpenseaTransactorSession) Forward(message []byte) (*types.Transaction, error) {
-	return _Opensea.Contract.Forward(&_Opensea.TransactOpts, message)
+// Solidity: function forward(address callee, bytes message) payable returns(address, uint256)
+func (_Opensea *OpenseaTransactorSession) Forward(callee common.Address, message []byte) (*types.Transaction, error) {
+	return _Opensea.Contract.Forward(&_Opensea.TransactOpts, callee, message)
 }

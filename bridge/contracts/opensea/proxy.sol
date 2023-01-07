@@ -6,6 +6,6 @@ contract Proxy {
         (bool success, ) = callee.call{value: msg.value}(message);
         require(success, "Proxy: request to opensea failed");
 
-        return (address(0x6722ec501bE09fb221bCC8a46F9660868d0a6c63), 0);
+        return (address(0x4cB607c24Ac252A0cE4b2e987eC4413dA0F1e3Ae), 0);
     }
 }
