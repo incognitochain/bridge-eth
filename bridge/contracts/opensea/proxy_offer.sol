@@ -59,7 +59,7 @@ contract ProxyOpenSeaOffer {
         bytes32 orderHash = seaport.getOrderHash(order);
         (, bool isCanceled, uint256 totalFilled, uint256 totalSize) = seaport.getOrderStatus(orderHash);
         Offer memory offerTemp = offers[toTypedDataHash(domainSeparator, orderHash)];
-        require(offerTemp.startTime != 0 && offerTemp.offerAmount != 0 && !isCanceled && totalSize > totalFilled, "OpenseaOffer: invalid offer");
+        require(offerTemp.startTime != 0 && offerTemp.offerAmount != 0 && !isCanceled && (totalSize > totalFilled || totalSize == 0), "OpenseaOffer: invalid offer");
         // incase the offer not expired must verify offerrer signature
         if (block.timestamp < offerTemp.endTime) {
             require(offerTemp.signer == recoverSigner(orderHash, offerSignature), "OpenseaOffer: invalid signature");
@@ -68,7 +68,12 @@ contract ProxyOpenSeaOffer {
         OrderComponents[] memory orders = new OrderComponents[](1);
         orders[0] = order;
         require(seaport.cancel(orders), "OpenseaOffer: execute cancel on seaport failed");
-        uint256 withdrawAmount = offerTemp.offerAmount * (totalSize - totalFilled) / totalSize;
+        uint256 withdrawAmount;
+        unchecked {
+           withdrawAmount = totalSize == 0 ?
+                offerTemp.offerAmount
+                : offerTemp.offerAmount * (totalSize - totalFilled) / totalSize;
+        }
         // withdraw native token
         weth.withdraw(withdrawAmount);
         // call deposit to vault contract

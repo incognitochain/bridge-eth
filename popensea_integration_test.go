@@ -65,7 +65,7 @@ func (v2 *POpenseaIntegrationTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaProxy = ops
 
-	v2.OpenseaOfferAddr = common.HexToAddress("0x3F5d522881DD7fF936Cb8B314Bf65425f8538347")
+	v2.OpenseaOfferAddr = common.HexToAddress("0x7978357437C957B21Daa700595f4d44ffEE35E84")
 	opsO, err := opensea.NewOpenseaOffer(v2.OpenseaOfferAddr, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaOffer = opsO
@@ -355,4 +355,10 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 		_, err = v2.OpenseaOffer.CancelOffer(auth, offer, signBytes, common.Hash{}, regulatorSignature)
 		require.NotEqual(v2.T(), nil, err)
 	}
+
+	// burn to create new offer
+	calldata, err = openseaProxyAbi.Pack("forward", v2.OpenseaOfferAddr, tempData)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println("final burn to offer calldata: " + hex.EncodeToString(calldata) + "\n")
+
 }
