@@ -65,7 +65,7 @@ func (v2 *POpenseaIntegrationTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaProxy = ops
 
-	v2.OpenseaOfferAddr = common.HexToAddress("0x88E34AD6D526761638e9C1b5c0a302C2Ef9Adc09")
+	v2.OpenseaOfferAddr = common.HexToAddress("0x3F5d522881DD7fF936Cb8B314Bf65425f8538347")
 	opsO, err := opensea.NewOpenseaOffer(v2.OpenseaOfferAddr, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaOffer = opsO
