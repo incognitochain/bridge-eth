@@ -35,7 +35,7 @@ contract ProxyOpenSeaOffer {
     // new offer
     function offer(OrderComponents calldata order, string calldata otaKey, bytes calldata signature, address conduit) payable external {
         // verify offerer
-        require(order.offerer == address(this) && order.offer.length == 1, "OpenseaOffer: invalid offerer");
+        require(order.offerer == address(this) && order.offer.length == 1 && order.startTime != 0, "OpenseaOffer: invalid offer");
         bytes32 signOfferHash = toTypedDataHash(domainSeparator, seaport.getOrderHash(order));
         require(offers[signOfferHash].startTime == 0, "OpenseaOffer: offer existed");
         address signer = recoverSigner(signOfferHash, signature);
