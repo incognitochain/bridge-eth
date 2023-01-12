@@ -2,7 +2,43 @@
 pragma solidity ^0.8.0;
 
 import "./iopensea.sol";
-import { OrderComponents, OfferItem } from "./ConsiderationStructs.sol";
+import { OrderComponents, OfferItem, ConsiderationItem } from "./ConsiderationStructs.sol";
+import { ItemType } from "./ConsiderationEnums.sol";
+
+interface IERC721 {
+    /**
+     * @dev Transfers `tokenId` token from `from` to `to`.
+     *
+     * WARNING: Usage of this method is discouraged, use {safeTransferFrom} whenever possible.
+     *
+     * Requirements:
+     *
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     * - `tokenId` token must be owned by `from`.
+     * - If the caller is not `from`, it must be approved to move this token by either {approve} or {setApprovalForAll}.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address from, address to, uint256 tokenId) external;
+}
+
+interface IERC1155 {
+    /**
+     * @dev Transfers `amount` tokens of token type `id` from `from` to `to`.
+     *
+     * Emits a {TransferSingle} event.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - If the caller is not `from`, it must be have been approved to spend ``from``'s tokens via {setApprovalForAll}.
+     * - `from` must have a balance of tokens of type `id` of at least `amount`.
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
+     * acceptance magic value.
+     */
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external;
+}
 
 interface Vault {
     function deposit(string calldata incognitoAddress, bytes32 txId, bytes calldata signData) payable external;
@@ -30,12 +66,15 @@ contract ProxyOpenSeaOffer {
         uint256 startTime;
         uint256 endTime;
         uint256 offerAmount;
+        address recipient;
+        uint256 claimed;
     }
 
     // new offer
-    function offer(OrderComponents calldata order, string calldata otaKey, bytes calldata signature, address conduit) payable external {
+    function offer(OrderComponents calldata order, string calldata otaKey, bytes calldata signature, address conduit, address recipient) payable external {
         // verify offerer
         require(order.offerer == address(this) && order.offer.length == 1 && order.startTime != 0, "OpenseaOffer: invalid offer");
+        require(recipient != address(0), "OpenseaOffer: recipient must not 0");
         bytes32 signOfferHash = toTypedDataHash(domainSeparator, seaport.getOrderHash(order));
         require(offers[signOfferHash].startTime == 0, "OpenseaOffer: offer existed");
         address signer = recoverSigner(signOfferHash, signature);
@@ -48,7 +87,7 @@ contract ProxyOpenSeaOffer {
             offerAmount = offerAmount + item.startAmount;
         }
         require(msg.value == offerAmount, "OpenseaOffer: invalid offer amount");
-        offers[signOfferHash] = Offer(otaKey, signer, signature, order.startTime, order.endTime, offerAmount);
+        offers[signOfferHash] = Offer(otaKey, signer, signature, order.startTime, order.endTime, offerAmount, recipient, 0);
         weth.deposit{value: msg.value}();
 
         // approve to corresponding conduit key
@@ -82,6 +121,31 @@ contract ProxyOpenSeaOffer {
             txId,
             regulatorSignData
         );
+    }
+
+    function claim(OrderComponents calldata order) external {
+        bytes32 signOfferHash = toTypedDataHash(domainSeparator, seaport.getOrderHash(order));
+        require(offers[signOfferHash].startTime != 0 && order.consideration.length != 0, "OpenseaOffer: invalid offer");
+        ConsiderationItem memory temp = order.consideration[0];
+        if (temp.itemType == ItemType.ERC721) {
+            IERC721(temp.token).transferFrom(address(this), offers[signOfferHash].recipient, temp.identifierOrCriteria);
+            offers[signOfferHash].claimed = 1;
+        } else if (temp.itemType == ItemType.ERC1155) {
+            (,, uint256 totalFilled, uint256 totalSize) = seaport.getOrderStatus(seaport.getOrderHash(order));
+            if (totalFilled > 0 && totalSize > 0) {
+                uint256 claimAmount = temp.endAmount * totalFilled / totalSize;
+                if (claimAmount > offers[signOfferHash].claimed) {
+                    uint256 transferAmount;
+                    unchecked {
+                        transferAmount = claimAmount - offers[signOfferHash].claimed;
+                    }
+                    offers[signOfferHash].claimed = claimAmount;
+                    IERC1155(temp.token).safeTransferFrom(address(this), offers[signOfferHash].recipient, temp.identifierOrCriteria, transferAmount, bytes(""));
+                }
+            }
+        } else {
+            revert("OpenseaOffer: the item type not supported");
+        }
     }
 
     // verify signature source https://eips.ethereum.org/EIPS/eip-1271

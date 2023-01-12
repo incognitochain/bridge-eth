@@ -65,7 +65,7 @@ func (v2 *POpenseaIntegrationTestSuite) SetupSuite() {
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaProxy = ops
 
-	v2.OpenseaOfferAddr = common.HexToAddress("0x7978357437C957B21Daa700595f4d44ffEE35E84")
+	v2.OpenseaOfferAddr = common.HexToAddress("0x483305059D63231f24B31122F2140d9Da30E0C5b")
 	opsO, err := opensea.NewOpenseaOffer(v2.OpenseaOfferAddr, v2.ETHClient)
 	require.Equal(v2.T(), nil, err)
 	v2.OpenseaOffer = opsO
@@ -240,7 +240,7 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 		Consideration: []opensea.ConsiderationItem{
 			{
 				ItemType:             2,
-				Token:                common.HexToAddress("0x8b0e17927a58392BBc42faeD1Cb41abE3A43A50C"),
+				Token:                v2.OpenseaOfferAddr,
 				IdentifierOrCriteria: big.NewInt(0),
 				StartAmount:          big.NewInt(1),
 				EndAmount:            big.NewInt(1),
@@ -264,6 +264,7 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 		Counter:    big.NewInt(0),
 	}
 	// sign data
+	recipient := common.HexToAddress("0x8b0e17927a58392BBc42faeD1Cb41abE3A43A50C")
 	domainSeparator, _ := v2.OpenseaOffer.DomainSeparator(nil)
 	orderHash, _ := v2.OpenSea.GetOrderHash(nil, offer)
 	signData, _ := v2.OpenseaOffer.ToTypedDataHash(nil, domainSeparator, orderHash)
@@ -275,7 +276,7 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 	}
 	openseaOfferAbi, _ := abi.JSON(strings.NewReader(opensea.OpenseaOfferMetaData.ABI))
 	otaKey := "12121212"
-	tempData, err := openseaOfferAbi.Pack("offer", offer, otaKey, signBytes, conduit)
+	tempData, err := openseaOfferAbi.Pack("offer", offer, otaKey, signBytes, conduit, recipient)
 	require.Equal(v2.T(), nil, err)
 
 	// call to proxy offer contract
@@ -361,4 +362,7 @@ func (v2 *POpenseaIntegrationTestSuite) TestPDAOCreateProp() {
 	require.Equal(v2.T(), nil, err)
 	fmt.Println("final burn to offer calldata: " + hex.EncodeToString(calldata) + "\n")
 
+	// test claim
+	_, err = v2.OpenseaOffer.Claim(auth, offer)
+	require.Equal(v2.T(), nil, err)
 }
