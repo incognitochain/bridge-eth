@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "./iopensea.sol";
 import { OrderComponents, OfferItem, ConsiderationItem } from "./ConsiderationStructs.sol";
 import { ItemType } from "./ConsiderationEnums.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 interface IERC721 {
     /**
@@ -238,4 +240,16 @@ contract ProxyOpenSeaOffer {
 
     // Receive function which allows transfer eth.
     receive() external payable {}
+
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    function onERC1155Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
 }
