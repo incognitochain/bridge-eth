@@ -39,7 +39,19 @@ func NewPNFTTestSuite(tradingTestSuite *TradingTestSuite) *PNFTTestSuite {
 }
 
 func (v2 *PNFTTestSuite) DeployContracts() {
-	
+	// deploy execution delegate contract
+
+	// deploy policy manager contract
+
+	// deploy pnft implementation
+
+	// deploy pnft proxy
+
+	// call approve to delegate contract
+
+	// add new policy to policy manager
+
+	// deploy new erc721 contract
 }
 
 // Make sure that VariableThatShouldStartAtFive is set to five
@@ -100,5 +112,7 @@ func TestPNFT(t *testing.T) {
 }
 
 func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
+	// create new sell order
 
+	// match order
 }
