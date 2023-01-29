@@ -62,7 +62,6 @@ func TestUpdateImplementation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	auth.GasPrice = big.NewInt(5e9)
 
 	tx, err := c.UpgradeTo(auth, common.HexToAddress(PDaoNewImplementation))
 	if err != nil {
