@@ -53,7 +53,7 @@ func TestUpdateImplementation(t *testing.T) {
 	}
 
 	// Get vault instance
-	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(BSCVaultAddress), client)
+	c, err := vaultproxy.NewTransparentUpgradeableProxy(common.HexToAddress(PDaoAddress), client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestUpdateImplementation(t *testing.T) {
 	}
 	auth.GasPrice = big.NewInt(5e9)
 
-	tx, err := c.UpgradeTo(auth, common.HexToAddress(BSCNewImplementation))
+	tx, err := c.UpgradeTo(auth, common.HexToAddress(PDaoNewImplementation))
 	if err != nil {
 		t.Fatal(err)
 	}
