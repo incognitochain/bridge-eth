@@ -33,11 +33,11 @@ contract IncognitoDAO is GovernorUpgradeable, GovernorCompatibilityBravoUpgradea
     }
 
     function proposalThreshold() public pure override returns (uint256) {
-        return 62500 * 1e9; // 0.25% of 25M PRV
+        return 100 * 1e9; // 100 PRV
     }
 
     function quorumVotes() public pure override returns (uint256) {
-        return 500000 * 1e9; // 2% of 25M PRV
+        return 20000 * 1e9; // 20.000 PRV
     }
 
     // The functions below are overrides required by Solidity.
