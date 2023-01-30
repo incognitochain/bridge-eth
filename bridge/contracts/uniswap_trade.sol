@@ -42,30 +42,27 @@ contract UniswapV2Trade is TradeUtils, Executor {
     // Reciever function which allows transfer eth.
     receive() external payable {}
 
-    function trade(IERC20 srcToken, uint srcQty, IERC20 destToken, uint amountOutMin) public payable returns (address, uint) {
-        require(balanceOf(srcToken) >= srcQty);
-        require(srcToken != destToken);
-        address[] memory path = new address[](2);
+    function trade(address[] memory path, uint amountOutMin) public payable returns (address, uint) {
+        require(path.length >= 2, "Proxy: invalid path");
+        uint256 swapAmount = msg.value > 0 ? msg.value : balanceOf(IERC20(path[0]));
         uint[] memory amounts;
-        if (srcToken != ETH_CONTRACT_ADDRESS) {
-            path[0] = address(srcToken);
+        bool isSwapForNative = false;
+        if (msg.value == 0) {
             // approve
-            approve(srcToken, address(uniswapV2), srcQty);
-            if (destToken != ETH_CONTRACT_ADDRESS) { // token to token.
-                path[1] = address(destToken);
-                amounts = tokenToToken(path, srcQty, amountOutMin);
+            approve(IERC20(path[0]), address(uniswapV2), swapAmount);
+            if (path[path.length - 1] != wETH) { // token to token.
+                amounts = tokenToToken(path, swapAmount, amountOutMin);
             } else {
-                path[1] = address(wETH);
-                amounts = tokenToEth(path, srcQty, amountOutMin);
+                amounts = tokenToEth(path, swapAmount, amountOutMin);
+                isSwapForNative = true;
             }
         } else {
-            path[0] = address(wETH);
-            path[1] = address(destToken);
-            amounts = ethToToken(path, srcQty, amountOutMin);
+            amounts = ethToToken(path, swapAmount, amountOutMin);
         }
-        require(amounts.length >= 2);
-        require(amounts[amounts.length - 1] >= amountOutMin && amounts[0] == srcQty);
-        return (address(destToken), amounts[amounts.length - 1]);
+        require(amounts.length >= 2, "Proxy: invalid response values");
+        require(amounts[amounts.length - 1] >= amountOutMin && amounts[0] == swapAmount);
+        // ETH_CONTRACT_ADDRESS is a address present for eth native
+        return (isSwapForNative ? address(ETH_CONTRACT_ADDRESS) : path[path.length - 1], amounts[amounts.length - 1]);
     }
 
     function ethToToken(address[] memory path, uint srcQty, uint amountOutMin) internal returns (uint[] memory) {

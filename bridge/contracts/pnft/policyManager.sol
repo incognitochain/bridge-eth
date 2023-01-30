@@ -49,14 +49,14 @@ contract PolicyManager is IPolicyManager, Ownable {
     }
 
     /**
-     * @notice View number of whitelisted policies
+     * @notice View number of whitelisted polices
      */
     function viewCountWhitelistedPolicies() external view override returns (uint256) {
         return _whitelistedPolicies.length();
     }
 
     /**
-     * @notice See whitelisted policies
+     * @notice See whitelisted polices
      * @param cursor cursor
      * @param size size
      */

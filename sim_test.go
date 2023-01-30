@@ -234,7 +234,7 @@ func setup(
 	for _, acc := range accs {
 		alloc[acc] = core.GenesisAccount{Balance: balance}
 	}
-	sim := backends.NewSimulatedBackend(alloc, 8000000)
+	sim := backends.NewSimulatedBackend(alloc, 16000000)
 	p := &Platform{
 		sim: sim,
 		contracts: &contracts{
