@@ -298,7 +298,7 @@ func (v2 *PDaoTestSuite) TestPDAOCreateProp() {
 	require.Equal(v2.T(), nil, err)
 
 	// anyone can cancel prop when proposer hold amount of token lower than require threshold value
-	GenNewBlocks(v2.p.sim, 6575+10)
+	GenNewBlocks(v2.p.sim, votePeriodNum+10)
 	v2.cancelVoteBySign(receiveFundAcc, propId3, false)
 
 	// create new prop
@@ -350,6 +350,9 @@ func (v2 *PDaoTestSuite) createProposalBySign(signAccount *account, targets []co
 		require.Equal(v2.T(), nil, err)
 	}
 	GenNewBlocks(v2.p.sim, 1)
+	temp, err := crypto.SigToPub(signData[:], signBytes)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), crypto.PubkeyToAddress(*temp), signAccount.Address)
 	return tx
 }
 
@@ -376,6 +379,9 @@ func (v2 *PDaoTestSuite) voteBySign(signAccount *account, proposalId *big.Int, s
 	} else {
 		require.Equal(v2.T(), nil, err)
 	}
+	temp, err := crypto.SigToPub(signData[:], signBytes)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), crypto.PubkeyToAddress(*temp), signAccount.Address)
 	GenNewBlocks(v2.p.sim, 1)
 }
 
@@ -440,6 +446,10 @@ func (v2 *PDaoTestSuite) burnBySignUnshieldTx(signAccount *account, unshieldTx [
 		require.Equal(v2.T(), nil, err)
 	}
 	GenNewBlocks(v2.p.sim, 1)
+	remoteAddr := signAccount.Address
+	temp, err := crypto.SigToPub(unshieldTx[:], signBytes)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), crypto.PubkeyToAddress(*temp), remoteAddr)
 	return tx
 }
 
