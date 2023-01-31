@@ -34,6 +34,8 @@ type PNFTTestSuite struct {
 	executionDelegate *executiondelegate.Executiondelegate
 	policyManager     *policymanager.Policymanager
 	pnft              *pnft.BlurExchange
+	pnftAddr          common.Address
+	execDelegateAddr  common.Address
 	incNFT            *erc721.Erc721
 	Forwarder         *opensea.Opensea
 	BlurProxy         *blur.Blur
@@ -57,6 +59,7 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	execDelegateAddr, _, delegateInst, err := executiondelegate.DeployExecutiondelegate(auth, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 	v2.executionDelegate = delegateInst
+	v2.execDelegateAddr = execDelegateAddr
 
 	// deploy policy manager contract
 	policyMangerAddr, _, policyManagerInst, err := policymanager.DeployPolicymanager(auth, v2.p.sim)
@@ -76,6 +79,7 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	pnftInst, err := pnft.NewBlurExchange(proxyNftm, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 	v2.pnft = pnftInst
+	v2.pnftAddr = proxyNftm
 
 	// call approve to delegate contract
 	_, err = v2.executionDelegate.ApproveContract(auth, proxyNftm)
@@ -172,7 +176,17 @@ func TestPNFT(t *testing.T) {
 }
 
 func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
+	fmt.Println("Buy Single NFT token...")
+
+	// approve all for delegate contract
+	_, err := v2.incNFT.Mint(auth, auth.From)
+	require.Equal(v2.T(), nil, err)
+	_, err = v2.incNFT.SetApprovalForAll(auth, v2.execDelegateAddr, true)
+	require.Equal(v2.T(), nil, err)
+
 	// create new sell order
 
 	// match order
+
+	fmt.Println("Buy Multis NFT tokens...")
 }
