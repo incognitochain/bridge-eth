@@ -3,7 +3,10 @@ package bridge
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"github.com/cbergoon/merkletree"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -20,6 +23,7 @@ import (
 	"github.com/incognitochain/bridge-eth/bridge/pnft/proxy"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/sha3"
 	"math/big"
 	"os/exec"
 	"strings"
@@ -262,12 +266,71 @@ func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
 	require.Equal(v2.T(), nil, err)
 	auth2.Value = big.NewInt(0)
 	v2.p.sim.Commit()
-
 	// check ownership
 	newOwner, err := v2.incNFT.OwnerOf(nil, big.NewInt(0))
 	require.Equal(v2.T(), newOwner, auth2.From)
 
-	fmt.Println("Buy Multis NFT tokens...")
+	fmt.Println("Sell and Buy Bulk NFT tokens...")
+
+	// mint nft
+	v2.incNFT.Mint(auth, auth.From) // mint token nft id 1
+	v2.incNFT.Mint(auth, auth.From) // mint token nft id 2
+	v2.incNFT.Mint(auth, auth.From) // mint token nft id 3
+	v2.incNFT.SetApprovalForAll(auth, v2.execDelegateAddr, true)
+	v2.p.sim.Commit()
+
+	// order 1
+	order1 := pnft.Order{
+		Trader:         auth.From,
+		Side:           1,
+		MatchingPolicy: v2.standardPolicy,
+		Collection:     v2.incNFTAddr,
+		PaymentToken:   common.Address{},
+		TokenId:        big.NewInt(1),
+		Amount:         big.NewInt(1),
+		Price:          big.NewInt(1000000000),
+		ListingTime:    big.NewInt(int64(v2.p.sim.Blockchain().CurrentHeader().Time)),
+		ExpirationTime: big.NewInt(int64(v2.p.sim.Blockchain().CurrentHeader().Time) + 100),
+		Fees:           []pnft.Fee{},
+		Salt:           big.NewInt(1),
+		ExtraParams:    []byte{},
+	}
+
+	order2 := order1
+	order2.TokenId = big.NewInt(2)
+	order2.Price = big.NewInt(2000000000)
+
+	order3 := order1
+	order3.TokenId = big.NewInt(3)
+	order3.Price = big.NewInt(3000000000)
+
+	// create signature
+	executions, err := v2.SignBulk([]pnft.Order{order1, order2, order3}, genesisAcc.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+
+	// create buy side
+	for i, _ := range executions {
+		_buyOrder := executions[i].Sell.Order
+		_buyOrder.Trader = auth2.From
+		_buyOrder.Side = 0
+		_buyInput := pnft.Input{
+			Order:       _buyOrder,
+			BlockNumber: big.NewInt(0),
+		}
+		executions[i].Buy = _buyInput
+	}
+
+	currentOwner, _ := v2.incNFT.OwnerOf(nil, big.NewInt(1))
+	require.Equal(v2.T(), currentOwner, auth.From)
+
+	// match order
+	auth2.Value = big.NewInt(1e18)
+	_, err = v2.pnft.BulkExecute(auth2, executions)
+	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
+
+	newOwner, _ = v2.incNFT.OwnerOf(nil, big.NewInt(1))
+	require.Equal(v2.T(), newOwner, auth2.From)
 }
 
 func (v2 *PNFTTestSuite) SignSingle(order *pnft.Order, privKey *ecdsa.PrivateKey) (pnft.Input, error) {
@@ -288,9 +351,95 @@ func (v2 *PNFTTestSuite) SignSingle(order *pnft.Order, privKey *ecdsa.PrivateKey
 	}, nil
 }
 
-// todo
-func (v2 *PNFTTestSuite) SignBulk(bulkOrder *[]pnft.Execution) {
+func (v2 *PNFTTestSuite) SignBulk(orders []pnft.Order, privKey *ecdsa.PrivateKey) ([]pnft.Execution, error) {
+	//Build list of Content to build tree
+	var list []merkletree.Content
+	for _, order := range orders {
+		orderHash, err := v2.pnft.GetOrderHash(nil, order)
+		fmt.Println(hex.EncodeToString(orderHash[:]))
+		require.Equal(v2.T(), nil, err)
+		list = append(list, TestContent{x: orderHash})
+	}
 
+	//Create a new Merkle Tree from the list of Content
+	t, err := merkletree.NewTreeWithHashStrategySorted(list, sha3.NewLegacyKeccak256, true)
+	require.Equal(v2.T(), nil, err)
+	// sign root hash
+	byte32, err := abi.NewType("bytes32", "", nil)
+	require.Equal(v2.T(), nil, err)
+	argumentsRoot := abi.Arguments{
+		abi.Argument{
+			Type: byte32,
+		},
+		abi.Argument{
+			Type: byte32,
+		},
+	}
+	bytesRootPack, err := argumentsRoot.Pack(
+		crypto.Keccak256Hash([]byte("Root(bytes32 root)")),
+		toByte32(t.MerkleRoot()),
+	)
+	require.Equal(v2.T(), nil, err)
+	domainSeparator, _ := v2.pnft.DOMAINSEPARATOR(nil)
+	hashToSign := crypto.Keccak256Hash(
+		[]byte("\x19\x01"),
+		domainSeparator[:],
+		crypto.Keccak256Hash(bytesRootPack).Bytes(),
+	)
+	signBytes, err := crypto.Sign(hashToSign[:], privKey)
+	require.Equal(v2.T(), nil, err)
+
+	// build result
+	var result []pnft.Execution
+	for i, _ := range list {
+		var tempProof [][32]byte
+		proof, _, err := t.GetMerklePath(list[i])
+		require.Equal(v2.T(), nil, err)
+		for _, p := range proof {
+			tempProof = append(tempProof, toByte32(p))
+		}
+		arrayByte32, err := abi.NewType("bytes32[]", "", nil)
+		require.Equal(v2.T(), nil, err)
+		arguments := abi.Arguments{
+			abi.Argument{
+				Type: arrayByte32,
+			},
+		}
+		bytes, err := arguments.Pack(tempProof)
+		require.Equal(v2.T(), nil, err)
+		var execution pnft.Execution
+		execution.Sell = pnft.Input{
+			Order:            orders[i],
+			V:                signBytes[64] + 27,
+			R:                toByte32(signBytes[:32]),
+			S:                toByte32(signBytes[32:64]),
+			ExtraSignature:   bytes,
+			SignatureVersion: 1,
+			BlockNumber:      big.NewInt(0),
+		}
+		result = append(result, execution)
+	}
+
+	return result, nil
+}
+
+// TestContent implements the Content interface provided by merkletree and represents the content stored in the tree.
+type TestContent struct {
+	x [32]byte
+}
+
+// CalculateHash hashes the values of a TestContent
+func (t TestContent) CalculateHash() ([]byte, error) {
+	return t.x[:], nil
+}
+
+// Equals tests for equality of two Contents
+func (t TestContent) Equals(other merkletree.Content) (bool, error) {
+	otherTC, ok := other.(TestContent)
+	if !ok {
+		return false, errors.New("value is not of type TestContent")
+	}
+	return t.x == otherTC.x, nil
 }
 
 func (v2 *PNFTTestSuite) SendEth(receiver common.Address) {
