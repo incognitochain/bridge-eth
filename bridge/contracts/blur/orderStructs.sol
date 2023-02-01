@@ -171,7 +171,7 @@ interface IBlur {
 }
 
 contract BuyBlurProxy {
-    IBlur constant public blur1 = IBlur(0x000000000000Ad05Ccc4F10045630fb830B95127);
+    IBlur constant public blur1 = IBlur(0x9A886f7cB772Fc990dd8265cb1a9547DB6CfE2e3);
     IBlur constant public blur2 = IBlur(0x39da41747a83aeE658334415666f3EF92DD0D541);
 
     // process buy

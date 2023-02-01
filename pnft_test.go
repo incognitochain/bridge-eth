@@ -41,6 +41,7 @@ type PNFTTestSuite struct {
 	pnftAddr          common.Address
 	execDelegateAddr  common.Address
 	incNFT            *erc721.Erc721
+	incNFTAddr        common.Address
 	Forwarder         *opensea.Opensea
 	BlurProxy         *blur.Blur
 	BlurProxyAddr     common.Address
@@ -102,9 +103,10 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	v2.standardPolicy = standardPolicyErc721
 
 	// deploy new erc721 contract to test
-	_, _, erc721Inst, err := erc721.DeployErc721(auth, v2.p.sim, "incognito nft", "INFT", "")
+	erc721Addr, _, erc721Inst, err := erc721.DeployErc721(auth, v2.p.sim, "incognito nft", "INFT", "")
 	require.Equal(v2.T(), nil, err)
 	v2.incNFT = erc721Inst
+	v2.incNFTAddr = erc721Addr
 
 	// deploy proxy contract
 	_, _, fwd, err := opensea.DeployOpensea(auth, v2.p.sim)
@@ -117,6 +119,8 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	require.Equal(v2.T(), nil, err)
 	v2.BlurProxy = bProxy
 	v2.BlurProxyAddr = bPAddr
+
+	v2.p.sim.Commit()
 }
 
 // Make sure that VariableThatShouldStartAtFive is set to five
@@ -166,6 +170,13 @@ func (v2 *PNFTTestSuite) SetupSuite() {
 		"abigen --abi bridge/erc721/ERC721PresetMinterPauserAutoId.abi --bin bridge/erc721/ERC721PresetMinterPauserAutoId.bin --out bridge/erc721/erc721.go --pkg erc721").Run()
 	require.Equal(v2.T(), nil, err)
 
+	// incognito proxy pnft
+	err = exec.Command("/bin/bash", "-c",
+		"solc @openzeppelin/=node_modules/@openzeppelin/ --base-path=$(pwd)/bridge --bin --abi --optimize --overwrite bridge/contracts/blur/orderStructs.sol -o bridge/blur").Run()
+	require.Equal(v2.T(), nil, err)
+	err = exec.Command("/bin/bash", "-c",
+		"abigen --abi bridge/blur/BuyBlurProxy.abi --bin bridge/blur/BuyBlurProxy.bin --out bridge/blur/blur.go --pkg blur").Run()
+
 	p, c, err := setupFixedCommittee()
 	require.Equal(v2.T(), nil, err)
 	v2.p = p
@@ -206,42 +217,73 @@ func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.incNFT.SetApprovalForAll(auth, v2.execDelegateAddr, true)
 	require.Equal(v2.T(), nil, err)
+	v2.p.sim.Commit()
 
-	//order := blur.Order{
-	//	Trader:         auth.From,
-	//	Side:           1,
-	//	MatchingPolicy: v2.standardPolicy,
-	//	Collection:     v2.pnftAddr,
-	//	TokenId:        big.NewInt(0),
-	//	Amount:         big.NewInt(1),
-	//	PaymentToken:   common.Address{},
-	//	Price:          big.NewInt(100000000),
-	//	ListingTime:    big.NewInt(10),
-	//	ExpirationTime: big.NewInt(20),
-	//	Fees:           []blur.Fee{},
-	//	Salt:           big.NewInt(1),
-	//	ExtraParams:    []byte{},
-	//}
-	//
-	//// create new sell order
-	//sell := blur.Input{
-	//	Order: order,
-	//}
-	//buy := blur.Input{
-	//	Order: order,
-	//}
+	fmt.Println()
+
+	order := pnft.Order{
+		Side:           1,
+		MatchingPolicy: v2.standardPolicy,
+		Collection:     v2.incNFTAddr,
+		PaymentToken:   common.Address{},
+		TokenId:        big.NewInt(0),
+		Amount:         big.NewInt(1),
+		Price:          big.NewInt(100000000),
+		ListingTime:    big.NewInt(int64(v2.p.sim.Blockchain().CurrentHeader().Time)),
+		ExpirationTime: big.NewInt(int64(v2.p.sim.Blockchain().CurrentHeader().Time) + 100),
+		Fees:           []pnft.Fee{},
+		Salt:           big.NewInt(1),
+		ExtraParams:    []byte{},
+	}
+
+	// create new sell order
+	sellOrder := order
+	sellOrder.Trader = auth.From
+	sellInput, err := v2.SignSingle(&sellOrder, genesisAcc.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+
+	buyOrder := order
+	buyOrder.Trader = auth2.From
+	buyOrder.Side = 0
+	buyInput := pnft.Input{
+		Order:       buyOrder,
+		BlockNumber: big.NewInt(0),
+	}
+
 	// match order
+	auth2.Value = order.Price
+	_, err = v2.pnft.Execute(auth2, sellInput, buyInput)
+	require.Equal(v2.T(), nil, err)
+	auth2.Value = big.NewInt(0)
+	v2.p.sim.Commit()
+
+	// check ownership
+	newOwner, err := v2.incNFT.OwnerOf(nil, big.NewInt(0))
+	require.Equal(v2.T(), newOwner, auth2.From)
 
 	fmt.Println("Buy Multis NFT tokens...")
 }
 
-func (v2 *PNFTTestSuite) SignSingle(order *blur.Order) (*blur.Input, error) {
+func (v2 *PNFTTestSuite) SignSingle(order *pnft.Order, privKey *ecdsa.PrivateKey) (pnft.Input, error) {
+	orderHash, err := v2.pnft.GetOrderHash(nil, *order)
+	require.Equal(v2.T(), nil, err)
 
-	return &blur.Input{}, nil
+	domainSeparator, _ := v2.pnft.DOMAINSEPARATOR(nil)
+	hashToSign := crypto.Keccak256Hash([]byte("\x19\x01"), domainSeparator[:], orderHash[:])
+	signBytes, err := crypto.Sign(hashToSign[:], privKey)
+	require.Equal(v2.T(), nil, err)
+
+	return pnft.Input{
+		Order:       *order,
+		V:           signBytes[64] + 27,
+		R:           toByte32(signBytes[:32]),
+		S:           toByte32(signBytes[32:64]),
+		BlockNumber: big.NewInt(0),
+	}, nil
 }
 
 // todo
-func (v2 *PNFTTestSuite) SignBulk(bulkOrder *[]blur.Execution) {
+func (v2 *PNFTTestSuite) SignBulk(bulkOrder *[]pnft.Execution) {
 
 }
 

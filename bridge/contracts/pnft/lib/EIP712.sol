@@ -34,7 +34,7 @@ contract EIP712 {
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
     );
 
-    bytes32 DOMAIN_SEPARATOR;
+    bytes32 public DOMAIN_SEPARATOR;
 
     function _hashDomain(EIP712Domain memory eip712Domain)
     internal
