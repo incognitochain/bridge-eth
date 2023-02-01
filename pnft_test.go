@@ -243,16 +243,22 @@ func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
 	require.Equal(v2.T(), nil, err)
 
 	buyOrder := order
-	buyOrder.Trader = auth2.From
+	buyOrder.Trader = v2.BlurProxyAddr
 	buyOrder.Side = 0
 	buyInput := pnft.Input{
 		Order:       buyOrder,
 		BlockNumber: big.NewInt(0),
 	}
 
-	// match order
+	// match buy order
 	auth2.Value = order.Price
-	_, err = v2.pnft.Execute(auth2, sellInput, buyInput)
+	blurProxy, _ := abi.JSON(strings.NewReader(blur.BlurMetaData.ABI))
+	buyInput.Order.Trader = v2.BlurProxyAddr
+	fmt.Println(v2.pnftAddr)
+	callDataBlur, err := blurProxy.Pack("execute", sellInput, buyInput, auth2.From)
+	require.Equal(v2.T(), nil, err)
+	fmt.Println(callDataBlur)
+	_, err = v2.Forwarder.Forward(auth2, v2.BlurProxyAddr, callDataBlur)
 	require.Equal(v2.T(), nil, err)
 	auth2.Value = big.NewInt(0)
 	v2.p.sim.Commit()
