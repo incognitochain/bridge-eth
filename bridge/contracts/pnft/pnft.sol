@@ -292,6 +292,10 @@ contract BlurExchange is IBlurExchange, ReentrancyGuarded, EIP712, OwnableUpgrad
         emit NonceIncremented(msg.sender, nonces[msg.sender]);
     }
 
+    /* Getters */
+    function getOrderHash(Order calldata order) external returns(bytes32) {
+        return _hashOrder(order, nonces[order.trader]);
+    }
 
     /* Setters */
 

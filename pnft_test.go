@@ -1,11 +1,14 @@
 package bridge
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/incognitochain/bridge-eth/bridge/blur"
 	"github.com/incognitochain/bridge-eth/bridge/erc721"
@@ -30,7 +33,8 @@ type PNFTTestSuite struct {
 
 	p                 *Platform
 	c                 *committees
-	standardProxy     common.Address
+	standardPolicy    common.Address
+	pnftDeployer      *bind.TransactOpts
 	executionDelegate *executiondelegate.Executiondelegate
 	policyManager     *policymanager.Policymanager
 	pnft              *pnft.BlurExchange
@@ -74,7 +78,14 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	nftABI, _ := abi.JSON(strings.NewReader(pnft.BlurExchangeMetaData.ABI))
 	input, err := nftABI.Pack("initialize", execDelegateAddr, policyMangerAddr, auth2.From, big.NewInt(30))
 	require.Equal(v2.T(), nil, err)
-	proxyNftm, _, _, err := proxy.DeployProxy(auth, v2.p.sim, pnftImplementation, input)
+
+	privKey, err := crypto.HexToECDSA("1193a43543fc11e37daa1a026ae8fae69d84c5dd1f3f933047ff2588778c5cca")
+	require.Equal(v2.T(), nil, err)
+	v2.pnftDeployer, err = bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(1337))
+	require.Equal(v2.T(), nil, err)
+	v2.SendEth(v2.pnftDeployer.From)
+
+	proxyNftm, _, _, err := proxy.DeployProxy(v2.pnftDeployer, v2.p.sim, pnftImplementation, input)
 	require.Equal(v2.T(), nil, err)
 	pnftInst, err := pnft.NewBlurExchange(proxyNftm, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
@@ -88,12 +99,24 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.policyManager.AddPolicy(auth, standardPolicyErc721)
 	require.Equal(v2.T(), nil, err)
-	v2.standardProxy = standardPolicyErc721
+	v2.standardPolicy = standardPolicyErc721
 
 	// deploy new erc721 contract to test
 	_, _, erc721Inst, err := erc721.DeployErc721(auth, v2.p.sim, "incognito nft", "INFT", "")
 	require.Equal(v2.T(), nil, err)
 	v2.incNFT = erc721Inst
+
+	// deploy proxy contract
+	_, _, fwd, err := opensea.DeployOpensea(auth, v2.p.sim)
+	require.Equal(v2.T(), nil, err)
+	v2.Forwarder = fwd
+
+	// deploy blur proxy
+	bPAddr, _, bProxy, err := blur.DeployBlur(auth, v2.p.sim)
+	fmt.Println(bPAddr.String())
+	require.Equal(v2.T(), nil, err)
+	v2.BlurProxy = bProxy
+	v2.BlurProxyAddr = bPAddr
 }
 
 // Make sure that VariableThatShouldStartAtFive is set to five
@@ -179,14 +202,54 @@ func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
 	fmt.Println("Buy Single NFT token...")
 
 	// approve all for delegate contract
-	_, err := v2.incNFT.Mint(auth, auth.From)
+	_, err := v2.incNFT.Mint(auth, auth.From) // mint token nft id 0
 	require.Equal(v2.T(), nil, err)
 	_, err = v2.incNFT.SetApprovalForAll(auth, v2.execDelegateAddr, true)
 	require.Equal(v2.T(), nil, err)
 
-	// create new sell order
-
+	//order := blur.Order{
+	//	Trader:         auth.From,
+	//	Side:           1,
+	//	MatchingPolicy: v2.standardPolicy,
+	//	Collection:     v2.pnftAddr,
+	//	TokenId:        big.NewInt(0),
+	//	Amount:         big.NewInt(1),
+	//	PaymentToken:   common.Address{},
+	//	Price:          big.NewInt(100000000),
+	//	ListingTime:    big.NewInt(10),
+	//	ExpirationTime: big.NewInt(20),
+	//	Fees:           []blur.Fee{},
+	//	Salt:           big.NewInt(1),
+	//	ExtraParams:    []byte{},
+	//}
+	//
+	//// create new sell order
+	//sell := blur.Input{
+	//	Order: order,
+	//}
+	//buy := blur.Input{
+	//	Order: order,
+	//}
 	// match order
 
 	fmt.Println("Buy Multis NFT tokens...")
+}
+
+func (v2 *PNFTTestSuite) SignSingle(order *blur.Order) (*blur.Input, error) {
+
+	return &blur.Input{}, nil
+}
+
+// todo
+func (v2 *PNFTTestSuite) SignBulk(bulkOrder *[]blur.Execution) {
+
+}
+
+func (v2 *PNFTTestSuite) SendEth(receiver common.Address) {
+	var data []byte
+	tx := types.NewTransaction(6, receiver, big.NewInt(5e18), 21000, big.NewInt(1e9), data)
+	signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, genesisAcc.PrivateKey)
+	require.Equal(v2.T(), nil, err)
+	require.Equal(v2.T(), nil, v2.p.sim.SendTransaction(context.Background(), signedTx))
+	v2.p.sim.Commit()
 }
