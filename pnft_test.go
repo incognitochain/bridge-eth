@@ -76,6 +76,7 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 	v2.policyManager = policyManagerInst
 
 	// deploy pnft implementation
+	pnft.MerkleVerifierMetaData.ABI = "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"leaf\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"_computeRoot\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"leaf\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"_verifyProof\",\"outputs\":[],\"stateMutability\":\"pure\",\"type\":\"function\"}]"
 	pnftImplementation, _, _, err := pnft.DeployBlurExchange(auth, v2.p.sim)
 	require.Equal(v2.T(), nil, err)
 
@@ -119,7 +120,6 @@ func (v2 *PNFTTestSuite) DeployContracts() {
 
 	// deploy blur proxy
 	bPAddr, _, bProxy, err := blur.DeployBlur(auth, v2.p.sim)
-	fmt.Println(bPAddr.String())
 	require.Equal(v2.T(), nil, err)
 	v2.BlurProxy = bProxy
 	v2.BlurProxyAddr = bPAddr
@@ -331,6 +331,10 @@ func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
 
 	newOwner, _ = v2.incNFT.OwnerOf(nil, big.NewInt(1))
 	require.Equal(v2.T(), newOwner, auth2.From)
+	newOwner, _ = v2.incNFT.OwnerOf(nil, big.NewInt(2))
+	require.Equal(v2.T(), newOwner, auth2.From)
+	newOwner, _ = v2.incNFT.OwnerOf(nil, big.NewInt(3))
+	require.Equal(v2.T(), newOwner, auth2.From)
 }
 
 func (v2 *PNFTTestSuite) SignSingle(order *pnft.Order, privKey *ecdsa.PrivateKey) (pnft.Input, error) {
@@ -444,7 +448,7 @@ func (t TestContent) Equals(other merkletree.Content) (bool, error) {
 
 func (v2 *PNFTTestSuite) SendEth(receiver common.Address) {
 	var data []byte
-	tx := types.NewTransaction(6, receiver, big.NewInt(5e18), 21000, big.NewInt(1e9), data)
+	tx := types.NewTransaction(7, receiver, big.NewInt(5e18), 21000, big.NewInt(1e9), data)
 	signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, genesisAcc.PrivateKey)
 	require.Equal(v2.T(), nil, err)
 	require.Equal(v2.T(), nil, v2.p.sim.SendTransaction(context.Background(), signedTx))
