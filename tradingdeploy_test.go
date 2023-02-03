@@ -4,6 +4,11 @@ package bridge
 import (
 	"fmt"
 	"github.com/incognitochain/bridge-eth/bridge/governance"
+	"github.com/incognitochain/bridge-eth/bridge/pnft"
+	"github.com/incognitochain/bridge-eth/bridge/pnft/executiondelegate"
+	policymanager "github.com/incognitochain/bridge-eth/bridge/pnft/policyManager"
+	"github.com/incognitochain/bridge-eth/bridge/pnft/policyManager/standardPolicyERC721"
+	"github.com/incognitochain/bridge-eth/bridge/pnft/proxy"
 	"github.com/incognitochain/bridge-eth/bridge/prvvote"
 	"math/big"
 	"os"
@@ -523,7 +528,76 @@ func (tradingDeploySuite *TradingDeployTestSuite) TestDeployAllContracts() {
 		return
 	}
 
-	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 7 ===============")
+	// deploy pnft
+	if network == "8" {
+		fmt.Println("============== DEPLOY PNFT ===============")
+		auth, err = bind.NewKeyedTransactorWithChainID(tradingDeploySuite.ETHPrivKey, big.NewInt(int64(tradingDeploySuite.ChainIDETH)))
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// deploy execution delegate contract
+		execDelegateAddr, tx, executionDelegate, err := executiondelegate.DeployExecutiondelegate(auth, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed executiondelegate")
+		fmt.Printf("addr: %s\n", execDelegateAddr.Hex())
+
+		// deploy policy manager contract
+		policyMangerAddr, tx, policyManager, err := policymanager.DeployPolicymanager(auth, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed policymanager")
+		fmt.Printf("addr: %s\n", policyMangerAddr.Hex())
+
+		// deploy pnft implementation
+		pnft.MerkleVerifierMetaData.ABI = "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"leaf\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"_computeRoot\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"leaf\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"_verifyProof\",\"outputs\":[],\"stateMutability\":\"pure\",\"type\":\"function\"}]"
+		pnftImplementation, tx, _, err := pnft.DeployBlurExchange(auth, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed pnft implementation")
+		fmt.Printf("addr: %s\n", pnftImplementation.Hex())
+
+		// deploy pnft proxy
+		nftABI, _ := abi.JSON(strings.NewReader(pnft.BlurExchangeMetaData.ABI))
+		input, err := nftABI.Pack("initialize", execDelegateAddr, policyMangerAddr, auth2.From, big.NewInt(30))
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		proxyNftm, tx, _, err := proxy.DeployProxy(auth, tradingDeploySuite.ETHClient, pnftImplementation, input)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed pnft")
+		fmt.Printf("addr: %s\n", proxyNftm.Hex())
+		_, err = pnft.NewBlurExchange(proxyNftm, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// call approve to delegate contract
+		tx, err = executionDelegate.ApproveContract(auth, proxyNftm)
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+
+		// deploy and add new policy to policy manager
+		standardPolicyErc721, tx, _, err := standardPolicyERC721.DeployStandardPolicyERC721(auth, tradingDeploySuite.ETHClient)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		_, err = policyManager.AddPolicy(auth, standardPolicyErc721)
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		// Wait until tx is confirmed
+		err = wait(tradingDeploySuite.ETHClient, tx.Hash())
+		require.Equal(tradingDeploySuite.T(), nil, err)
+		fmt.Println("deployed standardPolicyERC721")
+		fmt.Printf("addr: %s\n", standardPolicyErc721.Hex())
+
+		return
+	}
+
+	fmt.Println("============== NETWORK ONLY IN RANGE 0 - 8 ===============")
 }
 
 func convertCommittees(
