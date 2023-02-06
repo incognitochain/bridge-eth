@@ -338,7 +338,8 @@ func (v2 *PNFTTestSuite) TestPBlurCreateProp() {
 }
 
 func (v2 *PNFTTestSuite) SignSingle(order *pnft.Order, privKey *ecdsa.PrivateKey) (pnft.Input, error) {
-	orderHash, err := v2.pnft.GetOrderHash(nil, *order)
+	nonce, _ := v2.pnft.Nonces(nil, order.Trader)
+	orderHash, err := v2.pnft.GetOrderHash(nil, *order, nonce)
 	require.Equal(v2.T(), nil, err)
 
 	domainSeparator, _ := v2.pnft.DOMAINSEPARATOR(nil)
@@ -358,8 +359,9 @@ func (v2 *PNFTTestSuite) SignSingle(order *pnft.Order, privKey *ecdsa.PrivateKey
 func (v2 *PNFTTestSuite) SignBulk(orders []pnft.Order, privKey *ecdsa.PrivateKey) ([]pnft.Execution, error) {
 	//Build list of Content to build tree
 	var list []merkletree.Content
+	nonce, _ := v2.pnft.Nonces(nil, orders[0].Trader)
 	for _, order := range orders {
-		orderHash, err := v2.pnft.GetOrderHash(nil, order)
+		orderHash, err := v2.pnft.GetOrderHash(nil, order, nonce)
 		fmt.Println(hex.EncodeToString(orderHash[:]))
 		require.Equal(v2.T(), nil, err)
 		list = append(list, TestContent{x: orderHash})
