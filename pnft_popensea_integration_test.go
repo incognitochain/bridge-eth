@@ -173,9 +173,145 @@ func (v2 *PNFTIntegrationTestSuite) TestPBlurCreateProp() {
 	require.Equal(v2.T(), nil, err)
 
 	auth.Value = big.NewInt(0).Add(big.NewInt(2000000000000000), order.Price)
-	tx, err := v2.adapter.BuyBatchETH(auth, []uint8{0, 1}, [][]byte{pnftCallData, openseaData})
+	//tx, err := v2.adapter.BuyBatchETH(auth, []uint8{0, 1}, [][]byte{pnftCallData, openseaData})
+	//require.Equal(v2.T(), nil, err)
+	//fmt.Printf("buy nft tx: %s \n", tx.Hash().String())
+	var salt = big.NewInt(0)
+	salt.SetString("24446860302761739304752683030156737591518664810215442929816018635051325168460", 10)
+	var salt2 = big.NewInt(0)
+	salt2.SetString("24446860302761739304752683030156737591518664810215442929817092847857479731389", 10)
+	advancedOrders := []opensea.AdvancedOrder{
+		{
+			Parameters: opensea.OrderParameters{
+				Offerer: common.HexToAddress("0xbFb53a2c470cdb4FF32eE4F18A93B98F9f55D0E1"),
+				Zone:    common.HexToAddress("0x0000000000000000000000000000000000000000"),
+				Offer: []opensea.OfferItem{
+					{
+						ItemType:             2,
+						Token:                common.HexToAddress("0x1f419B9469D641D333805C4054CA3b65Af54d315"),
+						IdentifierOrCriteria: big.NewInt(1628),
+						StartAmount:          big.NewInt(1),
+						EndAmount:            big.NewInt(1),
+					},
+				},
+				Consideration: []opensea.ConsiderationItem{
+					{
+						ItemType:             0,
+						Token:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						IdentifierOrCriteria: big.NewInt(0),
+						StartAmount:          big.NewInt(975000000000000),
+						EndAmount:            big.NewInt(975000000000000),
+						Recipient:            common.HexToAddress("0xbFb53a2c470cdb4FF32eE4F18A93B98F9f55D0E1"),
+					},
+					{
+						ItemType:             1,
+						Token:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						IdentifierOrCriteria: big.NewInt(0),
+						StartAmount:          big.NewInt(25000000000000),
+						EndAmount:            big.NewInt(25000000000000),
+						Recipient:            common.HexToAddress("0x0000a26b00c1F0DF003000390027140000fAa719"),
+					},
+				},
+				OrderType:                       0,
+				StartTime:                       big.NewInt(1674492391),
+				EndTime:                         big.NewInt(1677170791),
+				ZoneHash:                        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+				Salt:                            salt,
+				ConduitKey:                      toByte32([]byte{0, 0, 0, 123, 2, 35, 0, 145, 167, 237, 1, 35, 0, 114, 247, 0, 106, 0, 77, 96, 168, 212, 231, 29, 89, 155, 129, 4, 37, 15, 0, 0}),
+				TotalOriginalConsiderationItems: big.NewInt(2),
+			},
+			Numerator:   big.NewInt(1),
+			Denominator: big.NewInt(1),
+			Signature:   []byte{142, 163, 60, 189, 238, 109, 190, 24, 253, 234, 98, 23, 132, 164, 223, 53, 18, 68, 4, 250, 136, 203, 54, 160, 49, 142, 193, 119, 81, 34, 77, 15, 18, 105, 54, 25, 147, 235, 23, 166, 3, 52, 31, 238, 232, 114, 76, 196, 226, 1, 175, 58, 129, 232, 32, 131, 144, 78, 50, 180, 109, 211, 179, 151, 28},
+			ExtraData:   []byte{},
+		},
+		{
+			Parameters: opensea.OrderParameters{
+				Offerer: common.HexToAddress("0xbFb53a2c470cdb4FF32eE4F18A93B98F9f55D0E1"),
+				Zone:    common.HexToAddress("0x0000000000000000000000000000000000000000"),
+				Offer: []opensea.OfferItem{
+					{
+						ItemType:             2,
+						Token:                common.HexToAddress("0x1f419B9469D641D333805C4054CA3b65Af54d315"),
+						IdentifierOrCriteria: big.NewInt(1631),
+						StartAmount:          big.NewInt(1),
+						EndAmount:            big.NewInt(1),
+					},
+				},
+				Consideration: []opensea.ConsiderationItem{
+					{
+						ItemType:             0,
+						Token:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						IdentifierOrCriteria: big.NewInt(0),
+						StartAmount:          big.NewInt(975000000000000),
+						EndAmount:            big.NewInt(975000000000000),
+						Recipient:            common.HexToAddress("0xbFb53a2c470cdb4FF32eE4F18A93B98F9f55D0E1"),
+					},
+					{
+						ItemType:             1,
+						Token:                common.HexToAddress("0x0000000000000000000000000000000000000000"),
+						IdentifierOrCriteria: big.NewInt(0),
+						StartAmount:          big.NewInt(25000000000000),
+						EndAmount:            big.NewInt(25000000000000),
+						Recipient:            common.HexToAddress("0x0000a26b00c1F0DF003000390027140000fAa719"),
+					},
+				},
+				OrderType:                       0,
+				StartTime:                       big.NewInt(1674492432),
+				EndTime:                         big.NewInt(1677170832),
+				ZoneHash:                        common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+				Salt:                            salt2,
+				ConduitKey:                      toByte32([]byte{0, 0, 0, 123, 2, 35, 0, 145, 167, 237, 1, 35, 0, 114, 247, 0, 106, 0, 77, 96, 168, 212, 231, 29, 89, 155, 129, 4, 37, 15, 0, 0}),
+				TotalOriginalConsiderationItems: big.NewInt(2),
+			},
+			Numerator:   big.NewInt(1),
+			Denominator: big.NewInt(1),
+			Signature:   []byte{222, 14, 2, 71, 231, 73, 224, 254, 243, 195, 222, 225, 63, 134, 52, 81, 233, 183, 11, 151, 3, 176, 50, 98, 227, 6, 16, 67, 227, 37, 254, 106, 50, 140, 134, 51, 176, 10, 43, 102, 208, 154, 218, 168, 167, 49, 83, 101, 209, 92, 243, 221, 94, 191, 189, 175, 254, 18, 35, 22, 95, 182, 6, 96, 28},
+			ExtraData:   []byte{},
+		},
+	}
+	criteriaResolvers := []opensea.CriteriaResolver{}
+	offerFulfillments := [][]opensea.FulfillmentComponent{
+		{
+			{
+				OrderIndex: big.NewInt(0),
+				ItemIndex:  big.NewInt(0),
+			},
+			{
+				OrderIndex: big.NewInt(1),
+				ItemIndex:  big.NewInt(0),
+			},
+		},
+	}
+	considerationFulfillments := [][]opensea.FulfillmentComponent{
+		{
+			{
+				OrderIndex: big.NewInt(0),
+				ItemIndex:  big.NewInt(0),
+			},
+			{
+				OrderIndex: big.NewInt(1),
+				ItemIndex:  big.NewInt(0),
+			},
+		},
+		{
+			{
+				OrderIndex: big.NewInt(0),
+				ItemIndex:  big.NewInt(1),
+			},
+			{
+				OrderIndex: big.NewInt(1),
+				ItemIndex:  big.NewInt(1),
+			},
+		},
+	}
+	fulfillerConduitKey := toByte32([]byte{0, 0, 0, 123, 2, 35, 0, 145, 167, 237, 1, 35, 0, 114, 247, 0, 106, 0, 77, 96, 168, 212, 231, 29, 89, 155, 129, 4, 37, 15, 0, 0})
+	recipient := common.HexToAddress("0x54b3DBA467C9Dbb916EF4D6AedaFa19C4Fef8258")
+	maximumFulfilled := big.NewInt(2)
+	iopenseaAbi, _ := abi.JSON(strings.NewReader(opensea.IopenseaMetaData.ABI))
+	openseaCalldataBuild, err := iopenseaAbi.Pack("fulfillAvailableAdvancedOrders", advancedOrders, criteriaResolvers, offerFulfillments, considerationFulfillments, fulfillerConduitKey, recipient, maximumFulfilled)
 	require.Equal(v2.T(), nil, err)
-	fmt.Printf("buy nft tx: %s \n", tx.Hash().String())
+	require.Equal(v2.T(), openseaCalldataBuild, openseaData)
 
 	pnftCallData, err = adapterProxy.Pack("buyBatchETH", []uint8{0, 1}, [][]byte{pnftCallData, openseaData})
 	require.Equal(v2.T(), nil, err)
