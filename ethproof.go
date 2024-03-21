@@ -40,6 +40,7 @@ var encodeBufferPool = sync.Pool{
 	New: func() interface{} { return new(bytes.Buffer) },
 }
 
+// comment
 // getTransactionByHashToInterface returns the transaction as a map[string]interface{} type
 func getETHTransactionByHash(
 	url string,
